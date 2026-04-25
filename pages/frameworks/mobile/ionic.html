@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ionic + Capacitor · Mobile Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Mobile Framework Deep Dive</div>
+    <h1>Ionic + Capacitor</h1>
+    <p class="lede">Web technology, packaged as a native app. Build with HTML / CSS / JS using React, Vue, or Angular — Capacitor wraps it as a real iOS / Android binary with full access to native APIs.</p>
+    <div class="tags"><span>HTML / CSS / JS</span><span>WebView-based</span><span>React / Vue / Angular</span><span>Native APIs via Capacitor</span><span>Hybrid</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/javascript.html" style="color:var(--blue);text-decoration:none;">JS</a> / <a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2013 · Drifty / Ionic Team</div></div>
+        <div class="f"><div class="label">UI Framework</div><div class="val">React, Vue, Angular (or vanilla)</div></div>
+        <div class="f"><div class="label">Native bridge</div><div class="val">Capacitor (modern) / Cordova (legacy)</div></div>
+        <div class="f"><div class="label">Targets</div><div class="val">iOS, Android, Web (PWA), Electron</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">BBC, Sworkit, Untappd, Sanvello</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Web app inside a native shell:</strong> the UI runs in a WebView (WKWebView on iOS, WebView on Android).</li>
+          <li><strong>Capacitor</strong> is the modern native bridge — tiny JS API, real native plugins underneath.</li>
+          <li><strong>Ionic Framework</strong> provides ~100 UI components that adapt to iOS / Material styling automatically.</li>
+          <li><strong>Standards-based:</strong> Web Components everywhere — works with any frontend framework.</li>
+          <li><strong>One codebase</strong> ships to iOS, Android, web (PWA), and even desktop via Electron.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Ionic + React</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="kw">import</span> {
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonList, IonItem, IonLabel, IonSpinner,
+} <span class="kw">from</span> <span class="str">"@ionic/react"</span>;
+
+<span class="kw">export default function</span> <span class="fn">Products</span>() {
+  <span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>([]);
+  <span class="kw">const</span> [loading, setLoading]   = <span class="fn">useState</span>(<span class="kw">true</span>);
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetch</span>(<span class="str">"/api/products"</span>)
+      .<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(d =&gt; { <span class="fn">setProducts</span>(d); <span class="fn">setLoading</span>(<span class="kw">false</span>); });
+  }, []);
+
+  <span class="kw">return</span> (
+    &lt;<span class="tag">IonPage</span>&gt;
+      &lt;<span class="tag">IonHeader</span>&gt;&lt;<span class="tag">IonToolbar</span>&gt;&lt;<span class="tag">IonTitle</span>&gt;Products&lt;/<span class="tag">IonTitle</span>&gt;&lt;/<span class="tag">IonToolbar</span>&gt;&lt;/<span class="tag">IonHeader</span>&gt;
+      &lt;<span class="tag">IonContent</span>&gt;
+        {loading ? &lt;<span class="tag">IonSpinner</span> /&gt; : (
+          &lt;<span class="tag">IonList</span>&gt;
+            {products.<span class="fn">map</span>(p =&gt; (
+              &lt;<span class="tag">IonItem</span> key={p.id}&gt;
+                &lt;<span class="tag">IonLabel</span>&gt;{p.name} — ${p.price}&lt;/<span class="tag">IonLabel</span>&gt;
+              &lt;/<span class="tag">IonItem</span>&gt;
+            ))}
+          &lt;/<span class="tag">IonList</span>&gt;
+        )}
+      &lt;/<span class="tag">IonContent</span>&gt;
+    &lt;/<span class="tag">IonPage</span>&gt;
+  );
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Capacitor — The Modern Native Bridge</summary>
+        <div class="drill-body">
+          <p>Capacitor replaced Cordova as Ionic's default native runtime. Native code lives in standard Xcode / Android Studio projects you can edit directly. Plugins (Camera, Geolocation, Filesystem, Push) expose typed JS APIs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Web Components Everywhere</summary>
+        <div class="drill-body">
+          <p>Ionic UI is built with <strong>Stencil</strong> (also from the Ionic team) — a Web Components compiler. The <em>same</em> components work in React, Vue, Angular, or vanilla JS without rewrites.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Adaptive Theming</summary>
+        <div class="drill-body">
+          <p>Ionic components automatically render in iOS or Material Design style based on the platform — buttons, transitions, alerts all match the host OS conventions out of the box.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Live Updates &amp; Distribution</summary>
+        <div class="drill-body">
+          <p>Ionic AppFlow offers managed CI/CD plus live JS updates — push fixes to users without an App Store re-review. Comparable to Expo's EAS Update.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Capacitor Plugins</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Plugin</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>@capacitor/camera</td><td>Photo capture &amp; gallery picker.</td></tr>
+              <tr><td>@capacitor/geolocation</td><td>GPS coordinates.</td></tr>
+              <tr><td>@capacitor/filesystem</td><td>Read/write app storage.</td></tr>
+              <tr><td>@capacitor/push-notifications</td><td>FCM / APNs push.</td></tr>
+              <tr><td>@capacitor/preferences</td><td>Cross-platform key-value storage.</td></tr>
+              <tr><td>@capacitor/biometric-auth</td><td>Face ID / Touch ID / fingerprint.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Web teams ship mobile apps without learning new languages.</li>
+            <li>One codebase: iOS + Android + PWA + (optionally) Electron.</li>
+            <li>Massive plugin ecosystem; easy to write your own.</li>
+            <li>Capacitor's native projects are real Xcode / Android Studio — no black box.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>WebView-based — performance ceiling lower than React Native / Flutter for heavy UIs.</li>
+            <li>Animations and gestures less buttery than fully native frameworks.</li>
+            <li>Smaller hiring pool of "Ionic specialists" (most teams just hire web devs).</li>
+            <li>App size larger due to bundled WebView frameworks (less of an issue with WKWebView).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Content &amp; Form Apps</h5><p>Healthcare, enterprise LOB, internal tools — UI is mostly lists and forms.</p></div>
+        <div class="card teal"><h5>Web → Native Conversions</h5><p>Wrap an existing PWA as iOS / Android with minimal code changes.</p></div>
+        <div class="card mid"><h5>One-team Cross-platform</h5><p>Web devs ship phone apps without picking up Swift/Kotlin or Dart.</p></div>
+        <div class="card accent"><h5>White-label Apps</h5><p>One codebase, dozens of branded variants for clients.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Mobile Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="swiftui.html">SwiftUI</a><a href="jetpack-compose.html">Jetpack Compose</a><a href="flutter.html">Flutter</a><a href="react-native.html">React Native</a><a href="dotnet-maui.html">.NET MAUI</a><a href="kotlin-multiplatform.html">Kotlin Multiplatform</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Mobile Framework Deep Dive</footer>
+</div>
+</body>
+</html>

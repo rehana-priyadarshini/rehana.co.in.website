@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TypeScript · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>TypeScript</h1>
+    <p class="lede">JavaScript with a type system. The de-facto choice for serious frontend and backend JS work — catches bugs at compile time without leaving the JS ecosystem.</p>
+    <div class="tags"><span>Statically Typed</span><span>Superset of JS</span><span>Compiles to JS</span><span>Structural Typing</span><span>Multi-paradigm</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">2012 · Microsoft</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Anders Hejlsberg</div></div>
+        <div class="f"><div class="label">Compiles to</div><div class="val">JavaScript (any version)</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Static, structural, gradual</div></div>
+        <div class="f"><div class="label">Compiler</div><div class="val">tsc, swc, esbuild</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Superset of JavaScript:</strong> any valid JS is valid TS.</li>
+          <li><strong>Type erasure:</strong> types vanish at compile time — runtime is plain JS.</li>
+          <li><strong>Structural typing:</strong> compatibility based on shape, not name.</li>
+          <li><strong>Gradual typing:</strong> mix typed and untyped code; opt-in strictness.</li>
+          <li><strong>Type inference</strong> means you rarely have to write the obvious types.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of TypeScript</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">type</span> Customer = {
+  name: <span class="kw">string</span>;
+  age: <span class="kw">number</span>;
+  active?: <span class="kw">boolean</span>;     <span class="com">// optional</span>
+};
+
+<span class="kw">function</span> <span class="fn">greet</span>(c: Customer): <span class="kw">string</span> {
+  <span class="kw">return</span> <span class="str">`Hello, ${c.name}!`</span>;
+}
+
+<span class="com">// Discriminated unions — pattern matching without runtime cost</span>
+<span class="kw">type</span> Result&lt;T&gt; =
+  | { ok: <span class="kw">true</span>;  value: T }
+  | { ok: <span class="kw">false</span>; error: <span class="kw">string</span> };
+
+<span class="kw">function</span> <span class="fn">handle</span>&lt;T&gt;(r: Result&lt;T&gt;) {
+  <span class="kw">if</span> (r.ok) <span class="fn">use</span>(r.value);
+  <span class="kw">else</span>      <span class="fn">log</span>(r.error);
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Type System</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Primitive types:</strong> <code>string</code>, <code>number</code>, <code>boolean</code>, <code>null</code>, <code>undefined</code>, <code>symbol</code>, <code>bigint</code>.</li>
+            <li><strong>Unions</strong> (<code>A | B</code>) and <strong>intersections</strong> (<code>A &amp; B</code>).</li>
+            <li><strong>Generics</strong> for reusable, type-safe code.</li>
+            <li><strong>Mapped &amp; conditional types</strong> for advanced type transformations.</li>
+            <li><strong>Literal types</strong> like <code>"GET" | "POST"</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Strictness Settings</summary>
+        <div class="drill-body">
+          <p>Turn on <code>"strict": true</code> in <code>tsconfig.json</code> for the safest mode. Includes <code>strictNullChecks</code> (no surprise <code>null</code>s), <code>noImplicitAny</code>, and more.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Inference &amp; Narrowing</summary>
+        <div class="drill-body">
+          <p>TypeScript figures out most types automatically. Inside an <code>if (typeof x === "string")</code> block, <code>x</code> is treated as a string. This <strong>narrowing</strong> makes typed code feel natural to write.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>tsc</td><td>The reference compiler from Microsoft.</td></tr>
+              <tr><td>esbuild / swc</td><td>Ultra-fast TS-to-JS transformers (skip type checking).</td></tr>
+              <tr><td>ts-node / tsx</td><td>Run TypeScript directly in Node without a build step.</td></tr>
+              <tr><td>Zod / Valibot / io-ts</td><td>Runtime validation that infers TS types.</td></tr>
+              <tr><td>Type definitions</td><td><code>@types/*</code> packages from DefinitelyTyped.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Catches bugs at compile time; massive win on big codebases.</li>
+            <li>World-class IDE autocomplete and refactoring.</li>
+            <li>Rich, expressive type system.</li>
+            <li>Adoptable gradually — no rewrite required.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Adds a build step and tsconfig complexity.</li>
+            <li>Type gymnastics can over-engineer simple code.</li>
+            <li>3rd-party type definitions occasionally lag or are wrong.</li>
+            <li>Still has all of JavaScript's runtime quirks underneath.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Large Frontend Apps</h5><p>React, Vue, Angular, Svelte — all TypeScript-first today.</p></div>
+        <div class="card teal"><h5>Backend APIs</h5><p>NestJS, Fastify, Hono, tRPC — type-safe end-to-end.</p></div>
+        <div class="card mid"><h5>Library Authoring</h5><p>Publish strong types; consumers get IntelliSense for free.</p></div>
+        <div class="card accent"><h5>Full-stack with Type Sharing</h5><p>Same types on client and server (e.g., tRPC, Remix).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

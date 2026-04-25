@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Procedural Programming · Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<style>
+  :root {
+    --deep:#0A2A43; --blue:#065A82; --teal:#1C7293; --mid:#21295C;
+    --ice:#CADCFC; --cream:#F5F9FC; --ink:#17222E; --muted:#5D6B7A;
+    --accent:#F2A541; --line:#D6E2EC; --ok:#2C8F5C;
+    --card-shadow:0 4px 14px rgba(10,42,67,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:"Segoe UI","Calibri",system-ui,sans-serif;color:var(--ink);background:var(--cream);scroll-behavior:smooth}
+  h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;margin:0;color:var(--deep)}
+  header.hero{background:linear-gradient(135deg,var(--deep) 0%,var(--blue) 60%,var(--teal) 100%);color:#fff;padding:60px 40px 80px;position:relative;overflow:hidden}
+  header.hero::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(28,114,147,.35);top:-120px;right:-100px}
+  header.hero::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(242,165,65,.25);bottom:-80px;left:-60px}
+  .hero-inner{position:relative;max-width:1100px;margin:0 auto}
+  .eyebrow{letter-spacing:6px;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+  header h1{font-size:clamp(34px,5vw,54px);color:#fff;line-height:1.05;margin-bottom:14px}
+  header p.lede{font-size:18px;color:var(--ice);max-width:780px;margin:0}
+  .back{display:inline-block;margin-top:18px;padding:8px 14px;border-radius:8px;color:var(--deep);background:var(--accent);text-decoration:none;font-weight:700;font-size:13px}
+  .back:hover{background:#fff}
+  .page{max-width:1100px;margin:-50px auto 60px;padding:0 24px;position:relative;z-index:2}
+  section.chapter{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden}
+  .chapter-head{padding:20px 26px 14px;border-bottom:4px solid var(--accent);background:linear-gradient(90deg,var(--deep) 0%,var(--blue) 100%);color:#fff}
+  .chapter-head h2{color:#fff;font-size:22px}
+  .chapter-head .eyebrow{margin:0 0 4px;color:var(--accent);font-size:11px;letter-spacing:4px}
+  .chapter-body{padding:24px 26px}
+  .basics{background:linear-gradient(135deg,#FFF7E8 0%,#FFEFD1 100%);border-left:5px solid var(--accent);padding:16px 20px;border-radius:8px;margin-bottom:18px}
+  .basics h4{font-size:13px;text-transform:uppercase;letter-spacing:3px;color:var(--accent);margin-bottom:8px;font-family:"Segoe UI",sans-serif;font-weight:700}
+  .basics p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink)}
+  .basics ul{margin:8px 0 0;padding-left:22px;font-size:14px;line-height:1.6}
+  .basics strong{color:var(--deep)}
+  details.drill{margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--cream);overflow:hidden}
+  details.drill>summary{cursor:pointer;padding:14px 18px;font-weight:700;color:var(--deep);background:#fff;list-style:none;display:flex;align-items:center;gap:10px;font-size:15px;user-select:none}
+  details.drill>summary::-webkit-details-marker{display:none}
+  details.drill>summary::before{content:"▸";color:var(--teal);font-size:14px;transition:transform .15s}
+  details.drill[open]>summary::before{transform:rotate(90deg)}
+  details.drill>summary:hover{background:#FBFDFF}
+  details.drill .drill-body{padding:16px 20px 20px;border-top:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:12px}
+  .card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:14px 16px}
+  .card.teal{border-left-color:var(--teal)}.card.mid{border-left-color:var(--mid)}.card.accent{border-left-color:var(--accent)}.card.ok{border-left-color:var(--ok)}
+  .card h5{font-family:Georgia,serif;font-size:16px;color:var(--deep);margin-bottom:6px}
+  .card p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:var(--blue);color:#fff;font-weight:700;letter-spacing:.5px;font-size:12.5px}
+  tbody tr:nth-child(even){background:#FBFDFF}
+  pre{background:#0F2233;color:#E0EAF2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;font-family:Consolas,Monaco,monospace;margin-top:8px}
+  pre .kw{color:#82C8FF}
+  pre .str{color:#F2A541}
+  pre .com{color:#7B8FA1;font-style:italic}
+  pre .fn{color:#7CD8C7}
+  .lede-p{font-size:15px;color:var(--muted);margin-bottom:16px;font-style:italic}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+  @media(max-width:700px){.two-col{grid-template-columns:1fr}}
+  .pros-cons h6{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--teal);margin:0 0 8px;font-family:"Segoe UI",sans-serif}
+  .pros-cons ul{margin:0;padding-left:20px;font-size:14px;line-height:1.6}
+  .pros{background:#EAF7EE;border-left:4px solid var(--ok);padding:12px 16px;border-radius:6px}
+  .cons{background:#FCEEEA;border-left:4px solid #C0573B;padding:12px 16px;border-radius:6px}
+  .pros h6{color:var(--ok)}.cons h6{color:#C0573B}
+  .stack-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .stack-row span{font-size:11.5px;padding:3px 10px;border-radius:14px;background:var(--ice);color:var(--deep);font-weight:600}
+  .nav-other{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .nav-other a{padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--deep);text-decoration:none;font-size:13px;font-weight:600}
+  .nav-other a:hover{background:var(--ice)}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 20px 40px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Paradigm Deep Dive · 01 of 04</div>
+    <h1>Procedural Programming</h1>
+    <p class="lede">The original paradigm — a program is a sequence of instructions, organized into procedures that the computer follows step by step.</p>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Foundations</div><h2>What Is Procedural Programming?</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Computers execute instructions one after another. Procedural programming embraces that reality — give the machine a recipe and it follows.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Procedure / Function:</strong> a named, reusable block of statements.</li>
+          <li><strong>Sequence, Selection, Iteration:</strong> the three control-flow building blocks (do A then B; <code>if</code>; loops).</li>
+          <li><strong>State:</strong> values stored in variables that change as the program runs.</li>
+          <li><strong>Top-Down Design:</strong> break a big problem into smaller procedures until each one is trivial.</li>
+          <li><strong>Side Effects:</strong> a procedure may modify variables, files, or screens — central to how procedural code works.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Core Principles</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Stepwise Refinement</h5><p>Start with broad steps, then refine each step into smaller ones until you can write the code.</p></div>
+            <div class="card teal"><h5>Modularity via Procedures</h5><p>Group related statements into a procedure with a clear name and contract.</p></div>
+            <div class="card mid"><h5>Pass by Value vs Reference</h5><p>How data flows in and out of procedures — affects correctness and performance.</p></div>
+            <div class="card accent"><h5>Structured Programming</h5><p>Avoid <code>goto</code>; use blocks, conditionals, and loops to keep flow obvious.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>A Tiny Example (C)</summary>
+        <div class="drill-body">
+<pre><span class="com">// Compute the average of an array — classic procedural style.</span>
+<span class="kw">double</span> <span class="fn">average</span>(<span class="kw">double</span> values[], <span class="kw">int</span> n) {
+    <span class="kw">double</span> total = 0.0;
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; n; i++) {
+        total += values[i];
+    }
+    <span class="kw">return</span> n &gt; 0 ? total / n : 0.0;
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">double</span> data[] = { 10.0, 20.0, 30.0 };
+    printf(<span class="str">"Average: %f\n"</span>, <span class="fn">average</span>(data, 3));
+    <span class="kw">return</span> 0;
+}</pre>
+          <p style="margin-top:10px;font-size:13px;color:var(--muted);">A function operates on data passed in. No objects, no inheritance — just steps.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Languages</div><h2>Procedural Languages</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Language</th><th>Era</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>FORTRAN</td><td>1957</td><td>The first widely used high-level language. Still alive in scientific computing.</td></tr>
+          <tr><td>COBOL</td><td>1959</td><td>Business data processing. Powers banks, insurers, governments today.</td></tr>
+          <tr><td>BASIC</td><td>1964</td><td>Designed for teaching beginners. Spawned dozens of dialects.</td></tr>
+          <tr><td>Pascal</td><td>1970</td><td>Strongly typed, structured — popular in academia.</td></tr>
+          <tr><td>C</td><td>1972</td><td>The granddaddy of modern programming. Still ubiquitous in OS, embedded, drivers.</td></tr>
+          <tr><td>Go</td><td>2009</td><td>Modern, procedural-leaning, with goroutines for concurrency.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px;font-size:13.5px;color:var(--muted);">Many "multi-paradigm" languages (Python, JavaScript, C++, Rust) let you write purely procedural code when it suits the problem.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Simple, linear, easy to learn.</li>
+            <li>Maps naturally onto how the CPU works — predictable performance.</li>
+            <li>Excellent for short scripts, embedded code, and algorithms.</li>
+            <li>Minimal abstraction overhead.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Hard to scale — large programs become tangled webs of global state.</li>
+            <li>Reuse is procedure-level only; no inheritance or composition baked in.</li>
+            <li>Side effects make testing and parallelism tricky.</li>
+            <li>Domain modeling is awkward — you push everything through functions and structs.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use</div><h2>Picking the Right Tool</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Embedded &amp; Systems</h5><p>Drivers, OS kernels, microcontroller firmware. Predictable, close to hardware.</p></div>
+        <div class="card teal"><h5>Scientific Computing</h5><p>Numerical recipes, simulations, FORTRAN libraries that have run for 50 years.</p></div>
+        <div class="card mid"><h5>Scripting &amp; Glue Code</h5><p>Shell scripts, build files, one-off automation.</p></div>
+        <div class="card accent"><h5>Performance-Critical Hot Paths</h5><p>Even in OOP codebases, inner loops are often plain procedural code.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Paradigm Deep Dives</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="oop.html">→ Object-Oriented</a>
+        <a href="functional.html">→ Functional</a>
+        <a href="declarative.html">→ Declarative</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Paradigm Deep Dive</footer>
+</div>
+</body>
+</html>

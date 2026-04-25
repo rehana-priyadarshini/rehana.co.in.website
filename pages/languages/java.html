@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Java · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>Java</h1>
+    <p class="lede">"Write once, run anywhere." Three decades on, Java still powers more bank vaults, airline reservations, and Android phones than any other language.</p>
+    <div class="tags"><span>OOP</span><span>Statically Typed</span><span>JVM</span><span>Garbage Collected</span><span>Enterprise</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">1995 · Sun Microsystems</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">James Gosling</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">OOP, multi-paradigm</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Static, strong</div></div>
+        <div class="f"><div class="label">Runtime</div><div class="val">JVM (bytecode)</div></div>
+        <div class="f"><div class="label">Memory</div><div class="val">Garbage collected</div></div>
+        <div class="f"><div class="label">Latest LTS</div><div class="val">Java 21 / 25</div></div>
+        <div class="f"><div class="label">Steward</div><div class="val">Oracle / OpenJDK</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Source → Bytecode → JVM:</strong> <code>javac</code> compiles <code>.java</code> to <code>.class</code> bytecode that any JVM runs.</li>
+          <li><strong>Class-based OOP:</strong> everything lives inside a class.</li>
+          <li><strong>Strong typing &amp; explicit declarations</strong> mean the compiler catches many bugs early.</li>
+          <li><strong>Memory:</strong> garbage collector frees you from <code>malloc</code>/<code>free</code>; pause times are tunable.</li>
+          <li><strong>Massive standard library</strong> for collections, IO, networking, concurrency.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Java</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">public class</span> Hello {
+    <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+        System.out.println(<span class="str">"Hello, world!"</span>);
+    }
+}
+
+<span class="com">// A small domain class with modern Java features</span>
+<span class="kw">public record</span> Customer(String name, <span class="kw">int</span> age) {
+    <span class="kw">public boolean</span> <span class="fn">isAdult</span>() { <span class="kw">return</span> age &gt;= <span class="num">18</span>; }
+}
+
+List&lt;Customer&gt; adults = customers.stream()
+    .filter(Customer::isAdult)
+    .toList();</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The JVM &amp; Bytecode</summary>
+        <div class="drill-body">
+          <p>Java compiles to portable bytecode that the <strong>JVM</strong> executes. The JVM does <em>just-in-time</em> compilation — hot code is converted to optimized native machine code at runtime. Other languages (Kotlin, Scala, Clojure, Groovy) ride on the JVM too.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Concurrency &amp; Virtual Threads</summary>
+        <div class="drill-body">
+          <p>Java has had <code>Thread</code>, executor pools, and <code>java.util.concurrent</code> for decades. Java 21 added <strong>virtual threads</strong> — millions of lightweight threads on top of a small pool of OS threads, hugely simplifying concurrent server code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Generics &amp; Collections</summary>
+        <div class="drill-body">
+          <p>Type-safe containers like <code>List&lt;Customer&gt;</code>, <code>Map&lt;String, Integer&gt;</code>. The Streams API (Java 8+) gives functional-style pipelines on collections.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Modern Language Additions</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Records</strong> — concise immutable data classes.</li>
+            <li><strong>Pattern matching</strong> in <code>switch</code> and <code>instanceof</code>.</li>
+            <li><strong>Sealed classes</strong> — closed type hierarchies.</li>
+            <li><strong>Text blocks</strong> — multi-line strings.</li>
+            <li><strong>var</strong> — local-variable type inference.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Build</td><td>Maven, Gradle</td></tr>
+              <tr><td>IDE</td><td>IntelliJ IDEA, Eclipse, VS Code, NetBeans</td></tr>
+              <tr><td>Test</td><td>JUnit 5, TestNG, Mockito, AssertJ</td></tr>
+              <tr><td>Web frameworks</td><td>Spring Boot, Quarkus, Micronaut, Helidon, Jakarta EE</td></tr>
+              <tr><td>Persistence</td><td>JPA / Hibernate, jOOQ, MyBatis</td></tr>
+              <tr><td>Reactive</td><td>Project Reactor, RxJava</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Battle-tested at extreme scale; world-class GC and JIT.</li>
+            <li>Vast hiring pool and library ecosystem.</li>
+            <li>Backward compatibility — code from 2005 still runs.</li>
+            <li>Best-in-class IDEs and refactoring tools.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Verbose by modern standards (improving fast).</li>
+            <li>JVM startup cost &amp; memory footprint (mitigated by GraalVM, native image).</li>
+            <li>Historical reputation for over-engineered "enterprise" code.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Banking &amp; Finance</h5><p>Core banking, trading, settlement, fraud detection.</p></div>
+        <div class="card teal"><h5>Large Enterprise Backend</h5><p>SaaS, ERP, supply chain — Spring Boot is everywhere.</p></div>
+        <div class="card mid"><h5>Android (via Kotlin)</h5><p>Android originally Java; Kotlin is now preferred but interoperates.</p></div>
+        <div class="card accent"><h5>Big Data</h5><p>Hadoop, Spark, Kafka, Elasticsearch — all JVM under the hood.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

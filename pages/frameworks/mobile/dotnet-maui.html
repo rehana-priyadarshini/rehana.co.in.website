@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>.NET MAUI · Mobile Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Mobile Framework Deep Dive</div>
+    <h1>.NET MAUI</h1>
+    <p class="lede">Microsoft's "Multi-platform App UI" — write iOS, Android, macOS, and Windows apps in a single C# codebase. The official successor to Xamarin.Forms.</p>
+    <div class="tags"><span>C#</span><span>.NET</span><span>XAML or C#</span><span>Native UI</span><span>Microsoft</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/csharp.html" style="color:var(--blue);text-decoration:none;">C#</a></div></div>
+        <div class="f"><div class="label">Released</div><div class="val">2022 · Microsoft</div></div>
+        <div class="f"><div class="label">UI</div><div class="val">XAML or C# Markup</div></div>
+        <div class="f"><div class="label">Targets</div><div class="val">iOS, Android, macOS (Catalyst), Windows</div></div>
+        <div class="f"><div class="label">Predecessor</div><div class="val">Xamarin.Forms</div></div>
+        <div class="f"><div class="label">IDE</div><div class="val">Visual Studio / Rider / VS Code</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>One project, many targets:</strong> a single .NET project produces iOS, Android, macOS, and Windows binaries.</li>
+          <li><strong>XAML</strong> describes UI declaratively; C# Markup is the code-only alternative.</li>
+          <li><strong>MVVM</strong> is the canonical pattern — views bind to view-models via data-binding.</li>
+          <li><strong>Handlers</strong> map MAUI controls to native platform widgets (instead of Xamarin's older Renderers).</li>
+          <li><strong>Hot Reload</strong> for both XAML and C# during development.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of .NET MAUI</h2></div>
+    <div class="chapter-body">
+<pre>&lt;!-- ProductListPage.xaml --&gt;
+&lt;<span class="tag">ContentPage</span> xmlns=<span class="str">"http://schemas.microsoft.com/dotnet/2021/maui"</span>
+             x:Class=<span class="str">"MyApp.ProductListPage"</span>
+             Title=<span class="str">"Products"</span>&gt;
+  &lt;<span class="tag">CollectionView</span> ItemsSource=<span class="str">"{Binding Products}"</span>&gt;
+    &lt;<span class="tag">CollectionView.ItemTemplate</span>&gt;
+      &lt;<span class="tag">DataTemplate</span>&gt;
+        &lt;<span class="tag">HorizontalStackLayout</span> Padding=<span class="str">"12"</span>&gt;
+          &lt;<span class="tag">Label</span> Text=<span class="str">"{Binding Name}"</span> /&gt;
+          &lt;<span class="tag">Label</span> Text=<span class="str">"{Binding Price, StringFormat='${0}'}"</span> /&gt;
+        &lt;/<span class="tag">HorizontalStackLayout</span>&gt;
+      &lt;/<span class="tag">DataTemplate</span>&gt;
+    &lt;/<span class="tag">CollectionView.ItemTemplate</span>&gt;
+  &lt;/<span class="tag">CollectionView</span>&gt;
+&lt;/<span class="tag">ContentPage</span>&gt;</pre>
+<pre><span class="com">// ProductListViewModel.cs</span>
+<span class="kw">public partial class</span> ProductListViewModel : ObservableObject
+{
+    [<span class="fn">ObservableProperty</span>]
+    <span class="kw">private</span> ObservableCollection&lt;Product&gt; products = <span class="kw">new</span>();
+
+    [<span class="fn">RelayCommand</span>]
+    <span class="kw">private async</span> Task <span class="fn">LoadAsync</span>()
+    {
+        <span class="kw">var</span> data = <span class="kw">await</span> _api.GetProductsAsync();
+        <span class="kw">foreach</span> (<span class="kw">var</span> p <span class="kw">in</span> data) Products.Add(p);
+    }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Handlers Architecture</summary>
+        <div class="drill-body">
+          <p>Each MAUI control (Button, Entry, CollectionView…) maps to a per-platform <strong>handler</strong> that wraps the real native widget. You can swap or extend handlers per platform — much cleaner than Xamarin's renderers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>MVVM with Community Toolkit</summary>
+        <div class="drill-body">
+          <p>The <code>CommunityToolkit.Mvvm</code> source generators (<code>[ObservableProperty]</code>, <code>[RelayCommand]</code>) eliminate most ViewModel boilerplate — concise, testable, AOT-friendly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Blazor Hybrid</summary>
+        <div class="drill-body">
+          <p>Embed Blazor web components inside a MAUI shell — share UI between web (Blazor Server / WebAssembly) and native apps. A unique selling point in the cross-platform space.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Essentials &amp; Native APIs</summary>
+        <div class="drill-body">
+          <p><code>Microsoft.Maui.Essentials</code> exposes cross-platform APIs for sensors, geolocation, file system, secure storage, and more — one C# call, four platforms.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>NuGet packages</strong> — full access to the .NET ecosystem.</li>
+            <li><strong>Telerik / Syncfusion / DevExpress</strong> — commercial control libraries with rich grids and charts.</li>
+            <li><strong>Sharpnado / The49</strong> — popular community libraries.</li>
+            <li><strong>App Center / Visual Studio App Center successors</strong> for distribution &amp; analytics.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Single C# codebase across mobile + desktop.</li>
+            <li>Best-in-class IDE (Visual Studio, Rider).</li>
+            <li>Full .NET ecosystem (NuGet, EF Core, SignalR).</li>
+            <li>Blazor Hybrid shares code with web frontends.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller mobile community than Flutter or React Native.</li>
+            <li>iOS build still requires a Mac for signing.</li>
+            <li>Migration from Xamarin.Forms is significant.</li>
+            <li>UI feels less polished out-of-the-box vs SwiftUI/Compose.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Microsoft-Stack Shops</h5><p>Teams already invested in C#, Azure, EF Core, and Visual Studio.</p></div>
+        <div class="card teal"><h5>Enterprise LOB Apps</h5><p>Field-service, inventory, CRM clients across phone + desktop.</p></div>
+        <div class="card mid"><h5>Blazor + Mobile</h5><p>Share components between web and native via Blazor Hybrid.</p></div>
+        <div class="card accent"><h5>Windows + Mobile Pairs</h5><p>One of the few stacks with strong Windows desktop + mobile parity.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Mobile Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="swiftui.html">SwiftUI</a><a href="jetpack-compose.html">Jetpack Compose</a><a href="flutter.html">Flutter</a><a href="react-native.html">React Native</a><a href="kotlin-multiplatform.html">Kotlin Multiplatform</a><a href="ionic.html">Ionic</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Mobile Framework Deep Dive</footer>
+</div>
+</body>
+</html>

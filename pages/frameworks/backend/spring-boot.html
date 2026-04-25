@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spring Boot · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Spring Boot</h1>
+    <p class="lede">The enterprise standard. "Convention over configuration" applied to Java backends — auto-wiring, embedded servers, production-grade defaults out of the box.</p>
+    <div class="tags"><span>Java</span><span>JVM</span><span>OOP</span><span>Convention-driven</span><span>Enterprise</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/java.html" style="color:var(--blue);text-decoration:none;">Java</a> (Kotlin OK)</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2014 · Pivotal / VMware</div></div>
+        <div class="f"><div class="label">Built on</div><div class="val">Spring Framework</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Annotation-driven, opinionated</div></div>
+        <div class="f"><div class="label">Build</div><div class="val">Maven, Gradle</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Spring Boot 3.x · JDK 17+</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Auto-configuration:</strong> Spring Boot inspects your classpath and wires up sensible defaults (DB, web server, security…).</li>
+          <li><strong>Starters:</strong> curated dependency bundles (<code>spring-boot-starter-web</code>, <code>...-data-jpa</code>) — one line, full stack.</li>
+          <li><strong>Embedded server:</strong> a Spring Boot app is a runnable JAR with Tomcat/Jetty/Undertow built in.</li>
+          <li><strong>Dependency Injection:</strong> Spring's IoC container wires beans together at startup.</li>
+          <li><strong>Actuator:</strong> production endpoints (<code>/health</code>, <code>/metrics</code>, <code>/info</code>) for free.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Spring Boot</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">@SpringBootApplication</span>
+<span class="kw">public class</span> StoreApp {
+    <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {
+        SpringApplication.<span class="fn">run</span>(StoreApp.<span class="kw">class</span>, args);
+    }
+}
+
+<span class="kw">@RestController</span>
+<span class="kw">@RequestMapping</span>(<span class="str">"/api/products"</span>)
+<span class="kw">class</span> ProductController {
+    <span class="kw">private final</span> ProductRepository repo;
+
+    ProductController(ProductRepository repo) { <span class="kw">this</span>.repo = repo; }
+
+    <span class="kw">@GetMapping</span>
+    List&lt;Product&gt; <span class="fn">all</span>() { <span class="kw">return</span> repo.findAll(); }
+
+    <span class="kw">@PostMapping</span>
+    Product <span class="fn">create</span>(<span class="kw">@RequestBody</span> Product p) { <span class="kw">return</span> repo.save(p); }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Spring Data &amp; Repositories</summary>
+        <div class="drill-body">
+          <p>Define an interface like <code>interface ProductRepository extends JpaRepository&lt;Product, Long&gt; {}</code> and Spring generates the implementation — finders, paging, sorting. Works against SQL, MongoDB, Redis, Elasticsearch, and more.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Spring Security</summary>
+        <div class="drill-body">
+          <p>Battle-tested security framework — OAuth 2 / OIDC, JWT, method-level authorization, CSRF protection. The default for any Spring Boot service that exposes APIs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reactive Stack (WebFlux)</summary>
+        <div class="drill-body">
+          <p>Alternative to the traditional servlet stack — non-blocking I/O on Project Reactor. Useful for high-throughput, long-lived connections (SSE, WebSockets, streaming APIs).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloud-Native &amp; Native Image</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Spring Cloud</strong> — config server, service discovery, circuit breakers, distributed tracing.</li>
+            <li><strong>GraalVM native image</strong> — compile to a single fast-starting binary; rivals Go/Quarkus.</li>
+            <li><strong>Buildpacks</strong> — <code>./mvnw spring-boot:build-image</code> produces an OCI image without a Dockerfile.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Module</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Spring Web / WebFlux</td><td>REST controllers, reactive streams.</td></tr>
+              <tr><td>Spring Data</td><td>JPA, JDBC, MongoDB, Redis, Elasticsearch.</td></tr>
+              <tr><td>Spring Security</td><td>Authn / authz, OAuth, JWT.</td></tr>
+              <tr><td>Spring Batch</td><td>Large-scale batch jobs &amp; ETL.</td></tr>
+              <tr><td>Spring Integration</td><td>EAI patterns, messaging adapters.</td></tr>
+              <tr><td>Spring Cloud Stream</td><td>Kafka, RabbitMQ, Pulsar abstraction.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Massive ecosystem; a starter exists for almost anything.</li>
+            <li>Production-ready defaults (security, metrics, health).</li>
+            <li>Huge hiring pool and decades of community knowledge.</li>
+            <li>Stable LTS releases backed by VMware.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Annotation magic can be hard to debug for newcomers.</li>
+            <li>JVM startup cost (mitigated by native image).</li>
+            <li>Easy to over-engineer with layers of abstraction.</li>
+            <li>Memory footprint heavier than Go / Rust services.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Banking &amp; Insurance</h5><p>Long-lived enterprise services with strict audit and security requirements.</p></div>
+        <div class="card teal"><h5>Microservices Platforms</h5><p>Spring Cloud + service registry + distributed tracing.</p></div>
+        <div class="card mid"><h5>Internal Enterprise APIs</h5><p>Talk to legacy DBs, message buses, mainframes via Spring Integration.</p></div>
+        <div class="card accent"><h5>Batch / ETL Jobs</h5><p>Spring Batch for nightly billing, reconciliation, reporting.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

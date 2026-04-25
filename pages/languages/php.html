@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PHP · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>PHP</h1>
+    <p class="lede">Quietly powering ~75% of all websites with server-rendered HTML — WordPress, Wikipedia, Facebook (originally), and countless WooCommerce shops. The web's most underestimated language.</p>
+    <div class="tags"><span>Multi-paradigm</span><span>Dynamically Typed</span><span>Server-side</span><span>Web</span><span>Mature</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">1995</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Rasmus Lerdorf</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">OOP + procedural</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Dynamic, gradual (since 7.0)</div></div>
+        <div class="f"><div class="label">Runtime</div><div class="val">Zend Engine, JIT (PHP 8+)</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">PHP 8.4</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Embedded in HTML:</strong> classic PHP mixes <code>&lt;?php ?&gt;</code> tags inside templates.</li>
+          <li><strong>Per-request lifecycle:</strong> each HTTP request typically gets a fresh process — simple mental model.</li>
+          <li><strong>Modern PHP (7+/8+)</strong> is fast, typed, and looks nothing like the 2005 stereotype.</li>
+          <li><strong>Composer</strong> is the package manager; <strong>PSR</strong> standards keep the ecosystem coherent.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Modern PHP</h2></div>
+    <div class="chapter-body">
+<pre>&lt;?<span class="kw">php</span>
+<span class="kw">declare</span>(strict_types=<span class="num">1</span>);
+
+<span class="kw">readonly class</span> Customer {
+    <span class="kw">public function</span> <span class="fn">__construct</span>(
+        <span class="kw">public string</span> $name,
+        <span class="kw">public int</span> $age,
+    ) {}
+
+    <span class="kw">public function</span> <span class="fn">isAdult</span>(): <span class="kw">bool</span> {
+        <span class="kw">return</span> $<span class="kw">this</span>-&gt;age &gt;= <span class="num">18</span>;
+    }
+}
+
+$adults = <span class="fn">array_filter</span>($customers, <span class="kw">fn</span>($c) =&gt; $c-&gt;<span class="fn">isAdult</span>());</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Modern PHP (8.x)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>JIT compiler</strong> — competitive with Node.js for many workloads.</li>
+            <li><strong>Strict types, readonly, enums</strong> bring it close to Java/C#.</li>
+            <li><strong>Constructor property promotion</strong> &amp; <strong>match expressions</strong>.</li>
+            <li><strong>Attributes</strong> (annotations) for metadata.</li>
+            <li><strong>Fibers</strong> open the door to async runtimes (Swoole, ReactPHP).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Package mgr</td><td>Composer</td></tr>
+              <tr><td>Web frameworks</td><td>Laravel, Symfony, CodeIgniter, Slim</td></tr>
+              <tr><td>CMS</td><td>WordPress, Drupal, Joomla, TYPO3</td></tr>
+              <tr><td>E-commerce</td><td>Magento, WooCommerce, Shopware</td></tr>
+              <tr><td>Test</td><td>PHPUnit, Pest</td></tr>
+              <tr><td>Static analysis</td><td>PHPStan, Psalm</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Cheapest hosting on earth — every shared host runs PHP.</li>
+            <li>Laravel is one of the most pleasant web frameworks alive.</li>
+            <li>Massive plugin ecosystems (WordPress alone has 60k+).</li>
+            <li>Mature, predictable, easy to deploy.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Old reputation lingers; legacy PHP 4/5 code can be ugly.</li>
+            <li>Inconsistent stdlib naming (a famous historical quirk).</li>
+            <li>Less popular among new developers — smaller candidate pool.</li>
+            <li>Async story is improving but remains immature vs Node/Go.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Content Sites</h5><p>WordPress + Drupal own publishing.</p></div>
+        <div class="card teal"><h5>E-commerce</h5><p>Magento, WooCommerce, Shopware.</p></div>
+        <div class="card mid"><h5>Modern Web Apps</h5><p>Laravel + Livewire/Inertia for productive full-stack work.</p></div>
+        <div class="card accent"><h5>Enterprise CMS &amp; ERP</h5><p>Symfony underpins many large-scale European apps.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

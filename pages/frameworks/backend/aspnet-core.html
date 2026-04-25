@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASP.NET Core · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>ASP.NET Core</h1>
+    <p class="lede">Microsoft's modern, cross-platform web framework — high performance, batteries-included, and consistently near the top of TechEmpower benchmarks.</p>
+    <div class="tags"><span>C# / .NET</span><span>Cross-platform</span><span>Statically Typed</span><span>High-performance</span><span>Enterprise</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/csharp.html" style="color:var(--blue);text-decoration:none;">C#</a> · F# · VB</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2016 · Microsoft</div></div>
+        <div class="f"><div class="label">Runs on</div><div class="val">Windows, Linux, macOS</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Middleware pipeline + DI</div></div>
+        <div class="f"><div class="label">Build / pkg</div><div class="val">dotnet CLI, NuGet</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">.NET 9</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Middleware pipeline:</strong> requests pass through a chain of components (auth, routing, CORS, your handler).</li>
+          <li><strong>Built-in DI container:</strong> register services, inject them via constructors.</li>
+          <li><strong>Minimal APIs</strong> let you ship endpoints in a few lines without controllers.</li>
+          <li><strong>Kestrel</strong> is the cross-platform, ultra-fast HTTP server bundled in.</li>
+          <li><strong>One framework</strong> covers Web APIs, MVC, Razor Pages, Blazor (UI), gRPC, SignalR (real-time).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of ASP.NET Core (Minimal API)</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">var</span> builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext&lt;StoreDb&gt;();
+
+<span class="kw">var</span> app = builder.Build();
+
+app.MapGet(<span class="str">"/api/products"</span>, <span class="kw">async</span> (StoreDb db) =&gt;
+    <span class="kw">await</span> db.Products.ToListAsync());
+
+app.MapPost(<span class="str">"/api/products"</span>, <span class="kw">async</span> (Product p, StoreDb db) =&gt;
+{
+    db.Products.Add(p);
+    <span class="kw">await</span> db.SaveChangesAsync();
+    <span class="kw">return</span> Results.Created(<span class="str">$"/api/products/{p.Id}"</span>, p);
+});
+
+app.Run();</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Minimal APIs vs Controllers</summary>
+        <div class="drill-body">
+          <p><strong>Minimal APIs</strong> are great for small services and microservices. <strong>MVC controllers</strong> add structure (filters, model binding, conventions) for larger codebases. The two coexist in the same project.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Entity Framework Core</summary>
+        <div class="drill-body">
+          <p>The default ORM — code-first migrations, LINQ queries, change tracking. Supports SQL Server, PostgreSQL, MySQL, SQLite, Cosmos DB, and more.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Dependency Injection</summary>
+        <div class="drill-body">
+          <p>First-class DI baked in — no third-party container required. Lifetimes: <code>Singleton</code>, <code>Scoped</code> (per request), <code>Transient</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SignalR &amp; gRPC</summary>
+        <div class="drill-body">
+          <p><strong>SignalR</strong> for real-time (WebSockets, SSE, long-poll) — chat, notifications, dashboards. <strong>gRPC</strong> built in for service-to-service RPC with HTTP/2.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>AOT &amp; Performance</summary>
+        <div class="drill-body">
+          <p><strong>Native AOT</strong> compilation produces small, fast-starting binaries — ideal for serverless. ASP.NET Core regularly tops TechEmpower benchmarks.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Top-tier performance, often beating Node and Java in benchmarks.</li>
+            <li>One framework for APIs, real-time, gRPC, full-stack (Blazor).</li>
+            <li>Best-in-class tooling (Visual Studio, Rider).</li>
+            <li>Strong docs and Microsoft-grade backward compatibility.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller open-source community than Node.js / Python.</li>
+            <li>Microsoft-leaning ecosystem (Azure-first).</li>
+            <li>Annual major versions can feel like a treadmill.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Enterprise APIs</h5><p>Large internal services on the Microsoft stack.</p></div>
+        <div class="card teal"><h5>High-performance Backends</h5><p>Trading, gaming, real-time analytics.</p></div>
+        <div class="card mid"><h5>Real-time Apps</h5><p>SignalR for chat, notifications, live dashboards.</p></div>
+        <div class="card accent"><h5>Azure-Native Services</h5><p>Functions, App Service, AKS — first-class .NET support.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

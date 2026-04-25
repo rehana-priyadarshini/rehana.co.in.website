@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jetpack Compose · Mobile Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Mobile Framework Deep Dive</div>
+    <h1>Jetpack Compose</h1>
+    <p class="lede">Google's modern declarative UI toolkit for Android — and beyond. Same Kotlin code can target Android, desktop, web, and (via Compose Multiplatform) iOS.</p>
+    <div class="tags"><span>Kotlin</span><span>Declarative</span><span>Android</span><span>Compose Multiplatform</span><span>Material 3</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/kotlin.html" style="color:var(--blue);text-decoration:none;">Kotlin</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2021 (1.0) · Google</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Declarative composables</div></div>
+        <div class="f"><div class="label">Predecessor</div><div class="val">Android Views (XML layouts)</div></div>
+        <div class="f"><div class="label">IDE</div><div class="val">Android Studio (live preview)</div></div>
+        <div class="f"><div class="label">Cross-platform</div><div class="val">Compose Multiplatform → iOS, desktop, web</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Composable functions</strong> — Kotlin functions annotated with <code>@Composable</code> describe UI for given inputs.</li>
+          <li><strong>State hoisting:</strong> stateless composables receive state and event callbacks; the parent owns the state.</li>
+          <li><strong>Recomposition:</strong> Compose re-runs only the composables whose inputs changed — powered by the Compose Compiler.</li>
+          <li><strong>Modifier chain:</strong> behavior &amp; styling layered via <code>Modifier.padding(...).clickable { ... }</code>.</li>
+          <li><strong>Material 3</strong> components ship out of the box; Material You theming is built in.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Compose</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">@Composable</span>
+<span class="kw">fun</span> <span class="fn">ProductList</span>(viewModel: ProductViewModel = <span class="fn">viewModel</span>()) {
+    <span class="kw">val</span> state <span class="kw">by</span> viewModel.state.<span class="fn">collectAsState</span>()
+
+    Scaffold(topBar = { TopAppBar(title = { Text(<span class="str">"Products"</span>) }) }) { padding -&gt;
+        <span class="kw">when</span> {
+            state.isLoading -&gt; CircularProgressIndicator(Modifier.<span class="fn">padding</span>(padding))
+            <span class="kw">else</span> -&gt; LazyColumn(Modifier.<span class="fn">padding</span>(padding)) {
+                <span class="fn">items</span>(state.products, key = { it.id }) { p -&gt;
+                    ListItem(
+                        headlineContent = { Text(p.name) },
+                        trailingContent = { Text(<span class="str">"$"</span> + p.price) },
+                    )
+                }
+            }
+        }
+    }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>State &amp; Recomposition</summary>
+        <div class="drill-body">
+          <p><code>remember { mutableStateOf(...) }</code> creates state that survives recomposition. Reading the state inside a composable subscribes that composable to changes — only it re-runs on update. Pair with <code>StateFlow</code> from a ViewModel for app-level state.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Modifiers</summary>
+        <div class="drill-body">
+          <p>Modifiers are the workhorse — padding, size, background, click, focus, semantics. Order matters: <code>Modifier.padding(8.dp).background(Red)</code> ≠ <code>Modifier.background(Red).padding(8.dp)</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Side Effects &amp; Coroutines</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>LaunchedEffect</code> — coroutine tied to the composable's lifecycle.</li>
+            <li><code>rememberCoroutineScope</code> — scope for event-driven coroutines.</li>
+            <li><code>DisposableEffect</code> — cleanup on dispose.</li>
+            <li><code>produceState</code> / <code>derivedStateOf</code> — derived state.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Animations</summary>
+        <div class="drill-body">
+          <p><code>animate*AsState</code> functions interpolate values; <code>AnimatedVisibility</code>, <code>Crossfade</code>, and the <code>animateContentSize</code> modifier cover most UI animations declaratively.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Compose Multiplatform</summary>
+        <div class="drill-body">
+          <p>JetBrains' fork extends Compose to <strong>iOS, desktop (JVM), and web (Wasm)</strong>. Share UI code across all four platforms while keeping native performance — the most ambitious cross-platform UI story in the Kotlin world.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Library</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Material 3</td><td>Components &amp; theming.</td></tr>
+              <tr><td>Navigation Compose</td><td>Type-safe routing between screens.</td></tr>
+              <tr><td>Hilt</td><td>Dependency injection.</td></tr>
+              <tr><td>Coil</td><td>Image loading for Compose.</td></tr>
+              <tr><td>Accompanist</td><td>Pager, permissions, system UI helpers.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Modern, concise replacement for XML layouts.</li>
+            <li>Live previews in Android Studio.</li>
+            <li>Tight integration with Kotlin coroutines &amp; Flow.</li>
+            <li>Compose Multiplatform extends reach beyond Android.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Recomposition rules take time to internalize.</li>
+            <li>Compose Multiplatform iOS support is younger than Flutter / RN.</li>
+            <li>Subtle performance pitfalls (unstable lambdas, unstable types).</li>
+            <li>Older XML-based codebases need careful incremental migration.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>New Android Apps</h5><p>The Google-blessed default for greenfield Android.</p></div>
+        <div class="card teal"><h5>Wear OS</h5><p>Compose for Wear is the modern path for watch UIs.</p></div>
+        <div class="card mid"><h5>Cross-Platform via CMP</h5><p>Share UI across Android + iOS + desktop with Compose Multiplatform.</p></div>
+        <div class="card accent"><h5>Material 3 Apps</h5><p>Material You theming &amp; components without third-party libs.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Mobile Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="swiftui.html">SwiftUI</a><a href="flutter.html">Flutter</a><a href="react-native.html">React Native</a><a href="dotnet-maui.html">.NET MAUI</a><a href="kotlin-multiplatform.html">Kotlin Multiplatform</a><a href="ionic.html">Ionic</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Mobile Framework Deep Dive</footer>
+</div>
+</body>
+</html>

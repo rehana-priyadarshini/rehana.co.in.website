@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ktor · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Ktor</h1>
+    <p class="lede">JetBrains' Kotlin-native server framework — coroutine-driven, composable, and deeply idiomatic. The lightweight alternative to Spring for Kotlin teams.</p>
+    <div class="tags"><span>Kotlin</span><span>Coroutines</span><span>DSL-based</span><span>Lightweight</span><span>JetBrains</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/kotlin.html" style="color:var(--blue);text-decoration:none;">Kotlin</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2018 · JetBrains</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">DSL + coroutines</div></div>
+        <div class="f"><div class="label">Engines</div><div class="val">Netty, CIO, Jetty, Tomcat</div></div>
+        <div class="f"><div class="label">Build</div><div class="val">Gradle (Kotlin DSL)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Asynchronous by default</strong> — every handler is a Kotlin coroutine; no blocking thread pools.</li>
+          <li><strong>Plugin-based:</strong> install features (<code>ContentNegotiation</code>, <code>Authentication</code>, <code>CORS</code>) via a clean DSL.</li>
+          <li><strong>No annotations:</strong> Ktor is configured with idiomatic Kotlin code, not magic.</li>
+          <li><strong>Pluggable engine:</strong> swap Netty / CIO / Jetty without changing your code.</li>
+          <li><strong>Multiplatform-ready:</strong> the client also runs on JVM, JS, Android, iOS, Native.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Ktor</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">fun</span> <span class="fn">main</span>() {
+    <span class="fn">embeddedServer</span>(Netty, port = <span class="num">8080</span>) {
+        <span class="fn">install</span>(ContentNegotiation) { <span class="fn">json</span>() }
+
+        <span class="fn">routing</span> {
+            <span class="fn">get</span>(<span class="str">"/products"</span>) {
+                call.<span class="fn">respond</span>(<span class="fn">listOf</span>(Product(<span class="str">"Widget"</span>, <span class="num">9.99</span>)))
+            }
+
+            <span class="fn">post</span>(<span class="str">"/products"</span>) {
+                <span class="kw">val</span> p = call.<span class="fn">receive</span>&lt;Product&gt;()
+                call.<span class="fn">respond</span>(HttpStatusCode.Created, p)
+            }
+        }
+    }.<span class="fn">start</span>(wait = <span class="kw">true</span>)
+}
+
+<span class="kw">@Serializable</span>
+<span class="kw">data class</span> Product(<span class="kw">val</span> name: String, <span class="kw">val</span> price: Double)</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Coroutines &amp; Async</summary>
+        <div class="drill-body">
+          <p>Every Ktor handler is a <code>suspend</code> function. You can <code>await</code> DB calls or HTTP requests without blocking — millions of concurrent connections on a small thread pool.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Plugins (Features)</summary>
+        <div class="drill-body">
+          <p>Cross-cutting concerns are added with <code>install(...)</code>:</p>
+          <table>
+            <thead><tr><th>Plugin</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>ContentNegotiation</td><td>JSON / XML / ProtoBuf via kotlinx.serialization, Jackson, Gson.</td></tr>
+              <tr><td>Authentication</td><td>JWT, OAuth, Basic, Form, sessions.</td></tr>
+              <tr><td>StatusPages</td><td>Centralized exception handling.</td></tr>
+              <tr><td>CallLogging</td><td>Structured request logging.</td></tr>
+              <tr><td>WebSockets</td><td>Built-in WebSocket DSL.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ktor Client</summary>
+        <div class="drill-body">
+          <p>The same DSL powers a multiplatform HTTP client. Same code can fetch APIs from a JVM backend, an Android app, or an iOS app — perfect with Kotlin Multiplatform.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Exposed</strong> — JetBrains' own SQL DSL / lightweight ORM.</li>
+            <li><strong>Koin</strong> — pragmatic Kotlin DI (Ktor has no built-in container).</li>
+            <li><strong>kotlinx.serialization</strong> — fast, type-safe JSON.</li>
+            <li><strong>Arrow</strong> — functional helpers, error handling.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Idiomatic Kotlin DSL — feels native, not bolted-on.</li>
+            <li>Async-first via coroutines; excellent throughput.</li>
+            <li>Lightweight — fast startup, low memory vs Spring Boot.</li>
+            <li>Backed by JetBrains; first-class IntelliJ support.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller ecosystem than Spring Boot.</li>
+            <li>No built-in DI / ORM — assemble your own stack.</li>
+            <li>Fewer learning resources / job postings.</li>
+            <li>OpenAPI / docs tooling is third-party.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Kotlin-First Backends</h5><p>Teams who chose Kotlin and want a Kotlin-native framework.</p></div>
+        <div class="card teal"><h5>Microservices</h5><p>Lighter than Spring Boot; faster cold starts.</p></div>
+        <div class="card mid"><h5>Multiplatform Apps</h5><p>Ktor client shares HTTP code across Android, iOS, web.</p></div>
+        <div class="card accent"><h5>WebSocket / Streaming</h5><p>Coroutine-based async excels at long-lived connections.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

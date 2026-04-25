@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JavaScript · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>JavaScript</h1>
+    <p class="lede">The language of the web — and now of servers, mobile apps, desktops, and even microcontrollers. Born in 10 days, JavaScript ate the world.</p>
+    <div class="tags"><span>Multi-paradigm</span><span>Dynamically Typed</span><span>JIT-compiled</span><span>Single-threaded + async</span><span>Universal</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">1995 · Netscape</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Brendan Eich</div></div>
+        <div class="f"><div class="label">Standard</div><div class="val">ECMAScript (ES2024)</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Dynamic, weak</div></div>
+        <div class="f"><div class="label">Runtimes</div><div class="val">V8, SpiderMonkey, JavaScriptCore</div></div>
+        <div class="f"><div class="label">Server runtimes</div><div class="val">Node.js, Deno, Bun</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Single-threaded event loop</strong> — JS uses callbacks, promises, and async/await to handle concurrency without threads.</li>
+          <li><strong>First-class functions:</strong> functions are values, easily passed and returned.</li>
+          <li><strong>Prototype-based objects</strong> (with class syntax sugar on top).</li>
+          <li><strong>Runs everywhere:</strong> browsers, servers, mobile (React Native), desktop (Electron), edge functions.</li>
+          <li><strong>The DOM</strong> is the browser's API for manipulating the page tree.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of JavaScript</h2></div>
+    <div class="chapter-body">
+<pre><span class="com">// Modern JS — arrow functions, destructuring, async/await</span>
+<span class="kw">const</span> <span class="fn">greet</span> = (name) =&gt; <span class="str">`Hello, ${name}!`</span>;
+
+<span class="kw">async function</span> <span class="fn">loadUsers</span>() {
+  <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"/api/users"</span>);
+  <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+  <span class="kw">return</span> data.filter(({ active }) =&gt; active);
+}
+
+<span class="com">// Classes are syntactic sugar over prototypes</span>
+<span class="kw">class</span> Customer {
+  <span class="fn">constructor</span>(name, age) { <span class="kw">this</span>.name = name; <span class="kw">this</span>.age = age; }
+  <span class="fn">isAdult</span>() { <span class="kw">return</span> <span class="kw">this</span>.age &gt;= <span class="num">18</span>; }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Event Loop</summary>
+        <div class="drill-body">
+          <p>JavaScript runs <em>one thing at a time</em>. The runtime queues async work (timers, IO, promise resolutions) and the event loop pulls them onto the stack when it's idle. Block the loop and the whole app freezes — never run heavy CPU work in the main thread.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Promises &amp; async/await</summary>
+        <div class="drill-body">
+          <p>A <strong>Promise</strong> represents a value that will exist in the future. <code>async</code>/<code>await</code> is syntactic sugar that lets you write asynchronous code as if it were synchronous.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Modules</summary>
+        <div class="drill-body">
+          <p>Two systems coexist: <strong>ESM</strong> (<code>import</code>/<code>export</code>, the standard) and <strong>CommonJS</strong> (<code>require</code>, legacy Node). Modern code uses ESM; tooling bridges the two.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Package managers</td><td>npm, pnpm, yarn, bun</td></tr>
+              <tr><td>Bundlers</td><td>Vite, Webpack, esbuild, Rollup, Parcel</td></tr>
+              <tr><td>Transpilers</td><td>Babel, SWC, TypeScript</td></tr>
+              <tr><td>Test</td><td>Jest, Vitest, Playwright, Cypress, Mocha</td></tr>
+              <tr><td>Lint / format</td><td>ESLint, Prettier, Biome</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Major Frameworks</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Frontend</h5><p>React, Vue, Angular, Svelte, Solid, Qwik.</p></div>
+            <div class="card teal"><h5>Meta-frameworks</h5><p>Next.js, Nuxt, SvelteKit, Remix, Astro.</p></div>
+            <div class="card mid"><h5>Backend</h5><p>Express, Fastify, NestJS, Hono, Koa.</p></div>
+            <div class="card accent"><h5>Mobile / Desktop</h5><p>React Native, Expo, Electron, Tauri.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>The only language that runs natively in browsers.</li>
+            <li>One language across client, server, mobile, edge.</li>
+            <li>Largest package ecosystem on earth (npm).</li>
+            <li>Async-first, lightweight, fast iteration.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Quirks &amp; coercion (<code>"0" == false</code>) bite beginners.</li>
+            <li>Dynamic typing → most teams adopt TypeScript.</li>
+            <li>Tooling churn — frameworks rise &amp; fall fast.</li>
+            <li>Single-threaded; CPU-heavy work needs workers.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Web Frontends</h5><p>The default — SPA, SSR, static, edge.</p></div>
+        <div class="card teal"><h5>Real-time Backends</h5><p>Chat, dashboards, websockets — Node.js excels.</p></div>
+        <div class="card mid"><h5>Cross-Platform Mobile</h5><p>React Native shares code with web teams.</p></div>
+        <div class="card accent"><h5>Edge Functions</h5><p>Cloudflare Workers, Vercel Edge — JS at the edge of the network.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

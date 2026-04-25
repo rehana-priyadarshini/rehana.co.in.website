@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Next.js · Web Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Web Framework Deep Dive</div>
+    <h1>Next.js</h1>
+    <p class="lede">The React meta-framework. File-based routing, server components, image optimization, and a tight feedback loop with Vercel — Next.js is the production answer to "I want to build a React app."</p>
+    <div class="tags"><span>React</span><span>Full-stack</span><span>SSR / SSG / RSC</span><span>App Router</span><span>Vercel</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Built on</div><div class="val"><a href="react.html" style="color:var(--blue);text-decoration:none;">React</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2016 · Vercel (Zeit)</div></div>
+        <div class="f"><div class="label">Routing</div><div class="val">App Router (RSC) + Pages Router (legacy)</div></div>
+        <div class="f"><div class="label">Render modes</div><div class="val">SSR, SSG, ISR, RSC, streaming</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Next.js 15</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Notion, TikTok, Hulu, Twitch, OpenAI</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>File-based routing:</strong> a file at <code>app/products/page.tsx</code> becomes the route <code>/products</code>.</li>
+          <li><strong>Server Components</strong> render on the server with zero client JS by default.</li>
+          <li><strong>Client Components</strong> are opt-in via <code>"use client"</code> — for interactivity.</li>
+          <li><strong>Server Actions</strong> let forms call server functions without an API endpoint.</li>
+          <li><strong>Route Handlers</strong> (<code>route.ts</code>) replace API routes — REST, webhooks, edge functions.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Next.js (App Router)</h2></div>
+    <div class="chapter-body">
+<pre><span class="com">// app/products/page.tsx — server component, runs on the server</span>
+<span class="kw">async function</span> <span class="fn">getProducts</span>() {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">"https://api.example.com/products"</span>, {
+    next: { revalidate: <span class="num">60</span> },  <span class="com">// ISR: cache for 60s</span>
+  });
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="kw">export default async function</span> <span class="fn">ProductsPage</span>() {
+  <span class="kw">const</span> products = <span class="kw">await</span> <span class="fn">getProducts</span>();
+
+  <span class="kw">return</span> (
+    &lt;<span class="tag">ul</span>&gt;
+      {products.<span class="fn">map</span>(p =&gt; (
+        &lt;<span class="tag">li</span> key={p.id}&gt;{p.name} — ${p.price}&lt;/<span class="tag">li</span>&gt;
+      ))}
+    &lt;/<span class="tag">ul</span>&gt;
+  );
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>App Router &amp; React Server Components</summary>
+        <div class="drill-body">
+          <p>The App Router (default since v13) is built on RSC. Each route can mix server-rendered and client-interactive components in one tree. <strong>Layouts</strong>, <strong>loading.tsx</strong>, <strong>error.tsx</strong>, and <strong>not-found.tsx</strong> are special files for nested UI.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Rendering Modes</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>SSG</strong> — pre-render at build time.</li>
+            <li><strong>SSR</strong> — render per request on the server.</li>
+            <li><strong>ISR</strong> — pre-render, then re-build on a schedule.</li>
+            <li><strong>RSC streaming</strong> — flush UI as data resolves.</li>
+            <li><strong>Edge runtime</strong> — run components close to the user (Vercel Edge, Cloudflare).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Server Actions &amp; Forms</summary>
+        <div class="drill-body">
+          <p>Mark a function with <code>"use server"</code> and call it directly from a form or client component. Next handles the network round-trip, optimistic updates, and validation. No REST endpoints to wire up.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Built-in Optimizations</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>next/image</code> — automatic optimization, lazy loading, responsive sizes.</li>
+            <li><code>next/font</code> — self-host Google Fonts; zero CLS.</li>
+            <li><code>next/script</code> — strategic third-party script loading.</li>
+            <li><strong>Turbopack</strong> — Vite-class dev server (Rust-built).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Deployment</summary>
+        <div class="drill-body">
+          <p>Vercel is the easiest target (built by the same team), but Next.js runs on Node, Docker, AWS, Cloudflare Pages, Netlify, and self-hosted setups. <code>next build &amp;&amp; next start</code> is enough for a Node host.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Most production-ready React stack — routing, data, deploy, all included.</li>
+            <li>RSC + Server Actions reduce the amount of JS shipped.</li>
+            <li>Massive community &amp; commercial backing.</li>
+            <li>Fastest path from idea to deployed app.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Significant magic — RSC + caching can be hard to reason about.</li>
+            <li>App Router still maturing; breaking changes between majors.</li>
+            <li>Best DX is on Vercel (some features harder to self-host).</li>
+            <li>Build complexity vs a plain Vite + React SPA.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Marketing &amp; Content Sites</h5><p>SSG + ISR for blogs, docs, landing pages — fast and SEO-friendly.</p></div>
+        <div class="card teal"><h5>SaaS Dashboards</h5><p>Server components for data, client components for interactivity.</p></div>
+        <div class="card mid"><h5>E-commerce</h5><p>ISR product pages, Server Actions for cart, edge for global latency.</p></div>
+        <div class="card accent"><h5>AI Apps</h5><p>Streaming UI for LLM responses; Vercel AI SDK integrates tightly.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Web Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="react.html">React</a><a href="angular.html">Angular</a><a href="vue.html">Vue</a><a href="svelte.html">Svelte</a><a href="solid.html">Solid</a><a href="nuxt.html">Nuxt</a><a href="sveltekit.html">SvelteKit</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Web Framework Deep Dive</footer>
+</div>
+</body>
+</html>

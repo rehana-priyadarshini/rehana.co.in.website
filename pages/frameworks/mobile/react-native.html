@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>React Native · Mobile Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Mobile Framework Deep Dive</div>
+    <h1>React Native</h1>
+    <p class="lede">"Learn once, write anywhere." React Native lets web developers ship truly native iOS &amp; Android apps using JavaScript or TypeScript and the React mental model.</p>
+    <div class="tags"><span>JavaScript / TypeScript</span><span>React</span><span>Native UI</span><span>Cross-platform</span><span>Meta</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/javascript.html" style="color:var(--blue);text-decoration:none;">JS</a> / <a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2015 · Meta</div></div>
+        <div class="f"><div class="label">Renders to</div><div class="val">Real native UIKit / Android views</div></div>
+        <div class="f"><div class="label">Targets</div><div class="val">iOS, Android, Windows (community), tvOS, web (RN-Web)</div></div>
+        <div class="f"><div class="label">Recommended starter</div><div class="val">Expo (managed workflow)</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Instagram, Discord, Shopify, Microsoft Office, Tesla</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>React, on phones:</strong> the same components, hooks, and JSX you know — rendering native widgets instead of DOM nodes.</li>
+          <li><strong>Bridge / JSI:</strong> JS communicates with native code via Meta's modern <strong>JavaScript Interface</strong> — direct, synchronous, fast.</li>
+          <li><strong>Fabric &amp; TurboModules</strong> are the new architecture (default since RN 0.76) — better performance, smoother concurrent rendering.</li>
+          <li><strong>Native modules</strong> let you wrap any platform-specific Swift/Kotlin code as a JS module.</li>
+          <li><strong>Hot reload &amp; fast refresh</strong> keep iteration tight despite the native runtime.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of React Native</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">"react"</span>;
+<span class="kw">import</span> { FlatList, Text, View, ActivityIndicator } <span class="kw">from</span> <span class="str">"react-native"</span>;
+
+<span class="kw">export default function</span> <span class="fn">ProductList</span>() {
+  <span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>([]);
+  <span class="kw">const</span> [loading, setLoading]   = <span class="fn">useState</span>(<span class="kw">true</span>);
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetch</span>(<span class="str">"/api/products"</span>)
+      .<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(data =&gt; { <span class="fn">setProducts</span>(data); <span class="fn">setLoading</span>(<span class="kw">false</span>); });
+  }, []);
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> &lt;<span class="tag">ActivityIndicator</span> /&gt;;
+
+  <span class="kw">return</span> (
+    &lt;<span class="tag">FlatList</span>
+      data={products}
+      keyExtractor={p =&gt; p.id}
+      renderItem={({ item }) =&gt; (
+        &lt;<span class="tag">View</span> style={{ padding: <span class="num">12</span> }}&gt;
+          &lt;<span class="tag">Text</span>&gt;{item.name} — ${item.price}&lt;/<span class="tag">Text</span>&gt;
+        &lt;/<span class="tag">View</span>&gt;
+      )}
+    /&gt;
+  );
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The New Architecture (Fabric + TurboModules + JSI)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>JSI</strong> replaces the old async bridge — JS can call native synchronously when needed.</li>
+            <li><strong>Fabric</strong> is the new renderer — concurrent React on native UI threads.</li>
+            <li><strong>TurboModules</strong> are lazily loaded native modules — faster startup.</li>
+            <li><strong>Hermes</strong> is Meta's optimized JS engine, default since 0.70.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Expo &amp; the Managed Workflow</summary>
+        <div class="drill-body">
+          <p><strong>Expo</strong> is the default way to start a React Native app today — managed builds (EAS Build), OTA updates (EAS Update), file-based routing (Expo Router), config plugins, and a huge SDK of native APIs without ejecting.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Navigation</summary>
+        <div class="drill-body">
+          <p><strong>React Navigation</strong> is the de-facto router — stack, tabs, drawer, modal navigators with native gestures and animations. <strong>Expo Router</strong> layers file-based routing on top.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Library</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>NativeWind / Tamagui / Restyle</td><td>Styling systems (Tailwind, design-system).</td></tr>
+              <tr><td>Reanimated 3</td><td>60-FPS animations on the UI thread.</td></tr>
+              <tr><td>React Native Skia</td><td>2D graphics with the same Skia engine Flutter uses.</td></tr>
+              <tr><td>TanStack Query / Zustand / Redux</td><td>Same data &amp; state libs as React web.</td></tr>
+              <tr><td>RevenueCat / Stripe / Sentry</td><td>First-class native SDKs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Web/React skills transfer directly.</li>
+            <li>Truly native widgets (not custom-rendered).</li>
+            <li>Largest cross-platform community by far.</li>
+            <li>Expo + EAS handles builds, signing, and OTA updates for you.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Native modules add complexity when you "eject" managed Expo.</li>
+            <li>Bridging native APIs requires Swift / Kotlin knowledge.</li>
+            <li>Performance ceiling lower than fully native for heavy graphics / games.</li>
+            <li>Version upgrades historically painful (less so with Expo).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Web Teams Going Mobile</h5><p>Reuse React skills, JS tooling, and even some code via React Native Web.</p></div>
+        <div class="card teal"><h5>Content &amp; Social Apps</h5><p>Discord, Instagram, Bluesky — chat, feeds, media-heavy UX.</p></div>
+        <div class="card mid"><h5>MVPs &amp; Startups</h5><p>One team ships iOS + Android + web in parallel.</p></div>
+        <div class="card accent"><h5>Apps with Frequent Updates</h5><p>EAS Update / CodePush ship JS-only fixes without app store review.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Mobile Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="swiftui.html">SwiftUI</a><a href="jetpack-compose.html">Jetpack Compose</a><a href="flutter.html">Flutter</a><a href="dotnet-maui.html">.NET MAUI</a><a href="kotlin-multiplatform.html">Kotlin Multiplatform</a><a href="ionic.html">Ionic</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Mobile Framework Deep Dive</footer>
+</div>
+</body>
+</html>

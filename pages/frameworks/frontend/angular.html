@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Angular · Web Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Web Framework Deep Dive</div>
+    <h1>Angular</h1>
+    <p class="lede">Google's full-featured framework — TypeScript-first, opinionated, and built for large enterprise apps. Comes with everything: router, forms, HTTP, DI, testing.</p>
+    <div class="tags"><span>TypeScript</span><span>Component-based</span><span>Opinionated</span><span>Full Framework</span><span>Enterprise</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2016 · Google (rewrite of AngularJS)</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Components, Services, DI</div></div>
+        <div class="f"><div class="label">Render</div><div class="val">Incremental DOM, Signals (v17+)</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Angular 19</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Google, Microsoft Office, PayPal, Forbes</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Components:</strong> classes annotated with <code>@Component</code>, with separate template &amp; styles.</li>
+          <li><strong>Services + DI:</strong> Angular's IoC container injects services into components by constructor.</li>
+          <li><strong>Modules</strong> (or modern <strong>standalone components</strong>) organize the app.</li>
+          <li><strong>Signals</strong> (Angular 17+) are reactive primitives that drive fine-grained updates.</li>
+          <li><strong>RxJS</strong> is everywhere — observable streams for data, events, HTTP.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Angular</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">@Component</span>({
+  selector: <span class="str">'app-product-list'</span>,
+  standalone: <span class="kw">true</span>,
+  template: <span class="str">`
+    @if (loading()) {
+      &lt;p&gt;Loading…&lt;/p&gt;
+    } @else {
+      &lt;ul&gt;
+        @for (p of products(); track p.id) {
+          &lt;li&gt;{{ p.name }} — \${{ p.price }}&lt;/li&gt;
+        }
+      &lt;/ul&gt;
+    }
+  `</span>
+})
+<span class="kw">export class</span> ProductListComponent {
+  <span class="kw">private</span> http = <span class="fn">inject</span>(HttpClient);
+
+  products = <span class="fn">signal</span>&lt;Product[]&gt;([]);
+  loading  = <span class="fn">signal</span>(<span class="kw">true</span>);
+
+  <span class="fn">constructor</span>() {
+    <span class="kw">this</span>.http.<span class="fn">get</span>&lt;Product[]&gt;(<span class="str">'/api/products'</span>)
+      .<span class="fn">subscribe</span>(data =&gt; {
+        <span class="kw">this</span>.products.<span class="fn">set</span>(data);
+        <span class="kw">this</span>.loading.<span class="fn">set</span>(<span class="kw">false</span>);
+      });
+  }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Dependency Injection</summary>
+        <div class="drill-body">
+          <p>One of Angular's defining features — a hierarchical DI tree assembles your app at runtime. Services are injected via constructor or the modern <code>inject()</code> function. Lifetimes: root, module, component.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Signals (Angular 17+)</summary>
+        <div class="drill-body">
+          <p>Fine-grained reactivity that's replacing zone-based change detection. Signals make Angular updates more predictable and faster, while interoperating with RxJS for streams.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reactive Forms &amp; HTTP</summary>
+        <div class="drill-body">
+          <p>First-party forms library with validation, async validators, dynamic controls. <code>HttpClient</code> integrates with RxJS for cancellation, retries, interceptors.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standalone Components &amp; Modern Angular</summary>
+        <div class="drill-body">
+          <p>Recent Angular versions deprecated NgModules in favor of <strong>standalone components</strong>. The <code>@if</code>, <code>@for</code>, <code>@switch</code> control flow syntax (v17) replaces older <code>*ngIf</code> directives — cleaner templates, better performance.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling &amp; Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>CLI</td><td><code>ng new</code>, <code>ng generate</code>, <code>ng build</code> — best-in-class scaffolding.</td></tr>
+              <tr><td>State</td><td>NgRx, NGXS, Akita, Signal Store.</td></tr>
+              <tr><td>UI Kits</td><td>Angular Material, PrimeNG, Nebular, Taiga UI.</td></tr>
+              <tr><td>SSR</td><td>Angular Universal, Analog (meta-framework).</td></tr>
+              <tr><td>Test</td><td>Karma + Jasmine (default), Jest, Cypress, Playwright.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Batteries included — one framework, one CLI, one way to do things.</li>
+            <li>Rock-solid for large enterprise codebases.</li>
+            <li>Strong typing and tooling enforce structure.</li>
+            <li>Predictable upgrade path with codemods.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Steepest learning curve of the major frameworks.</li>
+            <li>RxJS is powerful but unforgiving for newcomers.</li>
+            <li>Heavier bundles than Svelte / Solid.</li>
+            <li>Slower momentum than React / Vue in startups &amp; OSS.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Enterprise SPAs</h5><p>Banking, ERP, complex internal tools.</p></div>
+        <div class="card teal"><h5>Large Engineering Teams</h5><p>Conventions enforce consistency across hundreds of devs.</p></div>
+        <div class="card mid"><h5>Long-Lived Codebases</h5><p>Stable upgrade story; same code style for years.</p></div>
+        <div class="card accent"><h5>Form-Heavy Apps</h5><p>Reactive Forms + validation are best-in-class.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Web Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="react.html">React</a><a href="vue.html">Vue</a><a href="svelte.html">Svelte</a><a href="solid.html">Solid</a><a href="next.html">Next.js</a><a href="nuxt.html">Nuxt</a><a href="sveltekit.html">SvelteKit</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Web Framework Deep Dive</footer>
+</div>
+</body>
+</html>

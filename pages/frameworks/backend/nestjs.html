@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NestJS · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>NestJS</h1>
+    <p class="lede">Angular-style architecture for Node.js — TypeScript-first, decorator-driven, and built around dependency injection. The opinionated framework Express never was.</p>
+    <div class="tags"><span>Node.js</span><span>TypeScript</span><span>Decorators</span><span>OOP</span><span>Modular</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a> (JS supported)</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2017 · Kamil Mysliwiec</div></div>
+        <div class="f"><div class="label">Influences</div><div class="val">Angular, Spring</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Modules, decorators, DI</div></div>
+        <div class="f"><div class="label">Underlying HTTP</div><div class="val">Express or Fastify (pluggable)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Modules:</strong> the unit of organization — group related controllers, providers, and imports.</li>
+          <li><strong>Controllers</strong> handle HTTP routes; <strong>providers</strong> are injectable services.</li>
+          <li><strong>Decorators</strong> describe metadata: <code>@Get()</code>, <code>@Post()</code>, <code>@Body()</code>, <code>@Inject()</code>.</li>
+          <li><strong>Dependency Injection</strong> is core — providers wired by constructor.</li>
+          <li><strong>Pipes, Guards, Interceptors</strong> provide cross-cutting concerns (validation, auth, transforms).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of NestJS</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">@Injectable</span>()
+<span class="kw">export class</span> ProductsService {
+  <span class="fn">constructor</span>(<span class="kw">private readonly</span> repo: ProductsRepository) {}
+
+  <span class="fn">findAll</span>() { <span class="kw">return this</span>.repo.<span class="fn">find</span>(); }
+}
+
+<span class="kw">@Controller</span>(<span class="str">'products'</span>)
+<span class="kw">export class</span> ProductsController {
+  <span class="fn">constructor</span>(<span class="kw">private readonly</span> service: ProductsService) {}
+
+  <span class="kw">@Get</span>()
+  <span class="fn">getAll</span>() { <span class="kw">return this</span>.service.<span class="fn">findAll</span>(); }
+
+  <span class="kw">@Post</span>()
+  <span class="fn">create</span>(<span class="kw">@Body</span>() dto: CreateProductDto) {
+    <span class="kw">return this</span>.service.<span class="fn">create</span>(dto);
+  }
+}
+
+<span class="kw">@Module</span>({
+  controllers: [ProductsController],
+  providers:   [ProductsService, ProductsRepository],
+})
+<span class="kw">export class</span> ProductsModule {}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Modules &amp; Dependency Injection</summary>
+        <div class="drill-body">
+          <p>Nest's IoC container assembles your app from modules at startup. Providers can be singletons, request-scoped, or transient. Eliminates manual wiring as the codebase grows.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pipes, Guards, Interceptors</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Pipes</strong> validate &amp; transform inputs (e.g., <code>ValidationPipe</code> + <code>class-validator</code>).</li>
+            <li><strong>Guards</strong> implement authorization (e.g., role checks, JWT).</li>
+            <li><strong>Interceptors</strong> wrap handlers — logging, caching, mapping responses.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Multiple Transports</summary>
+        <div class="drill-body">
+          <p>Same architecture supports REST, GraphQL, gRPC, WebSockets, and microservice transports (Kafka, NATS, Redis, RabbitMQ) — swap via configuration.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Module</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>@nestjs/typeorm / mongoose / prisma</td><td>ORM integrations.</td></tr>
+              <tr><td>@nestjs/config</td><td>Typed config &amp; .env loading.</td></tr>
+              <tr><td>@nestjs/swagger</td><td>Auto OpenAPI docs from decorators.</td></tr>
+              <tr><td>@nestjs/jwt + Passport</td><td>Authentication strategies.</td></tr>
+              <tr><td>@nestjs/bull</td><td>Redis-backed job queues.</td></tr>
+              <tr><td>@nestjs/microservices</td><td>Polyglot transports.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Strong structure — onboarding new devs is easy.</li>
+            <li>Type-safe end-to-end with TypeScript.</li>
+            <li>Excellent CLI, scaffolding, and testing story.</li>
+            <li>Same code shape across REST, GraphQL, microservices.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Lots of decorators; magic for newcomers.</li>
+            <li>Heavier than Express for trivial APIs.</li>
+            <li>Learning curve for the IoC / module model.</li>
+            <li>Slightly slower than raw Fastify or Hono.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Large Backend Teams</h5><p>Imposed structure pays off as headcount grows.</p></div>
+        <div class="card teal"><h5>TypeScript-First Shops</h5><p>End-to-end typed APIs with class-validator + Swagger.</p></div>
+        <div class="card mid"><h5>Polyglot Microservices</h5><p>Same code, multiple transports — REST + Kafka + gRPC.</p></div>
+        <div class="card accent"><h5>Migrating from Java/.NET</h5><p>Familiar OOP + DI patterns ease the jump.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

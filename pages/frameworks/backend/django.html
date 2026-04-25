@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Django · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Django</h1>
+    <p class="lede">"The web framework for perfectionists with deadlines." Batteries-included Python — ORM, admin, auth, templates — everything you need to ship a full-stack app on day one.</p>
+    <div class="tags"><span>Python</span><span>Batteries Included</span><span>MVT</span><span>Full-stack</span><span>Mature</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/python.html" style="color:var(--blue);text-decoration:none;">Python</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2005 · Lawrence Journal-World</div></div>
+        <div class="f"><div class="label">Pattern</div><div class="val">MVT (Model-View-Template)</div></div>
+        <div class="f"><div class="label">License</div><div class="val">BSD</div></div>
+        <div class="f"><div class="label">Steward</div><div class="val">Django Software Foundation</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Instagram, Pinterest, Disqus</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>App-based:</strong> a Django project is composed of pluggable apps (e.g., <code>blog</code>, <code>auth</code>, <code>billing</code>).</li>
+          <li><strong>Models:</strong> Python classes that map to DB tables — Django generates migrations from them.</li>
+          <li><strong>Views</strong> are functions or classes that take a request and return a response.</li>
+          <li><strong>Templates</strong> render HTML server-side from context data.</li>
+          <li><strong>Admin:</strong> a full CRUD interface for your models, automatically — Django's killer feature.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Django</h2></div>
+    <div class="chapter-body">
+<pre><span class="com"># models.py</span>
+<span class="kw">from</span> django.db <span class="kw">import</span> models
+
+<span class="kw">class</span> Product(models.Model):
+    name  = models.CharField(max_length=<span class="num">200</span>)
+    price = models.DecimalField(max_digits=<span class="num">10</span>, decimal_places=<span class="num">2</span>)
+    created_at = models.DateTimeField(auto_now_add=<span class="kw">True</span>)
+
+<span class="com"># views.py</span>
+<span class="kw">from</span> django.shortcuts <span class="kw">import</span> render
+<span class="kw">from</span> .models <span class="kw">import</span> Product
+
+<span class="kw">def</span> <span class="fn">product_list</span>(request):
+    products = Product.objects.<span class="fn">filter</span>(price__lt=<span class="num">100</span>)
+    <span class="kw">return</span> <span class="fn">render</span>(request, <span class="str">'products/list.html'</span>, {<span class="str">'products'</span>: products})
+
+<span class="com"># urls.py</span>
+urlpatterns = [
+    path(<span class="str">'products/'</span>, views.product_list),
+]</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Django ORM</summary>
+        <div class="drill-body">
+          <p>Pythonic queries that compile to SQL: <code>Product.objects.filter(price__lt=100).order_by('-created_at')</code>. Migrations are auto-generated from model changes. Supports PostgreSQL, MySQL, SQLite, Oracle.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Django Admin</summary>
+        <div class="drill-body">
+          <p>Register a model with three lines and get a polished CRUD UI — list views, search, filters, permissions. Saves weeks of internal-tool work.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forms &amp; Validation</summary>
+        <div class="drill-body">
+          <p><code>ModelForm</code> generates HTML forms + server-side validation directly from your models. Pair with the Django REST Framework for typed API serializers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Async &amp; Channels</summary>
+        <div class="drill-body">
+          <p>Django supports <code>async</code> views since 3.0. <strong>Django Channels</strong> adds WebSockets, background workers, and protocol routing for real-time apps.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Django REST Framework</td><td>The canonical way to build APIs in Django.</td></tr>
+              <tr><td>Celery</td><td>Background &amp; scheduled tasks.</td></tr>
+              <tr><td>Django Channels</td><td>WebSockets, ASGI, real-time.</td></tr>
+              <tr><td>django-allauth</td><td>Social auth, MFA, account flows.</td></tr>
+              <tr><td>Wagtail</td><td>CMS built on top of Django.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Everything you need in the box — auth, ORM, admin, forms, sessions.</li>
+            <li>Excellent documentation; opinionated and consistent.</li>
+            <li>Mature, secure defaults; CSRF/XSS protection built in.</li>
+            <li>Huge community and pluggable app ecosystem.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Heavier than micro-frameworks; not ideal for tiny APIs.</li>
+            <li>ORM, while powerful, can produce surprising queries at scale.</li>
+            <li>Async story is younger than Node/FastAPI.</li>
+            <li>Convention-heavy — fighting Django is painful.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Content / Admin-Heavy Apps</h5><p>SaaS dashboards, internal tools, CMS — Django Admin alone is a reason to choose it.</p></div>
+        <div class="card teal"><h5>Server-Rendered Web Apps</h5><p>Combined with HTMX, Django delivers SPA-like UX with simpler ops.</p></div>
+        <div class="card mid"><h5>Data-Driven Sites</h5><p>News, e-commerce, marketplaces — Instagram famously scaled Django.</p></div>
+        <div class="card accent"><h5>Rapid MVPs</h5><p>From <code>django-admin startproject</code> to a working app in an afternoon.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="aspnet-core.html">ASP.NET Core</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

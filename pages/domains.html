@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Software Development — Industry Domains</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+<style>
+  :root {
+    --deep:   #2D1B4E;   /* deep purple — distinguishes from the tech tour */
+    --primary:#5B2A86;
+    --second: #7E3F98;
+    --mid:    #3C5A99;
+    --ice:    #E9DCF7;
+    --cream:  #FAF7FD;
+    --ink:    #1B1033;
+    --muted:  #6A6380;
+    --accent: #E8A33D;
+    --line:   #E2D8EF;
+    --ok:     #2C8F5C;
+    --card-shadow: 0 4px 14px rgba(45, 27, 78, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: "Segoe UI", "Calibri", system-ui, sans-serif;
+    color: var(--ink); background: var(--cream); scroll-behavior: smooth; }
+  h1, h2, h3, h4 { font-family: Georgia, "Times New Roman", serif; margin: 0; color: var(--deep); }
+
+  header.hero {
+    background: linear-gradient(135deg, var(--deep) 0%, var(--primary) 55%, var(--second) 100%);
+    color: #fff; padding: 70px 40px 90px; position: relative; overflow: hidden;
+  }
+  header.hero::before {
+    content: ""; position: absolute; width: 420px; height: 420px; border-radius: 50%;
+    background: rgba(126, 63, 152, 0.35); top: -140px; right: -120px;
+  }
+  header.hero::after {
+    content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%;
+    background: rgba(232, 163, 61, 0.25); bottom: -90px; left: -70px;
+  }
+  .hero-inner { position: relative; max-width: 1200px; margin: 0 auto; }
+  .eyebrow { letter-spacing: 6px; font-size: 12px; font-weight: 700;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 14px; }
+  header h1 { font-size: clamp(36px, 6vw, 62px); color: #fff; line-height: 1.05; margin-bottom: 16px; }
+  header p.lede { font-size: 18px; color: var(--ice); max-width: 820px; margin: 0; }
+  header .meta { margin-top: 22px; font-size: 13px; color: var(--ice); opacity: 0.9; }
+  header .track-switch { margin-top: 18px; }
+  header .track-switch a {
+    display: inline-block; padding: 8px 14px; border-radius: 8px; color: var(--deep);
+    background: var(--accent); text-decoration: none; font-weight: 700; font-size: 13px;
+  }
+  header .track-switch a:hover { background: #fff; }
+
+  .page { max-width: 1200px; margin: -50px auto 60px; padding: 0 24px; position: relative; z-index: 2; }
+
+  .map {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px; background: #fff; padding: 24px; border-radius: 14px;
+    box-shadow: var(--card-shadow); border: 1px solid var(--line);
+  }
+  .map h2 { grid-column: 1 / -1; font-size: 22px; margin-bottom: 4px; }
+  .map .map-sub { grid-column: 1 / -1; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .tile {
+    display: block; padding: 16px 18px; border-radius: 10px; background: var(--cream);
+    border: 1px solid var(--line); text-decoration: none; color: var(--ink);
+    transition: all 0.15s ease; border-left: 5px solid var(--primary);
+  }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(45, 27, 78, 0.12); border-left-color: var(--accent); }
+  .tile .num { font-size: 11px; font-weight: 700; letter-spacing: 3px; color: var(--second); }
+  .tile .t  { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--deep); margin: 4px 0 4px; }
+  .tile .d  { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+  section.chapter {
+    margin-top: 36px; background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--card-shadow); overflow: hidden;
+  }
+  .chapter-head {
+    padding: 22px 28px 18px; border-bottom: 4px solid var(--accent);
+    background: linear-gradient(90deg, var(--deep) 0%, var(--primary) 100%);
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+  }
+  .chapter-head h2 { color: #fff; font-size: 26px; }
+  .chapter-head .eyebrow { margin: 0 0 6px; color: var(--accent); }
+  .back-link {
+    color: var(--accent); text-decoration: none; font-weight: 700;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap;
+  }
+  .back-link:hover { color: #fff; }
+  .chapter-body { padding: 26px 28px; }
+
+  .basics {
+    background: linear-gradient(135deg, #FFF5DF 0%, #FFE9C2 100%);
+    border-left: 5px solid var(--accent);
+    padding: 16px 20px; border-radius: 8px; margin-bottom: 22px;
+  }
+  .basics h4 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 3px; color: var(--accent);
+    margin-bottom: 8px; font-family: "Segoe UI", sans-serif; font-weight: 700;
+  }
+  .basics p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink); }
+  .basics ul { margin: 8px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.6; }
+  .basics strong { color: var(--deep); }
+
+  details.drill {
+    margin-top: 14px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--cream); overflow: hidden;
+  }
+  details.drill > summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 700; color: var(--deep);
+    background: #fff; list-style: none; display: flex; align-items: center; gap: 10px;
+    font-size: 15px; user-select: none;
+  }
+  details.drill > summary::-webkit-details-marker { display: none; }
+  details.drill > summary::before {
+    content: "▸"; color: var(--second); font-size: 14px; transition: transform 0.15s;
+  }
+  details.drill[open] > summary::before { transform: rotate(90deg); }
+  details.drill > summary:hover { background: #FCF9FF; }
+  details.drill .drill-body { padding: 16px 20px 20px; border-top: 1px solid var(--line); }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px; margin-top: 12px;
+  }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--primary);
+    border-radius: 8px; padding: 14px 16px; transition: transform 0.1s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); }
+  .card.second { border-left-color: var(--second); }
+  .card.mid    { border-left-color: var(--mid); }
+  .card.accent { border-left-color: var(--accent); }
+  .card.ok     { border-left-color: var(--ok); }
+  .card h5 { font-family: Georgia, serif; font-size: 16px; color: var(--deep); margin-bottom: 6px; }
+  .card p  { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+  .card .pill {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    color: var(--second); background: var(--ice); padding: 2px 8px; border-radius: 10px;
+    margin-bottom: 6px; text-transform: uppercase;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.5px; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--primary); color: #fff; font-weight: 700; letter-spacing: 0.5px; font-size: 12.5px; }
+  tbody tr:nth-child(even) { background: #FCF9FF; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  nav.side {
+    position: fixed; top: 50%; right: 16px; transform: translateY(-50%);
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 12px; box-shadow: var(--card-shadow); font-size: 12px; z-index: 50;
+    max-height: 80vh; overflow-y: auto;
+  }
+  nav.side a { display: block; color: var(--muted); text-decoration: none; padding: 4px 6px; border-radius: 4px; }
+  nav.side a:hover { background: var(--ice); color: var(--deep); }
+  nav.side .title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--accent);
+    text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  @media (max-width: 1100px) { nav.side { display: none; } }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 30px 20px 40px; }
+
+  .lede-p { font-size: 15px; color: var(--muted); margin-bottom: 16px; font-style: italic; }
+  code { background: #F3ECF9; padding: 2px 6px; border-radius: 4px; font-size: 12.5px; color: var(--deep); }
+  .tag { display: inline-block; font-size: 11px; background: var(--mid); color: #fff;
+    padding: 2px 8px; border-radius: 10px; margin-right: 4px; margin-bottom: 4px; }
+  .stack-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .stack-row span {
+    font-size: 11.5px; padding: 3px 10px; border-radius: 14px;
+    background: var(--ice); color: var(--deep); font-weight: 600;
+  }
+  .note {
+    font-size: 13px; color: var(--muted); font-style: italic;
+    padding: 10px 14px; background: #F7F2FC; border-radius: 6px; margin-top: 12px;
+    border-left: 3px solid var(--second);
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Parallel Track · Industry Domains</div>
+    <h1>Software Development<br/>Across Industries</h1>
+    <p class="lede">Every industry has its own jargon, regulations, and standard toolkits. This is a drill-down map of the domains where software engineers build their careers — from finance to industrial automation, healthcare to gaming.</p>
+    <div class="track-switch">
+      <a href="../index.html#hub">← Back to The Software Development Map</a>
+    </div>
+    <div class="meta">Tip: each domain opens with <strong>Basic Concepts</strong>, then drills into sub-segments, standards, and typical tech stacks.</div>
+  </div>
+</header>
+
+<nav class="side">
+  <div class="title">Domains</div>
+  <a href="#top">Top</a>
+  <a href="#d-finance">Finance / FinTech</a>
+  <a href="#d-health">Healthcare</a>
+  <a href="#d-erp">ERP</a>
+  <a href="#d-crm">CRM &amp; MarTech</a>
+  <a href="#d-ecom">E-commerce / Retail</a>
+  <a href="#d-industrial">Industrial Automation</a>
+  <a href="#d-security">Cybersecurity</a>
+  <a href="#d-telecom">Telecom</a>
+  <a href="#d-gaming">Gaming</a>
+  <a href="#d-media">Media / Streaming</a>
+  <a href="#d-edu">EdTech</a>
+  <a href="#d-gov">Government</a>
+  <a href="#d-logistics">Logistics</a>
+  <a href="#d-travel">Travel / Hospitality</a>
+  <a href="#d-energy">Energy / Utilities</a>
+  <a href="#d-real">Real Estate</a>
+  <a href="#d-agri">AgriTech</a>
+  <a href="#d-auto">Automotive</a>
+  <a href="#d-aero">Aerospace / Defense</a>
+  <a href="#d-legal">LegalTech</a>
+  <a href="#d-blockchain">Blockchain / Web3</a>
+</nav>
+
+<div class="page" id="top">
+
+  <!-- HUB -->
+  <div class="map" id="hub">
+    <h2>The Industry Map</h2>
+    <div class="map-sub">Twenty domains where software runs the show. Click a tile to drill down.</div>
+
+    <a class="tile" href="#d-finance"><div class="num">01</div><div class="t">Finance / FinTech</div><div class="d">Banking, payments, trading, wealth, insurance.</div></a>
+    <a class="tile" href="#d-health"><div class="num">02</div><div class="t">Healthcare</div><div class="d">EHR, telemedicine, medical devices, pharma.</div></a>
+    <a class="tile" href="#d-erp"><div class="num">03</div><div class="t">ERP</div><div class="d">SAP, Oracle, Dynamics — the corporate spine.</div></a>
+    <a class="tile" href="#d-crm"><div class="num">04</div><div class="t">CRM &amp; MarTech</div><div class="d">Sales, marketing, customer journeys.</div></a>
+    <a class="tile" href="#d-ecom"><div class="num">05</div><div class="t">E-commerce / Retail</div><div class="d">Storefronts, POS, omnichannel.</div></a>
+    <a class="tile" href="#d-industrial"><div class="num">06</div><div class="t">Industrial Automation</div><div class="d">PLCs, SCADA, Industry 4.0, IIoT.</div></a>
+    <a class="tile" href="#d-security"><div class="num">07</div><div class="t">Cybersecurity</div><div class="d">SOC, SIEM, IAM, threat intel.</div></a>
+    <a class="tile" href="#d-telecom"><div class="num">08</div><div class="t">Telecom</div><div class="d">5G, OSS/BSS, billing, network ops.</div></a>
+    <a class="tile" href="#d-gaming"><div class="num">09</div><div class="t">Gaming</div><div class="d">Engines, multiplayer, monetization.</div></a>
+    <a class="tile" href="#d-media"><div class="num">10</div><div class="t">Media / Streaming</div><div class="d">OTT, CDN, DRM, CMS, adtech.</div></a>
+    <a class="tile" href="#d-edu"><div class="num">11</div><div class="t">EdTech</div><div class="d">LMS, content delivery, assessments.</div></a>
+    <a class="tile" href="#d-gov"><div class="num">12</div><div class="t">Government / GovTech</div><div class="d">Citizen services, identity, compliance.</div></a>
+    <a class="tile" href="#d-logistics"><div class="num">13</div><div class="t">Logistics / SCM</div><div class="d">WMS, TMS, tracking, last-mile.</div></a>
+    <a class="tile" href="#d-travel"><div class="num">14</div><div class="t">Travel &amp; Hospitality</div><div class="d">GDS, PMS, bookings, loyalty.</div></a>
+    <a class="tile" href="#d-energy"><div class="num">15</div><div class="t">Energy / Utilities</div><div class="d">Smart grid, metering, renewables.</div></a>
+    <a class="tile" href="#d-real"><div class="num">16</div><div class="t">Real Estate / PropTech</div><div class="d">Listings, CRE, smart buildings.</div></a>
+    <a class="tile" href="#d-agri"><div class="num">17</div><div class="t">Agriculture / AgriTech</div><div class="d">Precision farming, supply traceability.</div></a>
+    <a class="tile" href="#d-auto"><div class="num">18</div><div class="t">Automotive</div><div class="d">Infotainment, ADAS, connected car.</div></a>
+    <a class="tile" href="#d-aero"><div class="num">19</div><div class="t">Aerospace / Defense</div><div class="d">Avionics, mission systems, safety.</div></a>
+    <a class="tile" href="#d-legal"><div class="num">20</div><div class="t">LegalTech</div><div class="d">Contract mgmt, e-discovery, compliance.</div></a>
+    <a class="tile" href="#d-blockchain"><div class="num">21</div><div class="t">Blockchain / Web3</div><div class="d">Crypto, smart contracts, DeFi, NFTs.</div></a>
+  </div>
+
+  <!-- 01 FINANCE -->
+  <section class="chapter" id="d-finance">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 01</div><h2>Finance &amp; FinTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Software in finance moves trillions of dollars daily. Accuracy, auditability, and latency are non-negotiable.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Transaction:</strong> a movement of money or a security. Must be atomic and auditable.</li>
+          <li><strong>Ledger:</strong> the system of record — debits and credits that always balance.</li>
+          <li><strong>KYC / AML:</strong> "Know Your Customer" and "Anti-Money-Laundering" checks are legally required.</li>
+          <li><strong>Settlement:</strong> the final transfer. Real-time (UPI, FedNow) vs T+1/T+2 (stocks).</li>
+          <li><strong>Reconciliation:</strong> matching records between systems to prove nothing was lost.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Sub-Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Core Banking</h5><p>Accounts, deposits, loans. Temenos, Finacle, FIS, Mambu.</p></div>
+            <div class="card second"><h5>Payments</h5><p>Cards, UPI, ACH, SEPA, real-time rails. Stripe, Adyen, PayPal.</p></div>
+            <div class="card mid"><h5>Capital Markets</h5><p>Trading, clearing, OMS/EMS. Bloomberg, Murex, Calypso.</p></div>
+            <div class="card accent"><h5>Wealth Management</h5><p>Portfolio mgmt, robo-advisors. BlackRock Aladdin, SS&amp;C.</p></div>
+            <div class="card"><h5>Insurance (InsurTech)</h5><p>Policy admin, claims, actuarial. Guidewire, Duck Creek.</p></div>
+            <div class="card second"><h5>Risk &amp; Compliance (RegTech)</h5><p>Fraud detection, sanctions screening, AML.</p></div>
+            <div class="card mid"><h5>Lending / BNPL</h5><p>Credit scoring, underwriting, servicing.</p></div>
+            <div class="card accent"><h5>Accounting / Treasury</h5><p>GL, close, forecasting. SAP, Oracle, Workday.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Regulations &amp; Standards</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Standard</th><th>Scope</th></tr></thead>
+            <tbody>
+              <tr><td>PCI-DSS</td><td>Storing/handling card data — very strict.</td></tr>
+              <tr><td>SOX</td><td>US public-company financial reporting controls.</td></tr>
+              <tr><td>Basel III</td><td>Bank capital &amp; liquidity rules.</td></tr>
+              <tr><td>MiFID II</td><td>EU investor protection &amp; market transparency.</td></tr>
+              <tr><td>PSD2 / Open Banking</td><td>EU payment APIs; consent-based data sharing.</td></tr>
+              <tr><td>ISO 20022</td><td>Modern financial messaging standard.</td></tr>
+              <tr><td>SWIFT / FIX / FpML</td><td>Interbank, trading, derivatives messaging.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Java / Scala</span><span>C++ (HFT)</span><span>Python (quant)</span>
+            <span>Kafka</span><span>Oracle / DB2 / PostgreSQL</span><span>kdb+ (time-series)</span>
+            <span>Spring Boot</span><span>Akka</span><span>Mainframe (COBOL for legacy core)</span>
+          </div>
+          <p class="note">Engineers here live with audit trails, idempotency, and 99.999% uptime. Latency in trading is measured in microseconds.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 02 HEALTHCARE -->
+  <section class="chapter" id="d-health">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 02</div><h2>Healthcare / HealthTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Software in healthcare must protect patient data, integrate with decades-old systems, and sometimes help save lives.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>EHR / EMR:</strong> Electronic Health/Medical Record — the patient's digital chart.</li>
+          <li><strong>PHI:</strong> Protected Health Information. Treat it like radioactive material.</li>
+          <li><strong>Interoperability:</strong> different hospital systems talking to each other.</li>
+          <li><strong>Clinical vs Administrative:</strong> diagnoses &amp; treatments vs billing &amp; scheduling.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Sub-Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>EHR / Hospital Info Systems</h5><p>Epic, Cerner (Oracle Health), Allscripts, Meditech.</p></div>
+            <div class="card second"><h5>Telemedicine</h5><p>Teladoc, Amwell — video consults, e-prescriptions.</p></div>
+            <div class="card mid"><h5>Medical Devices / SaMD</h5><p>Imaging, infusion pumps, wearables. Software <em>is</em> a medical device.</p></div>
+            <div class="card accent"><h5>Pharma &amp; Clinical Trials</h5><p>Veeva, Medidata — study mgmt, CTMS, EDC.</p></div>
+            <div class="card"><h5>Health Analytics</h5><p>Population health, readmission risk, AI diagnostics.</p></div>
+            <div class="card second"><h5>Billing &amp; Claims</h5><p>Revenue-cycle mgmt, payer/provider integration.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards &amp; Regulations</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Standard</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td>HIPAA (US)</td><td>Patient privacy &amp; security rules.</td></tr>
+              <tr><td>GDPR (EU)</td><td>General data protection — extra-sensitive for health.</td></tr>
+              <tr><td>HL7 v2 / v3 / FHIR</td><td>Healthcare data exchange formats. FHIR is the modern API standard.</td></tr>
+              <tr><td>DICOM</td><td>Medical imaging format &amp; network protocol.</td></tr>
+              <tr><td>ICD-10, SNOMED CT, LOINC</td><td>Standard codes for diagnoses, concepts, lab tests.</td></tr>
+              <tr><td>FDA 21 CFR Part 11</td><td>Electronic records &amp; signatures for regulated products.</td></tr>
+              <tr><td>IEC 62304</td><td>Medical device software lifecycle.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Java / .NET</span><span>Python (analytics/AI)</span><span>SQL Server / Oracle</span>
+            <span>HL7 FHIR APIs</span><span>Mirth Connect / Rhapsody</span><span>Azure Health Data Services</span>
+            <span>AWS HealthLake</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 03 ERP -->
+  <section class="chapter" id="d-erp">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 03</div><h2>Enterprise Resource Planning (ERP)</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">ERP is the digital spine of a company — one integrated system tracking finance, people, inventory, and operations.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Modules:</strong> Finance (GL/AP/AR), HR, Supply Chain, Manufacturing, CRM — all sharing one database.</li>
+          <li><strong>Master Data:</strong> customers, vendors, materials — the shared nouns of the business.</li>
+          <li><strong>Transactions:</strong> sales orders, purchase orders, journal entries — the verbs.</li>
+          <li><strong>Customization vs Configuration:</strong> configure when possible, customize only when forced — upgrades are easier.</li>
+          <li><strong>Implementation</strong> is typically a multi-year program, not a project.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Major ERP Platforms</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>SAP S/4HANA</h5><p>Largest vendor; in-memory HANA DB, ABAP/Fiori UI. Dominates Fortune 500.</p></div>
+            <div class="card second"><h5>Oracle Fusion / NetSuite</h5><p>Fusion for large enterprise; NetSuite for mid-market, cloud-native.</p></div>
+            <div class="card mid"><h5>Microsoft Dynamics 365</h5><p>F&amp;O + Business Central; tight Office/Azure integration.</p></div>
+            <div class="card accent"><h5>Workday</h5><p>HCM-first, strong in financials for services firms.</p></div>
+            <div class="card"><h5>Infor</h5><p>Industry-specialized clouds (manufacturing, healthcare, hospitality).</p></div>
+            <div class="card second"><h5>Odoo / ERPNext</h5><p>Open-source, mid-market, rapid deployment.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Key Modules</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Module</th><th>Covers</th></tr></thead>
+            <tbody>
+              <tr><td>FI / CO</td><td>Financial &amp; management accounting.</td></tr>
+              <tr><td>MM / SD</td><td>Materials &amp; purchasing, sales &amp; distribution.</td></tr>
+              <tr><td>PP / QM</td><td>Production planning &amp; quality management.</td></tr>
+              <tr><td>HCM</td><td>Human capital — payroll, benefits, talent.</td></tr>
+              <tr><td>WM / EWM</td><td>Warehouse management.</td></tr>
+              <tr><td>PM / EAM</td><td>Plant maintenance &amp; enterprise asset mgmt.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>ABAP (SAP)</span><span>SAP UI5 / Fiori</span><span>SAP BTP</span>
+            <span>Oracle APEX / ADF</span><span>X++ (Dynamics)</span><span>SAP CPI / MuleSoft / Boomi</span>
+            <span>IDoc / BAPI / OData APIs</span>
+          </div>
+          <p class="note">ERP careers split into <strong>functional consultants</strong> (know the business process) and <strong>technical consultants</strong> (write the extensions and integrations).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 04 CRM -->
+  <section class="chapter" id="d-crm">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 04</div><h2>CRM &amp; Marketing Technology</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Where a company meets its customers — sales pipelines, support, marketing journeys, and analytics.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Lead → Opportunity → Customer:</strong> the classic sales funnel modeled in CRM.</li>
+          <li><strong>Customer 360:</strong> one unified view of every interaction across channels.</li>
+          <li><strong>Attribution:</strong> which marketing dollar produced which sale.</li>
+          <li><strong>Consent &amp; Privacy:</strong> GDPR/CCPA make marketing data handling strict.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>CRM Platforms</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Salesforce</h5><p>Market leader — Sales / Service / Marketing Clouds + huge AppExchange.</p></div>
+            <div class="card second"><h5>HubSpot</h5><p>Inbound marketing + CRM; strong for SMB.</p></div>
+            <div class="card mid"><h5>Microsoft Dynamics 365 CE</h5><p>Tight integration with Outlook, Teams, Power Platform.</p></div>
+            <div class="card accent"><h5>Zoho / Freshsales / Pipedrive</h5><p>Affordable alternatives for SMBs.</p></div>
+            <div class="card"><h5>ServiceNow</h5><p>IT service mgmt that expanded into customer workflows.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>MarTech Stack</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Layer</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>CDP (Customer Data Platform)</td><td>Segment, mParticle, Tealium</td></tr>
+              <tr><td>Marketing Automation</td><td>Marketo, Eloqua, Pardot, Braze, Iterable</td></tr>
+              <tr><td>Email / SMS</td><td>SendGrid, Mailchimp, Twilio, Klaviyo</td></tr>
+              <tr><td>Analytics</td><td>Google Analytics 4, Mixpanel, Amplitude, Adobe Analytics</td></tr>
+              <tr><td>AdTech</td><td>DSPs, DMPs, programmatic ad platforms</td></tr>
+              <tr><td>Content / CMS</td><td>Adobe Experience Manager, Contentful, Sitecore</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Apex / LWC (Salesforce)</span><span>JavaScript / TypeScript</span><span>REST APIs / Webhooks</span>
+            <span>Snowflake / BigQuery</span><span>Kafka (event streams)</span><span>React (customer portals)</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 05 ECOM -->
+  <section class="chapter" id="d-ecom">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 05</div><h2>E-commerce &amp; Retail</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Selling anything online — from a single product to a global marketplace — plus the in-store systems that keep physical retail running.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Catalog:</strong> products, variants, categories, prices.</li>
+          <li><strong>Cart &amp; Checkout:</strong> the conversion funnel; every second of latency costs sales.</li>
+          <li><strong>Order Management:</strong> once paid, orchestrate fulfillment from warehouse to door.</li>
+          <li><strong>Inventory:</strong> real-time stock across channels and warehouses.</li>
+          <li><strong>Omnichannel:</strong> buy online, pick up in store, return anywhere.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Platforms &amp; Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Storefront Platforms</h5><p>Shopify, BigCommerce, Magento (Adobe Commerce), Salesforce Commerce Cloud, SAP Commerce.</p></div>
+            <div class="card second"><h5>Marketplaces</h5><p>Amazon, eBay, Etsy, Flipkart — third-party seller models.</p></div>
+            <div class="card mid"><h5>Headless Commerce</h5><p>commercetools, Elastic Path — API-first, decouple UI from commerce.</p></div>
+            <div class="card accent"><h5>Point of Sale (POS)</h5><p>Square, Lightspeed, Toast — in-store transactions.</p></div>
+            <div class="card"><h5>Product Info Mgmt (PIM)</h5><p>Akeneo, Salsify — canonical product data.</p></div>
+            <div class="card second"><h5>Subscriptions / D2C</h5><p>Recharge, Chargebee, Stripe Billing.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards &amp; Concepts</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>PCI-DSS</strong> for handling card data (often offloaded to Stripe/Adyen via hosted fields).</li>
+            <li><strong>3-D Secure 2</strong> for strong customer authentication on card payments.</li>
+            <li><strong>Tax:</strong> Avalara, TaxJar, Vertex — tax is hard and jurisdiction-specific.</li>
+            <li><strong>Personalization &amp; recommendations</strong> drive huge revenue lifts.</li>
+            <li><strong>SEO, Core Web Vitals</strong> are first-class concerns for organic traffic.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Next.js / Nuxt</span><span>Node.js / PHP / Java</span><span>GraphQL</span>
+            <span>Redis / Elasticsearch</span><span>Stripe / Adyen</span><span>Cloudflare / Fastly (CDN)</span>
+            <span>Algolia (search)</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 06 INDUSTRIAL -->
+  <section class="chapter" id="d-industrial">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 06</div><h2>Industrial Automation &amp; IIoT</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Factories, refineries, power plants. Where "down for five minutes" costs six figures — and safety is the top line.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>OT vs IT:</strong> Operational Technology runs machines; IT runs offices. They now converge but live by different rules.</li>
+          <li><strong>PLC:</strong> Programmable Logic Controller — a rugged computer that controls machines in real time.</li>
+          <li><strong>SCADA:</strong> supervisory software that monitors &amp; controls an entire plant.</li>
+          <li><strong>The Purdue Model:</strong> layered reference for plant networks (levels 0–5).</li>
+          <li><strong>Industry 4.0 / IIoT:</strong> connect machines to cloud for analytics, predictive maintenance, digital twins.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>The Automation Pyramid</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Level</th><th>Role</th><th>Examples</th></tr></thead>
+            <tbody>
+              <tr><td>L0 Field</td><td>Sensors, actuators.</td><td>Temperature probes, valves.</td></tr>
+              <tr><td>L1 Control</td><td>PLCs, DCSs — real-time control loops.</td><td>Siemens S7, Rockwell ControlLogix.</td></tr>
+              <tr><td>L2 Supervisory</td><td>SCADA &amp; HMI — operators watch and intervene.</td><td>Ignition, Wonderware, WinCC.</td></tr>
+              <tr><td>L3 MES</td><td>Manufacturing Execution — schedules, batches, quality.</td><td>Siemens Opcenter, Rockwell FactoryTalk.</td></tr>
+              <tr><td>L4 ERP</td><td>Business planning.</td><td>SAP, Oracle.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Protocols &amp; Standards</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>OPC UA</h5><p>Modern unified industrial protocol — secure, cross-vendor.</p></div>
+            <div class="card second"><h5>Modbus / PROFINET / EtherNet/IP</h5><p>Ubiquitous shop-floor protocols.</p></div>
+            <div class="card mid"><h5>MQTT / Sparkplug B</h5><p>Lightweight pub/sub for IIoT telemetry.</p></div>
+            <div class="card accent"><h5>ISA-95 / ISA-88</h5><p>Reference models for integration &amp; batch processes.</p></div>
+            <div class="card"><h5>IEC 61131-3</h5><p>PLC programming languages (Ladder, ST, FBD).</p></div>
+            <div class="card second"><h5>IEC 62443</h5><p>Security for industrial control systems.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Emerging Tech</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Digital twin</strong> — a live software model of a physical asset.</li>
+            <li><strong>Edge computing</strong> — compute at the plant to cut cloud latency.</li>
+            <li><strong>Predictive maintenance</strong> — ML on vibration/temp data to fix things before they break.</li>
+            <li><strong>AR/VR</strong> for field-service overlays and training.</li>
+          </ul>
+          <div class="stack-row">
+            <span>C / C++</span><span>Ladder Logic / Structured Text</span><span>Python (analytics)</span>
+            <span>MQTT</span><span>InfluxDB / TimescaleDB</span><span>AWS IoT / Azure IoT Hub</span>
+            <span>Ignition</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 07 CYBERSECURITY -->
+  <section class="chapter" id="d-security">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 07</div><h2>Cybersecurity</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">The software that protects all the other software — and the people who design, build, and operate it.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>CIA Triad:</strong> Confidentiality, Integrity, Availability — what security aims to protect.</li>
+          <li><strong>Defense in Depth:</strong> layered controls so no single failure is catastrophic.</li>
+          <li><strong>Zero Trust:</strong> never trust, always verify — even inside the network.</li>
+          <li><strong>Red vs Blue vs Purple Team:</strong> attack, defend, and collaborate.</li>
+          <li><strong>SOC:</strong> Security Operations Center — 24/7 monitoring &amp; response.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>IAM</h5><p>Identity &amp; Access Mgmt. Okta, Ping, Entra ID, Auth0.</p></div>
+            <div class="card second"><h5>SIEM / XDR</h5><p>Log aggregation &amp; detection. Splunk, Sentinel, Elastic SIEM.</p></div>
+            <div class="card mid"><h5>Endpoint (EDR)</h5><p>CrowdStrike, SentinelOne, Defender.</p></div>
+            <div class="card accent"><h5>Network Security</h5><p>Palo Alto, Fortinet, Cisco. Firewalls, IDS/IPS.</p></div>
+            <div class="card"><h5>Cloud Security (CSPM/CNAPP)</h5><p>Wiz, Prisma Cloud, Orca.</p></div>
+            <div class="card second"><h5>App Security (AppSec)</h5><p>SAST, DAST, SCA, WAF. Snyk, Veracode, Checkmarx.</p></div>
+            <div class="card mid"><h5>Secrets &amp; PKI</h5><p>Vault, AWS Secrets Manager, certificate mgmt.</p></div>
+            <div class="card accent"><h5>GRC</h5><p>Governance, Risk, Compliance. Archer, ServiceNow GRC.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Frameworks &amp; Standards</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Framework</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>NIST Cybersecurity Framework</td><td>Identify, Protect, Detect, Respond, Recover.</td></tr>
+              <tr><td>ISO 27001 / 27002</td><td>Information security management system.</td></tr>
+              <tr><td>MITRE ATT&amp;CK</td><td>Attacker tactics &amp; techniques — the shared playbook.</td></tr>
+              <tr><td>OWASP Top 10</td><td>Most common web vulnerabilities.</td></tr>
+              <tr><td>CIS Benchmarks</td><td>Hardening guides for OS, cloud, apps.</td></tr>
+              <tr><td>SOC 2 Type II</td><td>Trust &amp; controls audit — table stakes for B2B SaaS.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Specialist Tracks</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Offensive</h5><p>Pentesting, red team, bug bounty.</p></div>
+            <div class="card second"><h5>Defensive</h5><p>SOC analyst, threat hunting, IR.</p></div>
+            <div class="card mid"><h5>Forensics</h5><p>Incident investigation, chain of custody.</p></div>
+            <div class="card accent"><h5>Cryptography</h5><p>TLS, HSMs, post-quantum.</p></div>
+            <div class="card"><h5>DevSecOps</h5><p>Security in the CI/CD pipeline.</p></div>
+            <div class="card second"><h5>OT Security</h5><p>Protecting industrial systems.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 08 TELECOM -->
+  <section class="chapter" id="d-telecom">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 08</div><h2>Telecommunications</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">The networks that move voice, text, and data across the planet — and the software that runs them.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Generations:</strong> 2G (voice/SMS) → 3G (data) → 4G/LTE (broadband) → 5G (low-latency, IoT, slicing).</li>
+          <li><strong>RAN, Core, Transport:</strong> radio access → core packet network → backbone links.</li>
+          <li><strong>OSS vs BSS:</strong> Operations Support (run the network) vs Business Support (bill &amp; serve customers).</li>
+          <li><strong>NFV / SDN:</strong> run network functions as software on commodity hardware.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Software Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Billing &amp; Charging</h5><p>Amdocs, Netcracker, CSG. Real-time rating for prepaid.</p></div>
+            <div class="card second"><h5>OSS</h5><p>Inventory, provisioning, fault/performance. Netcracker, Oracle, Ericsson.</p></div>
+            <div class="card mid"><h5>Network Orchestration</h5><p>ONAP, Cisco NSO — automate VNF/CNF lifecycle.</p></div>
+            <div class="card accent"><h5>IMS / VoIP / SIP</h5><p>Modern voice runs on IP. Kamailio, FreeSWITCH, Asterisk.</p></div>
+            <div class="card"><h5>Messaging &amp; SMSC</h5><p>SMS centers, RCS, A2P messaging platforms.</p></div>
+            <div class="card second"><h5>Customer Apps</h5><p>Self-care portals, eSIM activation, family plans.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>3GPP</span><span>ETSI</span><span>TM Forum</span>
+            <span>Open RAN</span><span>SIP / RTP</span><span>Diameter</span><span>GSMA</span>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Java / C++ / Go</span><span>Kubernetes (CNFs)</span><span>Kafka</span>
+            <span>Oracle / Cassandra</span><span>Python (orchestration)</span><span>eBPF</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 09 GAMING -->
+  <section class="chapter" id="d-gaming">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 09</div><h2>Gaming</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Where performance, graphics, and player psychology meet — from AAA studios to indie mobile hits.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Game Loop:</strong> every frame: input → update → render, 60+ times a second.</li>
+          <li><strong>Game Engine:</strong> the runtime that handles rendering, physics, audio, input, and scripting.</li>
+          <li><strong>Client-server authority:</strong> the server is the source of truth; never trust the client.</li>
+          <li><strong>LiveOps:</strong> the post-launch practice of running a game as a service.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments &amp; Engines</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Engines</h5><p>Unity (C#), Unreal (C++/Blueprints), Godot, CryEngine.</p></div>
+            <div class="card second"><h5>Platforms</h5><p>Console (PS, Xbox, Switch), PC (Steam, Epic), Mobile, Web, XR.</p></div>
+            <div class="card mid"><h5>Multiplayer</h5><p>Netcode, matchmaking, rollback, dedicated vs peer-to-peer.</p></div>
+            <div class="card accent"><h5>Live Services</h5><p>PlayFab, GameLift, Nakama — accounts, leaderboards, cloud saves.</p></div>
+            <div class="card"><h5>Monetization</h5><p>F2P, IAP, ads, battle passes, subscriptions.</p></div>
+            <div class="card second"><h5>Analytics</h5><p>Player retention cohorts, funnels, DAU/MAU.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Graphics &amp; Performance</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>APIs:</strong> DirectX 12, Vulkan, Metal, WebGPU.</li>
+            <li><strong>Shaders:</strong> GPU programs that compute pixels and vertices.</li>
+            <li><strong>ECS</strong> (Entity-Component-System) is the modern pattern for game state.</li>
+            <li><strong>Profiling &amp; frame budgets</strong> — every millisecond matters.</li>
+          </ul>
+          <div class="stack-row">
+            <span>C++ / C#</span><span>Lua (scripting)</span><span>GLSL / HLSL</span>
+            <span>Photon / Mirror / FishNet</span><span>Protobuf / FlatBuffers</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 10 MEDIA -->
+  <section class="chapter" id="d-media">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 10</div><h2>Media &amp; Streaming</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Publishers, newsrooms, music and video streaming — billions of hours a day delivered over the internet.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Ingest → Transcode → Package → Deliver → Play:</strong> the content pipeline.</li>
+          <li><strong>OTT:</strong> Over-The-Top — delivering media over the public internet, bypassing traditional cable.</li>
+          <li><strong>CDN:</strong> distributed caches that serve content from close to the viewer.</li>
+          <li><strong>DRM:</strong> Digital Rights Management — protects premium content from piracy.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>OTT / VOD</h5><p>Netflix, Disney+, Prime Video, Hulu, Hotstar.</p></div>
+            <div class="card second"><h5>Live Streaming</h5><p>Twitch, YouTube Live, sports streaming.</p></div>
+            <div class="card mid"><h5>Audio Streaming</h5><p>Spotify, Apple Music, podcasts.</p></div>
+            <div class="card accent"><h5>CMS / DAM</h5><p>Contentful, Brightcove, Adobe AEM Assets.</p></div>
+            <div class="card"><h5>AdTech</h5><p>VAST, VPAID, SSAI — server-side ad insertion.</p></div>
+            <div class="card second"><h5>News &amp; Publishing</h5><p>WordPress VIP, custom CMS, paywalls.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>HLS</span><span>MPEG-DASH</span><span>CMAF</span>
+            <span>H.264 / H.265 / AV1</span><span>Widevine / FairPlay / PlayReady</span>
+            <span>WebRTC (low-latency)</span>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Node.js / Go / Java</span><span>FFmpeg</span><span>AWS Elemental / Mux</span>
+            <span>Cloudflare / Akamai / CloudFront</span><span>Cassandra / DynamoDB</span>
+            <span>Shaka Player / Video.js</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 11 EDU -->
+  <section class="chapter" id="d-edu">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 11</div><h2>EdTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Software for K-12, higher education, corporate training, and lifelong learning.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>LMS:</strong> Learning Management System — courses, assignments, grades.</li>
+          <li><strong>SIS:</strong> Student Information System — enrollment, transcripts, attendance.</li>
+          <li><strong>SCORM / xAPI / LTI:</strong> interoperability standards for learning content &amp; tools.</li>
+          <li><strong>Adaptive learning:</strong> content that adjusts to the learner's progress.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>LMS</h5><p>Canvas, Moodle, Blackboard, Google Classroom, D2L.</p></div>
+            <div class="card second"><h5>MOOCs</h5><p>Coursera, edX, Udemy, FutureLearn.</p></div>
+            <div class="card mid"><h5>K-12 Apps</h5><p>Khan Academy, Duolingo, Quizlet.</p></div>
+            <div class="card accent"><h5>Corporate L&amp;D</h5><p>Cornerstone, Docebo, SAP SuccessFactors Learning.</p></div>
+            <div class="card"><h5>Assessment / Proctoring</h5><p>Pearson VUE, Proctorio, ExamSoft.</p></div>
+            <div class="card second"><h5>Tutoring / AI</h5><p>AI tutors, homework help, language apps.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards &amp; Privacy</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>FERPA (US)</strong> and <strong>COPPA</strong> — student records and children's privacy.</li>
+            <li><strong>WCAG / ADA Section 508</strong> — accessibility is legally mandated in education.</li>
+            <li><strong>LTI, QTI, SCORM, xAPI</strong> — tool integration and experience tracking.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 12 GOV -->
+  <section class="chapter" id="d-gov">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 12</div><h2>Government / GovTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Citizen services, tax, benefits, identity, elections, defense. Scale of the whole population, with legal stakes.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Accessibility &amp; inclusion</strong> are non-optional — you serve every citizen.</li>
+          <li><strong>Procurement cycles</strong> are slow; contracts are long.</li>
+          <li><strong>Legacy integration</strong> is the rule, not the exception (mainframes, paper forms).</li>
+          <li><strong>Data residency</strong> often requires in-country hosting.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Typical Systems</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Digital Identity</h5><p>Aadhaar (India), SingPass, Login.gov, eIDAS.</p></div>
+            <div class="card second"><h5>Citizen Portals</h5><p>GOV.UK, USA.gov patterns — one site, many services.</p></div>
+            <div class="card mid"><h5>Tax &amp; Revenue</h5><p>e-Filing, GST/VAT portals.</p></div>
+            <div class="card accent"><h5>Benefits &amp; Welfare</h5><p>Unemployment, healthcare, disability.</p></div>
+            <div class="card"><h5>Defense &amp; Intelligence</h5><p>Classified systems, command &amp; control.</p></div>
+            <div class="card second"><h5>Smart City</h5><p>Traffic, safety, utilities, urban planning.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Frameworks &amp; Accreditation</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>FedRAMP (US cloud)</span><span>GDS service standard (UK)</span><span>NIST 800-53</span>
+            <span>StateRAMP</span><span>IL4 / IL5 / IL6 (defense)</span><span>MeitY empanelment (India)</span>
+          </div>
+          <p class="note">GovTech teams favor open-source and open standards — GOV.UK Design System and 18F are influential references.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 13 LOGISTICS -->
+  <section class="chapter" id="d-logistics">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 13</div><h2>Logistics &amp; Supply Chain</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Everything that moves — trucks, ships, packages — runs on software that knows where it is and where it's going.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Supply chain = plan, source, make, deliver, return.</strong></li>
+          <li><strong>SKU:</strong> Stock Keeping Unit — a unique product identifier.</li>
+          <li><strong>Lead time:</strong> from order to arrival — the core KPI.</li>
+          <li><strong>Cold chain:</strong> temperature-controlled transport (food, pharma).</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>System Types</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>WMS</h5><p>Warehouse Management — receive, slot, pick, pack, ship. Manhattan, Blue Yonder.</p></div>
+            <div class="card second"><h5>TMS</h5><p>Transportation Management — routing, carrier selection, tracking. MercuryGate, Oracle TMS.</p></div>
+            <div class="card mid"><h5>Order Mgmt (OMS)</h5><p>Orchestrate orders across channels, warehouses, carriers.</p></div>
+            <div class="card accent"><h5>Last-Mile</h5><p>FedEx, UPS, local couriers. Route optimization, driver apps.</p></div>
+            <div class="card"><h5>Freight &amp; Customs</h5><p>EDI, bills of lading, customs clearance.</p></div>
+            <div class="card second"><h5>Visibility / Track &amp; Trace</h5><p>Project44, FourKites — real-time shipment status.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>EDI (X12 / EDIFACT)</span><span>GS1 barcodes</span><span>RFID</span>
+            <span>IoT telematics</span><span>GTFS (transit)</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 14 TRAVEL -->
+  <section class="chapter" id="d-travel">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 14</div><h2>Travel &amp; Hospitality</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Flights, hotels, cars, experiences — and a tangled web of 50-year-old systems still powering it all.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>GDS:</strong> Global Distribution Systems — Amadeus, Sabre, Travelport — the wholesale exchanges.</li>
+          <li><strong>PSS:</strong> Passenger Service System for airlines (res, inventory, check-in).</li>
+          <li><strong>PMS:</strong> Property Management System for hotels (reservations, housekeeping, rates).</li>
+          <li><strong>OTA:</strong> Online Travel Agency (Booking, Expedia) — and their Meta-search upstream (Skyscanner, Kayak).</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Airlines</h5><p>PSS, revenue mgmt, loyalty, operations control.</p></div>
+            <div class="card second"><h5>Hotels</h5><p>PMS (Opera, Cloudbeds), channel managers, CRS.</p></div>
+            <div class="card mid"><h5>Car / Cruise / Rail</h5><p>Reservation &amp; inventory systems.</p></div>
+            <div class="card accent"><h5>OTAs &amp; Metasearch</h5><p>Aggregators, bid systems, inventory sync.</p></div>
+            <div class="card"><h5>Corporate Travel</h5><p>Concur, Egencia — policy, approvals, expenses.</p></div>
+            <div class="card second"><h5>Experiences</h5><p>Viator, GetYourGuide, Airbnb Experiences.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>NDC (IATA)</span><span>PNR</span><span>ARINC</span><span>OpenTravel</span>
+            <span>HTNG</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 15 ENERGY -->
+  <section class="chapter" id="d-energy">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 15</div><h2>Energy &amp; Utilities</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Grids, power plants, water networks — mission-critical systems under a sustainability transition.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Grid:</strong> generation → transmission → distribution → consumption.</li>
+          <li><strong>Smart Meters:</strong> two-way meters enabling time-of-use tariffs &amp; demand response.</li>
+          <li><strong>DER:</strong> Distributed Energy Resources (rooftop solar, batteries, EVs).</li>
+          <li><strong>Balancing:</strong> supply must match demand second by second.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Systems</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>EMS / DMS</h5><p>Energy / Distribution Management Systems. GE, Siemens, ABB, Hitachi Energy.</p></div>
+            <div class="card second"><h5>ADMS</h5><p>Advanced Distribution — unified grid control room.</p></div>
+            <div class="card mid"><h5>AMI / MDM</h5><p>Smart-meter infrastructure and data management.</p></div>
+            <div class="card accent"><h5>CIS / Billing</h5><p>Customer Info Systems — SAP IS-U, Oracle Utilities.</p></div>
+            <div class="card"><h5>Market / Trading</h5><p>Wholesale markets, settlement, carbon.</p></div>
+            <div class="card second"><h5>Renewables &amp; Storage</h5><p>Solar/wind SCADA, battery management.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>IEC 61850</span><span>IEC 61970 CIM</span><span>DNP3</span>
+            <span>OpenADR</span><span>OCPP (EV charging)</span><span>NERC CIP</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 16 REAL -->
+  <section class="chapter" id="d-real">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 16</div><h2>Real Estate / PropTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Buying, renting, managing, and operating buildings — residential, commercial, and industrial.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>MLS:</strong> Multiple Listing Service — shared database of listings.</li>
+          <li><strong>iBuying:</strong> algorithmic instant home buying/selling.</li>
+          <li><strong>BIM:</strong> Building Information Modeling — 3D digital model of a building.</li>
+          <li><strong>Smart building:</strong> HVAC, lighting, access, energy integrated via IoT.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Listings &amp; Marketplaces</h5><p>Zillow, Redfin, Rightmove, MagicBricks.</p></div>
+            <div class="card second"><h5>Property Mgmt</h5><p>AppFolio, Yardi — rent, maintenance, leases.</p></div>
+            <div class="card mid"><h5>Commercial RE</h5><p>VTS, CoStar — portfolio &amp; leasing.</p></div>
+            <div class="card accent"><h5>Mortgage / Title</h5><p>Blend, Roostify — digital closings.</p></div>
+            <div class="card"><h5>Smart Buildings</h5><p>BMS + IoT + tenant experience apps.</p></div>
+            <div class="card second"><h5>Construction Tech</h5><p>Procore, Autodesk Construction Cloud, BIM 360.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 17 AGRI -->
+  <section class="chapter" id="d-agri">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 17</div><h2>Agriculture &amp; AgriTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Satellites, drones, sensors, and markets transforming the oldest industry on earth.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Precision Agriculture:</strong> apply water, seed, fertilizer only where needed — via GPS &amp; sensors.</li>
+          <li><strong>Remote Sensing:</strong> satellites and drones detect crop stress and yield.</li>
+          <li><strong>Traceability:</strong> from farm to fork for food safety and export compliance.</li>
+          <li><strong>AgMarketplaces:</strong> connect farmers to buyers without intermediaries.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Farm Mgmt (FMS)</h5><p>John Deere Operations Center, Climate FieldView, Granular.</p></div>
+            <div class="card second"><h5>Drones &amp; Imagery</h5><p>DJI Ag, Ceres Imaging, Planet Labs.</p></div>
+            <div class="card mid"><h5>Livestock Tech</h5><p>RFID ear tags, milking robots, health monitors.</p></div>
+            <div class="card accent"><h5>Marketplaces</h5><p>DeHaat, AgroStar, Indigo Marketplace.</p></div>
+            <div class="card"><h5>Vertical &amp; Controlled Env.</h5><p>Indoor farming automation &amp; lighting.</p></div>
+            <div class="card second"><h5>Supply Traceability</h5><p>Blockchain for food origin &amp; provenance.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 18 AUTO -->
+  <section class="chapter" id="d-auto">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 18</div><h2>Automotive</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">A modern car is a computer on wheels — 100+ ECUs, millions of lines of code, and increasingly, AI drivers.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>ECU:</strong> Electronic Control Unit. Cars have dozens, talking over buses.</li>
+          <li><strong>SDV:</strong> Software-Defined Vehicle — behavior updated by OTA, like a phone.</li>
+          <li><strong>ADAS:</strong> Advanced Driver-Assistance Systems (lane keep, AEB, adaptive cruise).</li>
+          <li><strong>Autonomy Levels:</strong> L0 (manual) → L5 (no human needed).</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Infotainment (IVI)</h5><p>Android Automotive, QNX, Apple CarPlay, Android Auto.</p></div>
+            <div class="card second"><h5>ADAS &amp; Autonomy</h5><p>Computer vision, lidar, sensor fusion, path planning.</p></div>
+            <div class="card mid"><h5>Powertrain / EV</h5><p>Battery management, motor control, charging.</p></div>
+            <div class="card accent"><h5>Connected Car</h5><p>Telematics, OTA updates, remote services.</p></div>
+            <div class="card"><h5>Manufacturing</h5><p>PLM, MES, digital twin on the factory floor.</p></div>
+            <div class="card second"><h5>Mobility Services</h5><p>Ride-hailing, car-sharing, fleet management.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards &amp; Protocols</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>CAN / CAN-FD</span><span>LIN</span><span>FlexRay</span>
+            <span>Automotive Ethernet</span><span>AUTOSAR (Classic &amp; Adaptive)</span>
+            <span>ISO 26262 (functional safety)</span><span>ISO/SAE 21434 (cybersecurity)</span>
+            <span>UDS diagnostics</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 19 AERO -->
+  <section class="chapter" id="d-aero">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 19</div><h2>Aerospace &amp; Defense</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Software where a bug can cost lives — and where certification is measured in years.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Safety Criticality Levels:</strong> DAL A (catastrophic) → DAL E (no effect).</li>
+          <li><strong>Deterministic real-time:</strong> responses must happen within guaranteed times.</li>
+          <li><strong>Certification:</strong> every line of code can be traced to a requirement and a test.</li>
+          <li><strong>Classified environments:</strong> airgapped networks, cleared personnel, strict change control.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Avionics</h5><p>Flight control, navigation, autopilot, FMS.</p></div>
+            <div class="card second"><h5>Space</h5><p>Satellites, ground stations, mission control.</p></div>
+            <div class="card mid"><h5>Defense Systems</h5><p>Radar, C4ISR, electronic warfare.</p></div>
+            <div class="card accent"><h5>UAV / Drones</h5><p>Autonomy, swarming, payloads.</p></div>
+            <div class="card"><h5>Simulation &amp; Training</h5><p>Flight simulators, virtual battlefields.</p></div>
+            <div class="card second"><h5>MRO</h5><p>Maintenance, Repair &amp; Overhaul systems.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Standards</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>DO-178C (airborne software)</span><span>DO-254 (hardware)</span>
+            <span>ARINC 429 / 653 / 664</span><span>MIL-STD-498 / 1553</span>
+            <span>MISRA C/C++</span><span>NIST 800-171 / CMMC</span>
+          </div>
+          <p class="note">Languages of choice: Ada, C, C++, with formal methods and model-based engineering (Simulink, SCADE) heavily used.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 20 LEGAL -->
+  <section class="chapter" id="d-legal">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 20</div><h2>LegalTech</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Automating contracts, research, discovery, and compliance for law firms and in-house legal teams.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Contract Lifecycle Management (CLM):</strong> draft → negotiate → sign → manage → renew.</li>
+          <li><strong>e-Discovery:</strong> finding relevant documents in litigation — huge data volumes.</li>
+          <li><strong>E-signature:</strong> legally binding digital signatures (eIDAS, ESIGN Act).</li>
+          <li><strong>Privilege &amp; confidentiality</strong> drive extreme access controls.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>CLM</h5><p>Ironclad, DocuSign CLM, Icertis, Agiloft.</p></div>
+            <div class="card second"><h5>e-Discovery</h5><p>Relativity, Everlaw — review millions of documents.</p></div>
+            <div class="card mid"><h5>Legal Research</h5><p>Westlaw, LexisNexis, Bloomberg Law.</p></div>
+            <div class="card accent"><h5>Practice Mgmt</h5><p>Clio, MyCase — billing, matters, clients.</p></div>
+            <div class="card"><h5>Compliance / GRC</h5><p>OneTrust, LogicGate — privacy &amp; policy mgmt.</p></div>
+            <div class="card second"><h5>AI Assistants</h5><p>Harvey, Spellbook — LLMs fine-tuned for legal drafting.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 21 BLOCKCHAIN -->
+  <section class="chapter" id="d-blockchain">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Domain 21</div><h2>Blockchain / Web3</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">A decentralized, cryptographically verified database — and the apps, currencies, and markets built on top.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Blockchain:</strong> append-only ledger, replicated across many nodes, secured by cryptography.</li>
+          <li><strong>Consensus:</strong> how nodes agree on state (Proof of Work, Proof of Stake).</li>
+          <li><strong>Smart Contract:</strong> code that runs on the chain when conditions are met.</li>
+          <li><strong>Wallet:</strong> holds keys that prove ownership — "not your keys, not your coins".</li>
+          <li><strong>Gas:</strong> the fee to execute operations on the network.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Segments</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Layer-1 Chains</h5><p>Bitcoin, Ethereum, Solana, Avalanche, Cardano.</p></div>
+            <div class="card second"><h5>Layer-2 / Rollups</h5><p>Arbitrum, Optimism, Base, zkSync — scale Ethereum.</p></div>
+            <div class="card mid"><h5>DeFi</h5><p>Lending, DEXs, stablecoins — Uniswap, Aave, MakerDAO.</p></div>
+            <div class="card accent"><h5>NFTs &amp; Gaming</h5><p>Digital ownership of art, collectibles, in-game assets.</p></div>
+            <div class="card"><h5>Wallets &amp; Custody</h5><p>MetaMask, Coinbase Wallet, Fireblocks.</p></div>
+            <div class="card second"><h5>Enterprise / Permissioned</h5><p>Hyperledger Fabric, Corda — consortium chains.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typical Tech Stack</summary>
+        <div class="drill-body">
+          <div class="stack-row">
+            <span>Solidity / Vyper</span><span>Rust (Solana, Near)</span><span>Hardhat / Foundry</span>
+            <span>ethers.js / web3.js / viem</span><span>IPFS / Arweave</span>
+            <span>The Graph (indexing)</span><span>Chainlink (oracles)</span>
+          </div>
+          <p class="note">Security is paramount — contracts are immutable and audits are mandatory before real money is deployed.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- CROSS-CUTTING DOMAIN OBSERVATIONS -->
+  <section class="chapter" id="d-wrap">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Wrap-up</div><h2>Patterns Across Domains</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Different jargon, similar problems. When you step back, the same themes recur in every domain.</p>
+
+      <div class="grid">
+        <div class="card"><h5>Every Domain Has Regulations</h5><p>From HIPAA to PCI to GDPR to ISO 26262. Knowing the rules of the industry is half the job.</p></div>
+        <div class="card second"><h5>Legacy Systems Run the World</h5><p>Mainframes, COBOL, and 30-year-old schemas are still everywhere. Modernization pays bills.</p></div>
+        <div class="card mid"><h5>Integration Is 80% of the Work</h5><p>Domains are a web of systems. APIs, events, and ETL are where careers are made.</p></div>
+        <div class="card accent"><h5>Domain Knowledge Is a Superpower</h5><p>A developer who understands the business compounds in value year after year.</p></div>
+        <div class="card"><h5>Data Is the Shared Currency</h5><p>Warehouses, lakes, and lakehouses are becoming the center of every industry's stack.</p></div>
+        <div class="card second"><h5>AI Is Reshaping Every Domain</h5><p>From RAG for legal drafting to vision for agriculture — every vertical has an AI play now.</p></div>
+      </div>
+
+      <p class="note">Pick a domain whose problems excite you. The languages and frameworks rotate every decade; deep domain knowledge stays relevant for your whole career.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Software Development — Industry Domains · Interactive HTML Edition</p>
+    <p style="margin-top:6px;">
+      Companion to the <a href="../index.html#hub">Software Development Map</a>.
+    </p>
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', () => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === 'DETAILS') target.open = true;
+    });
+  });
+</script>
+</body>
+</html>

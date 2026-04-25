@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SvelteKit · Web Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Web Framework Deep Dive</div>
+    <h1>SvelteKit</h1>
+    <p class="lede">Svelte's official meta-framework — file-based routing, server-side data loading, form actions, and adapters that target every host on earth. Small, fast, and a joy to deploy.</p>
+    <div class="tags"><span>Svelte</span><span>Full-stack</span><span>SSR / SSG / SPA</span><span>Form Actions</span><span>Adapter-based</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Built on</div><div class="val"><a href="svelte.html" style="color:var(--blue);text-decoration:none;">Svelte</a> + Vite</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2020 (1.0 in 2022)</div></div>
+        <div class="f"><div class="label">Routing</div><div class="val">File-based (<code>src/routes/</code>)</div></div>
+        <div class="f"><div class="label">Adapters</div><div class="val">Node, Vercel, Netlify, Cloudflare, static, auto</div></div>
+        <div class="f"><div class="label">Steward</div><div class="val">Vercel + community</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Routes</strong> are folders in <code>src/routes/</code>; <code>+page.svelte</code> is the UI.</li>
+          <li><strong>Load functions</strong> (<code>+page.server.ts</code> / <code>+page.ts</code>) fetch data on server, client, or both.</li>
+          <li><strong>Form actions</strong> let HTML forms call server functions — no separate API endpoint.</li>
+          <li><strong>Endpoints</strong> (<code>+server.ts</code>) handle JSON / API requests.</li>
+          <li><strong>Adapters</strong> compile your app to a single host's format — Node server, Lambda, static files, edge worker.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of SvelteKit</h2></div>
+    <div class="chapter-body">
+<pre><span class="com">// src/routes/products/+page.server.ts — runs on the server</span>
+<span class="kw">export const</span> load = <span class="kw">async</span> () =&gt; {
+  <span class="kw">const</span> products = <span class="kw">await</span> db.products.<span class="fn">findMany</span>();
+  <span class="kw">return</span> { products };
+};
+
+<span class="kw">export const</span> actions = {
+  create: <span class="kw">async</span> ({ request }) =&gt; {
+    <span class="kw">const</span> data = <span class="kw">await</span> request.<span class="fn">formData</span>();
+    <span class="kw">await</span> db.products.<span class="fn">create</span>({ name: data.<span class="fn">get</span>(<span class="str">'name'</span>) });
+    <span class="kw">return</span> { success: <span class="kw">true</span> };
+  },
+};</pre>
+<pre>&lt;!-- src/routes/products/+page.svelte --&gt;
+&lt;<span class="tag">script</span>&gt;
+  <span class="kw">let</span> { data } = <span class="fn">$props</span>();
+&lt;/<span class="tag">script</span>&gt;
+
+&lt;<span class="tag">ul</span>&gt;
+  {#<span class="kw">each</span> data.products <span class="kw">as</span> p}
+    &lt;<span class="tag">li</span>&gt;{p.name} — \${p.price}&lt;/<span class="tag">li</span>&gt;
+  {/<span class="kw">each</span>}
+&lt;/<span class="tag">ul</span>&gt;
+
+&lt;<span class="tag">form</span> method=<span class="str">"POST"</span> action=<span class="str">"?/create"</span>&gt;
+  &lt;<span class="tag">input</span> name=<span class="str">"name"</span> /&gt;
+  &lt;<span class="tag">button</span>&gt;Add&lt;/<span class="tag">button</span>&gt;
+&lt;/<span class="tag">form</span>&gt;</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Load Functions</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>+page.server.ts</code> — server-only; never ships to client.</li>
+            <li><code>+page.ts</code> — universal; runs on server (SSR) and client (navigation).</li>
+            <li><code>+layout.server.ts</code> / <code>+layout.ts</code> — shared data for nested routes.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Form Actions &amp; Progressive Enhancement</summary>
+        <div class="drill-body">
+          <p>Forms work without JavaScript. Add SvelteKit's <code>use:enhance</code> action to upgrade them with optimistic updates and client-side navigation. The same code path covers both worlds.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Adapters</summary>
+        <div class="drill-body">
+          <p>One app, many hosts. Pick an adapter in <code>svelte.config.js</code> and build:</p>
+          <table>
+            <thead><tr><th>Adapter</th><th>Target</th></tr></thead>
+            <tbody>
+              <tr><td>adapter-node</td><td>Long-running Node server.</td></tr>
+              <tr><td>adapter-static</td><td>Pure static files.</td></tr>
+              <tr><td>adapter-vercel / -netlify</td><td>Serverless functions on those platforms.</td></tr>
+              <tr><td>adapter-cloudflare</td><td>Cloudflare Workers / Pages.</td></tr>
+              <tr><td>adapter-auto</td><td>Detects the host automatically.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hooks &amp; Middleware</summary>
+        <div class="drill-body">
+          <p><code>src/hooks.server.ts</code> intercepts every request — perfect for auth, logging, redirects, or attaching data to <code>event.locals</code>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Tiny bundles + fast SSR — feels effortlessly fast.</li>
+            <li>Form-first, progressive-enhancement-friendly.</li>
+            <li>Adapter model: one codebase, any host.</li>
+            <li>Coherent, well-documented, opinionated in the right ways.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Ecosystem smaller than Next.js / Nuxt.</li>
+            <li>Svelte 5 / Runes brought migration work.</li>
+            <li>Fewer third-party integrations (auth, billing, etc.).</li>
+            <li>Smaller hiring pool than React-based stacks.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Performance-First Sites</h5><p>News, marketing, e-commerce — small bundles win.</p></div>
+        <div class="card teal"><h5>Edge Deployments</h5><p>Cloudflare adapter + small bundles fit the edge perfectly.</p></div>
+        <div class="card mid"><h5>Form-Heavy Apps</h5><p>Form Actions + progressive enhancement = no JS required.</p></div>
+        <div class="card accent"><h5>Solo Devs &amp; Small Teams</h5><p>Less code, simpler model, faster ship.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Web Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="react.html">React</a><a href="angular.html">Angular</a><a href="vue.html">Vue</a><a href="svelte.html">Svelte</a><a href="solid.html">Solid</a><a href="next.html">Next.js</a><a href="nuxt.html">Nuxt</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Web Framework Deep Dive</footer>
+</div>
+</body>
+</html>

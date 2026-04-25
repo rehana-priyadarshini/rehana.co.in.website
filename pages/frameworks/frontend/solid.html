@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Solid · Web Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Web Framework Deep Dive</div>
+    <h1>Solid</h1>
+    <p class="lede">JSX with the performance of Svelte. Solid looks like React, but compiles to fine-grained reactive updates — components run once, signals do the work.</p>
+    <div class="tags"><span>JavaScript / TypeScript</span><span>JSX</span><span>Fine-grained Reactivity</span><span>No Virtual DOM</span><span>Fast</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/javascript.html" style="color:var(--blue);text-decoration:none;">JavaScript</a> / <a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2018 · Ryan Carniato</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">JSX + Signals</div></div>
+        <div class="f"><div class="label">Render</div><div class="val">Compile-time, no VDOM</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Solid 1.x · SolidStart for full-stack</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Components run once</strong> — only signals re-execute. No "re-render the function" model.</li>
+          <li><strong>Signals</strong> (<code>createSignal</code>) are the reactive primitive — read with a getter, write with a setter.</li>
+          <li><strong>Memos</strong> (<code>createMemo</code>) cache derived values; <strong>Effects</strong> (<code>createEffect</code>) run side effects.</li>
+          <li><strong>JSX</strong> looks like React but is compiled differently — directly to DOM operations.</li>
+          <li><strong>No diffing:</strong> the compiler knows exactly which DOM nodes depend on which signals.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Solid</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> { createSignal, createResource, For, Show } <span class="kw">from</span> <span class="str">"solid-js"</span>;
+
+<span class="kw">function</span> <span class="fn">ProductList</span>() {
+  <span class="kw">const</span> [products] = <span class="fn">createResource</span>(() =&gt;
+    <span class="fn">fetch</span>(<span class="str">"/api/products"</span>).<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>())
+  );
+
+  <span class="kw">return</span> (
+    &lt;<span class="tag">Show</span> when={!products.loading} fallback={&lt;<span class="tag">p</span>&gt;Loading…&lt;/<span class="tag">p</span>&gt;}&gt;
+      &lt;<span class="tag">ul</span>&gt;
+        &lt;<span class="tag">For</span> each={products()}&gt;
+          {p =&gt; &lt;<span class="tag">li</span>&gt;{p.name} — ${p.price}&lt;/<span class="tag">li</span>&gt;}
+        &lt;/<span class="tag">For</span>&gt;
+      &lt;/<span class="tag">ul</span>&gt;
+    &lt;/<span class="tag">Show</span>&gt;
+  );
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Signals &amp; Fine-Grained Reactivity</summary>
+        <div class="drill-body">
+          <p>A <code>createSignal()</code> returns a getter and a setter. When you read the getter inside a JSX expression or memo, Solid records the dependency. When you call the setter, only those exact DOM bindings update — no diffing, no reconciliation.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Resources &amp; Suspense</summary>
+        <div class="drill-body">
+          <p><code>createResource</code> is a first-class async primitive — fetch + loading + error in one. Pair with <code>&lt;Suspense&gt;</code> for declarative loading boundaries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Built-in Control Flow</summary>
+        <div class="drill-body">
+          <p><code>&lt;For&gt;</code>, <code>&lt;Show&gt;</code>, <code>&lt;Switch&gt;</code>, <code>&lt;Suspense&gt;</code>, <code>&lt;ErrorBoundary&gt;</code> — these compile to optimal DOM updates. Avoid <code>.map()</code> and <code>?:</code> for lists/conditions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SolidStart</summary>
+        <div class="drill-body">
+          <p>Solid's meta-framework — file-based routing, server functions, SSR, streaming. Solid's answer to Next.js / SvelteKit.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>JS framework benchmark champion year after year.</li>
+            <li>JSX feels familiar to React devs but performs better.</li>
+            <li>Tiny bundle, no virtual DOM overhead.</li>
+            <li>Predictable: components run once, period.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Small ecosystem &amp; hiring pool.</li>
+            <li>Mental model differs subtly from React — easy to misuse.</li>
+            <li>Fewer tutorials &amp; UI kits.</li>
+            <li>SolidStart is younger than Next.js / SvelteKit.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Performance-Critical UIs</h5><p>Dashboards, real-time data, low-end devices.</p></div>
+        <div class="card teal"><h5>React Devs Wanting Speed</h5><p>Familiar JSX, dramatically better runtime.</p></div>
+        <div class="card mid"><h5>Embedded &amp; Edge UIs</h5><p>Tiny bundles fit in widgets &amp; edge environments.</p></div>
+        <div class="card accent"><h5>Greenfield Projects</h5><p>No legacy React habits to unlearn.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Web Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="react.html">React</a><a href="angular.html">Angular</a><a href="vue.html">Vue</a><a href="svelte.html">Svelte</a><a href="next.html">Next.js</a><a href="nuxt.html">Nuxt</a><a href="sveltekit.html">SvelteKit</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Web Framework Deep Dive</footer>
+</div>
+</body>
+</html>

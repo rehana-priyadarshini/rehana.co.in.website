@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SwiftUI · Mobile Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Mobile Framework Deep Dive</div>
+    <h1>SwiftUI</h1>
+    <p class="lede">Apple's modern declarative UI framework — one DSL targets iPhone, iPad, Mac, Apple Watch, Apple TV, and Vision Pro. The future of building anything on Apple platforms.</p>
+    <div class="tags"><span>Swift</span><span>Declarative</span><span>iOS · macOS · watchOS · tvOS · visionOS</span><span>Apple Native</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/swift.html" style="color:var(--blue);text-decoration:none;">Swift</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2019 · Apple</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Declarative, view-as-value</div></div>
+        <div class="f"><div class="label">Min targets</div><div class="val">iOS 13+ (best on 17+)</div></div>
+        <div class="f"><div class="label">Predecessor</div><div class="val">UIKit (still interops cleanly)</div></div>
+        <div class="f"><div class="label">IDE</div><div class="val">Xcode (live previews)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Views are structs</strong> — value types describing the UI for a given state.</li>
+          <li><strong>Declarative:</strong> describe <em>what</em> the UI should look like; the framework figures out <em>how</em> to update it.</li>
+          <li><strong>State propagation</strong> via <code>@State</code>, <code>@Binding</code>, <code>@Environment</code>, and <code>@Observable</code>.</li>
+          <li><strong>Modifiers:</strong> chainable methods like <code>.padding()</code>, <code>.foregroundColor()</code> — a small set composes endlessly.</li>
+          <li><strong>Cross-platform within Apple:</strong> the same code can adapt to phone, watch, and TV with platform conditionals.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of SwiftUI</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> SwiftUI
+
+<span class="kw">@Observable</span>
+<span class="kw">class</span> ProductStore {
+    <span class="kw">var</span> products: [Product] = []
+    <span class="kw">var</span> isLoading = <span class="kw">true</span>
+
+    <span class="kw">func</span> <span class="fn">load</span>() <span class="kw">async</span> {
+        <span class="kw">let</span> (data, _) = <span class="kw">try!</span> <span class="kw">await</span> URLSession.shared.<span class="fn">data</span>(<span class="kw">from</span>: API.products)
+        products  = <span class="kw">try!</span> JSONDecoder().<span class="fn">decode</span>([Product].<span class="kw">self</span>, <span class="kw">from</span>: data)
+        isLoading = <span class="kw">false</span>
+    }
+}
+
+<span class="kw">struct</span> ProductListView: View {
+    <span class="kw">@State</span> <span class="kw">private var</span> store = ProductStore()
+
+    <span class="kw">var</span> body: <span class="kw">some</span> View {
+        NavigationStack {
+            List(store.products) { p <span class="kw">in</span>
+                Text(<span class="str">"\(p.name) — $\(p.price)"</span>)
+            }
+            .<span class="fn">overlay</span> { <span class="kw">if</span> store.isLoading { ProgressView() } }
+            .<span class="fn">task</span> { <span class="kw">await</span> store.<span class="fn">load</span>() }
+            .<span class="fn">navigationTitle</span>(<span class="str">"Products"</span>)
+        }
+    }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>State &amp; Observation</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>@State</code> — local view state.</li>
+            <li><code>@Binding</code> — two-way binding to parent state.</li>
+            <li><code>@Observable</code> + <code>@State</code> — modern reference-type stores (replaces <code>@StateObject</code>/<code>@ObservedObject</code>).</li>
+            <li><code>@Environment</code> — read shared values (locale, color scheme, dismiss action).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Layout System</summary>
+        <div class="drill-body">
+          <p>SwiftUI uses a <strong>preference-based layout</strong> — parents propose sizes, children respond. Stacks (<code>HStack</code>, <code>VStack</code>, <code>ZStack</code>), <code>Grid</code>, and the <code>Layout</code> protocol cover everything from forms to complex custom geometries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Animations &amp; Transitions</summary>
+        <div class="drill-body">
+          <p>Wrap state changes in <code>withAnimation { ... }</code> and SwiftUI interpolates the difference. Built-in transitions, matched geometry effects, and the new <code>PhaseAnimator</code> / <code>KeyframeAnimator</code> APIs cover most needs without third-party libraries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Concurrency</summary>
+        <div class="drill-body">
+          <p>SwiftUI integrates with Swift's <code>async</code>/<code>await</code> via <code>.task { }</code>, which auto-cancels when the view disappears. <code>@MainActor</code> ensures UI updates land on the right thread.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Interop with UIKit / AppKit</summary>
+        <div class="drill-body">
+          <p><code>UIViewRepresentable</code> / <code>NSViewRepresentable</code> bridges existing UIKit / AppKit views into SwiftUI — and the reverse with <code>UIHostingController</code>. Most apps still mix the two for a few years to come.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>SwiftData</td><td>Apple's modern persistence layer (replaces Core Data for new apps).</td></tr>
+              <tr><td>The Composable Architecture (TCA)</td><td>Popular state-management library (Redux-inspired).</td></tr>
+              <tr><td>Swift Charts</td><td>Native data viz framework.</td></tr>
+              <tr><td>StoreKit 2</td><td>In-app purchases &amp; subscriptions.</td></tr>
+              <tr><td>WidgetKit / App Intents</td><td>Home-screen widgets &amp; Siri integration.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Best-in-class performance and platform fidelity on Apple devices.</li>
+            <li>One DSL targets every Apple OS, including Vision Pro.</li>
+            <li>Live previews in Xcode shorten the inner loop dramatically.</li>
+            <li>Tight integration with Apple SDKs (HealthKit, ARKit, StoreKit, etc.).</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Apple-only — no Android or web story.</li>
+            <li>Newer APIs require recent iOS versions; backward compatibility takes work.</li>
+            <li>Some advanced UIKit features still have no SwiftUI equivalent.</li>
+            <li>Tooling (Xcode) can feel sluggish on large projects.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>iOS &amp; iPadOS Apps</h5><p>The default for any new Apple app — Apple's own first-party apps adopt it.</p></div>
+        <div class="card teal"><h5>Apple Watch &amp; Vision Pro</h5><p>SwiftUI is essentially required on these platforms.</p></div>
+        <div class="card mid"><h5>Native macOS Apps</h5><p>Mac apps that look and feel right at home.</p></div>
+        <div class="card accent"><h5>Widgets &amp; App Intents</h5><p>Lock-screen widgets, Live Activities, Siri shortcuts.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Mobile Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="jetpack-compose.html">Jetpack Compose</a><a href="flutter.html">Flutter</a><a href="react-native.html">React Native</a><a href="dotnet-maui.html">.NET MAUI</a><a href="kotlin-multiplatform.html">Kotlin Multiplatform</a><a href="ionic.html">Ionic</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Mobile Framework Deep Dive</footer>
+</div>
+</body>
+</html>

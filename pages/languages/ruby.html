@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ruby · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>Ruby</h1>
+    <p class="lede">"Optimized for programmer happiness." Elegant, expressive, and the language that made Rails — the framework that defined modern web conventions.</p>
+    <div class="tags"><span>Pure OOP</span><span>Dynamically Typed</span><span>Interpreted</span><span>Garbage Collected</span><span>Web</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">1995 · Japan</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Yukihiro "Matz" Matsumoto</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">Pure OOP, with FP touches</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Dynamic, strong, duck</div></div>
+        <div class="f"><div class="label">Runtime</div><div class="val">CRuby (MRI), JRuby, TruffleRuby</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Everything is an object</strong> — even integers and <code>nil</code>.</li>
+          <li><strong>Blocks &amp; iterators</strong> are central — you pass behavior to methods all the time.</li>
+          <li><strong>Metaprogramming</strong> is first-class — open classes, dynamic methods, DSLs.</li>
+          <li><strong>Convention over configuration</strong> — Rails' philosophy permeates Ruby code.</li>
+          <li><strong>Optimized for joy of writing</strong>, not raw performance.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Ruby</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">class</span> Customer
+  <span class="kw">attr_reader</span> <span class="str">:name</span>, <span class="str">:age</span>
+
+  <span class="kw">def</span> <span class="fn">initialize</span>(name, age)
+    @name, @age = name, age
+  <span class="kw">end</span>
+
+  <span class="kw">def</span> <span class="fn">adult?</span>
+    @age &gt;= <span class="num">18</span>
+  <span class="kw">end</span>
+<span class="kw">end</span>
+
+adults = customers.<span class="fn">select</span>(&amp;<span class="str">:adult?</span>).<span class="fn">sort_by</span>(&amp;<span class="str">:name</span>)
+
+<span class="num">5</span>.times { |i| puts <span class="str">"Hello #{i}"</span> }</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+      <details class="drill" open>
+        <summary>Blocks, Procs, &amp; Lambdas</summary>
+        <div class="drill-body">
+          <p>Blocks are anonymous chunks of code passed to methods — Ruby's signature feature. <code>each</code>, <code>map</code>, <code>select</code> all take blocks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Metaprogramming</summary>
+        <div class="drill-body">
+          <p>Define methods at runtime, modify existing classes (even built-ins), build internal DSLs. Powers Rails' magic <code>has_many :orders</code>-style syntax.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Package mgr</td><td>RubyGems, Bundler</td></tr>
+              <tr><td>Web framework</td><td>Ruby on Rails, Sinatra, Hanami</td></tr>
+              <tr><td>Test</td><td>RSpec, Minitest, Capybara</td></tr>
+              <tr><td>Background jobs</td><td>Sidekiq, Resque</td></tr>
+              <tr><td>Notable users</td><td>GitHub, Shopify, Airbnb (early), Stripe (internal tools)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Beautifully concise &amp; expressive.</li>
+            <li>Rails ships full-stack apps in record time.</li>
+            <li>Strong testing &amp; BDD culture.</li>
+            <li>Mature web hosting stack.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Slower than JVM/.NET languages (improving with YJIT).</li>
+            <li>Hiring market shrunk vs the 2010s peak.</li>
+            <li>Magic metaprogramming can hurt debuggability.</li>
+            <li>Concurrency is GIL-limited (similar to Python).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Web Startups</h5><p>Rails &amp; Hotwire for fast iteration on CRUD-heavy apps.</p></div>
+        <div class="card teal"><h5>Internal Tools / DSLs</h5><p>Ruby's metaprogramming makes building internal DSLs effortless.</p></div>
+        <div class="card mid"><h5>DevOps Scripting</h5><p>Chef, Vagrant, Capistrano are Ruby-based.</p></div>
+        <div class="card accent"><h5>E-commerce</h5><p>Shopify is the largest Rails app on earth.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

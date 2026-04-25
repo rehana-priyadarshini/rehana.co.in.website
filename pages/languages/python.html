@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Python · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>Python</h1>
+    <p class="lede">Readable as English, batteries included, and the lingua franca of data science and AI. Python is the language people learn first and reach for last.</p>
+    <div class="tags"><span>Multi-paradigm</span><span>Dynamically Typed</span><span>Interpreted</span><span>Garbage Collected</span><span>General Purpose</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">1991</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Guido van Rossum</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">Multi (OOP, FP, procedural)</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Dynamic, strong (optional hints)</div></div>
+        <div class="f"><div class="label">Runtime</div><div class="val">CPython, PyPy</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Python 3.13</div></div>
+        <div class="f"><div class="label">Steward</div><div class="val">Python Software Foundation</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Indentation matters:</strong> blocks are defined by whitespace, not braces.</li>
+          <li><strong>Dynamic typing:</strong> no type declarations; <code>x = 5</code> just works.</li>
+          <li><strong>Everything is an object</strong> — even functions, classes, modules.</li>
+          <li><strong>"Batteries included"</strong> standard library covers JSON, HTTP, OS, datetime, math, threading.</li>
+          <li><strong>The Zen of Python</strong> (<code>import this</code>) — readability counts.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Python</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">def</span> <span class="fn">greet</span>(name: <span class="kw">str</span>) -&gt; <span class="kw">str</span>:
+    <span class="kw">return</span> <span class="str">f"Hello, {name}!"</span>
+
+<span class="com"># List comprehension — concise data transformation</span>
+squares = [n * n <span class="kw">for</span> n <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>) <span class="kw">if</span> n % <span class="num">2</span> == <span class="num">0</span>]
+
+<span class="com"># A simple class</span>
+<span class="kw">class</span> Customer:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, name: <span class="kw">str</span>, age: <span class="kw">int</span>):
+        self.name = name
+        self.age  = age
+
+    <span class="kw">def</span> <span class="fn">is_adult</span>(self) -&gt; <span class="kw">bool</span>:
+        <span class="kw">return</span> self.age &gt;= <span class="num">18</span></pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Type Hints &amp; Static Checking</summary>
+        <div class="drill-body">
+          <p>Python is dynamically typed but supports optional <strong>type hints</strong> (PEP 484). Tools like <code>mypy</code>, <code>pyright</code>, <code>pyre</code> check them at lint time — giving you safety without losing flexibility.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Comprehensions, Generators, Iterators</summary>
+        <div class="drill-body">
+          <p>List, set, and dict comprehensions are core to idiomatic Python. <strong>Generators</strong> (<code>yield</code>) produce values lazily — perfect for streams and infinite sequences.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The GIL &amp; Concurrency</summary>
+        <div class="drill-body">
+          <p>CPython has a <strong>Global Interpreter Lock</strong> — only one thread runs Python bytecode at a time. For CPU-bound work, use <code>multiprocessing</code> or native libraries (NumPy, PyTorch). For IO-bound, use <code>asyncio</code> and <code>async</code>/<code>await</code>. Python 3.13 introduced an experimental no-GIL build.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Packaging &amp; Environments</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>pip</td><td>Install packages from PyPI.</td></tr>
+              <tr><td>venv</td><td>Lightweight isolated environments.</td></tr>
+              <tr><td>Poetry / Hatch</td><td>Modern dep + build management.</td></tr>
+              <tr><td>uv</td><td>Rust-built ultra-fast pip/poetry replacement.</td></tr>
+              <tr><td>conda</td><td>Cross-language environments, big in data science.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Major Frameworks</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Web</h5><p>Django, FastAPI, Flask, Starlette.</p></div>
+            <div class="card teal"><h5>Data &amp; ML</h5><p>NumPy, pandas, scikit-learn, PyTorch, TensorFlow.</p></div>
+            <div class="card mid"><h5>AI Tooling</h5><p>LangChain, LlamaIndex, Hugging Face Transformers.</p></div>
+            <div class="card accent"><h5>Automation / Scripting</h5><p>Requests, BeautifulSoup, Playwright, Ansible.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Readable, expressive, fast to write.</li>
+            <li>Unmatched ecosystem for data, ML, scientific computing.</li>
+            <li>Glues anything to anything (C, R, shell, cloud APIs).</li>
+            <li>Huge community &amp; learning resources.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Slow vs compiled languages (offset by C-backed libs).</li>
+            <li>GIL limits multithreaded CPU work.</li>
+            <li>Dependency &amp; environment management can frustrate.</li>
+            <li>Dynamic typing can hide bugs in big codebases.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Data Science &amp; ML</h5><p>The default language for analysis, training, and inference.</p></div>
+        <div class="card teal"><h5>AI &amp; LLM Apps</h5><p>Most LLM frameworks &amp; tools are Python-first.</p></div>
+        <div class="card mid"><h5>Web APIs</h5><p>FastAPI is a top choice for clean, typed services.</p></div>
+        <div class="card accent"><h5>Automation &amp; DevOps</h5><p>Scripts, CI tooling, infra automation.</p></div>
+        <div class="card"><h5>Scientific &amp; Academic</h5><p>Jupyter notebooks rule research workflows.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

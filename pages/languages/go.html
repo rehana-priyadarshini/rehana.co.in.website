@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Go · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>Go</h1>
+    <p class="lede">Born at Google to fix the problems of large-scale server software. Tiny syntax, fast compilation, blazing concurrency — Go is the lingua franca of modern cloud infrastructure.</p>
+    <div class="tags"><span>Statically Typed</span><span>Compiled</span><span>Garbage Collected</span><span>Concurrent</span><span>Cloud-Native</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">2009 · Google</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Pike, Thompson, Griesemer</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">Procedural + concurrent</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Static, structural interfaces</div></div>
+        <div class="f"><div class="label">Compiler</div><div class="val"><code>go</code> toolchain — single binary output</div></div>
+        <div class="f"><div class="label">Memory</div><div class="val">Garbage collected, low pause</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Small &amp; opinionated:</strong> ~25 keywords, one obvious way to do most things.</li>
+          <li><strong>Compiles in seconds</strong> to a single static binary — easy to deploy.</li>
+          <li><strong>Goroutines</strong> are cheap (KB-sized) lightweight threads; <strong>channels</strong> coordinate them.</li>
+          <li><strong>Structural interfaces:</strong> a type implements an interface just by having the methods.</li>
+          <li><strong>No exceptions:</strong> errors are values returned from functions.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Go</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">package</span> main
+
+<span class="kw">import</span> (
+    <span class="str">"fmt"</span>
+    <span class="str">"net/http"</span>
+)
+
+<span class="kw">func</span> <span class="fn">handler</span>(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintln(w, <span class="str">"Hello, world!"</span>)
+}
+
+<span class="kw">func</span> <span class="fn">main</span>() {
+    http.HandleFunc(<span class="str">"/"</span>, handler)
+    http.ListenAndServe(<span class="str">":8080"</span>, nil)
+}
+
+<span class="com">// Goroutines &amp; channels</span>
+<span class="kw">func</span> <span class="fn">work</span>(jobs &lt;-<span class="kw">chan</span> <span class="kw">int</span>, done <span class="kw">chan</span>&lt;- <span class="kw">int</span>) {
+    <span class="kw">for</span> j := <span class="kw">range</span> jobs { done &lt;- j * <span class="num">2</span> }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Goroutines &amp; Channels</summary>
+        <div class="drill-body">
+          <p>Launch concurrent work with <code>go someFunction()</code>. Communicate via channels — Go's mantra is <em>"share memory by communicating, don't communicate by sharing memory."</em></p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Errors as Values</summary>
+        <div class="drill-body">
+          <p>No try/catch. Functions return <code>(value, error)</code>. The famous <code>if err != nil</code> pattern repeats everywhere — explicit but verbose.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Generics (since Go 1.18)</summary>
+        <div class="drill-body">
+          <p>Type parameters arrived in 2022. Used for generic data structures and helpers without losing Go's simplicity.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling</summary>
+        <div class="drill-body">
+          <p>The <code>go</code> command does it all — build, test, format (<code>gofmt</code>), get dependencies, vet code. <strong>One way</strong> to format code; arguments end before they begin.</p>
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Web frameworks</td><td>Gin, Echo, Fiber, Chi, net/http</td></tr>
+              <tr><td>RPC</td><td>gRPC, Connect, Twirp</td></tr>
+              <tr><td>Test</td><td>Built-in <code>testing</code>, testify</td></tr>
+              <tr><td>Notable users</td><td>Docker, Kubernetes, Terraform, Prometheus, etcd</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Extremely fast compile times — feels interpreted.</li>
+            <li>Tiny static binaries — perfect for containers.</li>
+            <li>First-class concurrency model.</li>
+            <li>Code is uniform across teams (gofmt enforces style).</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Verbose error handling repeats forever.</li>
+            <li>Generics arrived late and are limited compared to Rust/Java.</li>
+            <li>No exceptions, no inheritance — feels minimalist to a fault.</li>
+            <li>GC pauses (small but present) make it unsuitable for hard real-time.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Cloud Infrastructure</h5><p>Kubernetes, Terraform, Docker, etcd — Go runs the cloud.</p></div>
+        <div class="card teal"><h5>Microservices &amp; APIs</h5><p>Tiny binaries, fast startup, great for serverless.</p></div>
+        <div class="card mid"><h5>CLIs</h5><p>Cross-compile once, run anywhere — gh, hugo, kubectl.</p></div>
+        <div class="card accent"><h5>Network Daemons</h5><p>Proxies, gateways, observability agents.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

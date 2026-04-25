@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>React · Web Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Web Framework Deep Dive</div>
+    <h1>React</h1>
+    <p class="lede">The library that redefined how the web is built. Components + one-way data flow + a virtual DOM — React powers the UIs of Facebook, Instagram, Netflix, and a generation of SPAs.</p>
+    <div class="tags"><span>JavaScript / TypeScript</span><span>Component-based</span><span>Declarative</span><span>Library (not framework)</span><span>Meta</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/javascript.html" style="color:var(--blue);text-decoration:none;">JavaScript</a> / <a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2013 · Meta (Facebook)</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Components + JSX</div></div>
+        <div class="f"><div class="label">Render</div><div class="val">Virtual DOM, fiber reconciler</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">React 19</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Meta, Netflix, Airbnb, Shopify</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Component:</strong> a function that returns JSX (HTML-like markup with embedded expressions).</li>
+          <li><strong>Props:</strong> read-only inputs passed from parent to child.</li>
+          <li><strong>State:</strong> per-component data managed with <code>useState</code>; React re-renders when it changes.</li>
+          <li><strong>Hooks:</strong> functions like <code>useState</code>, <code>useEffect</code>, <code>useMemo</code> that add behavior to components.</li>
+          <li><strong>One-way data flow:</strong> parents pass props down; children fire callbacks up.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of React</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">"react"</span>;
+
+<span class="kw">function</span> <span class="fn">ProductList</span>() {
+  <span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>([]);
+  <span class="kw">const</span> [loading, setLoading]   = <span class="fn">useState</span>(<span class="kw">true</span>);
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetch</span>(<span class="str">"/api/products"</span>)
+      .<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>())
+      .<span class="fn">then</span>(data =&gt; { <span class="fn">setProducts</span>(data); <span class="fn">setLoading</span>(<span class="kw">false</span>); });
+  }, []);
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> &lt;<span class="tag">p</span>&gt;Loading…&lt;/<span class="tag">p</span>&gt;;
+
+  <span class="kw">return</span> (
+    &lt;<span class="tag">ul</span>&gt;
+      {products.<span class="fn">map</span>(p =&gt; (
+        &lt;<span class="tag">li</span> key={p.id}&gt;{p.name} — ${p.price}&lt;/<span class="tag">li</span>&gt;
+      ))}
+    &lt;/<span class="tag">ul</span>&gt;
+  );
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Hooks</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>useState</code> — local component state.</li>
+            <li><code>useEffect</code> — side effects (fetching, subscriptions, DOM).</li>
+            <li><code>useMemo</code> / <code>useCallback</code> — memoize expensive values / functions.</li>
+            <li><code>useContext</code> — read shared state without prop-drilling.</li>
+            <li><code>useRef</code> — mutable values &amp; DOM refs.</li>
+            <li><strong>Custom hooks</strong> let you extract reusable logic across components.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JSX &amp; the Virtual DOM</summary>
+        <div class="drill-body">
+          <p>JSX compiles to <code>React.createElement</code> calls, producing a tree of plain objects. React's <strong>fiber reconciler</strong> diffs the tree against the previous render and applies the minimal DOM changes — fast, predictable updates.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Server Components &amp; React 19</summary>
+        <div class="drill-body">
+          <p><strong>React Server Components (RSC)</strong> render on the server with zero JS shipped to the client — perfect for data-heavy pages. React 19 adds <code>use()</code>, the new <code>Actions</code> model, and <code>useFormStatus</code> / <code>useOptimistic</code> for form-driven UIs. Best experienced via <a href="next.html" style="color:var(--accent);">Next.js</a>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>State Management</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Library</th><th>When to use</th></tr></thead>
+            <tbody>
+              <tr><td>React Context</td><td>Small, infrequent shared state.</td></tr>
+              <tr><td>Zustand</td><td>Lightweight global store, minimal boilerplate.</td></tr>
+              <tr><td>Redux Toolkit</td><td>Large apps with strict patterns &amp; devtools.</td></tr>
+              <tr><td>Jotai / Recoil</td><td>Atomic, fine-grained reactivity.</td></tr>
+              <tr><td>TanStack Query / SWR</td><td>Server-state caching &amp; revalidation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem &amp; Tooling</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Build:</strong> Vite (default for SPAs), Next.js, Remix.</li>
+            <li><strong>Routing:</strong> React Router, TanStack Router (in addition to meta-frameworks).</li>
+            <li><strong>UI kits:</strong> Material UI, Ant Design, Chakra, shadcn/ui, Radix.</li>
+            <li><strong>Forms:</strong> React Hook Form, Formik.</li>
+            <li><strong>Test:</strong> Vitest / Jest + React Testing Library, Playwright.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Largest UI library by adoption — vast ecosystem &amp; jobs.</li>
+            <li>Backed by Meta; extensive long-term investment.</li>
+            <li>Reusable everywhere: web, mobile (Native), desktop (Electron), VR.</li>
+            <li>Powerful escape hatches when you need them (refs, portals).</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>"Just a library" — you must assemble routing, data, build yourself.</li>
+            <li>Hooks model has subtle rules (deps arrays, stale closures).</li>
+            <li>Performance footguns — easy to over-render without memoization.</li>
+            <li>Ecosystem churn (state libs, meta-frameworks shift constantly).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Complex SPAs</h5><p>Dashboards, admin tools, design tools — Figma, Notion, Linear.</p></div>
+        <div class="card teal"><h5>Full-stack via Next.js</h5><p>SSR, SSG, server components — the dominant React stack today.</p></div>
+        <div class="card mid"><h5>Cross-platform Mobile</h5><p>React Native shares skills &amp; code with web teams.</p></div>
+        <div class="card accent"><h5>Component Libraries</h5><p>Reusable design systems shared across products.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Web Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="angular.html">Angular</a><a href="vue.html">Vue</a><a href="svelte.html">Svelte</a><a href="solid.html">Solid</a><a href="next.html">Next.js</a><a href="nuxt.html">Nuxt</a><a href="sveltekit.html">SvelteKit</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Web Framework Deep Dive</footer>
+</div>
+</body>
+</html>

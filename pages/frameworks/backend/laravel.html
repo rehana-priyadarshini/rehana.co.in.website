@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laravel · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Laravel</h1>
+    <p class="lede">Modern PHP that's a joy to write. Eloquent ORM, Blade templates, Artisan CLI, and a vast first-party ecosystem (Forge, Vapor, Livewire, Inertia) — Laravel is the most polished full-stack PHP framework ever made.</p>
+    <div class="tags"><span>PHP</span><span>MVC</span><span>Eloquent ORM</span><span>Full-stack</span><span>Modern</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/php.html" style="color:var(--blue);text-decoration:none;">PHP</a> 8.2+</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2011 · Taylor Otwell</div></div>
+        <div class="f"><div class="label">Pattern</div><div class="val">MVC + Service Container</div></div>
+        <div class="f"><div class="label">Pkg mgr</div><div class="val">Composer</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Laravel 11.x</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Eloquent</strong> is the ORM — ActiveRecord-style models with elegant query syntax.</li>
+          <li><strong>Blade</strong> is the templating engine — clean, fast, and composable.</li>
+          <li><strong>Artisan</strong> is the CLI for scaffolding, migrations, queues, and custom commands.</li>
+          <li><strong>Service Container</strong> handles dependency injection across the app.</li>
+          <li><strong>First-party ecosystem</strong> (Sanctum, Breeze, Jetstream, Cashier, Horizon) covers most needs end-to-end.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Laravel</h2></div>
+    <div class="chapter-body">
+<pre><span class="com">// app/Models/Product.php</span>
+<span class="kw">class</span> Product <span class="kw">extends</span> Model
+{
+    <span class="kw">protected</span> $fillable = [<span class="str">'name'</span>, <span class="str">'price'</span>];
+
+    <span class="kw">public function</span> <span class="fn">scopeAffordable</span>($query) {
+        <span class="kw">return</span> $query-&gt;<span class="fn">where</span>(<span class="str">'price'</span>, <span class="str">'&lt;'</span>, <span class="num">100</span>);
+    }
+}
+
+<span class="com">// routes/web.php</span>
+Route::<span class="fn">get</span>(<span class="str">'/products'</span>, <span class="kw">function</span> () {
+    <span class="kw">return</span> Product::<span class="fn">affordable</span>()-&gt;<span class="fn">latest</span>()-&gt;<span class="fn">paginate</span>(<span class="num">20</span>);
+});
+
+Route::<span class="fn">post</span>(<span class="str">'/products'</span>, <span class="kw">function</span> (Request $request) {
+    $data = $request-&gt;<span class="fn">validate</span>([
+        <span class="str">'name'</span>  =&gt; <span class="str">'required|string|max:200'</span>,
+        <span class="str">'price'</span> =&gt; <span class="str">'required|numeric|min:0'</span>,
+    ]);
+    <span class="kw">return</span> Product::<span class="fn">create</span>($data);
+});</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Eloquent ORM</summary>
+        <div class="drill-body">
+          <p>Active Record done right in PHP. Relationships (<code>hasMany</code>, <code>belongsToMany</code>), eager loading, mutators, casts, scopes — all expressive, all chainable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Livewire &amp; Inertia</summary>
+        <div class="drill-body">
+          <p>Two productivity multipliers:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Livewire</strong> — write reactive UIs in PHP; the framework syncs DOM updates over the wire.</li>
+            <li><strong>Inertia</strong> — server-driven SPAs with Vue or React frontends, no API layer needed.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Queues, Events, Scheduler</summary>
+        <div class="drill-body">
+          <p>First-class background jobs (Redis, SQS, DB), event broadcasting (Pusher, WebSockets), and a fluent scheduler that replaces cron for most needs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The First-Party Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Breeze / Jetstream</td><td>Auth scaffolding (login, registration, MFA).</td></tr>
+              <tr><td>Sanctum / Passport</td><td>API token / OAuth.</td></tr>
+              <tr><td>Cashier</td><td>Stripe / Paddle subscription billing.</td></tr>
+              <tr><td>Horizon</td><td>Dashboard for queues.</td></tr>
+              <tr><td>Forge / Vapor</td><td>Provisioning &amp; serverless deploys.</td></tr>
+              <tr><td>Nova / Filament</td><td>Admin panels.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Genuinely pleasant DX — code reads like prose.</li>
+            <li>Massive first-party + third-party ecosystem.</li>
+            <li>Cheap hosting; runs on every PHP host on earth.</li>
+            <li>Livewire / Inertia let you skip building a SPA entirely.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Inherits PHP's "old" reputation (deserved or not).</li>
+            <li>Async story is younger than Node / FastAPI.</li>
+            <li>Magic-heavy — facades and macros can hide flow.</li>
+            <li>Smaller hiring pool than Java / Python / JS.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>SaaS Products</h5><p>Auth, billing, queues, admin — first-party packages cover them all.</p></div>
+        <div class="card teal"><h5>Agencies / Consultancies</h5><p>Ship client projects fast with cohesive defaults.</p></div>
+        <div class="card mid"><h5>Internal Tools</h5><p>Filament + Livewire = admin panels in hours.</p></div>
+        <div class="card accent"><h5>E-commerce / Marketplaces</h5><p>Cashier + Spark + community packages.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

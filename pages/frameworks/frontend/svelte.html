@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Svelte · Web Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Web Framework Deep Dive</div>
+    <h1>Svelte</h1>
+    <p class="lede">A radical idea: do the work at compile time. Svelte compiles your components into tiny vanilla-JS that touches the DOM directly — no virtual DOM, smallest bundles, fastest runtime.</p>
+    <div class="tags"><span>JavaScript / TypeScript</span><span>Compiler</span><span>No Virtual DOM</span><span>Tiny Bundles</span><span>Loved DX</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/javascript.html" style="color:var(--blue);text-decoration:none;">JavaScript</a> / <a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2016 · Rich Harris</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Compiler — no runtime VDOM</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Svelte 5 (Runes)</div></div>
+        <div class="f"><div class="label">Steward</div><div class="val">Vercel + community</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Apple, Spotify, IKEA, NYT (the original Svelte demo)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Compile, don't ship:</strong> Svelte takes your <code>.svelte</code> file and emits surgical DOM update code — no framework runtime to download.</li>
+          <li><strong>Reactivity by assignment</strong> (Svelte 3-4) or <strong>Runes</strong> (Svelte 5: <code>$state</code>, <code>$derived</code>, <code>$effect</code>).</li>
+          <li><strong>Single-file components</strong> with <code>&lt;script&gt;</code>, markup, and scoped <code>&lt;style&gt;</code>.</li>
+          <li><strong>Built-in animations &amp; transitions</strong> as a first-class concept.</li>
+          <li><strong>Stores</strong> for cross-component reactive state.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Svelte 5 (Runes)</h2></div>
+    <div class="chapter-body">
+<pre>&lt;<span class="tag">script</span>&gt;
+  <span class="kw">let</span> products = <span class="fn">$state</span>([]);
+  <span class="kw">let</span> loading  = <span class="fn">$state</span>(<span class="kw">true</span>);
+
+  <span class="fn">$effect</span>(<span class="kw">async</span> () =&gt; {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/products'</span>);
+    products = <span class="kw">await</span> res.<span class="fn">json</span>();
+    loading  = <span class="kw">false</span>;
+  });
+&lt;/<span class="tag">script</span>&gt;
+
+{#<span class="kw">if</span> loading}
+  &lt;<span class="tag">p</span>&gt;Loading…&lt;/<span class="tag">p</span>&gt;
+{:<span class="kw">else</span>}
+  &lt;<span class="tag">ul</span>&gt;
+    {#<span class="kw">each</span> products <span class="kw">as</span> p (p.id)}
+      &lt;<span class="tag">li</span>&gt;{p.name} — \${p.price}&lt;/<span class="tag">li</span>&gt;
+    {/<span class="kw">each</span>}
+  &lt;/<span class="tag">ul</span>&gt;
+{/<span class="kw">if</span>}
+
+&lt;<span class="tag">style</span>&gt;
+  ul { padding-left: <span class="num">1.5</span>rem; }
+&lt;/<span class="tag">style</span>&gt;</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Compiler Approach</summary>
+        <div class="drill-body">
+          <p>React/Vue ship a runtime that interprets your components in the browser. Svelte ships <em>your component, compiled to direct DOM manipulation</em>. Result: smaller bundles, faster updates, lower memory — all without giving up an ergonomic API.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Runes (Svelte 5)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>$state</code> — reactive variable.</li>
+            <li><code>$derived</code> — computed value (think <code>useMemo</code>).</li>
+            <li><code>$effect</code> — side effect, like Vue's <code>watchEffect</code>.</li>
+            <li><code>$props</code> — declare component props.</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Runes make reactivity explicit and scale better than the implicit "let" reactivity of Svelte 3/4.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stores</summary>
+        <div class="drill-body">
+          <p>Cross-component state via <code>writable</code>, <code>readable</code>, <code>derived</code> stores — subscribe with <code>$store</code> auto-syntax. Svelte 5 also lets you put <code>$state</code> into plain JS modules for global reactive state.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Animations &amp; Transitions</summary>
+        <div class="drill-body">
+          <p>First-class <code>transition:fade</code>, <code>animate:flip</code>, <code>in:slide</code>, <code>out:scale</code> directives. The animations API is one of Svelte's most distinctive features.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Meta-framework:</strong> <a href="sveltekit.html" style="color:var(--accent);">SvelteKit</a> — routing, SSR, SSG, server endpoints.</li>
+            <li><strong>UI kits:</strong> Skeleton, shadcn-svelte, Flowbite Svelte, Bits UI.</li>
+            <li><strong>State:</strong> built-in stores; Runes; Svelte/store helpers.</li>
+            <li><strong>Test:</strong> Vitest + Playwright.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Smallest bundles &amp; fastest runtime of the major frameworks.</li>
+            <li>Most-loved framework on developer surveys.</li>
+            <li>Built-in transitions, scoped styles, stores — less to assemble.</li>
+            <li>Closer to plain HTML/CSS/JS than React or Angular.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smallest hiring pool of the four major frameworks.</li>
+            <li>Smaller component-library ecosystem.</li>
+            <li>Svelte 5 is a notable migration from 3/4.</li>
+            <li>Some build tooling specific to <code>.svelte</code> files.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Performance-Sensitive Sites</h5><p>News, marketing, e-commerce — every kilobyte counts.</p></div>
+        <div class="card teal"><h5>Embedded Widgets</h5><p>Tiny bundles make Svelte great for embeds &amp; micro-frontends.</p></div>
+        <div class="card mid"><h5>Animated, Interactive UIs</h5><p>Built-in animations save dozens of dependencies.</p></div>
+        <div class="card accent"><h5>Solo Devs &amp; Small Teams</h5><p>Less code, fewer concepts, faster iteration.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Web Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="react.html">React</a><a href="angular.html">Angular</a><a href="vue.html">Vue</a><a href="solid.html">Solid</a><a href="next.html">Next.js</a><a href="nuxt.html">Nuxt</a><a href="sveltekit.html">SvelteKit</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Web Framework Deep Dive</footer>
+</div>
+</body>
+</html>

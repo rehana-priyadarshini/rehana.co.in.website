@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rust · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>Rust</h1>
+    <p class="lede">A systems language with the safety of Java and the speed of C++ — without a garbage collector. Memory safety enforced at compile time, by the famous borrow checker.</p>
+    <div class="tags"><span>Statically Typed</span><span>Compiled</span><span>No GC</span><span>Memory-safe</span><span>Systems</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">2010 · Mozilla</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Graydon Hoare</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">Multi (FP + OOP-ish)</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Static, strong, inferred</div></div>
+        <div class="f"><div class="label">Memory</div><div class="val">Ownership &amp; borrow checker</div></div>
+        <div class="f"><div class="label">Compiler</div><div class="val">rustc · cargo build system</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Ownership:</strong> every value has one owner; when the owner goes out of scope, memory is freed.</li>
+          <li><strong>Borrowing:</strong> temporary references — either many readers or one writer, never both.</li>
+          <li><strong>No null, no exceptions:</strong> use <code>Option&lt;T&gt;</code> and <code>Result&lt;T, E&gt;</code> instead.</li>
+          <li><strong>Zero-cost abstractions:</strong> high-level code compiles to the same machine code as hand-written C.</li>
+          <li><strong>Fearless concurrency:</strong> data races are caught at compile time.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Rust</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">fn</span> <span class="fn">main</span>() {
+    <span class="kw">let</span> nums = <span class="kw">vec!</span>[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>];
+    <span class="kw">let</span> sum: i32 = nums.iter().sum();
+    println!(<span class="str">"Sum: {}"</span>, sum);
+}
+
+<span class="com">// Result type — explicit error handling</span>
+<span class="kw">fn</span> <span class="fn">parse_age</span>(s: &amp;<span class="kw">str</span>) -&gt; <span class="kw">Result</span>&lt;u32, ParseIntError&gt; {
+    s.<span class="fn">parse</span>::&lt;u32&gt;()
+}
+
+<span class="kw">match</span> <span class="fn">parse_age</span>(<span class="str">"42"</span>) {
+    <span class="kw">Ok</span>(age)   =&gt; println!(<span class="str">"Age: {}"</span>, age),
+    <span class="kw">Err</span>(err) =&gt; eprintln!(<span class="str">"Error: {}"</span>, err),
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Ownership &amp; the Borrow Checker</summary>
+        <div class="drill-body">
+          <p>Rust's central innovation. The compiler tracks who owns each piece of memory and ensures references can't outlive the data they point to. The famous "fight with the borrow checker" is the price of catching memory bugs at compile time instead of runtime.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pattern Matching &amp; Enums</summary>
+        <div class="drill-body">
+          <p>Algebraic data types with exhaustive <code>match</code> expressions. <code>Option</code> and <code>Result</code> use this to make null and exception-free code natural.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Traits</summary>
+        <div class="drill-body">
+          <p>Like interfaces in Java but more powerful. Traits can have default methods, be generic, and let you add behavior to existing types.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Async &amp; Concurrency</summary>
+        <div class="drill-body">
+          <p><code>async</code>/<code>await</code> on top of pluggable runtimes (<strong>Tokio</strong>, <strong>async-std</strong>). Concurrency without data races, courtesy of <code>Send</code> and <code>Sync</code> trait bounds.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Build / pkg</td><td><code>cargo</code> — build, test, publish, run</td></tr>
+              <tr><td>Linter</td><td>Clippy</td></tr>
+              <tr><td>Format</td><td>rustfmt</td></tr>
+              <tr><td>Web</td><td>Axum, Actix Web, Rocket, Warp</td></tr>
+              <tr><td>Async runtime</td><td>Tokio, async-std</td></tr>
+              <tr><td>Notable users</td><td>Discord, Cloudflare, Firefox, Linux kernel, AWS Firecracker</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>C/C++ performance with memory safety.</li>
+            <li>No GC — predictable pauseless execution.</li>
+            <li>Best-in-class tooling out of the box (cargo).</li>
+            <li>Most-loved language on Stack Overflow surveys for years.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Steep learning curve — ownership model takes weeks to internalize.</li>
+            <li>Slow compile times on large projects.</li>
+            <li>Not great for quick prototyping or scripting.</li>
+            <li>Smaller hiring pool than Java/JS/Python.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Systems &amp; OS</h5><p>Now in the Linux kernel and Windows internals.</p></div>
+        <div class="card teal"><h5>Performance-Critical Backends</h5><p>Discord, Cloudflare Workers, Firecracker (AWS Lambda).</p></div>
+        <div class="card mid"><h5>WebAssembly</h5><p>Best-in-class compiler target for Wasm.</p></div>
+        <div class="card accent"><h5>CLI &amp; Dev Tools</h5><p>ripgrep, fd, bat, uv — Rust ate this niche.</p></div>
+        <div class="card"><h5>Embedded &amp; IoT</h5><p>No-GC + safety = perfect for microcontrollers.</p></div>
+        <div class="card teal"><h5>Blockchain</h5><p>Solana, Polkadot, Aptos written in Rust.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

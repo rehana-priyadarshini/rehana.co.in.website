@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Express · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Express</h1>
+    <p class="lede">The minimalist that defined Node.js backends. Tiny core, middleware everywhere — Express is the foundation under thousands of production APIs.</p>
+    <div class="tags"><span>Node.js</span><span>JavaScript / TS</span><span>Minimalist</span><span>Middleware-driven</span><span>Unopinionated</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/javascript.html" style="color:var(--blue);text-decoration:none;">JavaScript</a> / <a href="../../languages/typescript.html" style="color:var(--blue);text-decoration:none;">TypeScript</a></div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2010 · TJ Holowaychuk</div></div>
+        <div class="f"><div class="label">Steward</div><div class="val">OpenJS Foundation</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Minimal, middleware pipeline</div></div>
+        <div class="f"><div class="label">License</div><div class="val">MIT</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Middleware:</strong> functions that receive <code>(req, res, next)</code>. Stack them to add behavior — logging, auth, parsing, your handler.</li>
+          <li><strong>Routing</strong> maps URL patterns + HTTP verbs to handlers.</li>
+          <li><strong>Unopinionated:</strong> Express ships almost nothing — you choose the ORM, validator, auth, templating.</li>
+          <li><strong>Routers</strong> let you split the app into modular sub-applications.</li>
+          <li><strong>Vast plugin ecosystem</strong> — virtually every common need has an Express middleware.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Express</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> express <span class="kw">from</span> <span class="str">"express"</span>;
+
+<span class="kw">const</span> app = <span class="fn">express</span>();
+app.<span class="fn">use</span>(express.<span class="fn">json</span>());
+
+<span class="com">// Middleware</span>
+app.<span class="fn">use</span>((req, res, next) =&gt; {
+  console.<span class="fn">log</span>(<span class="str">`${req.method} ${req.url}`</span>);
+  <span class="fn">next</span>();
+});
+
+<span class="com">// Routes</span>
+app.<span class="fn">get</span>(<span class="str">"/api/products"</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> products = <span class="kw">await</span> db.<span class="fn">query</span>(<span class="str">"SELECT * FROM products"</span>);
+  res.<span class="fn">json</span>(products);
+});
+
+app.<span class="fn">post</span>(<span class="str">"/api/products"</span>, <span class="kw">async</span> (req, res) =&gt; {
+  <span class="kw">const</span> created = <span class="kw">await</span> db.<span class="fn">insert</span>(req.body);
+  res.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>(created);
+});
+
+app.<span class="fn">listen</span>(<span class="num">3000</span>);</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Middleware Pipeline</summary>
+        <div class="drill-body">
+          <p>The whole framework is essentially this pattern: every request flows through an ordered chain of <code>(req, res, next)</code> functions. Add cross-cutting concerns (auth, validation, error handling) by inserting middleware at the right spot.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Routers &amp; Modularity</summary>
+        <div class="drill-body">
+          <p><code>express.Router()</code> lets you split routes by feature: <code>app.use("/users", usersRouter)</code>. Combined with TypeScript and Zod, you can get type-safe routes without leaving Express.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Middleware</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>express.json / urlencoded</td><td>Parse request bodies.</td></tr>
+              <tr><td>cors</td><td>Cross-origin support.</td></tr>
+              <tr><td>helmet</td><td>Sensible HTTP security headers.</td></tr>
+              <tr><td>morgan</td><td>HTTP request logging.</td></tr>
+              <tr><td>passport / express-session</td><td>Authentication strategies.</td></tr>
+              <tr><td>express-rate-limit</td><td>Brute-force protection.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Express 5 &amp; Async Errors</summary>
+        <div class="drill-body">
+          <p>Express 5 (current) finally handles thrown errors from <code>async</code> handlers natively — no more <code>try/catch + next(err)</code> boilerplate. Promise rejections automatically bubble to error middleware.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Minimal, predictable, infinitely flexible.</li>
+            <li>Largest middleware ecosystem in the Node.js world.</li>
+            <li>Easy to learn — most Node tutorials assume Express.</li>
+            <li>Stable for over a decade.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>No structure — large codebases need self-imposed conventions.</li>
+            <li>No built-in DI, validation, or schema handling.</li>
+            <li>Performance trails Fastify and NestJS for heavy throughput.</li>
+            <li>Async ergonomics were rough until v5.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Quick APIs &amp; Prototypes</h5><p>From <code>npm i express</code> to a working endpoint in minutes.</p></div>
+        <div class="card teal"><h5>BFFs &amp; Edge Layers</h5><p>Backend-for-frontend services that proxy and shape data for SPAs.</p></div>
+        <div class="card mid"><h5>Microservices</h5><p>Tiny, focused services — Express is light enough not to get in the way.</p></div>
+        <div class="card accent"><h5>Learning Node.js</h5><p>The lingua franca of Node tutorials.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Backend Framework Deep Dive</footer>
+</div>
+</body>
+</html>

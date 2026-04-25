@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kotlin · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>Kotlin</h1>
+    <p class="lede">A modern JVM language by JetBrains — concise, null-safe, and the official language of Android. Java's spiritual successor without the verbosity.</p>
+    <div class="tags"><span>OOP + FP</span><span>Statically Typed</span><span>JVM / Native / JS</span><span>Null-safe</span><span>Android-First</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">2011 · JetBrains</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">OOP + FP</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Static, strong, inferred</div></div>
+        <div class="f"><div class="label">Targets</div><div class="val">JVM, Android, JS, Native</div></div>
+        <div class="f"><div class="label">Interop</div><div class="val">100% Java-compatible</div></div>
+        <div class="f"><div class="label">Endorsed by</div><div class="val">Google for Android (2017)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Null safety</strong> in the type system: <code>String</code> can't be null; <code>String?</code> can.</li>
+          <li><strong>Java interop:</strong> call any Java library; mix Java &amp; Kotlin in one project.</li>
+          <li><strong>Coroutines</strong> for structured async — lighter than threads.</li>
+          <li><strong>Data classes, extension functions, sealed classes</strong> dramatically cut boilerplate.</li>
+          <li><strong>Multiplatform:</strong> share business logic across iOS, Android, web, and backend.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Kotlin</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">data class</span> Customer(<span class="kw">val</span> name: String, <span class="kw">val</span> age: Int) {
+    <span class="kw">fun</span> <span class="fn">isAdult</span>() = age &gt;= <span class="num">18</span>
+}
+
+<span class="kw">val</span> adults = customers
+    .filter { it.<span class="fn">isAdult</span>() }
+    .sortedBy { it.name }
+
+<span class="com">// Coroutines — async without callback hell</span>
+<span class="kw">suspend fun</span> <span class="fn">loadUser</span>(id: Int): User =
+    httpClient.<span class="fn">get</span>(<span class="str">"/api/users/$id"</span>).<span class="fn">body</span>()</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+      <details class="drill" open>
+        <summary>Null Safety</summary>
+        <div class="drill-body">
+          <p>Billion-dollar mistake fixed at the type level. <code>val name: String?</code> is nullable; you must use <code>?.</code>, <code>?:</code>, or <code>!!</code> to access it. Compiler enforced.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Coroutines &amp; Flow</summary>
+        <div class="drill-body">
+          <p>Lightweight suspending functions for async work. <strong>Flow</strong> is Kotlin's reactive streams API. Cleaner than RxJava, simpler than callbacks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Extension Functions</summary>
+        <div class="drill-body">
+          <p>Add methods to types you don't own. <code>fun String.isEmail() = …</code> lets every <code>String</code> have <code>.isEmail()</code> — without subclassing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Build</td><td>Gradle (Kotlin DSL), Maven</td></tr>
+              <tr><td>Backend</td><td>Spring Boot (Kotlin support), Ktor, Micronaut, Quarkus</td></tr>
+              <tr><td>Android</td><td>Jetpack Compose, AndroidX</td></tr>
+              <tr><td>Multiplatform</td><td>KMP, Compose Multiplatform</td></tr>
+              <tr><td>Test</td><td>JUnit 5, Kotest, MockK</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Concise, expressive — much less code than Java.</li>
+            <li>Null safety eliminates NPEs by construction.</li>
+            <li>Seamless Java interop &amp; gradual migration.</li>
+            <li>Multiplatform story is unique among mainstream languages.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller community than Java/Python.</li>
+            <li>Compile times slower than Java.</li>
+            <li>Multiplatform tooling still maturing.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Android Apps</h5><p>The Google-blessed default; Jetpack Compose is Kotlin-native.</p></div>
+        <div class="card teal"><h5>Modern Backend</h5><p>Spring Boot or Ktor with much less boilerplate than Java.</p></div>
+        <div class="card mid"><h5>Cross-platform Apps</h5><p>Share business logic across iOS &amp; Android via KMP.</p></div>
+        <div class="card accent"><h5>Java Migration</h5><p>Adopt incrementally — file by file inside a Java codebase.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="cpp.html">C++</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

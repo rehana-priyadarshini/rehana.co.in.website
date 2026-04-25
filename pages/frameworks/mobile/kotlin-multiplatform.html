@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kotlin Multiplatform · Mobile Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Mobile Framework Deep Dive</div>
+    <h1>Kotlin Multiplatform</h1>
+    <p class="lede">Share business logic — networking, persistence, validation — across Android, iOS, web, and desktop. Keep the UI native (SwiftUI on iOS, Compose on Android) where it matters most.</p>
+    <div class="tags"><span>Kotlin</span><span>Native &amp; JVM &amp; JS &amp; Wasm</span><span>Logic Sharing</span><span>JetBrains</span><span>Pragmatic</span></div>
+    <a class="back" href="../../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/kotlin.html" style="color:var(--blue);text-decoration:none;">Kotlin</a></div></div>
+        <div class="f"><div class="label">Stable</div><div class="val">2023 · JetBrains</div></div>
+        <div class="f"><div class="label">Targets</div><div class="val">JVM, Android, iOS, macOS, Windows, Linux, JS, Wasm</div></div>
+        <div class="f"><div class="label">UI options</div><div class="val">Native per platform <em>or</em> Compose Multiplatform</div></div>
+        <div class="f"><div class="label">Notable users</div><div class="val">Netflix, McDonald's, Philips, Cash App, 9GAG</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Logic over UI:</strong> KMP's "sweet spot" is sharing models, networking, business rules — not necessarily the UI.</li>
+          <li><strong>commonMain</strong> source set holds shared Kotlin code; <strong>androidMain</strong> / <strong>iosMain</strong> hold platform specifics.</li>
+          <li><strong>expect / actual</strong> declarations let shared code reference platform APIs that are implemented per target.</li>
+          <li><strong>Kotlin/Native</strong> compiles to a static framework on iOS — Swift code calls it like any Cocoa library.</li>
+          <li><strong>Compose Multiplatform</strong> (sister project) extends UI sharing to iOS, desktop, and web.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of KMP</h2></div>
+    <div class="chapter-body">
+<pre><span class="com">// commonMain — shared business logic</span>
+<span class="kw">class</span> ProductRepository(<span class="kw">private val</span> client: HttpClient) {
+    <span class="kw">suspend fun</span> <span class="fn">fetchProducts</span>(): List&lt;Product&gt; =
+        client.<span class="fn">get</span>(<span class="str">"https://api.example.com/products"</span>).<span class="fn">body</span>()
+}
+
+<span class="com">// commonMain — shared models</span>
+<span class="kw">@Serializable</span>
+<span class="kw">data class</span> Product(<span class="kw">val</span> id: String, <span class="kw">val</span> name: String, <span class="kw">val</span> price: Double)
+
+<span class="com">// expect / actual — platform-specific glue</span>
+<span class="kw">expect class</span> Logger() {
+    <span class="kw">fun</span> <span class="fn">log</span>(message: String)
+}
+
+<span class="com">// androidMain</span>
+<span class="kw">actual class</span> Logger {
+    <span class="kw">actual fun</span> <span class="fn">log</span>(message: String) = Log.<span class="fn">d</span>(<span class="str">"App"</span>, message)
+}
+
+<span class="com">// iosMain</span>
+<span class="kw">actual class</span> Logger {
+    <span class="kw">actual fun</span> <span class="fn">log</span>(message: String) = NSLog(message)
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Source Sets &amp; Targets</summary>
+        <div class="drill-body">
+          <p>A KMP module declares targets (<code>androidTarget()</code>, <code>iosX64()</code>, <code>iosArm64()</code>, <code>jvm()</code>, <code>js()</code>) and source sets (<code>commonMain</code>, <code>androidMain</code>, <code>iosMain</code>). Code is shared by default; platform-specific code lives in its own folder.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>iOS Interop</summary>
+        <div class="drill-body">
+          <p>Kotlin/Native compiles a <strong>shared.framework</strong> that Swift imports like any Apple framework. Suspend functions are exposed as completion-handler callbacks (or modern Swift async via <code>SKIE</code> / <code>KMP-NativeCoroutines</code>).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Compose Multiplatform</summary>
+        <div class="drill-body">
+          <p>JetBrains' UI framework on top of KMP — share Compose UI between Android, iOS, desktop, and web (Wasm). The most ambitious cross-platform UI story in the JVM world.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Library</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Ktor Client</td><td>Multiplatform HTTP client.</td></tr>
+              <tr><td>SQLDelight</td><td>Type-safe SQL across platforms.</td></tr>
+              <tr><td>kotlinx.serialization</td><td>JSON / ProtoBuf serialization.</td></tr>
+              <tr><td>kotlinx.coroutines</td><td>Async &amp; flows on every target.</td></tr>
+              <tr><td>Koin</td><td>Multiplatform DI.</td></tr>
+              <tr><td>SKIE</td><td>Better Swift interop (async/await, sealed classes).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Pragmatic: share what makes sense, keep UI native.</li>
+            <li>iOS gets a real native framework — Swift devs barely notice.</li>
+            <li>Backed by JetBrains; first-class IntelliJ / Android Studio support.</li>
+            <li>Same Kotlin you already use for Android.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller community than Flutter / React Native.</li>
+            <li>Swift interop has rough edges (improving with SKIE).</li>
+            <li>Build tooling (Gradle) intimidates iOS devs.</li>
+            <li>Compose Multiplatform iOS support is still maturing.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Apps with Heavy Business Logic</h5><p>Banking, fitness, e-commerce — share rules &amp; networking; keep UI native.</p></div>
+        <div class="card teal"><h5>Android-First Teams</h5><p>Kotlin shop adding iOS without learning React Native or Flutter.</p></div>
+        <div class="card mid"><h5>SDK Authors</h5><p>Ship one Kotlin codebase; consumers get a native SDK on each platform.</p></div>
+        <div class="card accent"><h5>Compose Everywhere</h5><p>Share UI across Android + iOS + desktop with Compose Multiplatform.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Mobile Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="swiftui.html">SwiftUI</a><a href="jetpack-compose.html">Jetpack Compose</a><a href="flutter.html">Flutter</a><a href="react-native.html">React Native</a><a href="dotnet-maui.html">.NET MAUI</a><a href="ionic.html">Ionic</a>
+        <a href="../../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Mobile Framework Deep Dive</footer>
+</div>
+</body>
+</html>

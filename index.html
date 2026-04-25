@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Software Development — A Guided Tour</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+  :root {
+    --deep:   #0A2A43;
+    --blue:   #065A82;
+    --teal:   #1C7293;
+    --mid:    #21295C;
+    --ice:    #CADCFC;
+    --cream:  #F5F9FC;
+    --ink:    #17222E;
+    --muted:  #5D6B7A;
+    --accent: #F2A541;
+    --line:   #D6E2EC;
+    --ok:     #2C8F5C;
+    --card-shadow: 0 4px 14px rgba(10, 42, 67, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: "Segoe UI", "Calibri", system-ui, sans-serif;
+    color: var(--ink); background: var(--cream); scroll-behavior: smooth; }
+  h1, h2, h3, h4 { font-family: Georgia, "Times New Roman", serif; margin: 0; color: var(--deep); }
+
+  /* Header / Hero */
+  header.hero {
+    background: linear-gradient(135deg, var(--deep) 0%, var(--blue) 60%, var(--teal) 100%);
+    color: #fff; padding: 70px 40px 90px; position: relative; overflow: hidden;
+  }
+  header.hero::before {
+    content: ""; position: absolute; width: 380px; height: 380px; border-radius: 50%;
+    background: rgba(28, 114, 147, 0.35); top: -120px; right: -100px;
+  }
+  header.hero::after {
+    content: ""; position: absolute; width: 240px; height: 240px; border-radius: 50%;
+    background: rgba(242, 165, 65, 0.25); bottom: -80px; left: -60px;
+  }
+  .hero-inner { position: relative; max-width: 1200px; margin: 0 auto; }
+  .eyebrow { letter-spacing: 6px; font-size: 12px; font-weight: 700;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 14px; }
+  header h1 { font-size: clamp(36px, 6vw, 64px); color: #fff; line-height: 1.05; margin-bottom: 16px; }
+  header p.lede { font-size: 18px; color: var(--ice); max-width: 780px; margin: 0; }
+  header .meta { margin-top: 22px; font-size: 13px; color: var(--ice); opacity: 0.85; }
+
+  /* Layout */
+  .page { max-width: 1200px; margin: -50px auto 60px; padding: 0 24px; position: relative; z-index: 2; }
+
+  /* Top-level map tiles */
+  .map {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px; background: #fff; padding: 24px; border-radius: 14px;
+    box-shadow: var(--card-shadow); border: 1px solid var(--line);
+  }
+  .map h2 { grid-column: 1 / -1; font-size: 22px; margin-bottom: 4px; }
+  .map .map-sub { grid-column: 1 / -1; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .tile {
+    display: block; padding: 16px 18px; border-radius: 10px; background: var(--cream);
+    border: 1px solid var(--line); text-decoration: none; color: var(--ink);
+    transition: all 0.15s ease; border-left: 5px solid var(--blue);
+  }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10, 42, 67, 0.12); border-left-color: var(--accent); }
+  .tile .num { font-size: 11px; font-weight: 700; letter-spacing: 3px; color: var(--teal); }
+  .tile .t  { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--deep); margin: 4px 0 4px; }
+  .tile .d  { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+  /* Section */
+  section.chapter {
+    margin-top: 36px; background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--card-shadow); overflow: hidden;
+  }
+  .chapter-head {
+    padding: 22px 28px 18px; border-bottom: 4px solid var(--accent);
+    background: linear-gradient(90deg, var(--deep) 0%, var(--blue) 100%);
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+  }
+  .chapter-head h2 { color: #fff; font-size: 26px; }
+  .chapter-head .eyebrow { margin: 0 0 6px; color: var(--accent); }
+  .back-link {
+    color: var(--accent); text-decoration: none; font-weight: 700;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap;
+  }
+  .back-link:hover { color: #fff; }
+  .chapter-body { padding: 26px 28px; }
+
+  /* Basic Concepts callout */
+  .basics {
+    background: linear-gradient(135deg, #FFF7E8 0%, #FFEFD1 100%);
+    border-left: 5px solid var(--accent);
+    padding: 16px 20px; border-radius: 8px; margin-bottom: 22px;
+  }
+  .basics h4 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 3px; color: var(--accent);
+    margin-bottom: 8px; font-family: "Segoe UI", sans-serif; font-weight: 700;
+  }
+  .basics p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink); }
+  .basics ul { margin: 8px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.6; }
+  .basics strong { color: var(--deep); }
+
+  /* Detail (drill-down) */
+  details.drill {
+    margin-top: 14px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--cream); overflow: hidden;
+  }
+  details.drill > summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 700; color: var(--deep);
+    background: #fff; list-style: none; display: flex; align-items: center; gap: 10px;
+    font-size: 15px; user-select: none;
+  }
+  details.drill > summary::-webkit-details-marker { display: none; }
+  details.drill > summary::before {
+    content: "▸"; color: var(--teal); font-size: 14px; transition: transform 0.15s;
+  }
+  details.drill[open] > summary::before { transform: rotate(90deg); }
+  details.drill > summary:hover { background: #FBFDFF; }
+  details.drill .drill-body { padding: 16px 20px 20px; border-top: 1px solid var(--line); }
+
+  /* Cards grid inside sections */
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px; margin-top: 12px;
+  }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue);
+    border-radius: 8px; padding: 14px 16px; transition: transform 0.1s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); }
+  .card.teal   { border-left-color: var(--teal); }
+  .card.mid    { border-left-color: var(--mid); }
+  .card.accent { border-left-color: var(--accent); }
+  .card.ok     { border-left-color: var(--ok); }
+  .card h5 { font-family: Georgia, serif; font-size: 16px; color: var(--deep); margin-bottom: 6px; }
+  .card p  { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+  .card .pill {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    color: var(--teal); background: var(--ice); padding: 2px 8px; border-radius: 10px;
+    margin-bottom: 6px; text-transform: uppercase;
+  }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.5px; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--blue); color: #fff; font-weight: 700; letter-spacing: 0.5px; font-size: 12.5px; }
+  tbody tr:nth-child(even) { background: #FBFDFF; }
+
+  /* Two-column */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Side nav */
+  nav.side {
+    position: fixed; top: 50%; right: 16px; transform: translateY(-50%);
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 12px; box-shadow: var(--card-shadow); font-size: 12px; z-index: 50;
+  }
+  nav.side a { display: block; color: var(--muted); text-decoration: none; padding: 4px 6px; border-radius: 4px; }
+  nav.side a:hover { background: var(--ice); color: var(--deep); }
+  nav.side .title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--accent);
+    text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  @media (max-width: 1100px) { nav.side { display: none; } }
+
+  /* Footer */
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 30px 20px 40px; }
+
+  /* Intro paragraph under chapter head */
+  .lede-p { font-size: 15px; color: var(--muted); margin-bottom: 16px; font-style: italic; }
+
+  /* Misc */
+  code { background: #EEF4F9; padding: 2px 6px; border-radius: 4px; font-size: 12.5px; color: var(--deep); }
+  .tag { display: inline-block; font-size: 11px; background: var(--mid); color: #fff;
+    padding: 2px 8px; border-radius: 10px; margin-right: 4px; margin-bottom: 4px; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; }
+  .flow .step { background: #fff; border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 12px; font-weight: 600; color: var(--deep); }
+  .flow .arrow { color: var(--teal); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">A Guided Tour for Beginners</div>
+    <h1>Software<br/>Development</h1>
+    <p class="lede">From programming fundamentals to architecture, cloud, and AI — an interactive drill-down map of the modern stack. Click any topic to dig deeper.</p>
+    <div class="meta">Tip: each section starts with <strong>Basic Concepts</strong>, then drills into specifics. Every sub-topic is collapsible.</div>
+  </div>
+</header>
+
+<nav class="side">
+  <div class="title">Map</div>
+  <a href="#top">Top</a>
+  <a href="#ch-foundations">Foundations</a>
+  <a href="#ch-client">Client</a>
+  <a href="#ch-server">Server</a>
+  <a href="#ch-db">Database</a>
+  <a href="#ch-api">APIs &amp; Networking</a>
+  <a href="#ch-arch">Architecture</a>
+  <a href="#ch-security">Security</a>
+  <a href="#ch-testing">Testing</a>
+  <a href="#ch-cross">Cross-Cutting</a>
+  <a href="#ch-devops">DevOps</a>
+  <a href="#ch-method">Methodologies</a>
+  <a href="#ch-cloud">Cloud</a>
+  <a href="#ch-observe">Observability</a>
+  <a href="#ch-ai">AI</a>
+  <a href="#ch-soft">Soft Skills</a>
+</nav>
+
+<div class="page" id="top">
+
+  <!-- HUB -->
+  <div class="map" id="hub">
+    <h2>The Software Development Map</h2>
+    <div class="map-sub">Click any tile to jump into that topic. Use <em>Back to Map</em> at the top of each section to return.</div>
+
+    <a class="tile" href="#ch-foundations"><div class="num">01</div><div class="t">Foundations</div><div class="d">What programming is, core concepts, CS basics.</div></a>
+    <a class="tile" href="#ch-client"><div class="num">02</div><div class="t">Client Side</div><div class="d">Web, mobile, desktop — everything the user touches.</div></a>
+    <a class="tile" href="#ch-server"><div class="num">03</div><div class="t">Server Side</div><div class="d">Languages, frameworks, backend logic.</div></a>
+    <a class="tile" href="#ch-db"><div class="num">04</div><div class="t">Database Side</div><div class="d">SQL, NoSQL, search, vector, warehouses.</div></a>
+    <a class="tile" href="#ch-api"><div class="num">05</div><div class="t">APIs &amp; Networking</div><div class="d">HTTP, REST, GraphQL, sockets, protocols.</div></a>
+    <a class="tile" href="#ch-arch"><div class="num">06</div><div class="t">Architecture &amp; Patterns</div><div class="d">Monolith, microservices, event-driven, SOLID.</div></a>
+    <a class="tile" href="#ch-security"><div class="num">07</div><div class="t">Security</div><div class="d">AuthN/Z, OWASP, encryption, secure coding.</div></a>
+    <a class="tile" href="#ch-testing"><div class="num">08</div><div class="t">Testing &amp; Quality</div><div class="d">Unit, integration, E2E, TDD, linters.</div></a>
+    <a class="tile" href="#ch-cross"><div class="num">09</div><div class="t">Cross-Cutting Tools</div><div class="d">Git, build tools, package managers, IDEs.</div></a>
+    <a class="tile" href="#ch-devops"><div class="num">10</div><div class="t">DevOps &amp; CI/CD</div><div class="d">Pipelines, containers, IaC, Kubernetes.</div></a>
+    <a class="tile" href="#ch-method"><div class="num">11</div><div class="t">Methodologies</div><div class="d">Agile, Scrum, Kanban, SDLC.</div></a>
+    <a class="tile" href="#ch-cloud"><div class="num">12</div><div class="t">Cloud Computing</div><div class="d">IaaS, PaaS, SaaS, serverless, providers.</div></a>
+    <a class="tile" href="#ch-observe"><div class="num">13</div><div class="t">Observability &amp; Perf</div><div class="d">Logs, metrics, traces, scaling, caching.</div></a>
+    <a class="tile" href="#ch-ai"><div class="num">14</div><div class="t">AI Landscape</div><div class="d">Models, frameworks, agents, MLOps.</div></a>
+    <a class="tile" href="#ch-soft"><div class="num">15</div><div class="t">Soft Skills &amp; Ecosystem</div><div class="d">Communication, open source, licenses, docs.</div></a>
+    <a class="tile" href="pages/domains.html" style="border-left-color:var(--accent);"><div class="num">16</div><div class="t">Industry Domains →</div><div class="d">Where software runs the show — finance, healthcare, ERP, gaming, and 17 more.</div></a>
+  </div>
+
+  <!-- 01 FOUNDATIONS -->
+  <section class="chapter" id="ch-foundations">
+    <div class="chapter-head">
+      <div>
+        <div class="eyebrow">Chapter 01</div>
+        <h2>Foundations of Programming</h2>
+      </div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Before frameworks and clouds, there are ideas. A program is a set of precise instructions a computer follows to turn input into output.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Program:</strong> step-by-step instructions written in a programming language.</li>
+          <li><strong>Variables &amp; Data Types:</strong> named containers (numbers, text, booleans, lists, objects).</li>
+          <li><strong>Control Flow:</strong> <code>if</code>, loops, functions — decide what runs, when, and how many times.</li>
+          <li><strong>Compile vs Interpret:</strong> compiled languages (Java, Go, C++) are translated ahead of time; interpreted ones (Python, JavaScript) run line by line.</li>
+          <li><strong>Algorithm:</strong> a recipe to solve a problem. <strong>Data Structure:</strong> how you arrange data (array, list, map, tree, graph).</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Programming Paradigms <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
+        <div class="drill-body">
+          <div class="grid">
+            <a class="card" href="pages/paradigms/procedural.html" style="text-decoration:none;color:inherit;display:block;"><h5>Procedural →</h5><p>Straight-line steps. C, early BASIC. Easy to start, hard to scale.</p></a>
+            <a class="card teal" href="pages/paradigms/oop.html" style="text-decoration:none;color:inherit;display:block;"><h5>Object-Oriented (OOP) →</h5><p>Data + behavior bundled into objects. Java, C#, Python. Dominates enterprise software.</p></a>
+            <a class="card mid" href="pages/paradigms/functional.html" style="text-decoration:none;color:inherit;display:block;"><h5>Functional →</h5><p>Pure functions, immutability. Haskell, F#, Elixir. Concepts now mainstream in JS/Python.</p></a>
+            <a class="card accent" href="pages/paradigms/declarative.html" style="text-decoration:none;color:inherit;display:block;"><h5>Declarative →</h5><p>Describe <em>what</em>, not <em>how</em>. SQL, HTML, React JSX.</p></a>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Computer Science Essentials</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">Memory</span><h5>Stack &amp; Heap</h5><p>Stack = fast, short-lived values. Heap = objects that outlive a function call.</p></div>
+            <div class="card teal"><span class="pill">Time</span><h5>Big-O Notation</h5><p>How runtime grows with input size. O(1), O(log n), O(n), O(n²).</p></div>
+            <div class="card mid"><span class="pill">Structure</span><h5>Core Data Structures</h5><p>Array, linked list, hash map, stack, queue, tree, graph. Pick based on access pattern.</p></div>
+            <div class="card accent"><span class="pill">Flow</span><h5>Concurrency</h5><p>Threads, async/await, event loops. Runs many things at once without chaos.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Operating Systems &amp; Environment</summary>
+        <div class="drill-body">
+          <div class="basics" style="background: #EEF4F9; border-left-color: var(--teal);">
+            <h4 style="color: var(--teal);">Why it matters</h4>
+            <p>Every program runs on an OS. It manages files, memory, processes, networking, and security.</p>
+          </div>
+          <table>
+            <thead><tr><th>Topic</th><th>What a beginner should know</th></tr></thead>
+            <tbody>
+              <tr><td>Processes &amp; Threads</td><td>Isolated running programs vs lightweight workers inside one program.</td></tr>
+              <tr><td>File System</td><td>Paths, permissions, current working directory.</td></tr>
+              <tr><td>Shell / Terminal</td><td>Bash / Zsh / PowerShell — text commands to control the OS.</td></tr>
+              <tr><td>Environment Variables</td><td>Config values (<code>PATH</code>, <code>API_KEY</code>) read by running programs.</td></tr>
+              <tr><td>Package Managers (OS)</td><td><code>apt</code>, <code>brew</code>, <code>choco</code>, <code>winget</code> — install software.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Source Code, Binary, and Runtime</summary>
+        <div class="drill-body">
+          <div class="flow">
+            <div class="step">Source code (.java, .py)</div><div class="arrow">→</div>
+            <div class="step">Compile / Interpret</div><div class="arrow">→</div>
+            <div class="step">Bytecode / Native binary</div><div class="arrow">→</div>
+            <div class="step">Runtime (JVM, V8, .NET CLR)</div><div class="arrow">→</div>
+            <div class="step">OS → CPU</div>
+          </div>
+          <p style="margin-top: 12px; font-size: 13.5px; color: var(--muted);">
+            The <strong>runtime</strong> is where your code actually executes. Java on JVM, JavaScript on V8 (Node/Chrome), C# on .NET CLR. Understanding the runtime helps you debug and tune performance.
+          </p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 02 CLIENT -->
+  <section class="chapter" id="ch-client">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 02</div><h2>Client Side</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">"Client side" means code that runs on the user's device — the part they see, click, and feel.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>HTML</strong> describes <em>structure</em>, <strong>CSS</strong> describes <em>style</em>, <strong>JavaScript</strong> adds <em>behavior</em>.</li>
+          <li><strong>DOM</strong> = the live tree of elements the browser renders; JS changes the DOM to update the UI.</li>
+          <li><strong>Responsive design</strong> makes one page look good on phone, tablet, and desktop.</li>
+          <li><strong>SPA vs MPA:</strong> Single-Page Apps update without full reloads; Multi-Page Apps navigate between server-rendered pages.</li>
+          <li><strong>Rendering modes:</strong> CSR (browser), SSR (server), SSG (build-time), and ISR (hybrid).</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Client Platforms</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Web</h5><p>Runs in any browser. HTML/CSS/JS + TypeScript. Most reach, least control of device.</p></div>
+            <div class="card teal"><h5>Mobile (Native)</h5><p>iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose). Full device power, store distribution.</p></div>
+            <div class="card mid"><h5>Mobile (Cross-platform)</h5><p>React Native, Flutter (Dart), .NET MAUI. One codebase → both stores.</p></div>
+            <div class="card accent"><h5>Desktop</h5><p>Electron, Tauri, WPF, JavaFX, Qt. Usually web tech wrapped as an app.</p></div>
+            <div class="card"><h5>TV / Embedded / Wearables</h5><p>Smart TVs, kiosks, cars, watches — specialized SDKs and constraints.</p></div>
+            <div class="card teal"><h5>PWA</h5><p>Progressive Web App — web that installs like an app and works offline.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Popular Web Frameworks <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— framework names link to deep dives</span></summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Framework</th><th>Backed by</th><th>Language</th><th>Why it matters</th></tr></thead>
+            <tbody>
+              <tr><td><a href="pages/frameworks/frontend/react.html" style="color:var(--blue);font-weight:600;">React →</a></td><td>Meta</td><td>JS / TypeScript</td><td>Component-based, the de-facto default, enormous ecosystem.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/angular.html" style="color:var(--blue);font-weight:600;">Angular →</a></td><td>Google</td><td>TypeScript</td><td>Opinionated and complete — popular for large enterprise apps.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/vue.html" style="color:var(--blue);font-weight:600;">Vue →</a></td><td>Community</td><td>JS / TS</td><td>Gentle learning curve, approachable templates.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/svelte.html" style="color:var(--blue);font-weight:600;">Svelte →</a></td><td>Community</td><td>JS / TS</td><td>Compiles away — smallest bundles, fastest runtime.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/solid.html" style="color:var(--blue);font-weight:600;">Solid →</a></td><td>Community</td><td>JS / TS</td><td>React-like API with fine-grained reactivity.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/next.html" style="color:var(--blue);font-weight:600;">Next.js →</a></td><td>Vercel</td><td>React</td><td>Full-stack React — routing, SSR, server components.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/nuxt.html" style="color:var(--blue);font-weight:600;">Nuxt →</a></td><td>Community</td><td>Vue</td><td>Next-style framework for Vue.</td></tr>
+              <tr><td><a href="pages/frameworks/frontend/sveltekit.html" style="color:var(--blue);font-weight:600;">SvelteKit →</a></td><td>Community</td><td>Svelte</td><td>Full-stack Svelte apps.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mobile Frameworks <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— framework names link to deep dives</span></summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">iOS</span><h5><a href="pages/frameworks/mobile/swiftui.html" style="color:var(--deep);text-decoration:none;">SwiftUI →</a></h5><p>Apple's native declarative framework. Best performance on Apple devices. <em>(Language: <a href="pages/languages/swift.html" style="color:var(--accent);">Swift</a>.)</em></p></div>
+            <div class="card teal"><span class="pill">Android</span><h5><a href="pages/frameworks/mobile/jetpack-compose.html" style="color:var(--deep);text-decoration:none;">Jetpack Compose →</a></h5><p>Google's native declarative toolkit for Android. <em>(Language: <a href="pages/languages/kotlin.html" style="color:var(--accent);">Kotlin</a>.)</em></p></div>
+            <div class="card mid"><span class="pill">Cross</span><h5><a href="pages/frameworks/mobile/flutter.html" style="color:var(--deep);text-decoration:none;">Flutter →</a></h5><p>Dart language; renders its own UI for pixel-identical look across platforms.</p></div>
+            <div class="card accent"><span class="pill">Cross</span><h5><a href="pages/frameworks/mobile/react-native.html" style="color:var(--deep);text-decoration:none;">React Native →</a></h5><p>Reuses React skills; native components under the hood. <em>(Language: <a href="pages/languages/javascript.html" style="color:var(--accent);">JavaScript</a>.)</em></p></div>
+            <div class="card"><span class="pill">Cross</span><h5><a href="pages/frameworks/mobile/dotnet-maui.html" style="color:var(--deep);text-decoration:none;">.NET MAUI →</a></h5><p>C# everywhere — Microsoft's successor to Xamarin. <em>(Language: <a href="pages/languages/csharp.html" style="color:var(--accent);">C#</a>.)</em></p></div>
+            <div class="card teal"><span class="pill">Cross</span><h5><a href="pages/frameworks/mobile/kotlin-multiplatform.html" style="color:var(--deep);text-decoration:none;">Kotlin Multiplatform →</a></h5><p>Share business logic across iOS, Android, web; native UI per platform. <em>(Language: <a href="pages/languages/kotlin.html" style="color:var(--accent);">Kotlin</a>.)</em></p></div>
+            <div class="card mid"><span class="pill">Hybrid</span><h5><a href="pages/frameworks/mobile/ionic.html" style="color:var(--deep);text-decoration:none;">Ionic + Capacitor →</a></h5><p>Web technology wrapped as a native app; React/Vue/Angular inside.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Client-Side Tooling</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">Bundle</span><h5>Bundlers</h5><p>Webpack, Vite, esbuild, Parcel, Rollup — package many files for the browser.</p></div>
+            <div class="card teal"><span class="pill">Install</span><h5>Package Managers</h5><p>npm, pnpm, yarn — install JavaScript libraries.</p></div>
+            <div class="card mid"><span class="pill">Translate</span><h5>Transpilers</h5><p>Babel, TypeScript, SWC — modern/typed code → browser JS.</p></div>
+            <div class="card accent"><span class="pill">Style</span><h5>CSS Systems</h5><p>Tailwind, Sass, CSS Modules, styled-components, design tokens.</p></div>
+            <div class="card"><span class="pill">State</span><h5>State Management</h5><p>Redux, Zustand, Pinia, NgRx, React Query, SWR.</p></div>
+            <div class="card teal"><span class="pill">UI Kits</span><h5>Component Libraries</h5><p>Material UI, Ant Design, shadcn/ui, Chakra, Bootstrap.</p></div>
+            <div class="card mid"><span class="pill">Accessibility</span><h5>a11y</h5><p>Screen readers, ARIA roles, keyboard nav, color contrast. Legal in many regions.</p></div>
+            <div class="card accent"><span class="pill">i18n</span><h5>Internationalization</h5><p>Multiple languages, currencies, dates, right-to-left layouts.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 03 SERVER -->
+  <section class="chapter" id="ch-server">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 03</div><h2>Server Side</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Servers run the business logic — authentication, transactions, integrations, background work — and expose it through APIs.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Server:</strong> a program (and the machine it runs on) that waits for requests and responds.</li>
+          <li><strong>Request/Response:</strong> clients send a request, the server returns a response. Usually over HTTP.</li>
+          <li><strong>Stateless vs Stateful:</strong> stateless servers keep nothing between requests — easier to scale.</li>
+          <li><strong>Business logic</strong> = the rules of your domain (pricing, approvals, workflows).</li>
+          <li><strong>Concurrency:</strong> handling many users at once via threads, async loops, or many processes.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Languages on the Server <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
+        <div class="drill-body">
+          <div class="grid">
+            <a class="card" href="pages/languages/java.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Enterprise</span><h5>Java →</h5><p>Strongly typed, long-lived; backs banks, airlines, telcos.</p></a>
+            <a class="card teal" href="pages/languages/csharp.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Microsoft</span><h5>C# / .NET →</h5><p>Excellent tooling; the Microsoft-shop default.</p></a>
+            <a class="card mid" href="pages/languages/python.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Versatile</span><h5>Python →</h5><p>Readable, huge libraries; web, data, AI, scripting.</p></a>
+            <div class="card accent"><span class="pill">Full-stack</span><h5><a href="pages/languages/javascript.html" style="color:var(--deep);text-decoration:none;">Node.js (JS) →</a></h5><p>Same language as the browser; fast iteration. <em>Often paired with <a href="pages/languages/typescript.html" style="color:var(--accent);">TypeScript</a> for type safety.</em></p></div>
+            <a class="card" href="pages/languages/go.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Cloud-native</span><h5>Go →</h5><p>Small binaries, fast startup; built at Google.</p></a>
+            <a class="card teal" href="pages/languages/rust.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Safety</span><h5>Rust →</h5><p>Memory-safe systems language; growing in backend &amp; infra.</p></a>
+            <a class="card mid" href="pages/languages/ruby.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Web</span><h5>Ruby →</h5><p>Developer-friendly; famous for Rails.</p></a>
+            <a class="card accent" href="pages/languages/kotlin.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">JVM</span><h5>Kotlin →</h5><p>Modern JVM language; runs Android too. (Scala is its sibling.)</p></a>
+            <a class="card" href="pages/languages/cpp.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Systems</span><h5>C++ →</h5><p>Performance-critical engines, browsers, trading, games.</p></a>
+            <a class="card teal" href="pages/languages/php.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Scripting</span><h5>PHP →</h5><p>Still powers a huge share of the web (WordPress, Laravel).</p></a>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Backend Frameworks <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— framework names link to deep dives</span></summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Language</th><th>Framework</th><th>Why it matters</th></tr></thead>
+            <tbody>
+              <tr><td>Java</td><td><a href="pages/frameworks/backend/spring-boot.html" style="color:var(--blue);font-weight:600;">Spring Boot →</a></td><td>Convention-over-config. The enterprise standard.</td></tr>
+              <tr><td>Java</td><td>Quarkus / Micronaut</td><td>Lightweight, cloud-native, fast startup.</td></tr>
+              <tr><td>C# / .NET</td><td><a href="pages/frameworks/backend/aspnet-core.html" style="color:var(--blue);font-weight:600;">ASP.NET Core →</a></td><td>High-performance web &amp; API framework.</td></tr>
+              <tr><td>Python</td><td><a href="pages/frameworks/backend/django.html" style="color:var(--blue);font-weight:600;">Django →</a></td><td>Full-featured — admin, ORM, auth included.</td></tr>
+              <tr><td>Python</td><td><a href="pages/frameworks/backend/fastapi.html" style="color:var(--blue);font-weight:600;">FastAPI →</a> / Flask</td><td>Minimal APIs; type hints and async.</td></tr>
+              <tr><td>Node.js</td><td><a href="pages/frameworks/backend/express.html" style="color:var(--blue);font-weight:600;">Express →</a> / <a href="pages/frameworks/backend/nestjs.html" style="color:var(--blue);font-weight:600;">NestJS →</a> / Fastify</td><td>From minimal (Express) to opinionated (Nest).</td></tr>
+              <tr><td>Go</td><td><a href="pages/frameworks/backend/gin.html" style="color:var(--blue);font-weight:600;">Gin →</a> / Echo / Fiber</td><td>Blazing-fast HTTP routers.</td></tr>
+              <tr><td>Ruby</td><td><a href="pages/frameworks/backend/rails.html" style="color:var(--blue);font-weight:600;">Ruby on Rails →</a></td><td>The classic full-stack, convention-driven framework.</td></tr>
+              <tr><td>PHP</td><td><a href="pages/frameworks/backend/laravel.html" style="color:var(--blue);font-weight:600;">Laravel →</a> / Symfony</td><td>Modern PHP frameworks with rich ecosystems.</td></tr>
+              <tr><td>Kotlin</td><td><a href="pages/frameworks/backend/ktor.html" style="color:var(--blue);font-weight:600;">Ktor →</a></td><td>Kotlin-native backend framework.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Server Responsibilities</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Authentication &amp; Sessions</h5><p>Who are you? JWT, OAuth, cookies, SSO.</p></div>
+            <div class="card teal"><h5>Authorization</h5><p>What can you do? RBAC, ABAC, permissions.</p></div>
+            <div class="card mid"><h5>Validation</h5><p>Never trust input — validate at every boundary.</p></div>
+            <div class="card accent"><h5>Persistence</h5><p>Talk to databases via ORMs or query builders.</p></div>
+            <div class="card"><h5>Integrations</h5><p>Payments, email, SMS, 3rd-party APIs.</p></div>
+            <div class="card teal"><h5>Background Jobs</h5><p>Queue long tasks: reports, emails, ML scoring.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 04 DB -->
+  <section class="chapter" id="ch-db">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 04</div><h2>Database Side</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Databases are how software remembers things safely, quickly, and at scale.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Schema:</strong> the shape of your data (tables, columns, types).</li>
+          <li><strong>CRUD:</strong> Create, Read, Update, Delete — the four basic operations.</li>
+          <li><strong>ACID:</strong> Atomicity, Consistency, Isolation, Durability — transactional guarantees.</li>
+          <li><strong>Index:</strong> a shortcut that makes reads fast; a trade-off that slows writes.</li>
+          <li><strong>Normalization:</strong> splitting data to avoid duplication. <strong>Denormalization:</strong> duplicating on purpose for speed.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>SQL vs NoSQL</summary>
+        <div class="drill-body">
+          <div class="two-col">
+            <div class="card"><h5>SQL (Relational)</h5>
+              <p><strong>Strict schema, ACID, joins.</strong> Best for money, orders, anything with invariants.</p>
+              <p style="margin-top:6px;">Examples: PostgreSQL, MySQL, SQL Server, Oracle, SQLite.</p>
+            </div>
+            <div class="card teal"><h5>NoSQL</h5>
+              <p><strong>Flexible schemas, horizontal scale.</strong> Great for unstructured or massive data.</p>
+              <p style="margin-top:6px;">Families: document, key-value, column, graph.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Database Families &amp; When to Use Them</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Family</th><th>Examples</th><th>Best for</th></tr></thead>
+            <tbody>
+              <tr><td>Relational</td><td>PostgreSQL, MySQL, SQL Server</td><td>Transactions, joins, strong consistency.</td></tr>
+              <tr><td>Document</td><td>MongoDB, Couchbase</td><td>JSON-like records, flexible shape.</td></tr>
+              <tr><td>Key-Value</td><td>Redis, DynamoDB</td><td>Ultra-fast lookups, caches, sessions.</td></tr>
+              <tr><td>Column</td><td>Cassandra, HBase, ScyllaDB</td><td>Huge writes, time-series.</td></tr>
+              <tr><td>Graph</td><td>Neo4j, Amazon Neptune</td><td>Deep relationships — fraud, recommendations.</td></tr>
+              <tr><td>Search</td><td>Elasticsearch, OpenSearch</td><td>Full-text search, logs, observability.</td></tr>
+              <tr><td>Vector</td><td>Pinecone, Weaviate, pgvector</td><td>AI embeddings — semantic search, RAG.</td></tr>
+              <tr><td>Warehouse / Lake</td><td>Snowflake, BigQuery, Databricks</td><td>Analytics at scale; historical reporting.</td></tr>
+              <tr><td>Time-Series</td><td>InfluxDB, TimescaleDB</td><td>Metrics, IoT, sensor data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ORMs &amp; Data Access</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">Java</span><h5>Hibernate / JPA</h5><p>Map objects ↔ tables. Venerable, powerful.</p></div>
+            <div class="card teal"><span class="pill">.NET</span><h5>Entity Framework</h5><p>LINQ queries, migrations.</p></div>
+            <div class="card mid"><span class="pill">Python</span><h5>SQLAlchemy / Django ORM</h5><p>The two Python standards.</p></div>
+            <div class="card accent"><span class="pill">Node</span><h5>Prisma / TypeORM / Drizzle</h5><p>Type-safe database access for TS.</p></div>
+            <div class="card"><span class="pill">Ruby</span><h5>ActiveRecord</h5><p>Rails' iconic ORM.</p></div>
+            <div class="card teal"><span class="pill">All</span><h5>Raw SQL / Query Builders</h5><p>Knex, jOOQ, sqlx — hand-crafted control when ORMs get in the way.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Caching &amp; Performance</summary>
+        <div class="drill-body">
+          <p>Databases are often the bottleneck. Caching is the first optimization most apps reach for.</p>
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Application cache:</strong> in-memory (Guava, Caffeine).</li>
+            <li><strong>Distributed cache:</strong> Redis, Memcached.</li>
+            <li><strong>CDN cache:</strong> Cloudflare, CloudFront, Fastly — cache at the edge, close to users.</li>
+            <li><strong>Read replicas:</strong> offload reads to secondary DB copies.</li>
+            <li><strong>Sharding:</strong> split one database into many by key.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 05 APIs & Networking -->
+  <section class="chapter" id="ch-api">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 05</div><h2>APIs &amp; Networking</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">APIs are the contracts between systems — and networking is how they talk.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>API</strong> (Application Programming Interface): a defined way one system calls another.</li>
+          <li><strong>HTTP:</strong> the request/response protocol of the web. Verbs: <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>.</li>
+          <li><strong>JSON</strong> is the common data format for APIs.</li>
+          <li><strong>DNS</strong> turns <code>example.com</code> into an IP address.</li>
+          <li><strong>TLS / HTTPS</strong> encrypts the traffic end-to-end.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>API Styles</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>REST</h5><p>Resources + HTTP verbs. Simple, cacheable, ubiquitous.</p></div>
+            <div class="card teal"><h5>GraphQL</h5><p>Client asks for exactly the fields it needs. One endpoint.</p></div>
+            <div class="card mid"><h5>gRPC</h5><p>Binary protocol using Protocol Buffers. Very fast for service-to-service.</p></div>
+            <div class="card accent"><h5>WebSockets</h5><p>Two-way always-on channel. Chats, dashboards, games.</p></div>
+            <div class="card"><h5>SOAP</h5><p>XML-based, heavy but still seen in legacy enterprise.</p></div>
+            <div class="card teal"><h5>Webhooks</h5><p>Reverse APIs — the server calls you when an event happens.</p></div>
+            <div class="card mid"><h5>Server-Sent Events</h5><p>One-way stream from server to client.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Networking Fundamentals</summary>
+        <div class="drill-body">
+          <div class="flow">
+            <div class="step">Client</div><div class="arrow">→</div>
+            <div class="step">DNS lookup</div><div class="arrow">→</div>
+            <div class="step">TCP + TLS handshake</div><div class="arrow">→</div>
+            <div class="step">HTTP request</div><div class="arrow">→</div>
+            <div class="step">Server</div><div class="arrow">→</div>
+            <div class="step">Response</div>
+          </div>
+          <table style="margin-top: 14px;">
+            <thead><tr><th>Concept</th><th>Beginner explanation</th></tr></thead>
+            <tbody>
+              <tr><td>IP &amp; Port</td><td>IP identifies a machine; port identifies a program on it (e.g. 443 for HTTPS).</td></tr>
+              <tr><td>TCP vs UDP</td><td>TCP is reliable &amp; ordered (web). UDP is fast &amp; lossy (video/game).</td></tr>
+              <tr><td>CORS</td><td>Browsers block cross-site requests by default; the server must opt in.</td></tr>
+              <tr><td>Load Balancer</td><td>Distributes requests across many servers.</td></tr>
+              <tr><td>Reverse Proxy</td><td>Sits in front of your app (nginx, HAProxy) — TLS, caching, routing.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Messaging &amp; Event Streaming</summary>
+        <div class="drill-body">
+          <p>When services don't want to wait for each other, they exchange messages.</p>
+          <div class="grid">
+            <div class="card"><h5>Message Queues</h5><p>RabbitMQ, ActiveMQ, Amazon SQS. One producer → one consumer, with durable delivery.</p></div>
+            <div class="card teal"><h5>Event Streaming</h5><p>Apache Kafka, AWS Kinesis, Google Pub/Sub. Replayable logs of events, many consumers.</p></div>
+            <div class="card mid"><h5>Pub/Sub</h5><p>Publishers broadcast events; subscribers listen. Decoupling 101.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 06 ARCH -->
+  <section class="chapter" id="ch-arch">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 06</div><h2>Architecture &amp; Design Patterns</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Architecture is about the big-picture shape — how pieces fit, scale, and evolve.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Separation of Concerns:</strong> each piece of code has one job.</li>
+          <li><strong>Coupling vs Cohesion:</strong> aim for low coupling between modules, high cohesion within them.</li>
+          <li><strong>Scalability:</strong> <em>vertical</em> (bigger machine) vs <em>horizontal</em> (more machines).</li>
+          <li><strong>Availability:</strong> how often the system is up. 99.9% ≈ 8h downtime/year.</li>
+          <li><strong>Consistency vs Availability (CAP):</strong> in a partition, you pick one.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Architectural Styles</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Monolith</h5><p>One deployable app. Simple early on; hard to scale teams.</p></div>
+            <div class="card teal"><h5>Modular Monolith</h5><p>Monolith with strict internal boundaries. Often the right default.</p></div>
+            <div class="card mid"><h5>Microservices</h5><p>Many small services, independently deployed. Powerful but complex.</p></div>
+            <div class="card accent"><h5>Serverless</h5><p>Functions triggered by events. No servers to manage.</p></div>
+            <div class="card"><h5>Event-Driven</h5><p>Services communicate via events on a bus. Loose coupling, eventual consistency.</p></div>
+            <div class="card teal"><h5>Layered / N-tier</h5><p>Presentation → Application → Domain → Data. The classic.</p></div>
+            <div class="card mid"><h5>Hexagonal / Clean</h5><p>Domain core, adapters on the edges. Swap DB or UI without touching logic.</p></div>
+            <div class="card accent"><h5>CQRS + Event Sourcing</h5><p>Separate read/write models; store events, not state.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Design Principles (SOLID &amp; Friends)</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>S — Single Responsibility:</strong> one reason to change per class.</li>
+            <li><strong>O — Open/Closed:</strong> open to extension, closed to modification.</li>
+            <li><strong>L — Liskov Substitution:</strong> subtypes must work where the base type is used.</li>
+            <li><strong>I — Interface Segregation:</strong> many small interfaces beat one big one.</li>
+            <li><strong>D — Dependency Inversion:</strong> depend on abstractions, not concretes.</li>
+            <li><strong>DRY</strong> (Don't Repeat Yourself), <strong>KISS</strong> (Keep It Simple), <strong>YAGNI</strong> (You Aren't Gonna Need It).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Design Patterns</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Creational</h5><p>Singleton, Factory, Builder, Prototype.</p></div>
+            <div class="card teal"><h5>Structural</h5><p>Adapter, Decorator, Facade, Proxy, Composite.</p></div>
+            <div class="card mid"><h5>Behavioral</h5><p>Strategy, Observer, Command, Iterator, State.</p></div>
+            <div class="card accent"><h5>Enterprise</h5><p>Repository, Unit of Work, DTO, Dependency Injection.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 07 SECURITY -->
+  <section class="chapter" id="ch-security">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 07</div><h2>Security</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Security isn't a feature you bolt on — it's a property you design for.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Authentication (AuthN):</strong> who are you? (password, SSO, biometric)</li>
+          <li><strong>Authorization (AuthZ):</strong> what are you allowed to do? (roles, permissions)</li>
+          <li><strong>Encryption at rest</strong> (stored data) vs <strong>in transit</strong> (TLS/HTTPS).</li>
+          <li><strong>Hashing</strong> is one-way (passwords). <strong>Encryption</strong> is reversible (with a key).</li>
+          <li><strong>Principle of Least Privilege:</strong> give every user/system the minimum access needed.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>OWASP Top 10 (Common Web Vulnerabilities)</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Injection</h5><p>SQL injection, command injection. Always use parameterized queries.</p></div>
+            <div class="card teal"><h5>Broken Access Control</h5><p>Users accessing data they shouldn't — #1 most common.</p></div>
+            <div class="card mid"><h5>XSS</h5><p>Cross-site scripting — attacker's JS runs in your page.</p></div>
+            <div class="card accent"><h5>CSRF</h5><p>A malicious site makes the browser perform actions as the logged-in user.</p></div>
+            <div class="card"><h5>Broken Authentication</h5><p>Weak passwords, no MFA, leaky sessions.</p></div>
+            <div class="card teal"><h5>Insecure Deserialization</h5><p>Untrusted data → code execution.</p></div>
+            <div class="card mid"><h5>Vulnerable Dependencies</h5><p>Old libraries with known CVEs.</p></div>
+            <div class="card accent"><h5>Security Misconfiguration</h5><p>Default passwords, verbose errors, open S3 buckets.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Auth Standards</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Standard</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>OAuth 2.0</td><td>Delegated authorization — "let this app read my Google calendar".</td></tr>
+              <tr><td>OpenID Connect (OIDC)</td><td>Authentication layer on top of OAuth — "who am I?".</td></tr>
+              <tr><td>SAML</td><td>Enterprise SSO (older, XML-based).</td></tr>
+              <tr><td>JWT</td><td>Signed token format; commonly carries auth claims.</td></tr>
+              <tr><td>MFA / 2FA</td><td>Second factor (authenticator app, hardware key).</td></tr>
+              <tr><td>Passkeys / WebAuthn</td><td>Modern passwordless authentication.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Secure Development Practices</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li>Never commit secrets. Use secret managers (AWS Secrets Manager, HashiCorp Vault).</li>
+            <li>Scan dependencies (Dependabot, Snyk) and container images.</li>
+            <li>Run SAST (static analysis) and DAST (dynamic) tools in CI.</li>
+            <li>Threat model new features before building them.</li>
+            <li>Rotate keys; audit access logs; patch promptly.</li>
+            <li>Understand relevant compliance: <strong>GDPR, HIPAA, PCI-DSS, SOC 2, ISO 27001</strong>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 08 TESTING -->
+  <section class="chapter" id="ch-testing">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 08</div><h2>Testing &amp; Code Quality</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Tests are how we move fast without breaking things. Quality tools keep codebases readable for years.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Test pyramid:</strong> lots of fast unit tests at the base, fewer integration tests in the middle, very few slow E2E tests at the top.</li>
+          <li><strong>TDD:</strong> write the failing test first, then the code that makes it pass.</li>
+          <li><strong>Coverage:</strong> how much code your tests exercise — useful but not a quality measure by itself.</li>
+          <li><strong>Static analysis:</strong> tools that find bugs without running code.</li>
+          <li><strong>Code review:</strong> a human reads your change before it merges.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Test Types</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Unit</h5><p>One function/class in isolation. Fast, many.</p></div>
+            <div class="card teal"><h5>Integration</h5><p>Multiple parts together, possibly a real DB.</p></div>
+            <div class="card mid"><h5>End-to-End (E2E)</h5><p>Full system through a real browser or API.</p></div>
+            <div class="card accent"><h5>Contract</h5><p>Verify service producers and consumers agree (Pact).</p></div>
+            <div class="card"><h5>Performance / Load</h5><p>k6, JMeter, Gatling — how it behaves under stress.</p></div>
+            <div class="card teal"><h5>Smoke</h5><p>Minimal "does it start?" tests in production.</p></div>
+            <div class="card mid"><h5>Regression</h5><p>Ensures old bugs stay fixed.</p></div>
+            <div class="card accent"><h5>Chaos</h5><p>Deliberately break things (Netflix Chaos Monkey) to prove resilience.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Testing Frameworks</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Stack</th><th>Unit / Integration</th><th>E2E</th></tr></thead>
+            <tbody>
+              <tr><td>Java</td><td>JUnit, TestNG, Mockito</td><td>Selenium</td></tr>
+              <tr><td>.NET</td><td>xUnit, NUnit, MSTest</td><td>Playwright, Selenium</td></tr>
+              <tr><td>Python</td><td>pytest, unittest</td><td>Playwright, Selenium</td></tr>
+              <tr><td>JS / TS</td><td>Jest, Vitest, Mocha</td><td>Playwright, Cypress</td></tr>
+              <tr><td>Ruby</td><td>RSpec, Minitest</td><td>Capybara</td></tr>
+              <tr><td>Go</td><td>testing, testify</td><td>Playwright</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Code Quality Tools</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">Lint</span><h5>Linters</h5><p>ESLint, Pylint, RuboCop, Checkstyle — enforce style, catch bugs.</p></div>
+            <div class="card teal"><span class="pill">Format</span><h5>Formatters</h5><p>Prettier, Black, gofmt, Spotless — zero-config consistent style.</p></div>
+            <div class="card mid"><span class="pill">SAST</span><h5>Static Analysis</h5><p>SonarQube, Semgrep, CodeQL — deep bug &amp; security scanning.</p></div>
+            <div class="card accent"><span class="pill">Types</span><h5>Type Checking</h5><p>TypeScript, mypy, Flow — compile-time safety for dynamic languages.</p></div>
+            <div class="card"><span class="pill">Review</span><h5>PR / Code Review</h5><p>GitHub PRs, GitLab MRs, Gerrit — human sanity check.</p></div>
+            <div class="card teal"><span class="pill">Docs</span><h5>Doc Generators</h5><p>Javadoc, JSDoc, Sphinx, Doxygen — API docs from comments.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 09 CROSS-CUTTING -->
+  <section class="chapter" id="ch-cross">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 09</div><h2>Cross-Cutting Tools</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">These tools show up in nearly every project, regardless of stack.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Version control</strong> tracks every change; Git is the universal standard.</li>
+          <li><strong>Build tool</strong> turns source into a shippable artifact (jar, container, bundle).</li>
+          <li><strong>Package manager</strong> installs and versions your dependencies.</li>
+          <li><strong>IDE</strong> is your writing environment — editor + debugger + refactoring.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Version Control</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Git</h5><p>Distributed version control — the standard.</p></div>
+            <div class="card teal"><h5>GitHub</h5><p>Hosting, PRs, Actions (CI/CD), Copilot.</p></div>
+            <div class="card mid"><h5>GitLab</h5><p>Hosting + built-in CI/CD, often self-hosted.</p></div>
+            <div class="card accent"><h5>Bitbucket</h5><p>Atlassian — integrates with Jira.</p></div>
+            <div class="card"><h5>Azure DevOps</h5><p>Microsoft's full ALM suite.</p></div>
+            <div class="card teal"><h5>Mercurial / SVN</h5><p>Legacy systems still found in older projects.</p></div>
+          </div>
+          <p style="margin-top: 10px; font-size: 13.5px; color: var(--muted);">
+            Key Git concepts: <code>clone</code>, <code>branch</code>, <code>commit</code>, <code>merge</code>, <code>rebase</code>, <code>pull request</code>. Common workflows: <em>GitFlow</em>, <em>trunk-based</em>.
+          </p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Build Tools &amp; Package Managers</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Stack</th><th>Tool</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Java</td><td>Maven, Gradle</td><td>Dependencies, builds, packaging JAR/WAR.</td></tr>
+              <tr><td>JavaScript / TS</td><td>npm, pnpm, yarn + Vite / Webpack</td><td>Install libs + bundle browser code.</td></tr>
+              <tr><td>.NET</td><td>dotnet CLI, NuGet, MSBuild</td><td>Restore, compile, package .NET.</td></tr>
+              <tr><td>Python</td><td>pip, Poetry, uv, pipenv</td><td>Dependency &amp; environment management.</td></tr>
+              <tr><td>C / C++</td><td>CMake, Make, Bazel</td><td>Cross-platform native builds.</td></tr>
+              <tr><td>Go / Rust</td><td>go build, cargo</td><td>Single-binary compilation baked in.</td></tr>
+              <tr><td>Ruby</td><td>Bundler + RubyGems</td><td>Ruby dependency management.</td></tr>
+              <tr><td>Mobile</td><td>Gradle, CocoaPods, SwiftPM</td><td>Android &amp; iOS packaging.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>IDEs &amp; Editors</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>VS Code</h5><p>The most popular editor — free, extensible, everywhere.</p></div>
+            <div class="card teal"><h5>JetBrains Suite</h5><p>IntelliJ (Java), PyCharm, WebStorm, Rider, GoLand. Best-in-class refactoring.</p></div>
+            <div class="card mid"><h5>Visual Studio</h5><p>Full IDE for .NET and C++ on Windows.</p></div>
+            <div class="card accent"><h5>Neovim / Emacs</h5><p>Keyboard-driven power tools for enthusiasts.</p></div>
+            <div class="card"><h5>Cursor / Claude Code / Copilot</h5><p>AI-native editors — pair-programmers built in.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Project &amp; Issue Tracking</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Jira</h5><p>Enterprise standard for backlogs &amp; sprints.</p></div>
+            <div class="card teal"><h5>Linear</h5><p>Fast, opinionated, developer-favorite.</p></div>
+            <div class="card mid"><h5>GitHub Issues / Projects</h5><p>Tightly integrated with the repo.</p></div>
+            <div class="card accent"><h5>Trello / Asana / ClickUp</h5><p>Lightweight boards for small teams.</p></div>
+            <div class="card"><h5>Confluence / Notion</h5><p>Team wikis and documentation.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 10 DEVOPS -->
+  <section class="chapter" id="ch-devops">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 10</div><h2>DevOps &amp; CI/CD</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">DevOps closes the gap between writing code and running it in production — through automation.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>CI (Continuous Integration):</strong> every change is automatically built and tested.</li>
+          <li><strong>CD (Continuous Delivery / Deployment):</strong> every green build is deployable — or actually deployed.</li>
+          <li><strong>Container:</strong> a lightweight, portable unit bundling app + dependencies.</li>
+          <li><strong>IaC (Infrastructure as Code):</strong> describe servers/networks in code, apply like software.</li>
+          <li><strong>Shift left:</strong> move testing, security, and quality checks earlier in the pipeline.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>CI/CD Platforms</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>GitHub Actions</h5><p>YAML workflows, huge marketplace.</p></div>
+            <div class="card teal"><h5>GitLab CI</h5><p>Built into GitLab; mature and full-featured.</p></div>
+            <div class="card mid"><h5>Jenkins</h5><p>Battle-tested, plugin-rich, self-hosted.</p></div>
+            <div class="card accent"><h5>CircleCI / Travis / TeamCity</h5><p>Other long-standing CI services.</p></div>
+            <div class="card"><h5>Azure Pipelines</h5><p>Microsoft's offering — works for any language.</p></div>
+            <div class="card teal"><h5>ArgoCD / Flux</h5><p>GitOps — deploy to Kubernetes from Git.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Containers &amp; Orchestration</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">Build</span><h5>Docker / Podman</h5><p>Package your app + runtime into a portable image.</p></div>
+            <div class="card teal"><span class="pill">Run many</span><h5>Kubernetes (K8s)</h5><p>Orchestrates containers across clusters — the de-facto standard.</p></div>
+            <div class="card mid"><span class="pill">Managed</span><h5>EKS / AKS / GKE</h5><p>Managed K8s from AWS / Azure / Google.</p></div>
+            <div class="card accent"><span class="pill">Simple</span><h5>ECS / Docker Swarm / Nomad</h5><p>Simpler alternatives to Kubernetes.</p></div>
+            <div class="card"><span class="pill">Packaging</span><h5>Helm</h5><p>Package manager for Kubernetes apps.</p></div>
+            <div class="card teal"><span class="pill">Mesh</span><h5>Service Mesh</h5><p>Istio, Linkerd — traffic, security, observability between services.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Infrastructure as Code (IaC)</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Tool</th><th>Strength</th></tr></thead>
+            <tbody>
+              <tr><td>Terraform / OpenTofu</td><td>Cloud-agnostic, declarative — describe infra in HCL.</td></tr>
+              <tr><td>AWS CloudFormation</td><td>Native to AWS; very deep integration.</td></tr>
+              <tr><td>Pulumi</td><td>IaC using real programming languages (TS, Python, Go).</td></tr>
+              <tr><td>Ansible</td><td>Configuration management — agentless, YAML playbooks.</td></tr>
+              <tr><td>Chef / Puppet</td><td>Older configuration management stalwarts.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Deployment Strategies</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Rolling:</strong> replace instances a few at a time.</li>
+            <li><strong>Blue/Green:</strong> spin up a full new env, switch traffic instantly, roll back if needed.</li>
+            <li><strong>Canary:</strong> send 1–5% of traffic to new version, expand if healthy.</li>
+            <li><strong>Feature flags:</strong> ship code dark, turn it on for subsets of users.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 11 METHODOLOGIES -->
+  <section class="chapter" id="ch-method">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 11</div><h2>Methodologies &amp; SDLC</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">How teams organize work, prioritize, and ship — from classic Waterfall to modern DevOps.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>SDLC</strong> (Software Development Life Cycle): Requirements → Design → Build → Test → Deploy → Maintain.</li>
+          <li><strong>Agile</strong> is a <em>mindset</em> of iteration and feedback — not a single process.</li>
+          <li><strong>Scrum &amp; Kanban</strong> are two concrete Agile flavors.</li>
+          <li><strong>DevOps</strong> unites developers and operations via automation and shared ownership.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Methodologies</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Waterfall</h5><p>Sequential phases. Predictable, inflexible to change.</p></div>
+            <div class="card teal"><h5>Agile</h5><p>Short iterations, constant feedback, adapt to change.</p></div>
+            <div class="card mid"><h5>Scrum</h5><p>Sprints (2 weeks), stand-ups, backlog, retros, roles.</p></div>
+            <div class="card accent"><h5>Kanban</h5><p>Continuous flow on a board, limit work-in-progress.</p></div>
+            <div class="card"><h5>XP (Extreme Programming)</h5><p>Pair programming, TDD, continuous integration.</p></div>
+            <div class="card teal"><h5>Lean</h5><p>Eliminate waste; focus on value delivery.</p></div>
+            <div class="card mid"><h5>SAFe / LeSS</h5><p>Scaled Agile for big organizations.</p></div>
+            <div class="card accent"><h5>DevOps</h5><p>Dev + Ops + automation + shared metrics.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Scrum Roles &amp; Ceremonies</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Role / Ceremony</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Product Owner</td><td>Owns priorities; decides <em>what</em> to build.</td></tr>
+              <tr><td>Scrum Master</td><td>Coaches the team; removes blockers.</td></tr>
+              <tr><td>Developers</td><td>Build the increment every sprint.</td></tr>
+              <tr><td>Sprint Planning</td><td>Pick goals &amp; items for the next sprint.</td></tr>
+              <tr><td>Daily Stand-up</td><td>15 min sync on progress &amp; blockers.</td></tr>
+              <tr><td>Sprint Review</td><td>Demo the increment to stakeholders.</td></tr>
+              <tr><td>Retrospective</td><td>Reflect on how to work better.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Estimation &amp; Planning</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Story points</strong> (relative effort) vs <strong>hours</strong> (absolute). Teams usually pick one.</li>
+            <li><strong>Planning Poker</strong> — collaborative estimation using cards.</li>
+            <li><strong>Velocity</strong> — story points completed per sprint.</li>
+            <li><strong>Definition of Done</strong> — what "finished" means (tests, docs, deployed).</li>
+            <li><strong>User Stories:</strong> "As a &lt;role&gt;, I want &lt;goal&gt;, so that &lt;benefit&gt;."</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 12 CLOUD -->
+  <section class="chapter" id="ch-cloud">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 12</div><h2>Cloud Computing</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">You rent computing on demand, pay only for what you use, and scale in minutes instead of months.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Region</strong> = geographic area. <strong>Availability Zone</strong> = isolated datacenter within a region.</li>
+          <li><strong>Elasticity:</strong> scale up &amp; down automatically with demand.</li>
+          <li><strong>Pay-as-you-go</strong> pricing — but watch for hidden costs (egress, idle resources).</li>
+          <li><strong>Shared Responsibility:</strong> cloud secures the platform, <em>you</em> secure your data &amp; config.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Service Models</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>IaaS</h5><p><em>Infrastructure</em> — raw VMs &amp; networks.<br/>AWS EC2, Azure VMs, GCP Compute Engine.</p></div>
+            <div class="card teal"><h5>PaaS</h5><p><em>Platform</em> — deploy code, no servers to manage.<br/>App Service, Cloud Run, Heroku.</p></div>
+            <div class="card mid"><h5>SaaS</h5><p><em>Software</em> — finished apps you subscribe to.<br/>Gmail, Salesforce, Slack.</p></div>
+            <div class="card accent"><h5>FaaS / Serverless</h5><p>Functions triggered by events.<br/>AWS Lambda, Azure Functions, Cloud Functions.</p></div>
+            <div class="card"><h5>DBaaS</h5><p>Managed databases.<br/>RDS, Cosmos DB, Cloud SQL.</p></div>
+            <div class="card teal"><h5>Containers as a Service</h5><p>Managed container platforms.<br/>EKS, AKS, GKE, ECS.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloud Providers</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Provider</th><th>Strength</th><th>Signature services</th></tr></thead>
+            <tbody>
+              <tr><td>AWS</td><td>Largest, most services.</td><td>EC2, S3, Lambda, RDS, DynamoDB</td></tr>
+              <tr><td>Microsoft Azure</td><td>Strong enterprise + Microsoft stack.</td><td>App Service, Functions, Cosmos DB, AKS</td></tr>
+              <tr><td>Google Cloud</td><td>Best-in-class data &amp; AI.</td><td>BigQuery, Vertex AI, Cloud Run, GKE</td></tr>
+              <tr><td>Oracle Cloud</td><td>Oracle DB workloads.</td><td>OCI Compute, Autonomous DB</td></tr>
+              <tr><td>DigitalOcean / Linode</td><td>Simple developer-friendly pricing.</td><td>Droplets, App Platform</td></tr>
+              <tr><td>Vercel / Netlify / Cloudflare</td><td>Edge &amp; front-end hosting.</td><td>Edge Functions, static hosting</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloud-Native Patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Stateless workers</strong> → scale horizontally behind a load balancer.</li>
+            <li><strong>Managed services</strong> wherever possible — less plumbing to maintain.</li>
+            <li><strong>Event-driven</strong> — queues &amp; streams decouple producers and consumers.</li>
+            <li><strong>12-Factor App</strong> — config via env vars, stateless processes, port binding, etc.</li>
+            <li><strong>FinOps</strong> — track &amp; optimize cloud spend like a first-class engineering concern.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 13 OBSERVABILITY -->
+  <section class="chapter" id="ch-observe">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 13</div><h2>Observability &amp; Performance</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">You can't fix what you can't see. Observability gives you eyes inside a running system.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts — The Three Pillars of Observability</h4>
+        <ul>
+          <li><strong>Logs:</strong> text records of events — "user X logged in at 3:42pm".</li>
+          <li><strong>Metrics:</strong> numbers over time — CPU, requests/sec, error rate.</li>
+          <li><strong>Traces:</strong> follow one request through many services.</li>
+          <li><strong>SLI / SLO / SLA:</strong> what you measure, what you promise internally, what you promise externally.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Tools &amp; Platforms</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><span class="pill">Logs</span><h5>ELK / OpenSearch / Loki</h5><p>Collect, index, and search log streams.</p></div>
+            <div class="card teal"><span class="pill">Metrics</span><h5>Prometheus + Grafana</h5><p>Open-source default for metrics &amp; dashboards.</p></div>
+            <div class="card mid"><span class="pill">Traces</span><h5>Jaeger / Zipkin / OpenTelemetry</h5><p>Distributed tracing — OTel is the emerging standard.</p></div>
+            <div class="card accent"><span class="pill">All-in-one</span><h5>Datadog / New Relic / Honeycomb</h5><p>Commercial platforms unifying the three pillars.</p></div>
+            <div class="card"><span class="pill">Alerts</span><h5>PagerDuty / Opsgenie</h5><p>Wake the right person when things break.</p></div>
+            <div class="card teal"><span class="pill">Errors</span><h5>Sentry / Rollbar</h5><p>Crash &amp; exception tracking for apps.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Performance &amp; Scalability</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Vertical scaling:</strong> bigger box — simple, limited.</li>
+            <li><strong>Horizontal scaling:</strong> more boxes — needs stateless design.</li>
+            <li><strong>Caching layers:</strong> CDN → reverse proxy → app cache → DB.</li>
+            <li><strong>Profiling:</strong> find hot spots (CPU, memory, SQL) before optimizing.</li>
+            <li><strong>Load testing:</strong> k6, JMeter, Gatling — simulate real traffic.</li>
+            <li><strong>Rate limiting &amp; backpressure</strong> protect services from overload.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 14 AI -->
+  <section class="chapter" id="ch-ai">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 14</div><h2>AI Landscape</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">The newest layer in the stack — and it changes both what we build and how we build it.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Model:</strong> a mathematical function trained on data to make predictions or generate content.</li>
+          <li><strong>LLM</strong> (Large Language Model): predicts the next token of text — GPT, Claude, Gemini.</li>
+          <li><strong>Embedding:</strong> a numerical vector that captures meaning of text/images.</li>
+          <li><strong>RAG</strong> (Retrieval-Augmented Generation): fetch relevant docs → feed into the LLM.</li>
+          <li><strong>Prompt:</strong> the instruction &amp; context you send to the model.</li>
+          <li><strong>Fine-tuning:</strong> further-train a model on your own data.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>The AI Stack Layers</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Foundation Models</h5><p>GPT, Claude, Gemini, Llama, Mistral, DeepSeek.</p></div>
+            <div class="card teal"><h5>Model Providers</h5><p>OpenAI, Anthropic, Google, Meta, xAI, Cohere.</p></div>
+            <div class="card mid"><h5>Frameworks</h5><p>LangChain, LlamaIndex, Semantic Kernel, Haystack.</p></div>
+            <div class="card accent"><h5>Vector DBs</h5><p>Pinecone, Weaviate, pgvector, Chroma, Milvus.</p></div>
+            <div class="card"><h5>Dev Agents / IDEs</h5><p>Claude Code, Cursor, GitHub Copilot, Windsurf.</p></div>
+            <div class="card teal"><h5>MLOps</h5><p>MLflow, Weights &amp; Biases, Vertex AI, SageMaker.</p></div>
+            <div class="card mid"><h5>Classic ML</h5><p>scikit-learn, XGBoost, PyTorch, TensorFlow.</p></div>
+            <div class="card accent"><h5>Data Prep</h5><p>pandas, Spark, dbt — feed the beast.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>AI in the Developer Workflow</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Code Generation</h5><p>Boilerplate, tests, whole features from natural language.</p></div>
+            <div class="card teal"><h5>Code Review</h5><p>Flag bugs, security issues, style problems in PRs.</p></div>
+            <div class="card mid"><h5>Documentation</h5><p>Auto-generate docstrings, READMEs, explain legacy code.</p></div>
+            <div class="card accent"><h5>Debugging</h5><p>Paste an error; get a cause and suggested fix.</p></div>
+            <div class="card"><h5>Product Features</h5><p>Chatbots, search, summarization, recommendations.</p></div>
+            <div class="card teal"><h5>Data &amp; Insights</h5><p>Natural-language analytics, anomaly detection.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Responsible AI</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>Hallucinations</strong> — LLMs can confidently invent facts. Validate outputs.</li>
+            <li><strong>Bias &amp; fairness</strong> — models reflect training data; audit for disparate impact.</li>
+            <li><strong>Privacy</strong> — never send sensitive data to third-party APIs without review.</li>
+            <li><strong>Prompt injection</strong> — a new attack surface; treat model output as untrusted input.</li>
+            <li><strong>Evaluation</strong> — golden sets, LLM-as-judge, human review. Ship what you can measure.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- 15 SOFT -->
+  <section class="chapter" id="ch-soft">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 15</div><h2>Soft Skills &amp; Ecosystem</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">Code is only half the job. The rest is people, writing, and the wider ecosystem you work in.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Clear writing</strong> is the most valuable developer skill — PRs, docs, incident reports.</li>
+          <li><strong>Code review</strong> is about learning, not gatekeeping.</li>
+          <li><strong>Open source</strong> underpins nearly every project you'll ever build.</li>
+          <li><strong>Licenses</strong> matter — not every "free" library is safe to ship commercially.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Developer Soft Skills</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Communication</h5><p>Explain tradeoffs in plain language to non-technical stakeholders.</p></div>
+            <div class="card teal"><h5>Collaboration</h5><p>Pair programming, constructive code review, async updates.</p></div>
+            <div class="card mid"><h5>Problem Decomposition</h5><p>Break big problems into independently shippable pieces.</p></div>
+            <div class="card accent"><h5>Time &amp; Focus</h5><p>Deep work, protecting schedules, avoiding endless yak-shaving.</p></div>
+            <div class="card"><h5>Learning to Learn</h5><p>Tech moves fast — skill of picking up new tools efficiently.</p></div>
+            <div class="card teal"><h5>Debugging Mindset</h5><p>Forming hypotheses, isolating variables, reading carefully.</p></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Open Source &amp; Licensing</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>License family</th><th>Practical meaning</th></tr></thead>
+            <tbody>
+              <tr><td>MIT / BSD / Apache 2.0</td><td>Permissive — use freely, even in closed-source commercial products.</td></tr>
+              <tr><td>GPL / AGPL</td><td>Copyleft — using it may require you to also release your code.</td></tr>
+              <tr><td>LGPL</td><td>Weaker copyleft — linking is typically OK.</td></tr>
+              <tr><td>Creative Commons</td><td>For content (docs, images) — not code.</td></tr>
+              <tr><td>Proprietary / Commercial</td><td>Check the EULA — often per-seat or per-core pricing.</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top: 10px; font-size: 13px; color: var(--muted);">Rule of thumb: before adopting a library, check its license and whether it fits your product's shipping model.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Documentation &amp; Writing</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.6;">
+            <li><strong>README</strong> — what it is, how to run it, how to contribute.</li>
+            <li><strong>Architecture Decision Records (ADRs)</strong> — short notes on <em>why</em> a design choice was made.</li>
+            <li><strong>Runbooks</strong> — step-by-step guides for common operational tasks.</li>
+            <li><strong>Postmortems</strong> — blameless write-ups after incidents.</li>
+            <li><strong>API docs</strong> — OpenAPI/Swagger for REST, Schema Introspection for GraphQL.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Career &amp; Community</summary>
+        <div class="drill-body">
+          <div class="grid">
+            <div class="card"><h5>Community Sites</h5><p>Stack Overflow, Reddit, Dev.to, Hacker News.</p></div>
+            <div class="card teal"><h5>Learning</h5><p>freeCodeCamp, Coursera, Pluralsight, Frontend Masters.</p></div>
+            <div class="card mid"><h5>Portfolio</h5><p>GitHub profile, personal site, blog posts — show the work.</p></div>
+            <div class="card accent"><h5>Interview Prep</h5><p>LeetCode, HackerRank, System Design Primer.</p></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <footer>
+    <p>Software Development — A Guided Tour · Interactive HTML Edition</p>
+    <p style="margin-top:6px;">Every section is collapsible. Use the side navigation (or <a href="#hub">Back to Map</a>) to jump between topics.</p>
+  </footer>
+</div>
+
+<script>
+  // Open details on deep-link anchors (makes drill-down respect URL fragments)
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', () => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === 'DETAILS') target.open = true;
+    });
+  });
+</script>
+</body>
+</html>

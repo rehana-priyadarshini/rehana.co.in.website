@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>C++ · Language Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Language Deep Dive</div>
+    <h1>C++</h1>
+    <p class="lede">The workhorse of high-performance software for four decades — from operating systems and game engines to trading platforms and rocket guidance.</p>
+    <div class="tags"><span>Multi-paradigm</span><span>Statically Typed</span><span>Compiled</span><span>Manual Memory</span><span>Systems</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Created</div><div class="val">1985 · Bell Labs</div></div>
+        <div class="f"><div class="label">Designed by</div><div class="val">Bjarne Stroustrup</div></div>
+        <div class="f"><div class="label">Paradigm</div><div class="val">Multi (procedural, OOP, generic)</div></div>
+        <div class="f"><div class="label">Typing</div><div class="val">Static, strong</div></div>
+        <div class="f"><div class="label">Compilers</div><div class="val">GCC, Clang, MSVC</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">C++23 (C++26 in flight)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Zero-overhead principle:</strong> what you don't use, you don't pay for.</li>
+          <li><strong>Manual memory management</strong> with smart pointers (<code>unique_ptr</code>, <code>shared_ptr</code>) keeping it manageable.</li>
+          <li><strong>RAII:</strong> Resource Acquisition Is Initialization — destructors clean up automatically when objects go out of scope.</li>
+          <li><strong>Templates</strong> enable generic programming and metaprogramming.</li>
+          <li><strong>STL:</strong> Standard Template Library of containers, algorithms, iterators.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Modern C++</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">#include</span> &lt;<span class="str">vector</span>&gt;
+<span class="kw">#include</span> &lt;<span class="str">algorithm</span>&gt;
+<span class="kw">#include</span> &lt;<span class="str">iostream</span>&gt;
+
+<span class="kw">struct</span> Customer { std::string name; <span class="kw">int</span> age; };
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    std::vector&lt;Customer&gt; customers = {
+        {<span class="str">"Ada"</span>, <span class="num">36</span>}, {<span class="str">"Linus"</span>, <span class="num">17</span>}, {<span class="str">"Grace"</span>, <span class="num">85</span>}
+    };
+
+    <span class="kw">auto</span> adults = customers | std::views::filter(
+        [](<span class="kw">const auto</span>&amp; c) { <span class="kw">return</span> c.age &gt;= <span class="num">18</span>; }
+    );
+
+    <span class="kw">for</span> (<span class="kw">const auto</span>&amp; c : adults)
+        std::cout &lt;&lt; c.name &lt;&lt; <span class="str">"\n"</span>;
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>RAII &amp; Smart Pointers</summary>
+        <div class="drill-body">
+          <p>Wrap resources (memory, files, locks) in objects whose destructors release them. <code>unique_ptr</code> = single ownership, <code>shared_ptr</code> = reference counting. Modern C++ rarely uses raw <code>new</code>/<code>delete</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Templates &amp; Generic Programming</summary>
+        <div class="drill-body">
+          <p>Compile-time polymorphism. <code>std::vector&lt;T&gt;</code> generates a custom version for each <code>T</code>. C++20 added <strong>concepts</strong> to constrain templates cleanly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Modern C++ (C++11 onward)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>auto</code> type deduction; range-based <code>for</code>.</li>
+            <li>Lambdas &amp; <code>std::function</code>.</li>
+            <li>Move semantics &amp; rvalue references.</li>
+            <li><code>constexpr</code> — compute at compile time.</li>
+            <li>Ranges, coroutines, modules (C++20+).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+            <tbody>
+              <tr><td>Build</td><td>CMake, Bazel, Meson, Ninja</td></tr>
+              <tr><td>Pkg mgr</td><td>vcpkg, Conan</td></tr>
+              <tr><td>Test</td><td>GoogleTest, Catch2</td></tr>
+              <tr><td>Static analysis</td><td>clang-tidy, cppcheck, PVS-Studio</td></tr>
+              <tr><td>Sanitizers</td><td>ASan, TSan, UBSan, MSan</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Top-of-the-charts performance — runs everywhere.</li>
+            <li>Fine-grained control over memory and CPU.</li>
+            <li>Massive existing codebases &amp; libraries.</li>
+            <li>Continuously modernized (C++11/14/17/20/23).</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Steep learning curve; many ways to shoot yourself in the foot.</li>
+            <li>Memory bugs (use-after-free, leaks, undefined behavior) are real.</li>
+            <li>Slow compile times.</li>
+            <li>Tooling fragmented compared to Rust/Go.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Game Engines</h5><p>Unreal Engine, Unity (core), CryEngine, AAA studios.</p></div>
+        <div class="card teal"><h5>Operating Systems &amp; Drivers</h5><p>Windows internals, macOS frameworks, embedded RTOS.</p></div>
+        <div class="card mid"><h5>High-Frequency Trading</h5><p>Microseconds matter; C++ is the language of low-latency finance.</p></div>
+        <div class="card accent"><h5>Browsers</h5><p>Chromium, Firefox internals, V8 JavaScript engine.</p></div>
+        <div class="card"><h5>Scientific Computing</h5><p>HPC, simulations, CERN, LLVM, TensorFlow/PyTorch internals.</p></div>
+        <div class="card teal"><h5>Embedded &amp; Robotics</h5><p>Cars, drones, satellites — when you need bare-metal control.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Languages</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="java.html">Java</a><a href="python.html">Python</a><a href="javascript.html">JavaScript</a><a href="typescript.html">TypeScript</a><a href="csharp.html">C#</a><a href="go.html">Go</a><a href="rust.html">Rust</a><a href="kotlin.html">Kotlin</a><a href="swift.html">Swift</a><a href="ruby.html">Ruby</a><a href="php.html">PHP</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Language Deep Dive</footer>
+</div>
+</body>
+</html>

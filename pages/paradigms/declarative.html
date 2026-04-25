@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Declarative Programming · Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<style>
+  :root {
+    --deep:#0A2A43; --blue:#065A82; --teal:#1C7293; --mid:#21295C;
+    --ice:#CADCFC; --cream:#F5F9FC; --ink:#17222E; --muted:#5D6B7A;
+    --accent:#F2A541; --line:#D6E2EC; --ok:#2C8F5C;
+    --card-shadow:0 4px 14px rgba(10,42,67,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:"Segoe UI","Calibri",system-ui,sans-serif;color:var(--ink);background:var(--cream);scroll-behavior:smooth}
+  h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;margin:0;color:var(--deep)}
+  header.hero{background:linear-gradient(135deg,var(--deep) 0%,var(--blue) 60%,var(--teal) 100%);color:#fff;padding:60px 40px 80px;position:relative;overflow:hidden}
+  header.hero::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(28,114,147,.35);top:-120px;right:-100px}
+  header.hero::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(242,165,65,.25);bottom:-80px;left:-60px}
+  .hero-inner{position:relative;max-width:1100px;margin:0 auto}
+  .eyebrow{letter-spacing:6px;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+  header h1{font-size:clamp(34px,5vw,54px);color:#fff;line-height:1.05;margin-bottom:14px}
+  header p.lede{font-size:18px;color:var(--ice);max-width:780px;margin:0}
+  .back{display:inline-block;margin-top:18px;padding:8px 14px;border-radius:8px;color:var(--deep);background:var(--accent);text-decoration:none;font-weight:700;font-size:13px}
+  .back:hover{background:#fff}
+  .page{max-width:1100px;margin:-50px auto 60px;padding:0 24px;position:relative;z-index:2}
+  section.chapter{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--card-shadow);overflow:hidden}
+  .chapter-head{padding:20px 26px 14px;border-bottom:4px solid var(--accent);background:linear-gradient(90deg,var(--deep) 0%,var(--blue) 100%);color:#fff}
+  .chapter-head h2{color:#fff;font-size:22px}
+  .chapter-head .eyebrow{margin:0 0 4px;color:var(--accent);font-size:11px;letter-spacing:4px}
+  .chapter-body{padding:24px 26px}
+  .basics{background:linear-gradient(135deg,#FFF7E8 0%,#FFEFD1 100%);border-left:5px solid var(--accent);padding:16px 20px;border-radius:8px;margin-bottom:18px}
+  .basics h4{font-size:13px;text-transform:uppercase;letter-spacing:3px;color:var(--accent);margin-bottom:8px;font-family:"Segoe UI",sans-serif;font-weight:700}
+  .basics ul{margin:8px 0 0;padding-left:22px;font-size:14px;line-height:1.6}
+  .basics strong{color:var(--deep)}
+  details.drill{margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--cream);overflow:hidden}
+  details.drill>summary{cursor:pointer;padding:14px 18px;font-weight:700;color:var(--deep);background:#fff;list-style:none;display:flex;align-items:center;gap:10px;font-size:15px;user-select:none}
+  details.drill>summary::-webkit-details-marker{display:none}
+  details.drill>summary::before{content:"▸";color:var(--teal);font-size:14px;transition:transform .15s}
+  details.drill[open]>summary::before{transform:rotate(90deg)}
+  details.drill>summary:hover{background:#FBFDFF}
+  details.drill .drill-body{padding:16px 20px 20px;border-top:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:12px}
+  .card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:14px 16px}
+  .card.teal{border-left-color:var(--teal)}.card.mid{border-left-color:var(--mid)}.card.accent{border-left-color:var(--accent)}.card.ok{border-left-color:var(--ok)}
+  .card h5{font-family:Georgia,serif;font-size:16px;color:var(--deep);margin-bottom:6px}
+  .card p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:var(--blue);color:#fff;font-weight:700;letter-spacing:.5px;font-size:12.5px}
+  tbody tr:nth-child(even){background:#FBFDFF}
+  pre{background:#0F2233;color:#E0EAF2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;font-family:Consolas,Monaco,monospace;margin-top:8px}
+  pre .kw{color:#82C8FF}
+  pre .str{color:#F2A541}
+  pre .com{color:#7B8FA1;font-style:italic}
+  pre .fn{color:#7CD8C7}
+  pre .tag{color:#FF9DAF}
+  .lede-p{font-size:15px;color:var(--muted);margin-bottom:16px;font-style:italic}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+  @media(max-width:700px){.two-col{grid-template-columns:1fr}}
+  .pros-cons h6{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--teal);margin:0 0 8px;font-family:"Segoe UI",sans-serif}
+  .pros-cons ul{margin:0;padding-left:20px;font-size:14px;line-height:1.6}
+  .pros{background:#EAF7EE;border-left:4px solid var(--ok);padding:12px 16px;border-radius:6px}
+  .cons{background:#FCEEEA;border-left:4px solid #C0573B;padding:12px 16px;border-radius:6px}
+  .pros h6{color:var(--ok)}.cons h6{color:#C0573B}
+  .nav-other{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .nav-other a{padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--deep);text-decoration:none;font-size:13px;font-weight:600}
+  .nav-other a:hover{background:var(--ice)}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 20px 40px}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+  .compare>div{padding:14px 16px;border-radius:8px}
+  .compare .imp{background:#FCEEEA;border-left:4px solid #C0573B}
+  .compare .dec{background:#EAF7EE;border-left:4px solid var(--ok)}
+  .compare h6{font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px;font-family:"Segoe UI",sans-serif}
+  .compare .imp h6{color:#C0573B}
+  .compare .dec h6{color:var(--ok)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Paradigm Deep Dive · 04 of 04</div>
+    <h1>Declarative Programming</h1>
+    <p class="lede">Describe <em>what</em> you want — let something else figure out <em>how</em> to make it happen. The paradigm of SQL, HTML, configuration files, and modern UI frameworks.</p>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Foundations</div><h2>What Is Declarative Programming?</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">In declarative code you state the desired result; an engine, compiler, or runtime works out the steps for you.</p>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Imperative vs Declarative:</strong> imperative = "do step 1, step 2…"; declarative = "this is what I want."</li>
+          <li><strong>Engine / Interpreter</strong> takes the declaration and produces the steps automatically.</li>
+          <li><strong>Idempotent &amp; Composable:</strong> declarations describe an end state; running them again is safe.</li>
+          <li><strong>Domain-Specific Languages (DSLs)</strong> are usually declarative — SQL, regex, CSS, Terraform.</li>
+          <li><strong>Functional</strong> code is one form of declarative; declarative is the broader umbrella.</li>
+        </ul>
+      </div>
+
+      <div class="compare">
+        <div class="imp">
+          <h6>Imperative — How</h6>
+<pre><span class="com">// Filter even numbers (JS)</span>
+<span class="kw">const</span> evens = [];
+<span class="kw">for</span> (<span class="kw">let</span> i = 0; i &lt; nums.length; i++) {
+    <span class="kw">if</span> (nums[i] % 2 === 0) {
+        evens.push(nums[i]);
+    }
+}</pre>
+        </div>
+        <div class="dec">
+          <h6>Declarative — What</h6>
+<pre><span class="com">// Same thing</span>
+<span class="kw">const</span> evens = nums.<span class="fn">filter</span>(n =&gt; n % 2 === 0);</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Flavors</div><h2>Forms of Declarative Programming</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Functional</h5><p>Compose pure functions; no explicit control flow.</p></div>
+        <div class="card teal"><h5>Logic Programming</h5><p>Prolog, Datalog. State facts and rules; ask the engine queries.</p></div>
+        <div class="card mid"><h5>Query Languages</h5><p>SQL, GraphQL, SPARQL. Describe the data you want.</p></div>
+        <div class="card accent"><h5>Markup</h5><p>HTML, XML, JSON, YAML. Describe structure and content.</p></div>
+        <div class="card"><h5>Configuration / IaC</h5><p>Terraform, Kubernetes manifests, Ansible. Describe the desired infra state.</p></div>
+        <div class="card teal"><h5>Reactive UI</h5><p>React, Vue, SwiftUI, Jetpack Compose. Describe the UI for any given state.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Examples</div><h2>Declarative in the Wild</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>SQL — Querying a Database</summary>
+        <div class="drill-body">
+<pre><span class="kw">SELECT</span> name, COUNT(*) <span class="kw">AS</span> orders
+<span class="kw">FROM</span> customers <span class="kw">JOIN</span> orders <span class="kw">ON</span> customers.id = orders.customer_id
+<span class="kw">WHERE</span> orders.created_at &gt;= <span class="str">'2026-01-01'</span>
+<span class="kw">GROUP BY</span> name
+<span class="kw">ORDER BY</span> orders <span class="kw">DESC</span>;</pre>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">You don't tell the database how to scan tables, build indexes, or join rows — its query planner figures that out.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>HTML — Describing a Page</summary>
+        <div class="drill-body">
+<pre>&lt;<span class="tag">article</span>&gt;
+  &lt;<span class="tag">h1</span>&gt;Welcome&lt;/<span class="tag">h1</span>&gt;
+  &lt;<span class="tag">p</span>&gt;This is a paragraph.&lt;/<span class="tag">p</span>&gt;
+&lt;/<span class="tag">article</span>&gt;</pre>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">No drawing instructions — the browser handles layout, fonts, line-wrapping, accessibility tree.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>React — Reactive UI</summary>
+        <div class="drill-body">
+<pre><span class="kw">function</span> <span class="fn">Greeting</span>({ name }) {
+    <span class="kw">return</span> &lt;<span class="tag">h1</span>&gt;Hello, {name}!&lt;/<span class="tag">h1</span>&gt;;
+}</pre>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">You declare what the UI should look like for any <code>name</code>; React figures out which DOM nodes to add, remove, or update.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Terraform — Desired Infrastructure</summary>
+        <div class="drill-body">
+<pre><span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"reports"</span> {
+  bucket = <span class="str">"acme-reports-2026"</span>
+  versioning {
+    enabled = true
+  }
+}</pre>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">You describe the bucket you want; Terraform creates, updates, or destroys resources to make reality match.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Prolog — Logic &amp; Inference</summary>
+        <div class="drill-body">
+<pre>parent(tom, bob).
+parent(bob, ann).
+
+grandparent(X, Y) :- parent(X, Z), parent(Z, Y).
+
+<span class="com">?- grandparent(tom, ann).</span>
+<span class="com">true.</span></pre>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">State facts and rules. Prolog's engine explores them to answer queries — no algorithm code from you.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CSS — Styling</summary>
+        <div class="drill-body">
+<pre><span class="tag">button</span>.primary {
+  background: <span class="str">#065A82</span>;
+  color: <span class="str">white</span>;
+  padding: 10px 20px;
+  border-radius: 6px;
+}</pre>
+          <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">No drawing code — the browser engine maps your style declarations to pixels.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Concise — express intent without ceremony.</li>
+            <li>Easier to read &amp; reason about; the "what" is right there.</li>
+            <li>Engines can optimize globally (e.g., SQL query planner).</li>
+            <li>Idempotent — re-running converges to the same state.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Performance is the engine's responsibility — you can't always tune it.</li>
+            <li>Debugging is harder when the "how" is hidden.</li>
+            <li>Edges of the DSL push you back into imperative escape hatches.</li>
+            <li>Steep ramp when the abstraction leaks (esp. SQL, Terraform).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Querying Data</h5><p>SQL, GraphQL — the engine optimizes; you describe results.</p></div>
+        <div class="card teal"><h5>UI &amp; Layout</h5><p>HTML/CSS, React, SwiftUI, Jetpack Compose, Flutter.</p></div>
+        <div class="card mid"><h5>Infrastructure as Code</h5><p>Terraform, Kubernetes manifests, CloudFormation.</p></div>
+        <div class="card accent"><h5>Configuration</h5><p>YAML/TOML/JSON for application and CI config.</p></div>
+        <div class="card"><h5>Build Systems</h5><p>Make, Bazel — declare targets; the tool figures out order.</p></div>
+        <div class="card teal"><h5>Rule Engines / Workflows</h5><p>Drools, BPMN, decision tables in finance &amp; insurance.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Wrap-up</div><h2>The Paradigms in Perspective</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14.5px;line-height:1.6;">
+        Real codebases <strong>blend paradigms</strong>. A typical web app uses:
+      </p>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li><strong>OOP</strong> for the domain model (Customer, Order, Invoice).</li>
+        <li><strong>Functional</strong> for transforming data (filter / map / reduce on lists).</li>
+        <li><strong>Declarative</strong> for the UI (React/JSX), database (SQL), and infra (Terraform).</li>
+        <li><strong>Procedural</strong> in the inner loops where every microsecond matters.</li>
+      </ul>
+      <p style="font-size:14.5px;line-height:1.6;margin-top:12px;">
+        The skill is recognizing which paradigm fits which problem — and switching cleanly between them in the same codebase.
+      </p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Paradigm Deep Dives</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="procedural.html">→ Procedural</a>
+        <a href="oop.html">→ Object-Oriented</a>
+        <a href="functional.html">→ Functional</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Paradigm Deep Dive</footer>
+</div>
+</body>
+</html>
