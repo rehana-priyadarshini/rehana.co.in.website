@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Data Prep · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 8 of 8</div>
+    <h1>Data Prep</h1>
+    <p class="lede">The unglamorous foundation of every AI system — ingesting, cleaning, joining, transforming, and labeling data so models have something useful to learn from. The famous "80% of the work."</p>
+    <div class="tags"><span>ETL / ELT</span><span>Cleaning</span><span>Labeling</span><span>Feature Engineering</span><span>Layer 8</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>ETL vs ELT:</strong> Extract → Load → Transform (modern, in-warehouse) vs Extract → Transform → Load (older, in-pipeline).</li>
+          <li><strong>Schema-on-read vs schema-on-write:</strong> data lakes vs data warehouses.</li>
+          <li><strong>Cleaning:</strong> dedupe, normalize, handle missing values &amp; outliers.</li>
+          <li><strong>Feature engineering:</strong> turn raw fields into model-ready inputs (encoding, scaling, lag features).</li>
+          <li><strong>Labeling:</strong> the supervision signal — humans, rules, or other models.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Tools</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td>In-memory analysis</td><td>pandas, Polars (Rust-built, much faster), DuckDB</td></tr>
+          <tr><td>Big data / distributed</td><td>Apache Spark (PySpark), Dask, Ray Data</td></tr>
+          <tr><td>SQL transforms</td><td>dbt, SQLMesh — version-controlled SQL pipelines in your warehouse</td></tr>
+          <tr><td>Workflow orchestration</td><td>Airflow, Prefect, Dagster, Argo Workflows</td></tr>
+          <tr><td>Streaming</td><td>Kafka + Flink, Spark Streaming, Beam</td></tr>
+          <tr><td>Data quality</td><td>Great Expectations, Soda, dbt tests, Pandera</td></tr>
+          <tr><td>Data warehouses</td><td>Snowflake, BigQuery, Databricks, Redshift, ClickHouse</td></tr>
+          <tr><td>Lakehouses / formats</td><td>Delta Lake, Apache Iceberg, Apache Hudi, Parquet</td></tr>
+          <tr><td>Ingestion / CDC</td><td>Fivetran, Airbyte, Debezium, Estuary</td></tr>
+          <tr><td>Labeling platforms</td><td>Label Studio, Snorkel, Scale AI, Surge, Prodigy</td></tr>
+          <tr><td>Synthetic data</td><td>Gretel, Mostly AI, Tonic — privacy-preserving fakes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Data Prep Workflow</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Ingestion</summary>
+        <div class="drill-body">
+          <p>Get raw data from operational systems (databases, SaaS, files, streams) into a place you can analyze it.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Batch:</strong> nightly dumps via Fivetran / Airbyte / custom scripts.</li>
+            <li><strong>CDC</strong> (Change Data Capture): stream every row change in near-real-time (Debezium, Estuary).</li>
+            <li><strong>Streaming:</strong> Kafka / Kinesis for event firehoses.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cleaning &amp; Transformation</summary>
+        <div class="drill-body">
+<pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+df = pd.<span class="fn">read_parquet</span>(<span class="str">"raw/orders.parquet"</span>)
+df = (df
+    .<span class="fn">drop_duplicates</span>(subset=<span class="str">"order_id"</span>)
+    .<span class="fn">dropna</span>(subset=[<span class="str">"customer_id"</span>])
+    .<span class="fn">assign</span>(
+        order_date = pd.to_datetime(df.order_date),
+        revenue    = df.qty * df.unit_price,
+    )
+    .<span class="fn">query</span>(<span class="str">"revenue &gt; 0"</span>)
+)</pre>
+          <p style="margin-top:8px;font-size:13.5px;color:var(--muted);">Modern teams increasingly do this in SQL via <strong>dbt</strong>, or in Polars / DuckDB for 10-100× speedups over pandas on large data.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Feature Engineering</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Encoding:</strong> categorical → one-hot, target, hashing.</li>
+            <li><strong>Scaling:</strong> standardize / normalize for distance-based models.</li>
+            <li><strong>Aggregations:</strong> rolling sums, group-by means, lags, recency.</li>
+            <li><strong>Datetime:</strong> hour-of-day, day-of-week, holiday flags.</li>
+            <li><strong>Text/Image:</strong> embeddings (often produced by a foundation model).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Data Quality &amp; Validation</summary>
+        <div class="drill-body">
+          <p>Fail loud, fail early. Tests run as part of the pipeline:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Schema:</strong> column exists, type is right.</li>
+            <li><strong>Range:</strong> price &gt; 0, percentage in [0,100].</li>
+            <li><strong>Cardinality:</strong> distinct values within bounds.</li>
+            <li><strong>Freshness:</strong> latest timestamp not older than X.</li>
+            <li><strong>Uniqueness &amp; nulls.</strong></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Labeling for ML</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Manual labeling</strong> in tools like Label Studio (with QA &amp; agreement scoring).</li>
+            <li><strong>Programmatic labeling</strong> (Snorkel) — write weak rules, train a label model.</li>
+            <li><strong>LLM-assisted labeling</strong> — use a strong model to pre-label; humans verify.</li>
+            <li><strong>Active learning</strong> — label only the examples the model is most uncertain about.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Data Prep for LLM Apps</summary>
+        <div class="drill-body">
+          <p>Beyond classical ML data prep, LLM apps need:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Document chunking</strong> — split long documents into RAG-friendly pieces (semantic, fixed-size, recursive).</li>
+            <li><strong>Cleaning</strong> — strip nav/ads from HTML, OCR PDFs, normalize whitespace.</li>
+            <li><strong>Embedding generation</strong> — batch-call an embedding API; store in a <a href="vector-dbs.html" style="color:var(--accent);">vector DB</a>.</li>
+            <li><strong>Metadata enrichment</strong> — tag chunks with source, date, ACL for filtering.</li>
+            <li><strong>Eval datasets</strong> — golden Q&amp;A pairs to measure RAG quality over time.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="model-providers.html">Model Providers</a><a href="frameworks.html">Frameworks</a><a href="vector-dbs.html">Vector DBs</a><a href="dev-agents.html">Dev Agents</a><a href="mlops.html">MLOps</a><a href="classic-ml.html">Classic ML</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

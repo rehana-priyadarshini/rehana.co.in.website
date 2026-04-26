@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Foundation Models · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 1 of 8</div>
+    <h1>Foundation Models</h1>
+    <p class="lede">Massive neural networks trained on internet-scale data — the engines under every modern AI app. Foundation models are pre-trained once, then adapted to thousands of downstream tasks.</p>
+    <div class="tags"><span>LLMs</span><span>Pre-trained</span><span>Multi-modal</span><span>Open &amp; Closed</span><span>Layer 1</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">What it is</div><div class="val">Pre-trained neural network</div></div>
+        <div class="f"><div class="label">Training data</div><div class="val">Trillions of tokens / images</div></div>
+        <div class="f"><div class="label">Sizes</div><div class="val">Billions to trillions of parameters</div></div>
+        <div class="f"><div class="label">Modalities</div><div class="val">Text, image, audio, video, code</div></div>
+        <div class="f"><div class="label">Access</div><div class="val">Closed (API) or Open-weights</div></div>
+        <div class="f"><div class="label">Examples</div><div class="val">GPT, Claude, Gemini, Llama</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Foundation model:</strong> a single model trained on broad data that can be adapted to many tasks (term coined by Stanford in 2021).</li>
+          <li><strong>Token:</strong> the unit of text the model processes — roughly ¾ of a word in English.</li>
+          <li><strong>Context window:</strong> how many tokens the model can "see" at once (4K → 200K → 1M+ today).</li>
+          <li><strong>Parameters:</strong> the learned weights — more isn't always better, but capability generally scales with size.</li>
+          <li><strong>Inference</strong> = running the model on new input. <strong>Training</strong> = teaching it from data.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Models</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Family</th><th>Maker</th><th>Open?</th><th>Strengths</th></tr></thead>
+        <tbody>
+          <tr><td>GPT (4o, 4.1, 5)</td><td>OpenAI</td><td>Closed</td><td>Multimodal, broad capability, ChatGPT.</td></tr>
+          <tr><td>Claude (Sonnet, Opus, Haiku)</td><td>Anthropic</td><td>Closed</td><td>Long context, coding, safety, agentic workflows.</td></tr>
+          <tr><td>Gemini (Pro, Flash, Ultra)</td><td>Google DeepMind</td><td>Closed</td><td>Native multimodal, huge context windows, Workspace integration.</td></tr>
+          <tr><td>Llama (3.x, 4)</td><td>Meta</td><td>Open weights</td><td>Most-used open model; runs anywhere.</td></tr>
+          <tr><td>Mistral / Mixtral</td><td>Mistral AI</td><td>Mixed</td><td>European, efficient, MoE architecture.</td></tr>
+          <tr><td>DeepSeek</td><td>DeepSeek</td><td>Open weights</td><td>Strong reasoning at fraction of training cost.</td></tr>
+          <tr><td>Qwen</td><td>Alibaba</td><td>Open weights</td><td>Multilingual, strong on Asian languages.</td></tr>
+          <tr><td>Grok</td><td>xAI</td><td>Mixed</td><td>X (Twitter) integration, real-time data.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How They Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Transformer Architecture</summary>
+        <div class="drill-body">
+          <p>Almost all modern foundation models are <strong>transformers</strong> — a 2017 architecture from Google ("Attention Is All You Need"). The core idea: <strong>self-attention</strong> lets the model weigh how every token relates to every other token, in parallel. This scales beautifully with compute.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pre-training vs Fine-tuning</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Pre-training:</strong> learn language patterns from trillions of tokens (months of GPU time, $$$$).</li>
+            <li><strong>Fine-tuning:</strong> adapt to a specific task or style with a small dataset (hours, $).</li>
+            <li><strong>RLHF</strong> (Reinforcement Learning from Human Feedback): teach the model to prefer helpful, harmless responses.</li>
+            <li><strong>Instruction tuning:</strong> train on (instruction, response) pairs so it follows requests.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Capabilities &amp; Limitations</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Strengths:</strong> language understanding, code, reasoning, summarization, translation, image understanding.</li>
+            <li><strong>Hallucination:</strong> models can confidently invent facts — always validate.</li>
+            <li><strong>Knowledge cutoff:</strong> models know nothing past their training date (without tools/RAG).</li>
+            <li><strong>Math &amp; precision:</strong> still uneven — use tool calling for arithmetic, code execution.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reasoning Models</summary>
+        <div class="drill-body">
+          <p>A new generation (OpenAI o-series, Claude with extended thinking, Gemini 2.0 Flash Thinking, DeepSeek R1) spends extra compute on a private "thinking" pass before answering — vastly better at math, code, and multi-step problems, at higher latency &amp; cost.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Multi-modal Models</summary>
+        <div class="drill-body">
+          <p>Modern models accept images, audio, and video alongside text. <strong>Native multimodal</strong> models (GPT-4o, Gemini, Claude) are trained jointly on all modalities; older systems bolt vision encoders on top.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Choosing</div><h2>Open vs Closed</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Closed (API)</h6>
+          <ul>
+            <li>State-of-the-art capability, no infra to manage.</li>
+            <li>Pay-per-token; instant scale.</li>
+            <li>Continuous improvement — model updates roll in.</li>
+            <li>Less control: data leaves your perimeter (with caveats).</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Open Weights</h6>
+          <ul>
+            <li>Run on your own hardware — full data privacy.</li>
+            <li>Free to fine-tune, distill, quantize.</li>
+            <li>Generally trail closed frontier by 6–12 months.</li>
+            <li>You own the GPU bill and ops headache.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="model-providers.html">Model Providers</a><a href="frameworks.html">Frameworks</a><a href="vector-dbs.html">Vector DBs</a><a href="dev-agents.html">Dev Agents</a><a href="mlops.html">MLOps</a><a href="classic-ml.html">Classic ML</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

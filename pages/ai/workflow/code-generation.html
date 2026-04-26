@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Code Generation · AI Workflow Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Workflow · 1 of 6</div>
+    <h1>Code Generation</h1>
+    <p class="lede">From line completion to whole features — AI now writes most boilerplate, scaffolds tests, and increasingly tackles real product work. The largest, fastest-growing slice of developer AI usage.</p>
+    <div class="tags"><span>Inline Suggestions</span><span>Chat Generation</span><span>Agentic Coding</span><span>Spec → Code</span><span>Workflow 1</span></div>
+    <a class="back" href="../../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Three altitudes:</strong> autocomplete (lines), chat (functions/files), agent (multi-file features).</li>
+          <li><strong>Context determines quality</strong> — the model can only write good code if it sees the surrounding code.</li>
+          <li><strong>Generation isn't "type and ship"</strong> — review, test, and iterate are still on you.</li>
+          <li><strong>Models matter:</strong> the best frontier model produces materially better code than mid-tier ones.</li>
+          <li><strong>Spec quality = output quality.</strong> Vague prompts get vague code.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Modes</div><h2>The Three Altitudes</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>1. Inline (Autocomplete)</h5><p>Ghost-text suggestions as you type. Fast (&lt;200ms), small models (Supermaven, Codeium, Copilot Tab).</p></div>
+        <div class="card teal"><h5>2. Chat / Edit</h5><p>"Add a function that…" — generates a function or refactors a file. Cursor Chat, Copilot Chat, JetBrains AI.</p></div>
+        <div class="card mid"><h5>3. Agent / Composer</h5><p>"Build the checkout flow." Reads files, edits multiple, runs tests, iterates. Claude Code, Cursor Composer, Devin.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>What AI Generates Well</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>High-Confidence Targets</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Boilerplate</strong> — DTOs, controllers, CRUD scaffolding, config files.</li>
+            <li><strong>Unit tests</strong> for existing functions — coverage that would otherwise rot.</li>
+            <li><strong>Migrations &amp; schema changes</strong> — repeating patterns across files.</li>
+            <li><strong>Translations</strong> — Python → TypeScript, jQuery → React, Java → Kotlin.</li>
+            <li><strong>Glue code</strong> — wiring two libraries together, format converters, parsers.</li>
+            <li><strong>One-off scripts</strong> — data cleanup, file renaming, log analysis.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Medium-Confidence Targets</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Feature implementation</strong> — when the spec is clear and the codebase is conventional.</li>
+            <li><strong>Refactoring</strong> — extracting components, renaming, splitting modules.</li>
+            <li><strong>Bug fixes from a stack trace</strong> — paste error + relevant code, get a fix.</li>
+            <li><strong>UI from a screenshot or Figma export.</strong></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Low-Confidence (Be Careful)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Architecture decisions</strong> — agents will happily invent a microservice you didn't need.</li>
+            <li><strong>Cross-cutting concerns</strong> not visible in the local context (auth, multi-tenant rules).</li>
+            <li><strong>Performance-critical hot paths</strong> — generated code is correct but rarely optimal.</li>
+            <li><strong>Niche libraries / new APIs</strong> — model may hallucinate functions that don't exist.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practice</div><h2>Prompting Patterns</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Spec-First Pattern</summary>
+        <div class="drill-body">
+          <p>Better than diving in. Write a short spec — the model will follow it.</p>
+<pre><span class="com">// Bad</span>
+"add caching"
+
+<span class="com">// Good</span>
+"Add an LRU cache to ProductService.getById:
+- Max 1000 entries
+- 5-minute TTL
+- Cache key: <span class="str">`product:${id}`</span>
+- Use the existing Caffeine library; see CacheConfig.java
+- Add a unit test that verifies eviction after 1001 inserts"</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Reference Pattern</summary>
+        <div class="drill-body">
+          <p>Point the agent at an example. "Build a UserController like ProductController in src/api/products/" gives it the conventions, naming, and test style without you spelling it out.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Tight Loop</summary>
+        <div class="drill-body">
+          <p>For agents: small task → run tests → review diff → fix or accept. Don't ask for "the whole feature" in one go — break it into steps you can verify in minutes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Test-First Pattern (TDD with AI)</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li>You: write the test cases describing desired behavior.</li>
+            <li>Agent: implement until tests pass.</li>
+            <li>You: review diff, accept.</li>
+          </ol>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Tests act as a contract — they pin down intent better than prose, and the agent gets a fast feedback signal.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Risks</div><h2>What Can Go Wrong</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Hallucinated APIs</h5><p>Calls to functions that don't exist. Linters, types, and tests catch most.</p></div>
+        <div class="card teal"><h5>Plausible Wrong Answers</h5><p>Code that compiles, looks right, but does the wrong thing. Read every diff.</p></div>
+        <div class="card mid"><h5>License Contamination</h5><p>Verbatim reproduction of GPL code. Use Copilot's filter / similar guards.</p></div>
+        <div class="card accent"><h5>Skill Atrophy</h5><p>Junior devs miss out on muscle memory. Mix AI work with hand-written code.</p></div>
+        <div class="card"><h5>Code Sprawl</h5><p>It's easy to generate too much code. Prune ruthlessly; don't merge unused.</p></div>
+        <div class="card teal"><h5>Security Holes</h5><p>SQL injection, weak crypto, leaked secrets. SAST + human review still required.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Workflow Areas</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="code-review.html">Code Review</a><a href="documentation.html">Documentation</a><a href="debugging.html">Debugging</a><a href="product-features.html">Product Features</a><a href="data-insights.html">Data &amp; Insights</a>
+        <a href="../../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Workflow Deep Dive</footer>
+</div>
+</body>
+</html>

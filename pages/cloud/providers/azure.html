@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Microsoft Azure · Cloud Provider Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Provider · 2 of 6</div>
+    <h1>Microsoft Azure</h1>
+    <p class="lede">The enterprise cloud. Tightly integrated with Microsoft's stack — Active Directory, .NET, SQL Server, Office 365 — and the de-facto choice for most Fortune 500s already running Microsoft.</p>
+    <div class="tags"><span>#2 by share</span><span>Enterprise-first</span><span>Microsoft stack</span><span>Hybrid-strong</span><span>OpenAI partnership</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Launched</div><div class="val">2010 (as "Windows Azure")</div></div>
+        <div class="f"><div class="label">Parent</div><div class="val">Microsoft</div></div>
+        <div class="f"><div class="label">Regions</div><div class="val">60+ (most of any cloud)</div></div>
+        <div class="f"><div class="label">Market share</div><div class="val">~25%</div></div>
+        <div class="f"><div class="label">Sweet spot</div><div class="val">Microsoft-stack enterprises</div></div>
+        <div class="f"><div class="label">AI partner</div><div class="val">Exclusive Azure OpenAI</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Subscription → Resource Group → Resource</strong> — Azure's nested hierarchy.</li>
+          <li><strong>Microsoft Entra ID</strong> (formerly Azure AD) is the identity backbone — same one behind Office 365.</li>
+          <li><strong>ARM / Bicep</strong> for native IaC; Terraform also fully supported.</li>
+          <li><strong>Region pairs</strong> for built-in geo-replication strategies.</li>
+          <li><strong>Hybrid is a first-class story</strong> — Azure Arc extends Azure to on-prem &amp; other clouds.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Services</div><h2>Signature Services</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Service</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Compute</td><td>Virtual Machines</td><td>IaaS, every flavor of Windows &amp; Linux.</td></tr>
+          <tr><td>Compute</td><td>App Service</td><td>Mature PaaS for web apps &amp; APIs.</td></tr>
+          <tr><td>Compute</td><td>Functions</td><td>Serverless functions (Consumption / Premium / Flex).</td></tr>
+          <tr><td>Containers</td><td>AKS / ACA / ACI</td><td>Managed Kubernetes / serverless containers / instances.</td></tr>
+          <tr><td>Storage</td><td>Blob Storage / Files / Data Lake Gen2</td><td>Object / file / hierarchical analytics storage.</td></tr>
+          <tr><td>Database</td><td>Azure SQL / Cosmos DB</td><td>Managed SQL Server / multi-model NoSQL.</td></tr>
+          <tr><td>Database</td><td>PostgreSQL / MySQL Flexible Server</td><td>Managed open-source DBs.</td></tr>
+          <tr><td>Networking</td><td>VNet, Front Door, Application Gateway, Private Link</td><td>Network, edge, WAF, private endpoints.</td></tr>
+          <tr><td>Identity</td><td>Microsoft Entra ID</td><td>SSO for SaaS &amp; in-app users.</td></tr>
+          <tr><td>Messaging</td><td>Service Bus / Event Grid / Event Hubs</td><td>Queues, events, Kafka-compatible streams.</td></tr>
+          <tr><td>Analytics</td><td>Synapse / Fabric / Databricks</td><td>Warehouse + lakehouse + ML.</td></tr>
+          <tr><td>AI / ML</td><td>Azure OpenAI / AI Foundry / ML Studio</td><td>GPT family + Microsoft AI services.</td></tr>
+          <tr><td>DevOps</td><td>Azure DevOps, GitHub (Microsoft-owned)</td><td>End-to-end ALM.</td></tr>
+          <tr><td>Hybrid</td><td>Azure Arc, Stack HCI, Stack Edge</td><td>Azure on customer hardware &amp; other clouds.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Azure Way</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Resource Hierarchy</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Tenant</strong> = your Entra ID directory.</li>
+            <li><strong>Management Group</strong> → <strong>Subscription</strong> → <strong>Resource Group</strong> → <strong>Resource</strong>.</li>
+            <li>Policies + RBAC apply at any level — inherited downward.</li>
+            <li>Multi-subscription is the norm at scale (one per environment, team, or product).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Microsoft Entra ID</summary>
+        <div class="drill-body">
+          <p>Azure's killer differentiator. Same identity stack as Office 365 — single sign-on works out of the box for every internal app. Conditional Access policies, MFA, B2B / B2C variants for partners and customers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>App Service — The Beloved PaaS</summary>
+        <div class="drill-body">
+          <p>Azure's mature PaaS. Push code via Git or Container Registry; Azure runs it with auto-scale, custom domains, free TLS, deployment slots (blue/green built in), and managed identity. Often a saner default than Functions for web apps.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hybrid &amp; Multi-Cloud</summary>
+        <div class="drill-body">
+          <p><strong>Azure Arc</strong> projects Azure's control plane onto:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>On-prem servers &amp; Kubernetes clusters.</li>
+            <li>EC2 / GCE VMs in other clouds.</li>
+            <li>Edge devices.</li>
+          </ul>
+          <p>Manage them with the same RBAC, policies, monitoring, and tagging as native Azure resources — Azure's strongest moat in regulated industries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cost &amp; Licensing Levers</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Azure Hybrid Benefit</strong> — reuse on-prem Windows / SQL licenses; major saver.</li>
+            <li><strong>Reserved Instances / Savings Plan</strong> — 1- &amp; 3-year commitments.</li>
+            <li><strong>EA / MCA</strong> enterprise agreements with custom pricing.</li>
+            <li><strong>Spot VMs</strong> for batch &amp; CI workloads.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick</div><h2>Where Azure Wins</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Microsoft-Stack Enterprises</h5><p>Office 365, AD, .NET, SQL Server already in production.</p></div>
+        <div class="card teal"><h5>Hybrid &amp; Regulated</h5><p>Azure Arc + the most compliance certifications.</p></div>
+        <div class="card mid"><h5>OpenAI / Copilot Strategy</h5><p>Azure OpenAI is the official enterprise path for GPT.</p></div>
+        <div class="card accent"><h5>Geographic Reach</h5><p>More regions than any other cloud — esp. EU sovereign clouds.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cloud Providers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="aws.html">AWS</a><a href="gcp.html">Google Cloud</a><a href="oracle.html">Oracle Cloud</a><a href="developer.html">DigitalOcean / Linode</a><a href="edge.html">Vercel / Netlify / Cloudflare</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Provider Deep Dive</footer>
+</div>
+</body>
+</html>

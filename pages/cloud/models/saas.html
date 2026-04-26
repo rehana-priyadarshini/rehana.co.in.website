@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SaaS · Cloud Service Model Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Service Model · 3 of 6</div>
+    <h1>SaaS — Software as a Service</h1>
+    <p class="lede">Subscribe to finished software running in someone else's cloud. The user-facing layer of cloud computing — Gmail, Salesforce, Slack, Notion, Figma. Probably how you spent today.</p>
+    <div class="tags"><span>Subscription</span><span>Multi-tenant</span><span>Browser-first</span><span>Zero install</span><span>API-friendly</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Pay subscription</strong> — per user, per seat, per usage, or freemium.</li>
+          <li><strong>Multi-tenant</strong> — your data lives in a shared system, isolated logically.</li>
+          <li><strong>Vendor owns everything</strong> — infrastructure, code, updates, security.</li>
+          <li><strong>Access via browser</strong> (and increasingly API + mobile + desktop apps).</li>
+          <li><strong>Updates are continuous</strong> — no "version 14 upgrade project."</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Categories</div><h2>The SaaS Universe</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td>Productivity / Office</td><td>Microsoft 365, Google Workspace, Notion, Coda</td></tr>
+          <tr><td>Communication</td><td>Slack, Teams, Zoom, Discord</td></tr>
+          <tr><td>CRM / Sales</td><td>Salesforce, HubSpot, Pipedrive</td></tr>
+          <tr><td>HR / Payroll</td><td>Workday, BambooHR, Gusto, Rippling</td></tr>
+          <tr><td>Finance / Accounting</td><td>QuickBooks Online, Xero, NetSuite</td></tr>
+          <tr><td>ERP</td><td>NetSuite, SAP S/4HANA Cloud, Oracle Fusion</td></tr>
+          <tr><td>Design / Creative</td><td>Figma, Canva, Adobe Creative Cloud</td></tr>
+          <tr><td>Dev tools</td><td>GitHub, GitLab, Linear, Jira, Sentry, Datadog</td></tr>
+          <tr><td>E-commerce platforms</td><td>Shopify, BigCommerce</td></tr>
+          <tr><td>Marketing</td><td>Mailchimp, HubSpot, Marketo, Braze</td></tr>
+          <tr><td>Customer support</td><td>Zendesk, Intercom, Front, Help Scout</td></tr>
+          <tr><td>AI tools</td><td>ChatGPT, Claude, Cursor, Notion AI</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How SaaS Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Multi-Tenancy Models</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Pooled (shared DB):</strong> all customers in one schema, isolated by <code>tenant_id</code>. Cheapest, smallest customer-by-customer overhead.</li>
+            <li><strong>Silo (DB per tenant):</strong> stronger isolation, easier compliance, more ops.</li>
+            <li><strong>Hybrid:</strong> shared compute, dedicated databases for big customers.</li>
+            <li><strong>Single-tenant cloud</strong>: dedicated stack per customer — for regulated / huge accounts.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Models</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Per seat / user</strong> — Slack, Notion, GitHub.</li>
+            <li><strong>Tiered features</strong> — Free / Pro / Team / Enterprise.</li>
+            <li><strong>Usage-based</strong> — Stripe, Twilio, OpenAI (per token, per call).</li>
+            <li><strong>Freemium</strong> — free tier funnels to paid.</li>
+            <li><strong>Hybrid</strong> — base subscription + overages.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Integration &amp; APIs</summary>
+        <div class="drill-body">
+          <p>Modern SaaS isn't a silo — it's a node in a graph:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>REST / GraphQL APIs</strong> for data access.</li>
+            <li><strong>Webhooks</strong> for real-time events.</li>
+            <li><strong>OAuth / SSO</strong> for delegated auth.</li>
+            <li><strong>iPaaS</strong> tools (Zapier, Make, Workato, MuleSoft, Boomi) wire SaaS together.</li>
+            <li><strong>Reverse ETL</strong> (Hightouch, Census) syncs data from warehouse → SaaS.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SaaS Compliance &amp; Trust</summary>
+        <div class="drill-body">
+          <p>Buyers ask about:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>SOC 2 Type II</strong> — table stakes for B2B.</li>
+            <li><strong>ISO 27001 / 27018</strong> — international info-sec.</li>
+            <li><strong>HIPAA / PCI / FedRAMP</strong> — domain-specific.</li>
+            <li><strong>GDPR / CCPA / DPDP</strong> — data privacy.</li>
+            <li><strong>Subprocessor list, data residency, encryption keys (BYOK).</strong></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SaaS Sprawl &amp; Governance</summary>
+        <div class="drill-body">
+          <p>The downside: a typical mid-market company runs 100+ SaaS apps.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>SSO / SCIM</strong> centralize identity &amp; provisioning.</li>
+            <li><strong>SaaS management platforms</strong> (Zylo, Productiv, Torii) discover &amp; track usage.</li>
+            <li><strong>Spend management</strong> (Vendr, Tropic) negotiates renewals.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>No installation, no infra, no upgrades.</li>
+            <li>Predictable per-seat pricing.</li>
+            <li>Vendor handles security &amp; uptime.</li>
+            <li>Always the latest version.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Data lives off-prem; vendor lock-in.</li>
+            <li>Per-seat costs add up fast at scale.</li>
+            <li>Limited customization vs self-hosted.</li>
+            <li>Outages = your outage; no fallback.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Building SaaS</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14.5px;line-height:1.6">If <em>you're</em> the one building a SaaS, the technical picks usually look like:</p>
+      <ul style="font-size:14px;line-height:1.6">
+        <li>Backend: <a href="../../frameworks/backend/spring-boot.html" style="color:var(--accent);">Spring Boot</a> · <a href="../../frameworks/backend/aspnet-core.html" style="color:var(--accent);">ASP.NET Core</a> · <a href="../../frameworks/backend/django.html" style="color:var(--accent);">Django</a> · <a href="../../frameworks/backend/laravel.html" style="color:var(--accent);">Laravel</a> · <a href="../../frameworks/backend/rails.html" style="color:var(--accent);">Rails</a></li>
+        <li>Frontend: <a href="../../frameworks/frontend/next.html" style="color:var(--accent);">Next.js</a> · <a href="../../frameworks/frontend/nuxt.html" style="color:var(--accent);">Nuxt</a> · <a href="../../frameworks/frontend/sveltekit.html" style="color:var(--accent);">SvelteKit</a></li>
+        <li>Hosting: <a href="paas.html" style="color:var(--accent);">PaaS</a> for the app + <a href="dbaas.html" style="color:var(--accent);">DBaaS</a> for the data + <a href="../providers/edge.html" style="color:var(--accent);">CDN</a> at the edge.</li>
+        <li>Cross-cutting: SSO (Okta/Auth0), billing (Stripe), email (SendGrid), observability (Sentry/Datadog).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Service Models</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="iaas.html">IaaS</a><a href="paas.html">PaaS</a><a href="faas.html">FaaS / Serverless</a><a href="dbaas.html">DBaaS</a><a href="caas.html">Containers as a Service</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Service Model Deep Dive</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PaaS · Cloud Service Model Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Service Model · 2 of 6</div>
+    <h1>PaaS — Platform as a Service</h1>
+    <p class="lede">Push code, get a running app. The platform handles the OS, runtime, scaling, load balancing, TLS, and most ops — you focus on the application itself.</p>
+    <div class="tags"><span>Push-to-deploy</span><span>Managed Runtime</span><span>Auto-scaling</span><span>Built-in TLS</span><span>Less ops</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>You ship code; the platform runs it.</strong> No servers to patch, no load balancers to configure.</li>
+          <li><strong>Buildpacks / Dockerfiles</strong> turn your repo into a runnable image automatically.</li>
+          <li><strong>Auto-scaling</strong> based on CPU, requests/sec, queue depth, or schedule.</li>
+          <li><strong>Built-in:</strong> TLS, custom domains, log streaming, environment vars, rolling deploys.</li>
+          <li><strong>You give up</strong> some control (kernel, exotic networking) for huge ops simplification.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Platforms</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Platform</th><th>Provider</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>Heroku</td><td>Salesforce</td><td>Original PaaS; still beloved for simplicity.</td></tr>
+          <tr><td>Azure App Service</td><td>Microsoft</td><td>Enterprise PaaS; .NET, Java, Node, Python.</td></tr>
+          <tr><td>Google Cloud Run</td><td>Google</td><td>Containers, scale-to-zero, pay-per-request.</td></tr>
+          <tr><td>AWS App Runner / Elastic Beanstalk</td><td>AWS</td><td>Container or code → managed service on AWS.</td></tr>
+          <tr><td>Fly.io</td><td>Fly</td><td>Global edge VMs from a Dockerfile + simple CLI.</td></tr>
+          <tr><td>Render</td><td>Render</td><td>Heroku-like DX, Git-driven, predictable pricing.</td></tr>
+          <tr><td>Railway</td><td>Railway</td><td>Modern Heroku alternative; great for side projects.</td></tr>
+          <tr><td>Vercel / Netlify</td><td>—</td><td>Frontend-focused PaaS (Next, Nuxt, SvelteKit).</td></tr>
+          <tr><td>Cloudflare Workers / Pages</td><td>Cloudflare</td><td>Edge runtime, V8 isolates, sub-ms cold starts.</td></tr>
+          <tr><td>DigitalOcean App Platform</td><td>DigitalOcean</td><td>Simple pricing, simple DX.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How PaaS Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Build → Deploy Pipeline</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Push to Git</strong> (or push a container image).</li>
+            <li>Platform <strong>builds</strong> your code via a buildpack or Dockerfile.</li>
+            <li>It deploys the new image as new instances.</li>
+            <li><strong>Rolling deploy</strong> swaps traffic — old instances keep serving until new ones pass health checks.</li>
+            <li>If health checks fail, automatic <strong>rollback</strong>.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The 12-Factor Discipline</summary>
+        <div class="drill-body">
+          <p>PaaS works best when your app follows <strong>12-factor</strong>:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Stateless processes</strong> — sessions in Redis, files in object storage.</li>
+            <li><strong>Config via env vars</strong>, not files.</li>
+            <li><strong>Logs to stdout</strong> — the platform streams them.</li>
+            <li><strong>Port binding</strong> — app listens on <code>$PORT</code>.</li>
+            <li><strong>Disposability</strong> — graceful shutdown on SIGTERM.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Auto-scaling Modes</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Manual</strong> — you set N instances.</li>
+            <li><strong>Metric-based</strong> — scale on CPU%, memory, custom metrics.</li>
+            <li><strong>Concurrency-based</strong> — N concurrent requests per instance.</li>
+            <li><strong>Scale-to-zero</strong> — drop to zero when idle (Cloud Run, Fly Machines, Vercel).</li>
+            <li><strong>Scheduled</strong> — pre-warm before known peaks.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What's Bundled (and What's Not)</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Usually included</th><th>Usually extra</th></tr></thead>
+            <tbody>
+              <tr><td>HTTPS / TLS certs</td><td>Managed databases (often DBaaS)</td></tr>
+              <tr><td>Custom domains</td><td>Background workers / cron</td></tr>
+              <tr><td>Log aggregation</td><td>Object storage</td></tr>
+              <tr><td>Health checks &amp; restarts</td><td>Email / SMS</td></tr>
+              <tr><td>Rolling deploys + rollback</td><td>Vector / search DBs</td></tr>
+              <tr><td>Env var management &amp; secrets</td><td>Auth / SSO</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Fastest path from idea to production.</li>
+            <li>Drastically less ops — no kernel, no LB config.</li>
+            <li>Built-in best practices (TLS, rolling deploys, health checks).</li>
+            <li>Great for small teams without dedicated infra engineers.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Less control — exotic runtimes, syscalls, kernels are off-limits.</li>
+            <li>Cost grows non-linearly at scale vs IaaS.</li>
+            <li>Vendor lock-in — moving off Heroku or Vercel takes work.</li>
+            <li>Cold starts on scale-to-zero offerings.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Web Apps &amp; APIs</h5><p>The classic 12-factor target.</p></div>
+        <div class="card teal"><h5>MVPs &amp; Side Projects</h5><p>Free tiers, instant deploys, no infra distraction.</p></div>
+        <div class="card mid"><h5>Internal Tools</h5><p>Low-traffic apps where ops cost &gt; compute cost.</p></div>
+        <div class="card accent"><h5>Frontend / Static + SSR</h5><p>Vercel, Netlify, Cloudflare Pages.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Service Models</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="iaas.html">IaaS</a><a href="saas.html">SaaS</a><a href="faas.html">FaaS / Serverless</a><a href="dbaas.html">DBaaS</a><a href="caas.html">Containers as a Service</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Service Model Deep Dive</footer>
+</div>
+</body>
+</html>

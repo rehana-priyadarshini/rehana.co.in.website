@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IaaS · Cloud Service Model Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Service Model · 1 of 6</div>
+    <h1>IaaS — Infrastructure as a Service</h1>
+    <p class="lede">Rent the raw building blocks — virtual machines, networks, storage, load balancers — and assemble whatever you want on top. The most flexible, lowest-level cloud model.</p>
+    <div class="tags"><span>VMs</span><span>Networks</span><span>Storage</span><span>You manage the OS</span><span>Maximum control</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>You rent the hardware</strong> (virtually) and own everything from the OS up.</li>
+          <li><strong>Pay per second / hour</strong> for compute; per GB-month for storage; per GB for egress.</li>
+          <li><strong>Elastic:</strong> spin up 100 servers in 5 minutes; tear them down in 1.</strong></li>
+          <li><strong>Building blocks:</strong> Compute (VM), Storage (disk + object), Networking (VPC, LB).</li>
+          <li><strong>Closest to "data center as code"</strong> — you control firewalls, subnets, IAM, encryption.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Building Blocks</div><h2>What IaaS Gives You</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Examples</th></tr></thead>
+        <tbody>
+          <tr><td>Virtual machines</td><td>AWS EC2, Azure VMs, GCP Compute Engine, OCI Compute</td></tr>
+          <tr><td>Block storage</td><td>EBS, Azure Managed Disks, Persistent Disk</td></tr>
+          <tr><td>Object storage</td><td>S3, Azure Blob, GCS, R2 (Cloudflare)</td></tr>
+          <tr><td>File storage</td><td>EFS, Azure Files, Filestore</td></tr>
+          <tr><td>Networking</td><td>VPC, subnets, security groups, route tables, NAT, peering</td></tr>
+          <tr><td>Load balancers</td><td>ALB / NLB, Azure LB, GCLB</td></tr>
+          <tr><td>DNS</td><td>Route 53, Azure DNS, Cloud DNS</td></tr>
+          <tr><td>CDN</td><td>CloudFront, Azure Front Door, Cloud CDN</td></tr>
+          <tr><td>Identity</td><td>IAM (AWS), Entra ID, Cloud IAM</td></tr>
+          <tr><td>Bare metal</td><td>EC2 metal, Azure dedicated, Bare Metal Solution</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Working with IaaS</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Provisioning &amp; Infrastructure as Code</summary>
+        <div class="drill-body">
+          <p>You almost never click in the console for production. Define infra in code:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Terraform / OpenTofu</strong> — cloud-agnostic, declarative.</li>
+            <li><strong>AWS CloudFormation / CDK</strong> — AWS-native.</li>
+            <li><strong>Azure Bicep / ARM</strong> — Azure-native.</li>
+            <li><strong>Pulumi</strong> — IaC in real languages (TS, Python, Go).</li>
+            <li><strong>Ansible</strong> — for what happens <em>inside</em> the VM.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>VM Sizing &amp; Families</summary>
+        <div class="drill-body">
+          <p>Each cloud has dozens of VM "families" optimized for different workloads:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>General purpose</strong> (M-series, D-series) — balanced CPU/RAM.</li>
+            <li><strong>Compute optimized</strong> (C-series) — CPU-heavy.</li>
+            <li><strong>Memory optimized</strong> (R-series, X-series) — in-memory DBs, analytics.</li>
+            <li><strong>Storage optimized</strong> (I-series) — local NVMe SSDs.</li>
+            <li><strong>GPU / accelerator</strong> (P / G / N-series) — AI training &amp; inference.</li>
+            <li><strong>ARM (Graviton)</strong> — cheaper, power-efficient.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Models &amp; Cost Levers</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>On-demand</strong> — pay per second, no commitment, highest rate.</li>
+            <li><strong>Reserved / Savings Plans</strong> — 1- or 3-year commit for 30–70% off.</li>
+            <li><strong>Spot / Preemptible</strong> — 70–90% off, can be reclaimed in minutes; great for batch.</li>
+            <li><strong>Egress is the silent killer</strong> — moving data <em>out</em> often dwarfs compute cost.</li>
+            <li><strong>Right-sizing</strong> + autoscaling are typically the biggest wins.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Operational Responsibilities</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>You handle</th><th>Cloud handles</th></tr></thead>
+            <tbody>
+              <tr><td>OS patching, hardening</td><td>Hypervisor, hardware</td></tr>
+              <tr><td>App deployment, runtime</td><td>Network fabric, power</td></tr>
+              <tr><td>Backups (mostly)</td><td>Storage durability (11 nines)</td></tr>
+              <tr><td>Firewall rules, IAM</td><td>Physical security, DDoS-edge</td></tr>
+              <tr><td>Monitoring &amp; logging</td><td>Region/AZ infrastructure</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Maximum control &amp; flexibility — runs anything.</li>
+            <li>Predictable performance (no shared multi-tenant runtime).</li>
+            <li>Smooth lift-and-shift from on-prem.</li>
+            <li>Compliance-friendly with dedicated tenancy.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>You own all the ops — patching, monitoring, scaling.</li>
+            <li>Slowest path from idea to production.</li>
+            <li>Cost spirals fast without disciplined right-sizing.</li>
+            <li>Easy to drift from cloud-native best practices.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Lift-and-Shift</h5><p>Move existing workloads with minimal rewrite.</p></div>
+        <div class="card teal"><h5>Custom / Legacy Stacks</h5><p>Apps that need specific OS / kernel / driver versions.</p></div>
+        <div class="card mid"><h5>Compliance-Heavy</h5><p>Dedicated tenancy, full audit control.</p></div>
+        <div class="card accent"><h5>HPC / AI Training</h5><p>GPU clusters, MPI, low-latency networking.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Service Models</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="paas.html">PaaS</a><a href="saas.html">SaaS</a><a href="faas.html">FaaS / Serverless</a><a href="dbaas.html">DBaaS</a><a href="caas.html">Containers as a Service</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Service Model Deep Dive</footer>
+</div>
+</body>
+</html>

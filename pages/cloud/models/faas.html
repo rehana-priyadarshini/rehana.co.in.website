@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FaaS / Serverless · Cloud Service Model Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Service Model · 4 of 6</div>
+    <h1>FaaS / Serverless</h1>
+    <p class="lede">Write a function. The cloud runs it on demand, scales it from zero to thousands per second, and charges only when it's actually executing. The most "cloud-native" of all the models.</p>
+    <div class="tags"><span>Functions</span><span>Event-driven</span><span>Pay-per-execution</span><span>Scale-to-zero</span><span>No servers</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Function:</strong> a small piece of code with a defined trigger (HTTP, queue, schedule, event).</li>
+          <li><strong>Stateless &amp; ephemeral</strong> — the runtime appears, runs, disappears.</li>
+          <li><strong>Cold start:</strong> the latency penalty when a new container spins up.</li>
+          <li><strong>Pay per request &amp; per millisecond</strong> of execution.</li>
+          <li><strong>"Serverless" is broader than "FaaS"</strong> — also includes serverless DBs, queues, search, etc.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Platforms</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Platform</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>AWS Lambda</td><td>The original; broadest trigger ecosystem.</td></tr>
+          <tr><td>Azure Functions</td><td>Multiple plans (Consumption, Premium, Flex).</td></tr>
+          <tr><td>Google Cloud Functions / Cloud Run Functions</td><td>Cloud Run is the modern recommended path.</td></tr>
+          <tr><td>Cloudflare Workers</td><td>V8 isolates, sub-ms cold starts, edge global.</td></tr>
+          <tr><td>Vercel Functions</td><td>Edge &amp; serverless functions tied to Next.js deploys.</td></tr>
+          <tr><td>Netlify Functions</td><td>Same idea, Netlify-native.</td></tr>
+          <tr><td>Deno Deploy</td><td>Deno-native edge runtime.</td></tr>
+          <tr><td>Fastly Compute</td><td>WASM at the edge.</td></tr>
+          <tr><td>Modal / Beam / Banana</td><td>Serverless GPUs for AI workloads.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How FaaS Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Execution Model</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li>A trigger fires (HTTP request, queue message, S3 upload, cron tick).</li>
+            <li>The platform finds (or starts) an instance of your function.</li>
+            <li>Your code runs to completion or timeout (typically 15 min max).</li>
+            <li>The instance may stay "warm" for a few minutes for the next call.</li>
+            <li>You're billed for invocation count + GB-seconds of memory × runtime.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Triggers — Way More Than HTTP</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>HTTP / API Gateway</strong> — REST endpoints.</li>
+            <li><strong>Queues</strong> (SQS, Service Bus, Pub/Sub) — process messages.</li>
+            <li><strong>Streams</strong> (Kinesis, Event Hubs, Kafka) — real-time data.</li>
+            <li><strong>Storage events</strong> — "new object in S3" → resize image.</li>
+            <li><strong>Database changes</strong> — DynamoDB streams, Cosmos DB change feed.</li>
+            <li><strong>Cron / schedules</strong> — nightly jobs without a server.</li>
+            <li><strong>IoT events, webhooks, auth events…</strong></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cold Starts &amp; Mitigations</summary>
+        <div class="drill-body">
+          <p>The biggest pain. Mitigations:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Provisioned concurrency</strong> — keep N instances warm (defeats some cost benefit).</li>
+            <li><strong>Lighter runtimes</strong> — Go, Rust, Node beat heavy JVM cold starts.</li>
+            <li><strong>SnapStart / AOT</strong> — pre-init the runtime image (Lambda SnapStart, GraalVM native).</li>
+            <li><strong>Edge runtimes</strong> (Workers, Vercel Edge) use V8 isolates — &lt; 1ms.</li>
+            <li><strong>Keep dependencies minimal</strong> — small bundles cold-start faster.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Limits &amp; Constraints</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Limit</th><th>Typical value</th></tr></thead>
+            <tbody>
+              <tr><td>Max execution time</td><td>15 min (Lambda); 60 min (Cloud Run); 30s (edge)</td></tr>
+              <tr><td>Max memory</td><td>10 GB (Lambda)</td></tr>
+              <tr><td>Max payload</td><td>6 MB sync, 256 KB async</td></tr>
+              <tr><td>Concurrency / region</td><td>1000 default (raise on request)</td></tr>
+              <tr><td>Local disk (ephemeral)</td><td>512 MB – 10 GB (<code>/tmp</code>)</td></tr>
+              <tr><td>Code package size</td><td>50 MB zipped, 250 MB unzipped</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>API backend</strong> — small CRUD APIs behind API Gateway.</li>
+            <li><strong>Queue processor</strong> — fan-out work without managing workers.</li>
+            <li><strong>Webhook receivers</strong> — handle GitHub, Stripe, Slack events.</li>
+            <li><strong>Image / media processing</strong> — on upload to object storage.</li>
+            <li><strong>Scheduled tasks</strong> — replace cron servers.</li>
+            <li><strong>Glue between services</strong> — small transformations, retries, ETL.</li>
+            <li><strong>Edge personalization</strong> — A/B, geo, auth checks at the CDN.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Pay only when running — pennies for low traffic.</li>
+            <li>Auto-scales to thousands instantly.</li>
+            <li>No infra to patch or monitor.</li>
+            <li>Massive trigger ecosystem encourages event-driven design.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Cold starts hurt user-facing latency.</li>
+            <li>Hard to reproduce locally (vendor specifics).</li>
+            <li>Stateless model rules out long-lived connections (WebSockets need workarounds).</li>
+            <li>Cost can balloon at sustained high traffic — containers may be cheaper.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Bursty / Spiky Workloads</h5><p>Sporadic webhooks, jobs that run a few times a day.</p></div>
+        <div class="card teal"><h5>Event-Driven Pipelines</h5><p>S3 trigger → resize → save → notify.</p></div>
+        <div class="card mid"><h5>Edge Personalization</h5><p>Auth, A/B, redirect logic at the CDN.</p></div>
+        <div class="card accent"><h5>Glue &amp; Automation</h5><p>SaaS-to-SaaS workflows, slack bots, ChatOps.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Service Models</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="iaas.html">IaaS</a><a href="paas.html">PaaS</a><a href="saas.html">SaaS</a><a href="dbaas.html">DBaaS</a><a href="caas.html">Containers as a Service</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Service Model Deep Dive</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Code Review · AI Workflow Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Workflow · 2 of 6</div>
+    <h1>Code Review</h1>
+    <p class="lede">AI as the second pair of eyes on every pull request — bug spotting, security flags, style nits, and explanations that help juniors ship safely. Best as a complement to human review, not a replacement.</p>
+    <div class="tags"><span>Pull Requests</span><span>Static Analysis</span><span>Security</span><span>Style</span><span>Workflow 2</span></div>
+    <a class="back" href="../../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Two flavors:</strong> AI inside the IDE (review-as-you-write) and AI on the PR (review-on-push).</li>
+          <li><strong>Best at:</strong> consistency, explanation, easy-to-miss bugs, security smells, accessibility.</li>
+          <li><strong>Weakest at:</strong> business-logic correctness it can't see context for.</li>
+          <li><strong>Noise is the killer:</strong> too many low-value comments and developers stop reading.</li>
+          <li><strong>Augment, don't replace human review</strong> — the human still owns the merge decision.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Tools</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Where it runs</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>GitHub Copilot Code Review</td><td>GitHub PRs</td><td>Native to GitHub; comments inline.</td></tr>
+          <tr><td>CodeRabbit</td><td>GitHub / GitLab / Azure</td><td>Popular standalone reviewer; configurable depth.</td></tr>
+          <tr><td>Greptile / Codium PR-Agent</td><td>GitHub / GitLab</td><td>Repo-aware, uses embeddings of the codebase.</td></tr>
+          <tr><td>Sourcery / Cursor BugBot</td><td>IDE / PR</td><td>Lighter-weight, focused on patterns.</td></tr>
+          <tr><td>Ellipsis</td><td>GitHub</td><td>AI reviewer + custom rules.</td></tr>
+          <tr><td>Snyk Code / GitHub Advanced Security</td><td>PR + CI</td><td>Security-focused (SAST) with AI explanations.</td></tr>
+          <tr><td>SonarQube + AI CodeFix</td><td>CI / IDE</td><td>Established static analyzer adding AI suggestions.</td></tr>
+          <tr><td>Custom (Claude Code / Cursor)</td><td>Local / CI script</td><td>Roll your own reviewer with prompts + the diff.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>What AI Reviewers Catch</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>High-Value Catches</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Null / undefined access</strong> the type checker missed.</li>
+            <li><strong>Off-by-one errors</strong> in loops &amp; ranges.</li>
+            <li><strong>Race conditions</strong> in async code (often!).</li>
+            <li><strong>SQL injection, XSS, SSRF</strong> patterns.</li>
+            <li><strong>Hard-coded secrets</strong> &amp; credentials.</li>
+            <li><strong>Missing error handling</strong> on async / I/O.</li>
+            <li><strong>Inconsistent naming / style</strong> vs surrounding code.</li>
+            <li><strong>Accessibility (a11y)</strong> — missing alt text, label-for, focus traps.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Lower-Value (Often Noise)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Style nits</strong> a formatter would handle.</li>
+            <li><strong>"Consider extracting a function"</strong> on perfectly clear 8-line blocks.</li>
+            <li><strong>Generic "add tests"</strong> without specifying which.</li>
+            <li><strong>"Add comments"</strong> on self-explanatory code.</li>
+            <li><strong>Performance speculation</strong> without measurement.</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Tune the reviewer to suppress these — most tools have severity / category filters.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Where It Genuinely Falls Short</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Business-logic correctness</strong> — does this discount rule match policy?</li>
+            <li><strong>Cross-service contracts</strong> — the diff doesn't show the consumer.</li>
+            <li><strong>Architecture &amp; long-term maintainability.</strong></li>
+            <li><strong>Performance under real load.</strong></li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practice</div><h2>Getting It to Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Tune Aggressiveness</summary>
+        <div class="drill-body">
+          <p>Default settings tend to be noisy. Configure:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Severity threshold</strong> — show only "warning" and above.</li>
+            <li><strong>Categories</strong> — disable "style" if you have a formatter.</li>
+            <li><strong>Path filters</strong> — skip generated code, vendor, fixtures.</li>
+            <li><strong>Custom rules / prompts</strong> — encode your team's conventions.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Two-Reviewer Workflow</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li>AI reviewer runs on PR open — author addresses obvious issues before pinging humans.</li>
+            <li>Human reviewer focuses on intent, architecture, business rules.</li>
+            <li>AI re-runs after each push.</li>
+          </ol>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Net result: humans spend less time on nits, more on the things only humans catch.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Custom CI Reviewer (DIY)</summary>
+        <div class="drill-body">
+          <p>If off-the-shelf doesn't fit, a 50-line GitHub Action can do it: send the diff + a custom prompt to Claude / GPT, post structured review comments back via the API. Total control over rules, model, and cost.</p>
+<pre><span class="com"># pseudo-code</span>
+diff = <span class="fn">git_diff</span>(base=<span class="str">"main"</span>)
+review = anthropic.<span class="fn">messages</span>(
+    model=<span class="str">"claude-sonnet-4.6"</span>,
+    system=OUR_TEAM_REVIEW_GUIDELINES,
+    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: diff}],
+)
+gh.<span class="fn">post_review</span>(pr=PR_NUMBER, body=review.text)</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Auto-merging on AI approval</strong> — never. Humans must own merges to production.</li>
+            <li><strong>Treating AI comments as required</strong> — they're suggestions, not blockers.</li>
+            <li><strong>Reviewing 5,000-line PRs with AI alone</strong> — split the PR, then review.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Workflow Areas</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="code-generation.html">Code Generation</a><a href="documentation.html">Documentation</a><a href="debugging.html">Debugging</a><a href="product-features.html">Product Features</a><a href="data-insights.html">Data &amp; Insights</a>
+        <a href="../../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Workflow Deep Dive</footer>
+</div>
+</body>
+</html>

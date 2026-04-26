@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AWS · Cloud Provider Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Provider · 1 of 6</div>
+    <h1>Amazon Web Services (AWS)</h1>
+    <p class="lede">The market leader. Largest service catalog, biggest ecosystem, most jobs. Everything from raw compute to satellite ground stations — and 200+ services in between.</p>
+    <div class="tags"><span>Market leader</span><span>200+ services</span><span>33+ regions</span><span>~31% market share</span><span>Enterprise default</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Launched</div><div class="val">2006 (S3, EC2)</div></div>
+        <div class="f"><div class="label">Parent</div><div class="val">Amazon</div></div>
+        <div class="f"><div class="label">Services</div><div class="val">200+</div></div>
+        <div class="f"><div class="label">Regions</div><div class="val">~33 globally</div></div>
+        <div class="f"><div class="label">Market share</div><div class="val">~31% (largest)</div></div>
+        <div class="f"><div class="label">Compliance</div><div class="val">FedRAMP High, IL5/6, SOC, HIPAA, PCI…</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Region</strong> = geographic area (e.g. <code>us-east-1</code>); <strong>AZ</strong> = isolated datacenter inside a region.</li>
+          <li><strong>IAM</strong> is the universal access-control system — users, roles, policies in JSON.</li>
+          <li><strong>Console / CLI / SDK / CloudFormation / CDK</strong> are the five ways to do anything.</li>
+          <li><strong>VPC</strong> isolates your network; everything lives in one (or peered ones).</li>
+          <li><strong>Largest service catalog</strong> means there's an "AWS way" to do almost anything — but also the most complexity.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Services</div><h2>Signature Services Cheatsheet</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Service</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Compute</td><td>EC2</td><td>Virtual machines (the original).</td></tr>
+          <tr><td>Compute</td><td>Lambda</td><td>Serverless functions.</td></tr>
+          <tr><td>Compute</td><td>ECS / EKS / Fargate</td><td>Containers (own / Kubernetes / serverless).</td></tr>
+          <tr><td>Compute</td><td>App Runner / Elastic Beanstalk</td><td>PaaS-style.</td></tr>
+          <tr><td>Storage</td><td>S3</td><td>The de-facto object storage standard.</td></tr>
+          <tr><td>Storage</td><td>EBS / EFS</td><td>Block / file storage.</td></tr>
+          <tr><td>Database</td><td>RDS / Aurora</td><td>Managed Postgres / MySQL / Oracle / SQL Server.</td></tr>
+          <tr><td>Database</td><td>DynamoDB</td><td>Serverless key-value / document, single-digit-ms latency.</td></tr>
+          <tr><td>Networking</td><td>VPC, Route 53, CloudFront</td><td>Network, DNS, CDN.</td></tr>
+          <tr><td>Messaging</td><td>SQS / SNS / EventBridge / Kinesis / MSK</td><td>Queues, pub/sub, events, streams, Kafka.</td></tr>
+          <tr><td>Identity</td><td>IAM, Cognito, IAM Identity Center</td><td>Service / app / workforce identity.</td></tr>
+          <tr><td>Analytics</td><td>Athena, Redshift, Glue, EMR</td><td>SQL on S3, warehouse, ETL, Spark.</td></tr>
+          <tr><td>AI / ML</td><td>Bedrock, SageMaker</td><td>Foundation models, full ML platform.</td></tr>
+          <tr><td>Security</td><td>KMS, Secrets Manager, GuardDuty, WAF, Shield</td><td>Keys, secrets, threat detection, perimeter.</td></tr>
+          <tr><td>Observability</td><td>CloudWatch, X-Ray</td><td>Metrics, logs, tracing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Working in AWS</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Mental Model</summary>
+        <div class="drill-body">
+          <p>AWS is built bottom-up: small, sharp building blocks you compose. Most production setups end up combining ~10 services (EC2/ECS, ALB, RDS, S3, IAM, CloudWatch, Route 53, KMS, Secrets, SQS). Once you know IAM and VPC, the rest is mostly variations.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>IAM Done Right</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Roles, not users</strong> — services and humans assume roles for short-lived credentials.</li>
+            <li><strong>Least privilege</strong> via policy conditions; <code>iam:PassRole</code> is the trickiest pattern.</li>
+            <li><strong>IAM Identity Center</strong> (formerly SSO) for workforce; permission sets per account.</li>
+            <li><strong>Multi-account</strong> by default — Organizations + AWS Control Tower.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Networking</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>VPC</strong> with public / private subnets; NAT for outbound.</li>
+            <li><strong>Security Groups</strong> = stateful instance firewalls. <strong>NACLs</strong> = subnet-level (rarely tuned).</li>
+            <li><strong>Transit Gateway</strong> connects many VPCs &amp; on-prem.</li>
+            <li><strong>PrivateLink</strong> exposes AWS services without internet egress.</li>
+            <li><strong>VPC endpoints</strong> route S3 / DynamoDB traffic through the AWS backbone.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cost Surprises</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>NAT Gateway</strong> charges per GB egress — proxy / VPC endpoints often cheaper.</li>
+            <li><strong>Cross-AZ traffic</strong> for chatty microservices.</li>
+            <li><strong>S3 list / get / put</strong> requests for high-volume workloads.</li>
+            <li><strong>CloudWatch Logs</strong> ingestion can dwarf EC2 cost on chatty apps.</li>
+            <li><strong>Idle EBS / unused snapshots / orphaned EIPs.</strong></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The "AWS Well-Architected" Pillars</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Operational Excellence</strong></li>
+            <li><strong>Security</strong></li>
+            <li><strong>Reliability</strong></li>
+            <li><strong>Performance Efficiency</strong></li>
+            <li><strong>Cost Optimization</strong></li>
+            <li><strong>Sustainability</strong></li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">A free Well-Architected Review with AWS partners is genuinely useful before going production.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick</div><h2>Where AWS Wins</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Maximum Optionality</h5><p>The widest catalog of any cloud — there's a service for almost anything.</p></div>
+        <div class="card teal"><h5>Mature Ops &amp; Compliance</h5><p>Most certifications, most government use, most enterprise battle-testing.</p></div>
+        <div class="card mid"><h5>Largest Hiring Pool</h5><p>More AWS-certified engineers than any other cloud.</p></div>
+        <div class="card accent"><h5>Hybrid Reality</h5><p>Outposts &amp; Local Zones bridge to data centers and metros.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cloud Providers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="azure.html">Microsoft Azure</a><a href="gcp.html">Google Cloud</a><a href="oracle.html">Oracle Cloud</a><a href="developer.html">DigitalOcean / Linode</a><a href="edge.html">Vercel / Netlify / Cloudflare</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Provider Deep Dive</footer>
+</div>
+</body>
+</html>

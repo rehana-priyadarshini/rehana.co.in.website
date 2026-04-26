@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Oracle Cloud · Cloud Provider Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Provider · 4 of 6</div>
+    <h1>Oracle Cloud Infrastructure (OCI)</h1>
+    <p class="lede">The dark horse. Aggressive pricing, very strong networking, and the only cloud where Oracle Database — still the system of record for thousands of enterprises — is a first-class citizen.</p>
+    <div class="tags"><span>Aggressive pricing</span><span>Oracle DB native</span><span>Strong networking</span><span>Multi-cloud (Azure / GCP / AWS)</span><span>Sovereign clouds</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Launched</div><div class="val">2016 (OCI Gen 2)</div></div>
+        <div class="f"><div class="label">Parent</div><div class="val">Oracle</div></div>
+        <div class="f"><div class="label">Regions</div><div class="val">50+ (incl. dedicated &amp; sovereign)</div></div>
+        <div class="f"><div class="label">Differentiator</div><div class="val">Oracle DB + Exadata in cloud</div></div>
+        <div class="f"><div class="label">Pricing</div><div class="val">Often 30–50% cheaper than AWS for compute</div></div>
+        <div class="f"><div class="label">Free tier</div><div class="val">Notably generous (4 ARM cores forever)</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Tenancy → Compartment → Resource</strong> — Compartments are the unit of isolation &amp; access control.</li>
+          <li><strong>Realms</strong> separate commercial, government, and dedicated tenants.</li>
+          <li><strong>Network is non-blocking</strong> — Oracle's claim is genuinely fast east-west.</li>
+          <li><strong>Universal Credits</strong> let one credit pool cover any service.</li>
+          <li><strong>Strongest in:</strong> Oracle workloads, HPC, enterprise apps lift-and-shift.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Services</div><h2>Signature Services</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Service</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Compute</td><td>OCI Compute (incl. Ampere ARM)</td><td>VMs &amp; bare metal — Ampere instances are the cheap-compute story.</td></tr>
+          <tr><td>Containers</td><td>OKE</td><td>Managed Kubernetes.</td></tr>
+          <tr><td>Serverless</td><td>OCI Functions</td><td>FaaS based on Fn Project.</td></tr>
+          <tr><td>Database</td><td>Autonomous Database</td><td>Self-driving Oracle DB (auto-tuning, patching, scaling).</td></tr>
+          <tr><td>Database</td><td>Exadata Cloud Service</td><td>Oracle's high-end DB hardware as a service.</td></tr>
+          <tr><td>Database</td><td>MySQL HeatWave</td><td>MySQL + accelerated analytics + ML in one engine.</td></tr>
+          <tr><td>Storage</td><td>Object / Block / File Storage</td><td>The standard trio.</td></tr>
+          <tr><td>Networking</td><td>VCN, FastConnect, Service Gateway</td><td>VCN = OCI's VPC; FastConnect for private interconnect.</td></tr>
+          <tr><td>AI / ML</td><td>OCI AI Services, Generative AI (Cohere, Llama, Mistral)</td><td>Hosted models on OCI.</td></tr>
+          <tr><td>Apps</td><td>Oracle Fusion Cloud Apps (ERP, HCM, CX)</td><td>Oracle's SaaS suite — runs on OCI.</td></tr>
+          <tr><td>Multi-cloud</td><td>Oracle Database@Azure / @AWS / @Google</td><td>Oracle DB hardware physically inside hyperscaler regions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The OCI Edge</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Autonomous Database</summary>
+        <div class="drill-body">
+          <p>Oracle's marquee service — a self-managing Oracle DB that auto-patches, auto-tunes, auto-scales, and auto-encrypts. Two flavors: <strong>Autonomous Transaction Processing</strong> (OLTP) and <strong>Autonomous Data Warehouse</strong> (analytics). For Oracle DB shops, this is the path to "no DBA."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Multi-Cloud Database</summary>
+        <div class="drill-body">
+          <p>Unique partnership angle: Oracle has dropped <strong>Exadata</strong> hardware physically into Azure, AWS, and Google Cloud regions. You can run a real Oracle DB inside another hyperscaler's network — eliminates egress for the DB tier.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Levers</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Always Free</strong> — 4 OCPUs (Ampere) + 24 GB RAM, plus 200 GB storage, forever.</li>
+            <li><strong>Universal Credits</strong> — pre-purchase credits used across any service.</li>
+            <li><strong>Compute &amp; egress</strong> consistently among cheapest of the major clouds.</li>
+            <li><strong>Bring Your Own License (BYOL)</strong> for Oracle DB &amp; Java.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Networking Story</summary>
+        <div class="drill-body">
+          <p>OCI's flat, non-blocking network is one of its strongest technical claims — designed for HPC and DB workloads where east-west bandwidth matters. RDMA-capable bare-metal instances power latency-sensitive apps.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Aggressive pricing (esp. Ampere ARM compute &amp; egress).</li>
+            <li>Best home for Oracle Database workloads.</li>
+            <li>Generous free tier rarely matched.</li>
+            <li>Multi-cloud DB story is genuinely unique.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smallest catalog of the major hyperscalers.</li>
+            <li>Smaller community &amp; learning resources.</li>
+            <li>Best practices &amp; ecosystem tooling lag AWS / Azure / GCP.</li>
+            <li>Sales motion can feel heavy for non-Oracle shops.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick</div><h2>Where OCI Wins</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Oracle DB Workloads</h5><p>Running Oracle anywhere else costs more &amp; works less well.</p></div>
+        <div class="card teal"><h5>Cost-Sensitive Compute</h5><p>Ampere ARM + free tier for startups &amp; learning.</p></div>
+        <div class="card mid"><h5>HPC / Bare Metal</h5><p>Non-blocking RDMA fabric for tightly coupled workloads.</p></div>
+        <div class="card accent"><h5>Multi-cloud DB Tier</h5><p>Oracle DB inside Azure / AWS / GCP regions.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cloud Providers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="aws.html">AWS</a><a href="azure.html">Microsoft Azure</a><a href="gcp.html">Google Cloud</a><a href="developer.html">DigitalOcean / Linode</a><a href="edge.html">Vercel / Netlify / Cloudflare</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Provider Deep Dive</footer>
+</div>
+</body>
+</html>

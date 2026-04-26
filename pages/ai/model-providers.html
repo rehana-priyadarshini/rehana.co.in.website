@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Model Providers · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 2 of 8</div>
+    <h1>Model Providers</h1>
+    <p class="lede">The companies that train, host, and serve the world's foundation models — through APIs, SDKs, and increasingly through cloud marketplaces. Pick a provider, get a model.</p>
+    <div class="tags"><span>APIs</span><span>SDKs</span><span>Hosted Inference</span><span>Pricing per token</span><span>Layer 2</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Inference API:</strong> a hosted endpoint you call with a prompt and get tokens back.</li>
+          <li><strong>SDKs</strong> exist for every major provider — Python, TypeScript, Go, Java, .NET.</li>
+          <li><strong>Pricing</strong> is per million tokens, split into <em>input</em> and <em>output</em>.</li>
+          <li><strong>Prompt caching</strong> lets you reuse repeated context cheaply (Anthropic, OpenAI, Google).</li>
+          <li><strong>Cloud marketplaces</strong> (Azure, AWS, GCP) re-sell the same models inside their security perimeter.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Providers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Provider</th><th>Flagship Models</th><th>Notable Strengths</th></tr></thead>
+        <tbody>
+          <tr><td>OpenAI</td><td>GPT-5, GPT-4o, o-series</td><td>Largest market share, ChatGPT brand, Realtime API.</td></tr>
+          <tr><td>Anthropic</td><td>Claude (Opus, Sonnet, Haiku)</td><td>Long context, coding, safety, agent SDK.</td></tr>
+          <tr><td>Google</td><td>Gemini Pro / Flash / Ultra</td><td>Massive context (1M+), native multimodal, Workspace.</td></tr>
+          <tr><td>Meta</td><td>Llama (open weights)</td><td>Free to download, run anywhere.</td></tr>
+          <tr><td>Mistral AI</td><td>Mistral, Mixtral, Codestral</td><td>European, efficient MoE, open + commercial.</td></tr>
+          <tr><td>xAI</td><td>Grok</td><td>Real-time X (Twitter) data.</td></tr>
+          <tr><td>Cohere</td><td>Command, Embed, Rerank</td><td>Enterprise RAG, multilingual embeddings.</td></tr>
+          <tr><td>AWS Bedrock</td><td>Claude, Llama, Titan, Nova, Mistral</td><td>One API across many providers, AWS perimeter.</td></tr>
+          <tr><td>Azure OpenAI</td><td>GPT family</td><td>Microsoft enterprise + Azure compliance.</td></tr>
+          <tr><td>Vertex AI</td><td>Gemini, Claude, Llama</td><td>Google Cloud's model garden.</td></tr>
+          <tr><td>Together / Fireworks / Groq</td><td>Open models, hosted</td><td>Fast inference for open models (esp. Groq's LPU).</td></tr>
+          <tr><td>Hugging Face</td><td>~All open models</td><td>The "GitHub of AI" + Inference Endpoints.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Working with Provider APIs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>A Typical Call</summary>
+        <div class="drill-body">
+<pre><span class="com"># OpenAI Python SDK</span>
+<span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+client = OpenAI()
+resp = client.chat.completions.<span class="fn">create</span>(
+    model=<span class="str">"gpt-5"</span>,
+    messages=[
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You are concise."</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: <span class="str">"Summarize quantum entanglement."</span>},
+    ],
+)
+print(resp.choices[<span class="num">0</span>].message.content)</pre>
+          <p style="margin-top:8px;font-size:13px;color:var(--muted);">Anthropic, Google, and Mistral SDKs follow nearly identical shapes — the API surface has converged.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing &amp; Cost Optimization</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Input tokens cost less than output</strong> — typically 4–5× cheaper.</li>
+            <li><strong>Prompt caching</strong> can cut repeated-context costs by 90% (Anthropic, OpenAI, Gemini).</li>
+            <li><strong>Batch APIs</strong> halve cost for non-real-time work.</li>
+            <li><strong>Smaller models first:</strong> Haiku / Flash / Mini before reaching for Opus / Pro / Premium.</li>
+            <li><strong>Distillation:</strong> use a big model to generate training data for a small one.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Streaming &amp; Tool Use</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Streaming</strong> sends tokens as they're generated — essential for chat UX.</li>
+            <li><strong>Tool / function calling</strong> lets the model invoke your code (search, DB queries, calculators).</li>
+            <li><strong>Structured outputs / JSON mode</strong> guarantees schema-conformant responses.</li>
+            <li><strong>Vision</strong> — pass images alongside text on most modern APIs.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Choosing a Provider</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>If you need…</th><th>Consider</th></tr></thead>
+            <tbody>
+              <tr><td>Best general capability</td><td>OpenAI, Anthropic, Google</td></tr>
+              <tr><td>Long context (1M+ tokens)</td><td>Google Gemini, Anthropic Claude</td></tr>
+              <tr><td>Coding agents</td><td>Anthropic Claude</td></tr>
+              <tr><td>On-prem / data residency</td><td>Open weights via vLLM, Hugging Face TGI</td></tr>
+              <tr><td>Lowest latency</td><td>Groq, Cerebras, Fireworks</td></tr>
+              <tr><td>Enterprise compliance</td><td>Azure OpenAI, AWS Bedrock, Vertex AI</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="frameworks.html">Frameworks</a><a href="vector-dbs.html">Vector DBs</a><a href="dev-agents.html">Dev Agents</a><a href="mlops.html">MLOps</a><a href="classic-ml.html">Classic ML</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

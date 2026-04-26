@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documentation · AI Workflow Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Workflow · 3 of 6</div>
+    <h1>Documentation</h1>
+    <p class="lede">The most universally welcome use of dev AI. Generate docstrings, READMEs, ADRs, runbooks, and onboarding tours from real code — and answer questions against your existing docs.</p>
+    <div class="tags"><span>Docstrings</span><span>READMEs</span><span>RAG over Docs</span><span>Onboarding</span><span>Workflow 3</span></div>
+    <a class="back" href="../../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Two directions:</strong> docs <em>from</em> code (generation) and Q&amp;A <em>over</em> docs (RAG).</li>
+          <li><strong>Best when grounded</strong> in actual code/config — never a "creative writing" prompt.</li>
+          <li><strong>Stale docs are worse than no docs</strong> — keep generation in CI to refresh on every change.</li>
+          <li><strong>Authorship still matters</strong> — humans review for accuracy, voice, and "what NOT to say."</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Use Cases</div><h2>Where AI Earns Its Keep</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Docstrings &amp; Inline Comments</summary>
+        <div class="drill-body">
+          <p>Highlight a function → "add docstring." Best models capture parameter types, return shape, side effects, and a one-liner of intent. Frameworks: <strong>Mintlify</strong>, <strong>Cursor / Copilot</strong>, JetBrains AI.</p>
+<pre><span class="com">/**
+ * Reserves stock for an order, decrementing inventory atomically.
+ *
+ * @param orderId  Idempotency key — repeated calls are no-ops.
+ * @param items    Line items; each must reference an existing SKU.
+ * @returns Reservation token, valid for 15 minutes.
+ * @throws OutOfStockError when any SKU has insufficient inventory.
+ */</span>
+<span class="kw">async function</span> <span class="fn">reserveStock</span>(orderId, items) { … }</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>READMEs &amp; Project Onboarding</summary>
+        <div class="drill-body">
+          <p>"Read the repo and write a README" works surprisingly well today. Best results come from giving the model:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>The folder structure</li>
+            <li>The package manifest (package.json / pyproject / pom)</li>
+            <li>The entry-point file(s)</li>
+            <li>Any existing partial docs</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Tools: Claude Code's <code>/init</code>, Cursor's "Generate README", Mintlify, AutoDoc.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>API References (OpenAPI / Typedoc / Sphinx)</summary>
+        <div class="drill-body">
+          <p>Generation tools have always existed. The new value is <strong>narrative documentation</strong> — examples, pitfalls, "common patterns" — pulled from real usage in the codebase.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Architecture Decision Records (ADRs)</summary>
+        <div class="drill-body">
+          <p>"Given this PR diff and the linked issue, draft an ADR." The model's first pass is rarely the final one — but it sets up the structure (context, decision, consequences) so the human can edit, not start from a blank page.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Runbooks &amp; Postmortems</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Runbooks:</strong> from monitoring config + alert history → "if X fires, do Y." Often produced by SRE teams using Claude / Copilot.</li>
+            <li><strong>Postmortem drafts:</strong> from Slack incident channel + git log + dashboard screenshots → blameless first draft.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>"Explain This Code" for Legacy</summary>
+        <div class="drill-body">
+          <p>Point an agent at a 5,000-line legacy module → "summarize the responsibilities, list public entry points, flag dead code." The most rescue-the-old-system valuable use of AI today.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>RAG Over Internal Docs</summary>
+        <div class="drill-body">
+          <p>Index your Confluence / Notion / docs site / wiki / Slack into a <a href="../vector-dbs.html" style="color:var(--accent);">vector DB</a>; expose a chatbot. Engineers ask "how do we deploy to staging?" and get an answer with citations. Tools: <strong>Glean</strong>, <strong>Notion Q&amp;A</strong>, <strong>Atlassian Rovo</strong>, custom <a href="../frameworks.html" style="color:var(--accent);">LangChain / LlamaIndex</a> apps.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practice</div><h2>Keeping Docs Honest</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Generate in CI, Not Once</summary>
+        <div class="drill-body">
+          <p>Run docstring / README updates as part of the PR pipeline. The dev sees the generated diff before merging — catches drift before it ships. Better than a one-time blast that's stale in two weeks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cite Sources in RAG Apps</summary>
+        <div class="drill-body">
+          <p>Always show which doc / page / line the answer came from. Without citations, RAG over docs becomes hallucination at scale. Users (and auditors) need to verify.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Voice &amp; Style Guides</summary>
+        <div class="drill-body">
+          <p>Feed the model your style guide ("active voice, second person, no marketing fluff"). Output reads like the rest of your docs, not generic AI prose.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>"Add comments to everything"</strong> — leads to <code>// increment counter by 1</code> noise.</li>
+            <li><strong>Generating tutorials without testing them</strong> — broken steps are worse than no tutorial.</li>
+            <li><strong>RAG without freshness signals</strong> — old wiki pages still show as canonical.</li>
+            <li><strong>Auto-publishing without review</strong> — at minimum, gate behind a human approval.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Workflow Areas</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="code-generation.html">Code Generation</a><a href="code-review.html">Code Review</a><a href="debugging.html">Debugging</a><a href="product-features.html">Product Features</a><a href="data-insights.html">Data &amp; Insights</a>
+        <a href="../../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Workflow Deep Dive</footer>
+</div>
+</body>
+</html>

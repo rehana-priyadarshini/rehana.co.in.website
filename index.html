@@ -1089,31 +1089,31 @@
       </div>
 
       <details class="drill" open>
-        <summary>Service Models</summary>
+        <summary>Service Models <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>IaaS</h5><p><em>Infrastructure</em> — raw VMs &amp; networks.<br/>AWS EC2, Azure VMs, GCP Compute Engine.</p></div>
-            <div class="card teal"><h5>PaaS</h5><p><em>Platform</em> — deploy code, no servers to manage.<br/>App Service, Cloud Run, Heroku.</p></div>
-            <div class="card mid"><h5>SaaS</h5><p><em>Software</em> — finished apps you subscribe to.<br/>Gmail, Salesforce, Slack.</p></div>
-            <div class="card accent"><h5>FaaS / Serverless</h5><p>Functions triggered by events.<br/>AWS Lambda, Azure Functions, Cloud Functions.</p></div>
-            <div class="card"><h5>DBaaS</h5><p>Managed databases.<br/>RDS, Cosmos DB, Cloud SQL.</p></div>
-            <div class="card teal"><h5>Containers as a Service</h5><p>Managed container platforms.<br/>EKS, AKS, GKE, ECS.</p></div>
+            <a class="card" href="pages/cloud/models/iaas.html" style="text-decoration:none;color:inherit;display:block;"><h5>IaaS →</h5><p><em>Infrastructure</em> — raw VMs &amp; networks.<br/>AWS EC2, Azure VMs, GCP Compute Engine.</p></a>
+            <a class="card teal" href="pages/cloud/models/paas.html" style="text-decoration:none;color:inherit;display:block;"><h5>PaaS →</h5><p><em>Platform</em> — deploy code, no servers to manage.<br/>App Service, Cloud Run, Heroku.</p></a>
+            <a class="card mid" href="pages/cloud/models/saas.html" style="text-decoration:none;color:inherit;display:block;"><h5>SaaS →</h5><p><em>Software</em> — finished apps you subscribe to.<br/>Gmail, Salesforce, Slack.</p></a>
+            <a class="card accent" href="pages/cloud/models/faas.html" style="text-decoration:none;color:inherit;display:block;"><h5>FaaS / Serverless →</h5><p>Functions triggered by events.<br/>AWS Lambda, Azure Functions, Cloud Functions.</p></a>
+            <a class="card" href="pages/cloud/models/dbaas.html" style="text-decoration:none;color:inherit;display:block;"><h5>DBaaS →</h5><p>Managed databases.<br/>RDS, Cosmos DB, Cloud SQL.</p></a>
+            <a class="card teal" href="pages/cloud/models/caas.html" style="text-decoration:none;color:inherit;display:block;"><h5>Containers as a Service →</h5><p>Managed container platforms.<br/>EKS, AKS, GKE, ECS.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Cloud Providers</summary>
+        <summary>Cloud Providers <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— provider names link to deep dives</span></summary>
         <div class="drill-body">
           <table>
             <thead><tr><th>Provider</th><th>Strength</th><th>Signature services</th></tr></thead>
             <tbody>
-              <tr><td>AWS</td><td>Largest, most services.</td><td>EC2, S3, Lambda, RDS, DynamoDB</td></tr>
-              <tr><td>Microsoft Azure</td><td>Strong enterprise + Microsoft stack.</td><td>App Service, Functions, Cosmos DB, AKS</td></tr>
-              <tr><td>Google Cloud</td><td>Best-in-class data &amp; AI.</td><td>BigQuery, Vertex AI, Cloud Run, GKE</td></tr>
-              <tr><td>Oracle Cloud</td><td>Oracle DB workloads.</td><td>OCI Compute, Autonomous DB</td></tr>
-              <tr><td>DigitalOcean / Linode</td><td>Simple developer-friendly pricing.</td><td>Droplets, App Platform</td></tr>
-              <tr><td>Vercel / Netlify / Cloudflare</td><td>Edge &amp; front-end hosting.</td><td>Edge Functions, static hosting</td></tr>
+              <tr><td><a href="pages/cloud/providers/aws.html" style="color:var(--blue);font-weight:600;">AWS →</a></td><td>Largest, most services.</td><td>EC2, S3, Lambda, RDS, DynamoDB</td></tr>
+              <tr><td><a href="pages/cloud/providers/azure.html" style="color:var(--blue);font-weight:600;">Microsoft Azure →</a></td><td>Strong enterprise + Microsoft stack.</td><td>App Service, Functions, Cosmos DB, AKS</td></tr>
+              <tr><td><a href="pages/cloud/providers/gcp.html" style="color:var(--blue);font-weight:600;">Google Cloud →</a></td><td>Best-in-class data &amp; AI.</td><td>BigQuery, Vertex AI, Cloud Run, GKE</td></tr>
+              <tr><td><a href="pages/cloud/providers/oracle.html" style="color:var(--blue);font-weight:600;">Oracle Cloud →</a></td><td>Oracle DB workloads.</td><td>OCI Compute, Autonomous DB</td></tr>
+              <tr><td><a href="pages/cloud/providers/developer.html" style="color:var(--blue);font-weight:600;">DigitalOcean / Linode →</a></td><td>Simple developer-friendly pricing.</td><td>Droplets, App Platform</td></tr>
+              <tr><td><a href="pages/cloud/providers/edge.html" style="color:var(--blue);font-weight:600;">Vercel / Netlify / Cloudflare →</a></td><td>Edge &amp; front-end hosting.</td><td>Edge Functions, static hosting</td></tr>
             </tbody>
           </table>
         </div>
@@ -1205,31 +1205,31 @@
       </div>
 
       <details class="drill" open>
-        <summary>The AI Stack Layers</summary>
+        <summary>The AI Stack Layers <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Foundation Models</h5><p>GPT, Claude, Gemini, Llama, Mistral, DeepSeek.</p></div>
-            <div class="card teal"><h5>Model Providers</h5><p>OpenAI, Anthropic, Google, Meta, xAI, Cohere.</p></div>
-            <div class="card mid"><h5>Frameworks</h5><p>LangChain, LlamaIndex, Semantic Kernel, Haystack.</p></div>
-            <div class="card accent"><h5>Vector DBs</h5><p>Pinecone, Weaviate, pgvector, Chroma, Milvus.</p></div>
-            <div class="card"><h5>Dev Agents / IDEs</h5><p>Claude Code, Cursor, GitHub Copilot, Windsurf.</p></div>
-            <div class="card teal"><h5>MLOps</h5><p>MLflow, Weights &amp; Biases, Vertex AI, SageMaker.</p></div>
-            <div class="card mid"><h5>Classic ML</h5><p>scikit-learn, XGBoost, PyTorch, TensorFlow.</p></div>
-            <div class="card accent"><h5>Data Prep</h5><p>pandas, Spark, dbt — feed the beast.</p></div>
+            <a class="card" href="pages/ai/foundation-models.html" style="text-decoration:none;color:inherit;display:block;"><h5>Foundation Models →</h5><p>GPT, Claude, Gemini, Llama, Mistral, DeepSeek.</p></a>
+            <a class="card teal" href="pages/ai/model-providers.html" style="text-decoration:none;color:inherit;display:block;"><h5>Model Providers →</h5><p>OpenAI, Anthropic, Google, Meta, xAI, Cohere.</p></a>
+            <a class="card mid" href="pages/ai/frameworks.html" style="text-decoration:none;color:inherit;display:block;"><h5>Frameworks →</h5><p>LangChain, LlamaIndex, Semantic Kernel, Haystack.</p></a>
+            <a class="card accent" href="pages/ai/vector-dbs.html" style="text-decoration:none;color:inherit;display:block;"><h5>Vector DBs →</h5><p>Pinecone, Weaviate, pgvector, Chroma, Milvus.</p></a>
+            <a class="card" href="pages/ai/dev-agents.html" style="text-decoration:none;color:inherit;display:block;"><h5>Dev Agents / IDEs →</h5><p>Claude Code, Cursor, GitHub Copilot, Windsurf.</p></a>
+            <a class="card teal" href="pages/ai/mlops.html" style="text-decoration:none;color:inherit;display:block;"><h5>MLOps →</h5><p>MLflow, Weights &amp; Biases, Vertex AI, SageMaker.</p></a>
+            <a class="card mid" href="pages/ai/classic-ml.html" style="text-decoration:none;color:inherit;display:block;"><h5>Classic ML →</h5><p>scikit-learn, XGBoost, PyTorch, TensorFlow.</p></a>
+            <a class="card accent" href="pages/ai/data-prep.html" style="text-decoration:none;color:inherit;display:block;"><h5>Data Prep →</h5><p>pandas, Spark, dbt — feed the beast.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>AI in the Developer Workflow</summary>
+        <summary>AI in the Developer Workflow <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Code Generation</h5><p>Boilerplate, tests, whole features from natural language.</p></div>
-            <div class="card teal"><h5>Code Review</h5><p>Flag bugs, security issues, style problems in PRs.</p></div>
-            <div class="card mid"><h5>Documentation</h5><p>Auto-generate docstrings, READMEs, explain legacy code.</p></div>
-            <div class="card accent"><h5>Debugging</h5><p>Paste an error; get a cause and suggested fix.</p></div>
-            <div class="card"><h5>Product Features</h5><p>Chatbots, search, summarization, recommendations.</p></div>
-            <div class="card teal"><h5>Data &amp; Insights</h5><p>Natural-language analytics, anomaly detection.</p></div>
+            <a class="card" href="pages/ai/workflow/code-generation.html" style="text-decoration:none;color:inherit;display:block;"><h5>Code Generation →</h5><p>Boilerplate, tests, whole features from natural language.</p></a>
+            <a class="card teal" href="pages/ai/workflow/code-review.html" style="text-decoration:none;color:inherit;display:block;"><h5>Code Review →</h5><p>Flag bugs, security issues, style problems in PRs.</p></a>
+            <a class="card mid" href="pages/ai/workflow/documentation.html" style="text-decoration:none;color:inherit;display:block;"><h5>Documentation →</h5><p>Auto-generate docstrings, READMEs, explain legacy code.</p></a>
+            <a class="card accent" href="pages/ai/workflow/debugging.html" style="text-decoration:none;color:inherit;display:block;"><h5>Debugging →</h5><p>Paste an error; get a cause and suggested fix.</p></a>
+            <a class="card" href="pages/ai/workflow/product-features.html" style="text-decoration:none;color:inherit;display:block;"><h5>Product Features →</h5><p>Chatbots, search, summarization, recommendations.</p></a>
+            <a class="card teal" href="pages/ai/workflow/data-insights.html" style="text-decoration:none;color:inherit;display:block;"><h5>Data &amp; Insights →</h5><p>Natural-language analytics, anomaly detection.</p></a>
           </div>
         </div>
       </details>

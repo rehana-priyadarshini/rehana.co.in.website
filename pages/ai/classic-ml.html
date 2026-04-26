@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Classic ML · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 7 of 8</div>
+    <h1>Classic ML</h1>
+    <p class="lede">Pre-LLM machine learning — and still the right tool for huge swaths of real problems. Tabular prediction, computer vision, recommendations, fraud, forecasting. Cheap, fast, interpretable.</p>
+    <div class="tags"><span>Supervised</span><span>Unsupervised</span><span>Tabular</span><span>Deep Learning</span><span>Layer 7</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Supervised learning:</strong> predict a label / value from features (regression, classification).</li>
+          <li><strong>Unsupervised:</strong> find structure without labels (clustering, dimensionality reduction).</li>
+          <li><strong>Reinforcement learning:</strong> an agent learns by taking actions and getting rewards.</li>
+          <li><strong>Train / validation / test split</strong> — never evaluate on data the model has seen.</li>
+          <li><strong>Overfitting</strong> = great on training, bad on new data. <strong>Regularization</strong> fights it.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Libraries</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Library</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td>scikit-learn</td><td>The Swiss army knife — regression, classification, clustering, pipelines, all in clean Python.</td></tr>
+          <tr><td>XGBoost</td><td>Gradient-boosted trees — wins most tabular Kaggle competitions.</td></tr>
+          <tr><td>LightGBM</td><td>Microsoft's GBT — faster training, similar accuracy.</td></tr>
+          <tr><td>CatBoost</td><td>Yandex's GBT — best-in-class with categorical features.</td></tr>
+          <tr><td>PyTorch</td><td>The default deep-learning framework today; flexible, research-friendly.</td></tr>
+          <tr><td>TensorFlow / Keras</td><td>Google's DL framework; strong production tooling (TFX, TF Serving).</td></tr>
+          <tr><td>JAX</td><td>Composable function transforms for high-performance ML / research.</td></tr>
+          <tr><td>Hugging Face Transformers</td><td>Pre-trained model hub for NLP, vision, audio.</td></tr>
+          <tr><td>statsmodels</td><td>Classical statistics — linear models, hypothesis tests, time series.</td></tr>
+          <tr><td>Prophet / NeuralProphet</td><td>Forecasting library from Meta.</td></tr>
+          <tr><td>OpenCV</td><td>Computer vision toolkit (faces, edges, tracking).</td></tr>
+          <tr><td>Surprise / implicit / RecBole</td><td>Recommender systems.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Common Tasks</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Tabular Prediction</summary>
+        <div class="drill-body">
+          <p>The bread &amp; butter — predicting churn, fraud, prices, conversion from a row of features. <strong>Gradient-boosted trees</strong> (XGBoost / LightGBM / CatBoost) almost always win, with neural nets close behind on very large datasets.</p>
+<pre><span class="kw">import</span> xgboost <span class="kw">as</span> xgb
+model = xgb.<span class="fn">XGBClassifier</span>(n_estimators=<span class="num">500</span>, max_depth=<span class="num">6</span>)
+model.<span class="fn">fit</span>(X_train, y_train)
+pred = model.<span class="fn">predict_proba</span>(X_test)[:, <span class="num">1</span>]</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Computer Vision</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Classification:</strong> "what's in this image?" — ResNet, EfficientNet, ViT.</li>
+            <li><strong>Detection:</strong> "where are the things?" — YOLO, DETR, Mask R-CNN.</li>
+            <li><strong>Segmentation:</strong> "label every pixel" — U-Net, SAM.</li>
+            <li><strong>Generation:</strong> Stable Diffusion, Flux, Imagen.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>NLP (pre-LLM)</summary>
+        <div class="drill-body">
+          <p>Tokenization, TF-IDF, word2vec / GloVe, named-entity recognition, topic modeling. Most of these still matter as building blocks — and BERT-family encoders remain the best choice for cheap, fast classification &amp; embeddings.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forecasting &amp; Time Series</summary>
+        <div class="drill-body">
+          <p>ARIMA, Prophet, neural forecasting (N-BEATS, Temporal Fusion Transformer). Most production forecasting still combines a tree model on lagged features with seasonal decomposition.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Evaluation Metrics</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Task</th><th>Metric</th></tr></thead>
+            <tbody>
+              <tr><td>Regression</td><td>RMSE, MAE, R²</td></tr>
+              <tr><td>Binary classification</td><td>AUC-ROC, precision, recall, F1, log-loss</td></tr>
+              <tr><td>Multi-class</td><td>Accuracy, macro F1, confusion matrix</td></tr>
+              <tr><td>Ranking / RecSys</td><td>NDCG, MRR, MAP, hit-rate</td></tr>
+              <tr><td>Forecasting</td><td>MAPE, sMAPE, MASE</td></tr>
+              <tr><td>Detection</td><td>mAP @ IoU thresholds</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Classic ML vs LLMs — When to Use Which</summary>
+        <div class="drill-body">
+          <div class="two-col pros-cons">
+            <div class="pros">
+              <h6>Use Classic ML when…</h6>
+              <ul>
+                <li>You have structured / tabular data.</li>
+                <li>You need millisecond-latency &amp; pennies-per-prediction.</li>
+                <li>You need interpretability &amp; explainability.</li>
+                <li>Compliance demands deterministic models.</li>
+              </ul>
+            </div>
+            <div class="cons">
+              <h6>Reach for LLMs when…</h6>
+              <ul>
+                <li>Inputs are free-form natural language.</li>
+                <li>You need reasoning, summarization, or generation.</li>
+                <li>You want zero-shot — no labeled training data.</li>
+                <li>Latency &amp; cost can absorb a few hundred ms / cents.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="model-providers.html">Model Providers</a><a href="frameworks.html">Frameworks</a><a href="vector-dbs.html">Vector DBs</a><a href="dev-agents.html">Dev Agents</a><a href="mlops.html">MLOps</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

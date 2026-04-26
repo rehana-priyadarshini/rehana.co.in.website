@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Frameworks · Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 3 of 8</div>
+    <h1>AI Frameworks</h1>
+    <p class="lede">The orchestration layer above raw model APIs — chains, agents, RAG pipelines, prompt management, evaluation. The plumbing that turns "call an LLM" into a real product.</p>
+    <div class="tags"><span>Orchestration</span><span>RAG</span><span>Agents</span><span>Tool Use</span><span>Layer 3</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Chain:</strong> a sequence of LLM + tool steps where each output feeds the next.</li>
+          <li><strong>Agent:</strong> an LLM that picks tools and takes actions in a loop until done.</li>
+          <li><strong>RAG</strong> (Retrieval-Augmented Generation): fetch relevant docs → stuff into the prompt → ask the model.</li>
+          <li><strong>Tool calling:</strong> the LLM decides which function to invoke; the framework runs it and feeds results back.</li>
+          <li><strong>Memory:</strong> conversation history (short-term) and stored facts (long-term).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Frameworks</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Framework</th><th>Language</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td>LangChain</td><td>Python, TS</td><td>Most popular; chains, agents, integrations to ~everything.</td></tr>
+          <tr><td>LangGraph</td><td>Python, TS</td><td>Stateful, graph-based agent workflows (LangChain's successor for agents).</td></tr>
+          <tr><td>LlamaIndex</td><td>Python, TS</td><td>RAG-first — ingestion, indexing, query engines.</td></tr>
+          <tr><td>Haystack</td><td>Python</td><td>Production RAG &amp; search pipelines (deepset).</td></tr>
+          <tr><td>Semantic Kernel</td><td>C#, Python, Java</td><td>Microsoft's enterprise orchestrator with planners.</td></tr>
+          <tr><td>DSPy</td><td>Python</td><td>Programmatic prompts that auto-optimize against metrics.</td></tr>
+          <tr><td>Anthropic Agent SDK</td><td>Python, TS</td><td>Claude-native agents with built-in tool use &amp; subagents.</td></tr>
+          <tr><td>OpenAI Agents SDK</td><td>Python</td><td>OpenAI-native agent framework with handoffs &amp; guardrails.</td></tr>
+          <tr><td>Vercel AI SDK</td><td>TypeScript</td><td>Streaming UI helpers for Next.js / React.</td></tr>
+          <tr><td>CrewAI / AutoGen</td><td>Python</td><td>Multi-agent collaboration patterns.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Core Patterns</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Retrieval-Augmented Generation (RAG)</summary>
+        <div class="drill-body">
+          <p>The standard pattern for "ask my docs":</p>
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Ingest:</strong> chunk documents, generate embeddings, store in a <a href="vector-dbs.html" style="color:var(--accent);">vector DB</a>.</li>
+            <li><strong>Retrieve:</strong> embed the user's question, find top-K similar chunks.</li>
+            <li><strong>Augment:</strong> stuff those chunks into the prompt as context.</li>
+            <li><strong>Generate:</strong> ask the LLM to answer using only that context.</li>
+          </ol>
+          <p style="margin-top:8px;font-size:13.5px;color:var(--muted);">Modern RAG adds re-ranking, hybrid (keyword + vector) search, query rewriting, and metadata filters.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tool Use &amp; Function Calling</summary>
+        <div class="drill-body">
+          <p>You describe a function (name, JSON schema). The model decides when to call it and produces a JSON argument; the framework runs it, feeds the result back, and the model continues. Used for:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Real-time data (weather, stock prices).</li>
+            <li>Database queries.</li>
+            <li>Math &amp; computation (the LLM is bad at it; Python isn't).</li>
+            <li>External APIs (Stripe, Slack, GitHub).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Agents &amp; Loops</summary>
+        <div class="drill-body">
+          <p>An <strong>agent</strong> is an LLM in a loop: <em>think → act → observe → repeat</em>. The framework handles:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Planning</strong> — break the task into steps.</li>
+            <li><strong>Tool selection</strong> — pick the right action.</li>
+            <li><strong>State management</strong> — what's been tried, what worked.</li>
+            <li><strong>Termination</strong> — when to stop (max steps, completion check).</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Newer frameworks (LangGraph, Anthropic Agent SDK) model agents as explicit state machines instead of opaque loops.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Prompt Management &amp; Evaluation</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Prompt templates</strong> — versioned, parameterized, often kept outside code.</li>
+            <li><strong>Evals</strong> — golden datasets + scoring (LLM-as-judge, human, exact match).</li>
+            <li><strong>Tracing</strong> — Langfuse, LangSmith, Weave, Phoenix capture every prompt &amp; response.</li>
+            <li><strong>A/B testing</strong> prompts &amp; models in production.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pick a Framework</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>If you want…</th><th>Reach for</th></tr></thead>
+            <tbody>
+              <tr><td>Maximum integrations &amp; ecosystem</td><td>LangChain</td></tr>
+              <tr><td>Graph-based stateful agents</td><td>LangGraph</td></tr>
+              <tr><td>RAG done well, fast</td><td>LlamaIndex</td></tr>
+              <tr><td>Microsoft / .NET shop</td><td>Semantic Kernel</td></tr>
+              <tr><td>Provider-native agent</td><td>Anthropic / OpenAI Agent SDK</td></tr>
+              <tr><td>Streaming UI on the web</td><td>Vercel AI SDK</td></tr>
+              <tr><td>Auto-optimized prompts</td><td>DSPy</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="model-providers.html">Model Providers</a><a href="vector-dbs.html">Vector DBs</a><a href="dev-agents.html">Dev Agents</a><a href="mlops.html">MLOps</a><a href="classic-ml.html">Classic ML</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

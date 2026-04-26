@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DBaaS · Cloud Service Model Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Service Model · 5 of 6</div>
+    <h1>DBaaS — Database as a Service</h1>
+    <p class="lede">A managed database — the cloud handles backups, patching, replication, failover, and (often) scaling. You point your app at a connection string and forget about everything else.</p>
+    <div class="tags"><span>Managed DB</span><span>Auto-backups</span><span>HA &amp; Failover</span><span>Read Replicas</span><span>Serverless DB</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>You get the database, not the box.</strong> No SSH, no <code>apt install postgresql</code>.</li>
+          <li><strong>Backups, patches, point-in-time recovery</strong> are automatic.</li>
+          <li><strong>HA</strong> via standby replicas in another availability zone — failover in seconds.</li>
+          <li><strong>Scaling</strong> via vertical resize, read replicas, or serverless auto-scale.</li>
+          <li><strong>You pay a managed-service premium</strong> over running it yourself — almost always worth it.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Options</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Type</th><th>Major DBaaS offerings</th></tr></thead>
+        <tbody>
+          <tr><td>Relational (SQL)</td><td>AWS RDS, Aurora · Azure SQL · Cloud SQL · Cloud Spanner · Oracle Autonomous</td></tr>
+          <tr><td>Postgres specialists</td><td>Neon, Supabase, Crunchy Bridge, Aiven, Timescale Cloud</td></tr>
+          <tr><td>MySQL specialists</td><td>PlanetScale (Vitess), MariaDB SkySQL</td></tr>
+          <tr><td>Document / NoSQL</td><td>MongoDB Atlas, DynamoDB, Cosmos DB, Firestore</td></tr>
+          <tr><td>Key-value</td><td>DynamoDB, Redis Cloud, Upstash Redis, Memorystore</td></tr>
+          <tr><td>Wide-column</td><td>Astra DB (Cassandra), ScyllaDB Cloud, Bigtable</td></tr>
+          <tr><td>Graph</td><td>Neptune, Neo4j AuraDB</td></tr>
+          <tr><td>Search</td><td>Elastic Cloud, OpenSearch Service, Algolia, MeiliSearch Cloud</td></tr>
+          <tr><td>Vector</td><td>Pinecone, Weaviate Cloud, Qdrant Cloud, MongoDB Atlas Vector</td></tr>
+          <tr><td>Time series</td><td>InfluxDB Cloud, Timescale Cloud, AWS Timestream</td></tr>
+          <tr><td>Warehouses</td><td>Snowflake, BigQuery, Redshift, Databricks SQL</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>What "Managed" Really Means</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>What the Provider Handles</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Provisioning</strong> — instance spins up in minutes.</li>
+            <li><strong>Patching</strong> — minor version upgrades on a maintenance window.</li>
+            <li><strong>Backups</strong> — daily snapshots + continuous WAL for point-in-time recovery.</li>
+            <li><strong>Replication &amp; failover</strong> — multi-AZ standby with automatic promotion.</li>
+            <li><strong>Monitoring</strong> — CPU, memory, query latency, slow-query log.</li>
+            <li><strong>Encryption at rest &amp; in transit</strong> by default.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What's Still On You</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Schema design &amp; migrations</strong> (Liquibase, Flyway, Alembic, Prisma).</li>
+            <li><strong>Indexing strategy</strong> &amp; query optimization.</li>
+            <li><strong>Connection pooling</strong> (PgBouncer, RDS Proxy, Hyperdrive).</li>
+            <li><strong>Capacity planning</strong> — choose instance size, IOPS, storage type.</li>
+            <li><strong>Data lifecycle</strong> — archival, retention, GDPR-style deletes.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Serverless &amp; Scale-to-Zero DBs</summary>
+        <div class="drill-body">
+          <p>A new class that auto-pauses when idle and bills per request:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Aurora Serverless v2</strong> — auto-scale by ACUs.</li>
+            <li><strong>Neon</strong> — Postgres with branching + scale-to-zero.</li>
+            <li><strong>PlanetScale</strong> — MySQL with branching schemas.</li>
+            <li><strong>DynamoDB on-demand</strong> — pay per request, no capacity planning.</li>
+            <li><strong>D1 (Cloudflare), Turso (libSQL), Xata</strong> — edge-native serverless DBs.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Levers</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Instance hours</strong> (vCPU + RAM).</li>
+            <li><strong>Storage GB-month</strong> + IOPS / throughput.</li>
+            <li><strong>Backup storage</strong> beyond included quota.</li>
+            <li><strong>Read replicas</strong> = extra instances.</li>
+            <li><strong>Egress</strong> — moving data out across regions / out of cloud.</li>
+            <li><strong>Reserved capacity</strong> can cut steady-state cost 30–60%.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Eliminates the most thankless ops work.</li>
+            <li>HA &amp; backups out of the box.</li>
+            <li>Easy to scale up or add replicas.</li>
+            <li>Security defaults are enterprise-grade.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Pricier per CPU than self-managed.</li>
+            <li>Limited extensions / tunables on locked-down services.</li>
+            <li>Vendor lock-in for proprietary engines (Aurora, Spanner, Cosmos).</li>
+            <li>Major version upgrades still require care.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Service Models</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="iaas.html">IaaS</a><a href="paas.html">PaaS</a><a href="saas.html">SaaS</a><a href="faas.html">FaaS / Serverless</a><a href="caas.html">Containers as a Service</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Service Model Deep Dive</footer>
+</div>
+</body>
+</html>

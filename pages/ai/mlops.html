@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MLOps · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 6 of 8</div>
+    <h1>MLOps &amp; LLMOps</h1>
+    <p class="lede">DevOps for ML. Track experiments, manage models, run training pipelines, deploy to production, and monitor everything — for both classical ML and LLM applications.</p>
+    <div class="tags"><span>Experiment Tracking</span><span>Model Registry</span><span>Pipelines</span><span>Monitoring</span><span>Layer 6</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Experiment tracking:</strong> log every run's params, metrics, code, and artifacts so you can reproduce.</li>
+          <li><strong>Model registry:</strong> versioned, stage-tagged storage for trained models (Staging → Production).</li>
+          <li><strong>Pipelines:</strong> reproducible DAGs that turn raw data into trained, evaluated, deployed models.</li>
+          <li><strong>Feature store:</strong> central source of computed features, shared between training and serving.</li>
+          <li><strong>LLMOps</strong> adds: prompt versioning, eval harnesses, tracing, cost &amp; token monitoring.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Tools</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Layer</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td>MLflow</td><td>Tracking + Registry</td><td>Open-source standard for experiments &amp; models.</td></tr>
+          <tr><td>Weights &amp; Biases</td><td>Tracking + Sweeps</td><td>Beautiful UI, hyperparameter sweeps, collaboration.</td></tr>
+          <tr><td>Vertex AI</td><td>Full platform (GCP)</td><td>Pipelines, registry, serving, monitoring on Google Cloud.</td></tr>
+          <tr><td>Amazon SageMaker</td><td>Full platform (AWS)</td><td>Notebooks → training jobs → endpoints, all on AWS.</td></tr>
+          <tr><td>Azure Machine Learning</td><td>Full platform (Azure)</td><td>Microsoft's MLOps suite.</td></tr>
+          <tr><td>Databricks</td><td>Lakehouse + ML</td><td>Spark + MLflow + serving in one platform.</td></tr>
+          <tr><td>Kubeflow</td><td>K8s-native</td><td>Open-source ML pipelines on Kubernetes.</td></tr>
+          <tr><td>Metaflow</td><td>Workflow framework</td><td>Netflix's framework — simple Python decorators.</td></tr>
+          <tr><td>DVC</td><td>Data versioning</td><td>Git-like versioning for datasets &amp; models.</td></tr>
+          <tr><td>Feast / Tecton</td><td>Feature store</td><td>Train &amp; serve from the same feature definitions.</td></tr>
+          <tr><td>BentoML / KServe / Triton</td><td>Model serving</td><td>Productionize models behind a REST/gRPC API.</td></tr>
+          <tr><td>Ray</td><td>Distributed compute</td><td>Distributed training, tuning, serving, RL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The MLOps Lifecycle</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Experiment Tracking</summary>
+        <div class="drill-body">
+          <p>Every training run logs: hyperparameters, metrics over time, code git SHA, dataset version, environment, artifacts (model file, plots). The same UI lets you compare runs, reproduce winners, and roll back losers.</p>
+<pre><span class="kw">import</span> mlflow
+<span class="kw">with</span> mlflow.<span class="fn">start_run</span>():
+    mlflow.<span class="fn">log_params</span>({<span class="str">"lr"</span>: <span class="num">0.001</span>, <span class="str">"epochs"</span>: <span class="num">10</span>})
+    <span class="com"># … train …</span>
+    mlflow.<span class="fn">log_metric</span>(<span class="str">"accuracy"</span>, acc)
+    mlflow.<span class="fn">log_model</span>(model, <span class="str">"model"</span>)</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pipelines &amp; Reproducibility</summary>
+        <div class="drill-body">
+          <p>An ML pipeline is a DAG: <em>ingest → validate → preprocess → train → evaluate → register → deploy</em>. Each step has versioned inputs/outputs. Re-running with the same config gives the same model.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Model Registry &amp; Deployment</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Stages:</strong> None → Staging → Production → Archived.</li>
+            <li><strong>Aliases / Champion-Challenger:</strong> traffic-split between candidate models.</li>
+            <li><strong>Serving:</strong> REST/gRPC endpoint, batch prediction, edge deploy, embedded.</li>
+            <li><strong>Shadow mode:</strong> a new model receives real traffic but its predictions don't ship — you compare offline.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Monitoring</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Operational:</strong> latency, error rate, cost (same as any service).</li>
+            <li><strong>Data drift:</strong> are inputs today statistically different from training data?</li>
+            <li><strong>Concept drift:</strong> are labels / outcomes shifting?</li>
+            <li><strong>Quality:</strong> precision, recall, AUC over time on labeled samples.</li>
+            <li><strong>For LLMs:</strong> token usage, hallucination rate, eval scores, tool-call success.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>LLMOps — What's Different</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Concern</th><th>LLMOps tool</th></tr></thead>
+            <tbody>
+              <tr><td>Prompt versioning &amp; evals</td><td>Langfuse, LangSmith, Promptfoo, Braintrust</td></tr>
+              <tr><td>Tracing every call</td><td>Langfuse, Phoenix (Arize), Helicone, W&amp;B Weave</td></tr>
+              <tr><td>Cost &amp; token tracking</td><td>OpenMeter, Helicone, native provider dashboards</td></tr>
+              <tr><td>Guardrails / safety</td><td>NVIDIA NeMo Guardrails, Guardrails AI</td></tr>
+              <tr><td>Fine-tuning ops</td><td>Provider APIs + W&amp;B / MLflow tracking</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="model-providers.html">Model Providers</a><a href="frameworks.html">Frameworks</a><a href="vector-dbs.html">Vector DBs</a><a href="dev-agents.html">Dev Agents</a><a href="classic-ml.html">Classic ML</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

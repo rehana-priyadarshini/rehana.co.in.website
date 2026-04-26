@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vector Databases · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 4 of 8</div>
+    <h1>Vector Databases</h1>
+    <p class="lede">Storage and search for embeddings — the high-dimensional vectors that capture the <em>meaning</em> of text, images, and audio. The memory of every RAG system.</p>
+    <div class="tags"><span>Embeddings</span><span>ANN search</span><span>Semantic similarity</span><span>RAG backbone</span><span>Layer 4</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Embedding:</strong> a vector (e.g. 1024 floats) representing the <em>meaning</em> of some content.</li>
+          <li><strong>Similarity</strong> = distance between two vectors (cosine, dot product, Euclidean).</li>
+          <li><strong>ANN</strong> (Approximate Nearest Neighbor): fast similarity search across millions of vectors.</li>
+          <li><strong>Index:</strong> a data structure (HNSW, IVF, ScaNN) that makes search sub-linear.</li>
+          <li><strong>Hybrid search</strong> combines vector similarity with keyword (BM25) matching for the best of both.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Options</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Database</th><th>Type</th><th>Why pick it</th></tr></thead>
+        <tbody>
+          <tr><td>Pinecone</td><td>Managed SaaS</td><td>Easiest production setup; auto-scaling, no ops.</td></tr>
+          <tr><td>Weaviate</td><td>Open-source / cloud</td><td>Built-in vectorizer modules; GraphQL API.</td></tr>
+          <tr><td>Qdrant</td><td>Open-source / cloud</td><td>Rust-built; fast filtering + payloads.</td></tr>
+          <tr><td>Milvus / Zilliz</td><td>Open-source / cloud</td><td>Battle-tested at billion-vector scale.</td></tr>
+          <tr><td>Chroma</td><td>Open-source / lite</td><td>Local-first; favorite for prototyping.</td></tr>
+          <tr><td>pgvector (Postgres)</td><td>Extension</td><td>Reuse your existing SQL DB; transactions + vectors.</td></tr>
+          <tr><td>Elasticsearch / OpenSearch</td><td>Search engine + vectors</td><td>Hybrid search; you may already run it.</td></tr>
+          <tr><td>Redis (RediSearch)</td><td>In-memory + vectors</td><td>Sub-millisecond ANN for hot data.</td></tr>
+          <tr><td>MongoDB Atlas Vector Search</td><td>Document DB + vectors</td><td>Vectors alongside JSON documents.</td></tr>
+          <tr><td>LanceDB</td><td>Embedded / Rust</td><td>File-based, Parquet-friendly, multi-modal.</td></tr>
+          <tr><td>FAISS</td><td>Library (Meta)</td><td>The original ANN library; powers many of the above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How They Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Embeddings — From Text to Vectors</summary>
+        <div class="drill-body">
+          <p>An embedding model (OpenAI <code>text-embedding-3</code>, Cohere Embed, Voyage, Nomic) takes a chunk of text and returns an N-dimensional vector. Semantically similar text → vectors that are close to each other.</p>
+<pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+client = OpenAI()
+v = client.embeddings.<span class="fn">create</span>(
+    model=<span class="str">"text-embedding-3-small"</span>,
+    input=<span class="str">"How do I reset my password?"</span>,
+).data[<span class="num">0</span>].embedding   <span class="com"># list of 1536 floats</span></pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Indexing Algorithms</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>HNSW</strong> (Hierarchical Navigable Small World) — graph-based, very fast, the modern default.</li>
+            <li><strong>IVF</strong> (Inverted File) — partition vectors into clusters, search only relevant ones.</li>
+            <li><strong>PQ</strong> (Product Quantization) — compress vectors for memory savings.</li>
+            <li><strong>ScaNN</strong> — Google's algorithm; powers Vertex AI Vector Search.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Filtering &amp; Metadata</summary>
+        <div class="drill-body">
+          <p>You rarely just want "similar things" — you want similar things <em>belonging to user X, in the past 30 days, of type Y</em>. Modern vector DBs support metadata filters that prune the search space before (or during) the ANN search.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hybrid Search &amp; Re-ranking</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Hybrid:</strong> combine BM25 keyword scores with vector similarity (better recall on rare terms / IDs).</li>
+            <li><strong>Re-rankers:</strong> a second-pass cross-encoder (Cohere Rerank, Voyage Rerank) that re-orders the top-N for accuracy.</li>
+            <li><strong>Reciprocal Rank Fusion (RRF)</strong> blends multiple result lists.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Choosing One</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Scenario</th><th>Pick</th></tr></thead>
+            <tbody>
+              <tr><td>Already on Postgres, &lt; 10M vectors</td><td>pgvector</td></tr>
+              <tr><td>Hosted, zero ops</td><td>Pinecone, Vertex AI Vector Search</td></tr>
+              <tr><td>Self-host, billions of vectors</td><td>Milvus, Qdrant</td></tr>
+              <tr><td>Already running Elasticsearch</td><td>Elasticsearch / OpenSearch</td></tr>
+              <tr><td>Local prototyping</td><td>Chroma, LanceDB</td></tr>
+              <tr><td>Need it on the edge</td><td>SQLite + sqlite-vec, LanceDB</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="model-providers.html">Model Providers</a><a href="frameworks.html">Frameworks</a><a href="dev-agents.html">Dev Agents</a><a href="mlops.html">MLOps</a><a href="classic-ml.html">Classic ML</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

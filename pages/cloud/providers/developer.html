@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Developer Clouds · Cloud Provider Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Provider · 5 of 6</div>
+    <h1>Developer Clouds — DigitalOcean, Linode, Hetzner</h1>
+    <p class="lede">Smaller, opinionated clouds that prioritize developer happiness and predictable pricing over breadth. The "I just want a box and a database" path — beloved by indie devs, startups, and small teams.</p>
+    <div class="tags"><span>Predictable pricing</span><span>Simple UI</span><span>Great docs</span><span>Indie-friendly</span><span>Bandwidth included</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>"Boring" infrastructure done well</strong> — VMs, load balancers, managed DBs, object storage.</li>
+          <li><strong>Flat-rate pricing</strong> — $X/month gets you Y CPUs, Z RAM, N TB bandwidth. No surprises.</li>
+          <li><strong>Bandwidth is generous</strong> — most plans bundle generous egress, sometimes terabytes.</li>
+          <li><strong>Smaller catalog</strong> means less choice paralysis.</li>
+          <li><strong>Best-in-class developer docs</strong> (esp. DigitalOcean's tutorials).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Players</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Provider</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>DigitalOcean</td><td>Largest of the developer clouds. Droplets, Spaces, Managed DBs, App Platform (PaaS), Kubernetes. Beloved for docs.</td></tr>
+          <tr><td>Linode (Akamai)</td><td>Now part of Akamai — VMs, Kubernetes, object storage. Very competitive pricing.</td></tr>
+          <tr><td>Hetzner</td><td>German; arguably the cheapest serious cloud — bare-metal &amp; VMs at hyperscaler-beating prices.</td></tr>
+          <tr><td>Vultr</td><td>32+ locations, bare metal, GPUs.</td></tr>
+          <tr><td>OVHcloud</td><td>European; dedicated &amp; public cloud, sovereign-friendly.</td></tr>
+          <tr><td>Scaleway</td><td>French; ARM, bare-metal, edge offerings.</td></tr>
+          <tr><td>Backblaze</td><td>Object storage at a fraction of S3 cost — popular for backups &amp; media.</td></tr>
+          <tr><td>UpCloud, Kamatera, Contabo</td><td>Niche players — predictable VMs, often per-second billing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>What You Get</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Typical Service Catalog</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Compute</strong> — VMs (Droplets / Linodes / Servers) and a smaller bare-metal lineup.</li>
+            <li><strong>Object storage</strong> — S3-compatible (Spaces, Object Storage).</li>
+            <li><strong>Block storage</strong> — Volumes attached to VMs.</li>
+            <li><strong>Managed databases</strong> — Postgres, MySQL, Redis, MongoDB, sometimes Kafka.</li>
+            <li><strong>Managed Kubernetes</strong> (DOKS, LKE, Hetzner via gardener).</li>
+            <li><strong>Load balancers, firewalls, VPCs, DNS</strong> — basics done well.</li>
+            <li><strong>App Platform / PaaS</strong> — DigitalOcean's Heroku-like offering.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Comparison (rough)</summary>
+        <div class="drill-body">
+          <p>For an equivalent 2-vCPU / 4 GB VM, monthly:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Hetzner:</strong> ~$5 (yes, really)</li>
+            <li><strong>DigitalOcean:</strong> ~$24</li>
+            <li><strong>Linode / Vultr:</strong> ~$24</li>
+            <li><strong>AWS t3.medium on-demand:</strong> ~$30 + bandwidth</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Bandwidth: developer clouds typically include 1–20 TB; AWS / Azure / GCP charge ~$0.05–0.09 per GB egress past 100 GB.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What You Give Up</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>No proprietary high-end services (no Spanner, BigQuery, DynamoDB, Bedrock).</li>
+            <li>Smaller region count.</li>
+            <li>Less mature compliance tooling for highly regulated industries.</li>
+            <li>Smaller hiring pool of "Hetzner-certified engineers."</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Indie SaaS</strong> — entire stack on a $20/month Droplet for &lt;1k users.</li>
+            <li><strong>Side projects &amp; learning</strong> — predictable bills, no AWS-scare stories.</li>
+            <li><strong>Bandwidth-heavy</strong> apps — video, downloads, gaming where egress would crush you on AWS.</li>
+            <li><strong>Co-pilot to a hyperscaler</strong> — primary on AWS, dev/staging on a developer cloud to save cost.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Predictable monthly bills.</li>
+            <li>Generous bandwidth allowances.</li>
+            <li>Simple UIs &amp; APIs.</li>
+            <li>Excellent documentation &amp; community.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>No "managed everything" service catalog.</li>
+            <li>Limited regions vs hyperscalers.</li>
+            <li>Less battle-tested for complex enterprise needs.</li>
+            <li>Outages have less surface area but feel bigger when they happen.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick</div><h2>Where Developer Clouds Win</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Indie SaaS &amp; Bootstrappers</h5><p>$20/month covers the whole stack for the first thousand users.</p></div>
+        <div class="card teal"><h5>Bandwidth-Heavy Apps</h5><p>Media, downloads, gaming — where AWS egress would be punishing.</p></div>
+        <div class="card mid"><h5>Learning &amp; Education</h5><p>No "$5,000 surprise bill" stories.</p></div>
+        <div class="card accent"><h5>EU-Sovereign Workloads</h5><p>OVH, Scaleway, Hetzner are EU-headquartered.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cloud Providers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="aws.html">AWS</a><a href="azure.html">Microsoft Azure</a><a href="gcp.html">Google Cloud</a><a href="oracle.html">Oracle Cloud</a><a href="edge.html">Vercel / Netlify / Cloudflare</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Provider Deep Dive</footer>
+</div>
+</body>
+</html>

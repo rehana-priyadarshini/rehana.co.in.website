@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Product Features · AI Workflow Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Workflow · 5 of 6</div>
+    <h1>AI Product Features</h1>
+    <p class="lede">Embedding AI <em>in</em> the product, not just the dev process. Chatbots, semantic search, summarization, recommendations, generation — the layer where AI actually meets the end user.</p>
+    <div class="tags"><span>Chatbots</span><span>Semantic Search</span><span>Summarization</span><span>Recommendations</span><span>Workflow 5</span></div>
+    <a class="back" href="../../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>"AI feature" rarely means a raw chatbot</strong> — usually it's a focused capability inside an existing flow.</li>
+          <li><strong>Latency &amp; cost are first-class</strong> design concerns, not afterthoughts.</li>
+          <li><strong>Evals before launch.</strong> If you can't measure it, don't ship it.</li>
+          <li><strong>Streaming UX</strong> hides latency. Most user-facing AI features stream tokens.</li>
+          <li><strong>Have a non-AI fallback</strong> — model APIs go down or get rate-limited.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>The Common AI Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Chatbots &amp; Assistants</summary>
+        <div class="drill-body">
+          <p>The default first AI feature most products ship. Variants:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Support bot</strong> — RAG over docs + ticket history; deflects tier-1 tickets.</li>
+            <li><strong>In-product assistant</strong> — knows the user's account context, can take actions.</li>
+            <li><strong>Persona / character</strong> chatbots — entertainment, companionship.</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Hard parts: scoping ("don't answer off-topic"), safety, escalation to humans, conversation memory.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Semantic / "Natural Language" Search</summary>
+        <div class="drill-body">
+          <p>Replace keyword search with embeddings — users ask questions, you return relevant docs/products/items. Often combined with re-ranking and metadata filters. Backed by a <a href="../vector-dbs.html" style="color:var(--accent);">vector DB</a>.</p>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Best as <em>hybrid</em> (keyword + semantic) — pure semantic loses on rare exact terms (SKU, error code, names).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Summarization</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Long documents → executive summary.</strong></li>
+            <li><strong>Meeting transcripts → action items.</strong></li>
+            <li><strong>Email threads → "what changed?"</strong></li>
+            <li><strong>Comments / reviews → sentiment + themes.</strong></li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Often the easiest AI win — high user value, simple prompt, predictable cost.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Recommendations &amp; Personalization</summary>
+        <div class="drill-body">
+          <p>Two flavors today:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Classical:</strong> matrix factorization / two-tower / GBT — still wins on most marketplaces.</li>
+            <li><strong>LLM-augmented:</strong> generate explanations ("Because you liked X…"), re-rank with reasoning, conversational discovery.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Generation (Text, Image, Audio, Code)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Marketing copy &amp; product descriptions.</strong></li>
+            <li><strong>Image generation</strong> — banners, thumbnails, style transfer (Stable Diffusion, Flux, DALL-E, Imagen).</li>
+            <li><strong>Voice / TTS</strong> — ElevenLabs, OpenAI TTS, Cartesia.</li>
+            <li><strong>Code-as-feature</strong> — Notion AI in formulas, Excel Copilot.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Classification &amp; Extraction</summary>
+        <div class="drill-body">
+          <p>Often the most cost-effective LLM use:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Tag tickets, route emails, label content.</li>
+            <li>Extract structured data from PDFs / contracts / invoices.</li>
+            <li>Score sentiment, urgency, intent.</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Where a classical model would need labeled data, a small / cheap LLM with a good prompt often gets you to "good enough" the first day.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>In-Product Agents</summary>
+        <div class="drill-body">
+          <p>"Do this for me." The agent navigates the app, fills forms, calls APIs, shows the user the result. New, risky, and high-leverage. Examples: Linear's draft-issue agent, GitHub Copilot Workspace, Notion AI.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture</div><h2>Building Blocks &amp; Concerns</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Typical Stack</summary>
+        <div class="drill-body">
+<pre>User → UI (streaming) → Your API
+              → Prompt template + context
+              → <a href="../frameworks.html" style="color:var(--accent);">Framework</a> orchestration
+              → Retrieval from <a href="../vector-dbs.html" style="color:var(--accent);">Vector DB</a>
+              → Tool calls (your APIs, search, DB)
+              → <a href="../model-providers.html" style="color:var(--accent);">Provider</a> (Claude / GPT / Gemini)
+              → Stream tokens back</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Latency &amp; UX</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Stream tokens</strong> — the user sees output start in &lt;500ms, hiding the rest.</li>
+            <li><strong>Optimistic UI</strong> — show "thinking…" with shape indicators.</li>
+            <li><strong>Progressive disclosure</strong> — outline first, details on demand.</li>
+            <li><strong>Cache aggressively</strong> — repeated questions / system prompts benefit from <a href="../model-providers.html" style="color:var(--accent);">prompt caching</a>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Safety &amp; Guardrails</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Input filters</strong> — strip PII, block prompt injection patterns.</li>
+            <li><strong>Output validators</strong> — JSON schema, allowed-topic checks, profanity filters.</li>
+            <li><strong>Tool authorization</strong> — never let the model call write APIs unscoped.</li>
+            <li><strong>Rate limits per user</strong> — both abuse prevention and cost control.</li>
+            <li><strong>Tools:</strong> NeMo Guardrails, Guardrails AI, Lakera, Protect AI.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Evals &amp; Quality</summary>
+        <div class="drill-body">
+          <p>Before launch, build a small (50–500 examples) golden dataset. Score offline:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Exact match</strong> for structured tasks.</li>
+            <li><strong>LLM-as-judge</strong> for free-form (with caveats).</li>
+            <li><strong>Human review</strong> for nuanced subjective quality.</li>
+            <li><strong>Tools:</strong> Promptfoo, Braintrust, Langfuse, OpenAI Evals, DeepEval.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cost &amp; Pricing</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Track tokens per user / per feature</strong> — surprises are common.</li>
+            <li><strong>Tier model use</strong> — Haiku/Flash/Mini for simple, Sonnet/Pro for hard.</li>
+            <li><strong>Cap per request</strong> — <code>max_tokens</code> protects against runaway responses.</li>
+            <li><strong>Prompt caching</strong> can cut bills 70–90% on repeated context.</li>
+            <li><strong>Pricing model</strong> — pass-through, included in plan, usage-based add-on.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Workflow Areas</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="code-generation.html">Code Generation</a><a href="code-review.html">Code Review</a><a href="documentation.html">Documentation</a><a href="debugging.html">Debugging</a><a href="data-insights.html">Data &amp; Insights</a>
+        <a href="../../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Workflow Deep Dive</footer>
+</div>
+</body>
+</html>

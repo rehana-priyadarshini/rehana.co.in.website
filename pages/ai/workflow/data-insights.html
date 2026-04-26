@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Data &amp; Insights · AI Workflow Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Workflow · 6 of 6</div>
+    <h1>Data &amp; Insights</h1>
+    <p class="lede">Natural-language analytics, smart dashboards, anomaly detection — AI as the bridge between raw data and the people who need answers. Bringing analyst-level insight to every employee.</p>
+    <div class="tags"><span>Text-to-SQL</span><span>Smart BI</span><span>Anomaly Detection</span><span>Forecasting</span><span>Workflow 6</span></div>
+    <a class="back" href="../../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Two complementary jobs:</strong> letting more people <em>ask</em> questions, and surfacing answers <em>without</em> being asked.</li>
+          <li><strong>The semantic layer matters more than the model</strong> — a clean schema + metrics catalog beats a clever LLM.</li>
+          <li><strong>Wrong answers are catastrophic</strong> in analytics. Verification, citations, and SQL transparency are non-negotiable.</li>
+          <li><strong>Hybrid wins</strong> — let LLMs draft, dashboards confirm, classical ML detect.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Use Cases</div><h2>Where AI Helps Analytics</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Natural-Language → SQL ("Text-to-SQL")</summary>
+        <div class="drill-body">
+          <p>"How many active users last month per region?" → the model writes the SQL, runs it, returns the table + a chart.</p>
+          <p>What makes it work in practice:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Schema description</strong> in the prompt — column names, types, foreign keys, sample rows.</li>
+            <li><strong>Few-shot examples</strong> of question/SQL pairs.</li>
+            <li><strong>Allow only SELECT</strong> — never let the model issue DDL/DML.</li>
+            <li><strong>Show the SQL</strong> to the user; let them verify before trusting the chart.</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Tools: <strong>Snowflake Cortex Analyst</strong>, <strong>Databricks Genie</strong>, <strong>BigQuery Gemini</strong>, <strong>Redshift Q</strong>, <strong>Hex Magic</strong>, <strong>Vanna.ai</strong>, <strong>Defog</strong>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Smart Dashboards &amp; BI Copilots</summary>
+        <div class="drill-body">
+          <p>BI tools are baking AI in:</p>
+          <table>
+            <thead><tr><th>Tool</th><th>AI capability</th></tr></thead>
+            <tbody>
+              <tr><td>Tableau Pulse / Einstein</td><td>Auto-summaries of changes; ask in natural language.</td></tr>
+              <tr><td>Power BI Copilot</td><td>Generate measures &amp; visuals from prompts.</td></tr>
+              <tr><td>Looker Studio + Gemini</td><td>NL queries against semantic models.</td></tr>
+              <tr><td>ThoughtSpot Sage</td><td>NL-first BI from the start.</td></tr>
+              <tr><td>Hex / Mode AI</td><td>Notebook-style analytics with AI cells.</td></tr>
+              <tr><td>Sigma Compute AI</td><td>Spreadsheet-meets-warehouse + AI.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anomaly Detection</summary>
+        <div class="drill-body">
+          <p>Hybrid is best:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Classical ML</strong> for the detection (Prophet, isolation forest, ESD, statistical control charts) — cheap, fast, explainable.</li>
+            <li><strong>LLM</strong> for the explanation ("Revenue dropped 18% — likely related to the deploy at 14:32 that affected the checkout API").</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Tools: Anomalo, Sifflet, Monte Carlo, Datadog Watchdog, AWS Lookout for Metrics.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Auto-Generated Insights / "Auto-Narratives"</summary>
+        <div class="drill-body">
+          <p>Daily / weekly emails: "Here's what changed in the business this week, with charts." Generated from KPI deltas + recent context. Less impressive than text-to-SQL but quietly more used.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forecasting &amp; What-If</summary>
+        <div class="drill-body">
+          <p>Foundation time-series models (TimeGPT, Chronos, Lag-Llama, Moirai) are starting to compete with classical Prophet/ARIMA — zero-shot forecasts with no training. Combine with an LLM for "what if Q4 marketing spend doubles?" scenario narration.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Q&amp;A Over Documents (the BI Adjacent)</summary>
+        <div class="drill-body">
+          <p>RAG over PDFs, contracts, financial filings, support tickets. Often packaged as "data extraction" or "document AI." Tools: Azure Document Intelligence, AWS Textract + Bedrock, Google Document AI, Unstructured, LlamaParse.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practice</div><h2>Making It Trustworthy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Build a Semantic Layer First</summary>
+        <div class="drill-body">
+          <p>The biggest determinant of AI analytics quality is whether your data has clear, agreed-upon definitions. <strong>Cube.dev</strong>, <strong>dbt Semantic Layer</strong>, <strong>MetricFlow</strong>, <strong>Looker LookML</strong> formalize "what is an active user" once — then the LLM can use the metric instead of inventing SQL.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Always Show the Query &amp; Source</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Display the SQL the model generated.</li>
+            <li>Link to the source table / dashboard / metric definition.</li>
+            <li>Let users edit the SQL and re-run.</li>
+            <li>Surface confidence ("I used the orders table; if you meant gross orders, the answer differs").</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Read-Only by Default</summary>
+        <div class="drill-body">
+          <p>The model's database role should be read-only. Allow-list specific stored procedures if writes are needed. <strong>Never</strong> grant DROP, DELETE, or schema-mutation rights to a generative system.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Govern PII &amp; Access</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Apply row-level / column-level security <em>before</em> the LLM sees data.</li>
+            <li>Mask emails, phone numbers, IDs unless the user has explicit access.</li>
+            <li>Log every NL question + generated SQL for audit.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>"Ask anything"</strong> on a 4,000-table warehouse with no semantic layer — guarantees garbage answers.</li>
+            <li><strong>Auto-emailing AI summaries</strong> to executives without human review.</li>
+            <li><strong>LLM-only anomaly detection</strong> — too noisy, too expensive.</li>
+            <li><strong>Treating AI charts as canonical</strong> — they should drive humans to the dashboard, not replace it.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Workflow Areas</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="code-generation.html">Code Generation</a><a href="code-review.html">Code Review</a><a href="documentation.html">Documentation</a><a href="debugging.html">Debugging</a><a href="product-features.html">Product Features</a>
+        <a href="../../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Workflow Deep Dive</footer>
+</div>
+</body>
+</html>

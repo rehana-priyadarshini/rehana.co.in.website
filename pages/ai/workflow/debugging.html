@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Debugging · AI Workflow Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Workflow · 4 of 6</div>
+    <h1>Debugging</h1>
+    <p class="lede">Paste a stack trace, get a hypothesis. Modern AI is a remarkably good debugging partner — pattern-matching errors against billions of examples, suggesting fixes, and stepping through reproduction with you.</p>
+    <div class="tags"><span>Stack Traces</span><span>Root-Cause</span><span>Repro Steps</span><span>Production Errors</span><span>Workflow 4</span></div>
+    <a class="back" href="../../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>AI is a hypothesis machine.</strong> It surfaces likely causes; you verify.</li>
+          <li><strong>Context wins:</strong> error + offending file + recent diff &gt;&gt; just the error.</li>
+          <li><strong>Pattern-matching first, reasoning second</strong> — common bugs are recognized instantly.</li>
+          <li><strong>Reproduction is still on you</strong> — the model can write the test, but it needs the inputs.</li>
+          <li><strong>Production debugging</strong> increasingly happens with AI inside observability tools (Sentry, Datadog).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Use Cases</div><h2>Where AI Shines at Debugging</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Stack-Trace Triage</summary>
+        <div class="drill-body">
+          <p>Paste the trace + the offending file. Modern frontier models near-instantly identify:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Null / undefined dereferences.</li>
+            <li>Type mismatches.</li>
+            <li>Off-by-one and boundary errors.</li>
+            <li>Async / race / promise rejection.</li>
+            <li>Misuse of library APIs.</li>
+            <li>Import / circular-dependency tangles.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>"Why isn't this working?" — Subtle Bugs</summary>
+        <div class="drill-body">
+          <p>The classic "code looks fine, behavior is wrong" cases. The model often spots:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Mutated state across closures.</li>
+            <li>Wrong comparison operator (<code>=</code> vs <code>==</code> vs <code>===</code>).</li>
+            <li>Timezone / UTC issues.</li>
+            <li>Floating-point comparison without tolerance.</li>
+            <li>Missing <code>await</code> on async calls.</li>
+            <li>Caching invalidation bugs.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Generating a Repro Test</summary>
+        <div class="drill-body">
+          <p>"Here's the bug. Write a failing test that reproduces it." The model writes the test; you verify it actually fails for the right reason; then it writes the fix.</p>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">This pattern is gold for legacy codebases — every fix becomes a regression test.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Production Error Triage</summary>
+        <div class="drill-body">
+          <p>Observability platforms increasingly bundle AI:</p>
+          <table>
+            <thead><tr><th>Tool</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td>Sentry Autofix / Seer</td><td>Suggests root cause &amp; opens a draft PR with the fix.</td></tr>
+              <tr><td>Datadog Bits AI</td><td>Summarizes incidents, suggests next steps.</td></tr>
+              <tr><td>New Relic AI</td><td>Plain-English error explanations + correlations.</td></tr>
+              <tr><td>Honeycomb Query Assistant</td><td>Natural-language → structured trace queries.</td></tr>
+              <tr><td>Rollbar AI Assist</td><td>Groups errors, suggests fixes.</td></tr>
+              <tr><td>Coroot</td><td>OSS — root-cause from metrics + logs + traces.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cross-System Bugs</summary>
+        <div class="drill-body">
+          <p>Distributed bugs (microservice A times out → B retries → C runs out of connections) used to require senior engineers reading dashboards. AI-assisted observability now follows the trace and proposes a hypothesis. Still error-prone — verify before acting.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practice</div><h2>How to Debug With AI</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Give It Everything Relevant</summary>
+        <div class="drill-body">
+          <p>The single biggest predictor of useful answers:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Full stack trace (not just the top frame).</li>
+            <li>The offending file (not just the error line).</li>
+            <li>Recent git log / diff if the bug is new.</li>
+            <li>The input that triggered it.</li>
+            <li>What you already tried.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ask for Hypotheses, Not Just a Fix</summary>
+        <div class="drill-body">
+          <p>"List 3 most likely root causes and how to test each." Beats "fix this." Forces the model to reason and gives you something to verify before changing code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Use the Agent for Bisection</summary>
+        <div class="drill-body">
+          <p>"Run the failing test, then progressively comment out blocks of <code>processOrder</code> until it passes. Report which block contains the bug." Agents that can run shell commands (Claude Code, Cursor Composer) excel at this — basically <code>git bisect</code> in your code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Production Debugging Discipline</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Never let AI run write commands</strong> on production from a chat suggestion. Always proxy through reviewed automation.</li>
+            <li><strong>Sanitize logs/traces</strong> before sharing — they often contain PII, tokens, customer data.</li>
+            <li><strong>Verify the fix locally</strong> before pushing — production AI suggestions skip too many steps.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Accepting the first plausible fix</strong> without confirming the root cause.</li>
+            <li><strong>"Fix the test" instead of "fix the bug"</strong> — easy to do with agents.</li>
+            <li><strong>Pasting the same trace over and over</strong> — give the model new info each turn.</li>
+            <li><strong>Letting AI suppress an error</strong> just to make it green.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Workflow Areas</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="code-generation.html">Code Generation</a><a href="code-review.html">Code Review</a><a href="documentation.html">Documentation</a><a href="product-features.html">Product Features</a><a href="data-insights.html">Data &amp; Insights</a>
+        <a href="../../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Workflow Deep Dive</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CaaS · Cloud Service Model Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Service Model · 6 of 6</div>
+    <h1>Containers as a Service</h1>
+    <p class="lede">Bring your container image; the cloud runs it, schedules it, scales it, and gives you Kubernetes (or something simpler). The middle ground between IaaS &amp; PaaS — and the dominant compute model in the enterprise.</p>
+    <div class="tags"><span>Kubernetes</span><span>Managed Control Plane</span><span>Auto-scaling</span><span>Portable</span><span>Cloud-native</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Container</strong> = your app + its dependencies, packaged as a portable image.</li>
+          <li><strong>Orchestration</strong> = scheduling containers across many machines, restarting failed ones, scaling them.</li>
+          <li><strong>Control plane</strong> (the "brains") is managed by the cloud; <strong>data plane</strong> (worker nodes) is where your containers run.</li>
+          <li><strong>Kubernetes</strong> is the de-facto standard; simpler alternatives exist for smaller workloads.</li>
+          <li><strong>Container registry</strong> stores your images (ECR, GCR, ACR, Docker Hub, GHCR).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Options</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tier</th><th>Service</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Managed Kubernetes</td><td>EKS (AWS), AKS (Azure), GKE (GCP), OKE (Oracle), DOKS</td><td>You manage workloads &amp; node pools; cloud manages the control plane.</td></tr>
+          <tr><td>Serverless containers</td><td>AWS Fargate, Azure Container Apps, Cloud Run, ACI</td><td>No nodes to manage — just deploy a container, scale to zero.</td></tr>
+          <tr><td>Simple orchestrators</td><td>AWS ECS, Docker Swarm, HashiCorp Nomad</td><td>Lighter than K8s for small fleets.</td></tr>
+          <tr><td>Container registries</td><td>ECR, ACR, Artifact Registry, Docker Hub, GHCR, Quay</td><td>Where images live.</td></tr>
+          <tr><td>K8s ecosystem</td><td>Helm, ArgoCD / Flux, Istio / Linkerd, Knative, KEDA</td><td>Packaging, GitOps, service mesh, autoscaling.</td></tr>
+          <tr><td>K8s distributions</td><td>OpenShift (Red Hat), Rancher, Tanzu, k3s, k0s</td><td>Opinionated K8s for on-prem &amp; edge.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How CaaS Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Workflow</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Build</strong> the container image (Dockerfile / buildpacks / Buildah).</li>
+            <li><strong>Push</strong> to a registry.</li>
+            <li><strong>Declare</strong> what you want running (Deployment, Service, Ingress in YAML).</li>
+            <li><strong>Apply</strong> via <code>kubectl</code> / Helm / ArgoCD.</li>
+            <li>The control plane <strong>schedules</strong> pods onto nodes, watches for drift, restarts on failure.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Kubernetes Concepts You'll Meet</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Pod</strong> — one or more containers scheduled together.</li>
+            <li><strong>Deployment</strong> — desired state for a set of pods (with rolling updates).</li>
+            <li><strong>Service</strong> — stable virtual IP / DNS for a set of pods.</li>
+            <li><strong>Ingress</strong> — HTTP routing into the cluster (paired with an Ingress Controller).</li>
+            <li><strong>ConfigMap / Secret</strong> — configuration &amp; sensitive values.</li>
+            <li><strong>Namespace</strong> — logical isolation inside one cluster.</li>
+            <li><strong>HPA / VPA / KEDA</strong> — horizontal / vertical / event-driven autoscaling.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Serverless Containers — A Sweet Spot</summary>
+        <div class="drill-body">
+          <p>Cloud Run, Fargate, and Container Apps let you deploy a container without ever touching a node. You get:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Scale to zero when idle.</li>
+            <li>Auto-scale on requests / CPU / event load.</li>
+            <li>Pay per vCPU-second + memory-second.</li>
+            <li>HTTPS, custom domains, IAM out of the box.</li>
+          </ul>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">For most teams, serverless containers replace both K8s <em>and</em> traditional FaaS.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Operational Patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>GitOps</strong> — desired cluster state lives in Git; ArgoCD / Flux reconciles.</li>
+            <li><strong>Service mesh</strong> — Istio / Linkerd for mTLS, retries, observability.</li>
+            <li><strong>Helm charts</strong> — templated manifests; like a package manager for K8s apps.</li>
+            <li><strong>Operators</strong> — controllers that manage stateful apps (DBs, queues) as K8s resources.</li>
+            <li><strong>Observability</strong> — Prometheus + Grafana + Loki + Tempo (or commercial: Datadog, New Relic).</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Portable — same image runs on AWS, Azure, GCP, on-prem.</li>
+            <li>Right balance of control vs ops for most teams.</li>
+            <li>Massive open-source ecosystem (CNCF).</li>
+            <li>Standardizes deployment across many languages &amp; teams.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Kubernetes is genuinely complex — steep learning curve.</li>
+            <li>YAML sprawl; needs Helm / Kustomize discipline.</li>
+            <li>Cluster ops still requires expertise (upgrades, networking).</li>
+            <li>For small workloads, K8s is overkill — use serverless containers.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Microservices Platforms</h5><p>Many services, many teams, polyglot — K8s shines here.</p></div>
+        <div class="card teal"><h5>Hybrid / Multi-cloud</h5><p>Same workloads on AWS, Azure, on-prem.</p></div>
+        <div class="card mid"><h5>Stateful Workloads</h5><p>Operators run Postgres, Kafka, Cassandra reliably on K8s.</p></div>
+        <div class="card accent"><h5>Single Service / Modest Scale</h5><p>Skip K8s; use serverless containers (Cloud Run, ACA, Fargate).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Service Models</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="iaas.html">IaaS</a><a href="paas.html">PaaS</a><a href="saas.html">SaaS</a><a href="faas.html">FaaS / Serverless</a><a href="dbaas.html">DBaaS</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Service Model Deep Dive</footer>
+</div>
+</body>
+</html>

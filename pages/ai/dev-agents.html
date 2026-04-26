@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dev Agents &amp; AI IDEs · AI Stack Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">AI Stack Layer · 5 of 8</div>
+    <h1>Dev Agents &amp; AI IDEs</h1>
+    <p class="lede">AI that reads, writes, and edits real codebases — from autocomplete that finishes your line to autonomous agents that ship features. The fastest-changing layer of the stack.</p>
+    <div class="tags"><span>Code Generation</span><span>Pair Programming</span><span>Agentic Coding</span><span>IDE-native</span><span>Layer 5</span></div>
+    <a class="back" href="../../index.html#ch-ai">← Back to AI Landscape</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Three modes:</strong> autocomplete (inline), chat (sidebar), and agent (autonomous multi-file edits).</li>
+          <li><strong>Context</strong> is everything — the agent needs to <em>see</em> the right files to make good edits.</li>
+          <li><strong>Tool use:</strong> read files, run shell commands, search the web, call MCP servers.</li>
+          <li><strong>Review loop:</strong> AI proposes → you approve → tests run → iterate.</li>
+          <li><strong>The model matters:</strong> the same IDE feels totally different on Claude vs GPT vs a local model.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Tools</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Form factor</th><th>Why it stands out</th></tr></thead>
+        <tbody>
+          <tr><td>Claude Code</td><td>Terminal / IDE plugin</td><td>Anthropic's official agent — runs in your shell, edits files, runs tests, full agent loop.</td></tr>
+          <tr><td>Cursor</td><td>VS Code fork</td><td>Most popular AI-native editor; Composer agent + Tab completion.</td></tr>
+          <tr><td>GitHub Copilot</td><td>Plugin (any IDE)</td><td>The original. Inline + chat + agent (Workspace).</td></tr>
+          <tr><td>Windsurf (Codeium)</td><td>VS Code fork</td><td>Cascade agent; strong on multi-file flow.</td></tr>
+          <tr><td>Cline / Roo Code</td><td>VS Code extension</td><td>Open-source agentic coding inside VS Code.</td></tr>
+          <tr><td>Aider</td><td>Terminal CLI</td><td>OSS agent that edits via git commits.</td></tr>
+          <tr><td>Zed AI</td><td>Native editor</td><td>Rust-built collaborative editor with AI baked in.</td></tr>
+          <tr><td>JetBrains AI Assistant</td><td>JetBrains plugin</td><td>Native to IntelliJ / PyCharm / WebStorm / Rider.</td></tr>
+          <tr><td>Devin / Replit Agent / Bolt / Lovable</td><td>Cloud workspace</td><td>"Type a prompt, get an app" — async cloud-based agents.</td></tr>
+          <tr><td>Tabnine / Supermaven / Codeium</td><td>Inline completion</td><td>Fast, often local-first, cheap.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How They Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Three Modes</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Autocomplete:</strong> ghost-text suggestions as you type. Latency &lt; 200ms; small or distilled models.</li>
+            <li><strong>Chat:</strong> sidebar conversation, with the open file (or workspace) as context.</li>
+            <li><strong>Agent / Composer:</strong> the AI plans, edits multiple files, runs commands, iterates — you approve.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Context Strategy</summary>
+        <div class="drill-body">
+          <p>Modern coding agents work surprisingly well because they aggressively gather context:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Repo indexing (embeddings of every file).</li>
+            <li>Static analysis (LSP — definitions, references, types).</li>
+            <li>Recent edits, open tabs, terminal output.</li>
+            <li>Web search for libraries / errors.</li>
+            <li>MCP servers for external tools (Jira, DBs, Sentry).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Model Context Protocol (MCP)</summary>
+        <div class="drill-body">
+          <p><strong>MCP</strong> (Anthropic, 2024) is an open standard for connecting AI agents to external tools — file systems, databases, ticketing, monitoring. Pluggable across Claude Code, Cursor, Windsurf, and many others.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What AI Coding Is Good / Bad At</summary>
+        <div class="drill-body">
+          <div class="two-col pros-cons">
+            <div class="pros">
+              <h6>Good at</h6>
+              <ul>
+                <li>Boilerplate, tests, docstrings.</li>
+                <li>Translating between languages / frameworks.</li>
+                <li>Refactors with clear before/after.</li>
+                <li>Debugging stack traces.</li>
+                <li>"Do the thing in 3 places" repetitive edits.</li>
+              </ul>
+            </div>
+            <div class="cons">
+              <h6>Bad at (still)</h6>
+              <ul>
+                <li>Architecture decisions across many files without context.</li>
+                <li>Domain-specific business rules nowhere documented.</li>
+                <li>Performance optimization without measurement.</li>
+                <li>Recognizing it doesn't know.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Picking a Tool</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>If you want…</th><th>Try</th></tr></thead>
+            <tbody>
+              <tr><td>Best agentic coding today</td><td>Claude Code, Cursor (Composer), Windsurf</td></tr>
+              <tr><td>Stay in VS Code, official-feeling</td><td>GitHub Copilot</td></tr>
+              <tr><td>Stay in JetBrains</td><td>JetBrains AI Assistant, Junie</td></tr>
+              <tr><td>OSS / self-host</td><td>Aider, Cline, Continue.dev</td></tr>
+              <tr><td>Async cloud agents</td><td>Devin, Replit Agent, Bolt, Lovable</td></tr>
+              <tr><td>Just fast autocomplete</td><td>Supermaven, Codeium, Tabnine</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other AI Stack Layers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="foundation-models.html">Foundation Models</a><a href="model-providers.html">Model Providers</a><a href="frameworks.html">Frameworks</a><a href="vector-dbs.html">Vector DBs</a><a href="mlops.html">MLOps</a><a href="classic-ml.html">Classic ML</a><a href="data-prep.html">Data Prep</a>
+        <a href="../../index.html#ch-ai">↑ Back to AI Landscape</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · AI Stack Deep Dive</footer>
+</div>
+</body>
+</html>

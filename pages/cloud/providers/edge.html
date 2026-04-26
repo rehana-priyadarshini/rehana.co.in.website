@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Edge / Frontend Clouds · Cloud Provider Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Provider · 6 of 6</div>
+    <h1>Edge &amp; Frontend Clouds — Vercel, Netlify, Cloudflare</h1>
+    <p class="lede">A new generation of clouds built around the modern frontend stack — Git-driven deploys, global edge runtimes, deeply integrated with React / Vue / Svelte. Where the JAMstack and meta-frameworks live.</p>
+    <div class="tags"><span>Edge runtimes</span><span>Git-driven CI/CD</span><span>Static + SSR</span><span>Sub-ms cold starts</span><span>Frontend-first</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Edge runtime</strong> = your code runs in 200+ cities, milliseconds from any user.</li>
+          <li><strong>Push to Git → live URL</strong> in under a minute. Preview URL per PR.</li>
+          <li><strong>Static + SSR + Edge functions</strong> coexist in one deploy.</li>
+          <li><strong>Built around</strong> Next.js (Vercel), Nuxt (NuxtHub), SvelteKit, Astro, Workers.</li>
+          <li><strong>Pricing model</strong> = monthly seats / projects + usage (requests, bandwidth, function-time).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Players</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Provider</th><th>Strengths</th></tr></thead>
+        <tbody>
+          <tr><td>Vercel</td><td>Best-in-class for <a href="../../frameworks/frontend/next.html" style="color:var(--accent);">Next.js</a>; built by the same team. Image optimization, ISR, edge functions, AI SDK.</td></tr>
+          <tr><td>Netlify</td><td>The original JAMstack host; strong forms, identity, edge functions; works great with <a href="../../frameworks/frontend/sveltekit.html" style="color:var(--accent);">SvelteKit</a>, <a href="../../frameworks/frontend/nuxt.html" style="color:var(--accent);">Nuxt</a>, Astro.</td></tr>
+          <tr><td>Cloudflare</td><td>Workers (V8 isolates), Pages, R2 (object), D1 (SQL), KV, Queues, Durable Objects, Workers AI. The most ambitious edge platform.</td></tr>
+          <tr><td>Fastly Compute</td><td>WASM-based edge compute; strong for media &amp; high-traffic sites.</td></tr>
+          <tr><td>Deno Deploy</td><td>Deno-native edge; tight integration with Fresh framework.</td></tr>
+          <tr><td>AWS Amplify Hosting</td><td>AWS's answer for full-stack JS hosting.</td></tr>
+          <tr><td>Render / Railway / Fly.io</td><td>Adjacent — primarily PaaS, but offer edge / region selection.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How Edge Clouds Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Deployment Model</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li>Connect a Git repo (GitHub / GitLab / Bitbucket).</li>
+            <li>Every push runs the project's build (<code>next build</code>, <code>nuxt build</code>, etc.).</li>
+            <li>Output is split: <strong>static assets</strong> → CDN, <strong>functions</strong> → edge or serverless runtime.</li>
+            <li>Each PR gets a <strong>preview URL</strong> for review.</li>
+            <li>Merging to <code>main</code> → instant production deploy with rollback.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Edge Runtime vs Node Serverless</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>—</th><th>Edge runtime</th><th>Node serverless</th></tr></thead>
+            <tbody>
+              <tr><td>Where</td><td>200+ cities (CDN PoPs)</td><td>Few regions</td></tr>
+              <tr><td>Cold start</td><td>&lt; 1 ms (V8 isolates)</td><td>100–800 ms</td></tr>
+              <tr><td>APIs</td><td>Web standards (fetch, Request)</td><td>Full Node.js</td></tr>
+              <tr><td>Limits</td><td>~30s, no native modules, smaller bundles</td><td>15 min, native modules OK</td></tr>
+              <tr><td>Use for</td><td>Auth, redirects, A/B, light APIs</td><td>Heavy work, large deps</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloudflare's Full Edge Platform</summary>
+        <div class="drill-body">
+          <p>Cloudflare's offering goes well beyond hosting:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Workers</strong> — V8-isolate edge functions with sub-ms cold starts.</li>
+            <li><strong>Pages</strong> — static site &amp; framework hosting on top of Workers.</li>
+            <li><strong>R2</strong> — S3-compatible object storage with no egress fees.</li>
+            <li><strong>D1</strong> — SQLite at the edge.</li>
+            <li><strong>KV</strong> — eventually-consistent key-value globally replicated.</li>
+            <li><strong>Durable Objects</strong> — strongly-consistent stateful objects (one per ID worldwide).</li>
+            <li><strong>Queues, Cron Triggers, Workers AI, Vectorize, Hyperdrive…</strong></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Built-in Performance Wins</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Global CDN</strong> caching by default.</li>
+            <li><strong>Image optimization</strong> &amp; resizing on the fly.</li>
+            <li><strong>Smart bundling</strong> &amp; code-splitting handled by the framework.</li>
+            <li><strong>Brotli / HTTP/3 / 0-RTT</strong> automatically enabled.</li>
+            <li><strong>Analytics</strong> for Web Vitals, often free at the basic tier.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Notes</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Generous free tiers — fine for personal sites &amp; small apps.</li>
+            <li>Hobby vs Pro vs Enterprise tiers; per-seat / per-project.</li>
+            <li><strong>Bandwidth</strong> can become expensive on Vercel / Netlify at scale — Cloudflare often cheaper for high-traffic.</li>
+            <li><strong>Function-seconds</strong> &amp; <strong>edge requests</strong> meter usage.</li>
+            <li>Often paired with a hyperscaler for the database tier.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Best-in-class developer experience for modern web.</li>
+            <li>Global low-latency by default.</li>
+            <li>Preview URLs make code review &amp; collaboration delightful.</li>
+            <li>Tightly tracks the latest framework features.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Bandwidth-heavy apps can outgrow Vercel / Netlify pricing fast.</li>
+            <li>Edge runtimes have constraints (no native modules, time limits).</li>
+            <li>Vendor-specific features create lock-in.</li>
+            <li>Most need a separate provider for the database tier.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick</div><h2>Where Edge Clouds Win</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Modern Frontend Apps</h5><p>Next.js, Nuxt, SvelteKit, Astro — these clouds are the natural target.</p></div>
+        <div class="card teal"><h5>Marketing / Content / Docs</h5><p>SSG + ISR + global CDN = fast on every continent.</p></div>
+        <div class="card mid"><h5>Edge Personalization</h5><p>Auth, A/B, geo, redirects with sub-ms latency.</p></div>
+        <div class="card accent"><h5>Storage-Heavy Apps</h5><p>Cloudflare R2 — S3-compatible, no egress fees, beloved for media.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cloud Providers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="aws.html">AWS</a><a href="azure.html">Microsoft Azure</a><a href="gcp.html">Google Cloud</a><a href="oracle.html">Oracle Cloud</a><a href="developer.html">DigitalOcean / Linode</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Provider Deep Dive</footer>
+</div>
+</body>
+</html>

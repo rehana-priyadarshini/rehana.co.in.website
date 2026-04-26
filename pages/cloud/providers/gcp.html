@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Google Cloud · Cloud Provider Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cloud Provider · 3 of 6</div>
+    <h1>Google Cloud (GCP)</h1>
+    <p class="lede">The data &amp; AI cloud. Smaller than AWS or Azure, but home to BigQuery, the most-loved warehouse in tech, plus first-party Gemini models and a deeply Kubernetes-native compute story.</p>
+    <div class="tags"><span>#3 by share</span><span>BigQuery / Data</span><span>Vertex AI / Gemini</span><span>Kubernetes-native</span><span>Developer-friendly</span></div>
+    <a class="back" href="../../../index.html#ch-cloud">← Back to Cloud</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Launched</div><div class="val">2008 (App Engine)</div></div>
+        <div class="f"><div class="label">Parent</div><div class="val">Alphabet / Google</div></div>
+        <div class="f"><div class="label">Regions</div><div class="val">~40+ globally</div></div>
+        <div class="f"><div class="label">Market share</div><div class="val">~11%</div></div>
+        <div class="f"><div class="label">Strengths</div><div class="val">Data, AI, Kubernetes</div></div>
+        <div class="f"><div class="label">Native AI</div><div class="val">Gemini family + Vertex AI</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Organization → Folder → Project → Resources</strong> — every resource lives inside a Project.</li>
+          <li><strong>IAM</strong> assigns roles to identities at any level — inherited downward.</li>
+          <li><strong>Service accounts</strong> for service-to-service auth; <code>gcloud</code> CLI for everything.</li>
+          <li><strong>Kubernetes was born here</strong> — GKE is widely considered the best managed K8s.</li>
+          <li><strong>Network is global</strong> — same VPC can span regions; one global load balancer per app.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Services</div><h2>Signature Services</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Category</th><th>Service</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Compute</td><td>Compute Engine</td><td>VMs.</td></tr>
+          <tr><td>Compute</td><td>Cloud Run</td><td>Serverless containers — GCP's flagship compute.</td></tr>
+          <tr><td>Compute</td><td>Cloud Functions / Cloud Run Functions</td><td>FaaS.</td></tr>
+          <tr><td>Containers</td><td>GKE (Standard &amp; Autopilot)</td><td>Managed Kubernetes.</td></tr>
+          <tr><td>Storage</td><td>Cloud Storage</td><td>Object storage with strong consistency.</td></tr>
+          <tr><td>Database</td><td>Cloud SQL / AlloyDB</td><td>Managed Postgres / MySQL / SQL Server.</td></tr>
+          <tr><td>Database</td><td>Spanner</td><td>Globally distributed, strongly consistent SQL.</td></tr>
+          <tr><td>Database</td><td>Firestore / Bigtable</td><td>Serverless document / wide-column.</td></tr>
+          <tr><td>Analytics</td><td>BigQuery</td><td>Serverless data warehouse — GCP's killer app.</td></tr>
+          <tr><td>Analytics</td><td>Dataflow / Dataproc / Pub/Sub</td><td>Beam streaming, Spark, messaging.</td></tr>
+          <tr><td>AI / ML</td><td>Vertex AI</td><td>Gemini, hosted models, training, deployment.</td></tr>
+          <tr><td>Networking</td><td>VPC, Cloud Load Balancing, Cloud CDN, Cloud Armor</td><td>Network, global LB, CDN, WAF.</td></tr>
+          <tr><td>Identity</td><td>Cloud IAM, Identity Platform</td><td>Service / app identity.</td></tr>
+          <tr><td>DevOps</td><td>Cloud Build, Artifact Registry, Cloud Deploy</td><td>CI/CD &amp; image registry.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The GCP Way</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>BigQuery — Worth Its Own Section</summary>
+        <div class="drill-body">
+          <p>Probably the single biggest reason teams pick GCP. Pure SQL, no servers, scales to petabytes:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Pay per scanned bytes (or flat-rate slot reservations).</li>
+            <li>Federated queries across Cloud Storage, Bigtable, Spanner, even external clouds (Omni).</li>
+            <li>BigQuery ML lets you train models with SQL.</li>
+            <li>Streaming inserts for near-real-time data.</li>
+            <li>Best-in-class for analyst-friendly cloud data work.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloud Run — The Modern Default</summary>
+        <div class="drill-body">
+          <p>Bring a container, get a URL. Auto-scales 0 → N, billed per request, supports gRPC, websockets, jobs. For most teams it replaces both App Engine and Cloud Functions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Networking</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>VPC is global</strong>, not regional like AWS — simpler multi-region design.</li>
+            <li><strong>Global HTTP(S) Load Balancer</strong> = one anycast IP, routes worldwide.</li>
+            <li><strong>Private Service Connect</strong> for private connectivity to managed services.</li>
+            <li><strong>VPC Service Controls</strong> create a perimeter around services to prevent data exfiltration.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Vertex AI &amp; Gemini</summary>
+        <div class="drill-body">
+          <p>The unified AI platform — Gemini model API, model garden (Claude, Llama, Mistral, etc.), training, fine-tuning, evaluation, vector search, agents builder. Tightly integrated with BigQuery for "RAG over my warehouse."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pricing Notes</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Sustained-use discounts</strong> — auto-applied for VMs that stay on.</li>
+            <li><strong>Committed-use discounts</strong> — explicit 1- or 3-year commit.</li>
+            <li><strong>Spot VMs</strong> &amp; Spot GKE nodes — big savings for batch.</li>
+            <li><strong>BigQuery</strong> — slot reservations beat on-demand for steady workloads.</li>
+            <li><strong>Egress</strong> still expensive (better than AWS in many lanes, but still real).</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick</div><h2>Where GCP Wins</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Data &amp; Analytics</h5><p>BigQuery is the single best reason to be on GCP.</p></div>
+        <div class="card teal"><h5>AI &amp; ML</h5><p>Vertex AI + Gemini + GPUs / TPUs.</p></div>
+        <div class="card mid"><h5>Kubernetes-Heavy</h5><p>GKE Autopilot is the smoothest managed K8s.</p></div>
+        <div class="card accent"><h5>Container-First Apps</h5><p>Cloud Run is a developer-experience standout.</p></div>
+        <div class="card"><h5>Global Apps</h5><p>One global VPC + one global LB = simpler architecture.</p></div>
+        <div class="card teal"><h5>Open-Source-Friendly</h5><p>Most CNCF-aligned cloud (K8s, Istio, Knative, gRPC, Beam, TensorFlow…).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cloud Providers</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="aws.html">AWS</a><a href="azure.html">Microsoft Azure</a><a href="oracle.html">Oracle Cloud</a><a href="developer.html">DigitalOcean / Linode</a><a href="edge.html">Vercel / Netlify / Cloudflare</a>
+        <a href="../../../index.html#ch-cloud">↑ Back to Cloud</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour · Cloud Provider Deep Dive</footer>
+</div>
+</body>
+</html>
