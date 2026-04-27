@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Big-O Notation · CS Essentials Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="How runtime and memory grow with input size. The vocabulary every engineer uses to argue about performance — and the traps it hides." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cs/big-o.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Big-O Notation · CS Essentials Deep Dive" />
+<meta property="og:description" content="How runtime and memory grow with input size. The vocabulary every engineer uses to argue about performance — and the traps it hides." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cs/big-o.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Big-O Notation · CS Essentials Deep Dive" />
+<meta name="twitter:description" content="How runtime and memory grow with input size. The vocabulary every engineer uses to argue about performance — and the traps it hides." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CS Essentials Deep Dive · 2 of 4</div>
+    <h1>Big-O — The Shape of How It Scales</h1>
+    <p class="lede">Big-O describes how the work an algorithm does grows as the input grows. Not how fast it is on your laptop today, but what happens when the input is 10× or 1,000× larger. Get this right and you'll spot the algorithms that fall over at scale before they ship.</p>
+    <div class="tags"><span>Complexity</span><span>Scaling</span><span>Algorithms</span><span>Performance</span><span>Asymptotics</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Big-O (O):</strong> upper bound — "no worse than this." The one people usually mean.</li>
+          <li><strong>Big-Ω (Omega):</strong> lower bound — "no better than this."</li>
+          <li><strong>Big-Θ (Theta):</strong> tight bound — both upper and lower. The actual growth shape.</li>
+          <li><strong>Constants drop:</strong> O(2n) and O(100n) are both O(n). We're describing shape, not stopwatch time.</li>
+          <li><strong>Lower terms drop:</strong> O(n² + n) is O(n²). The biggest term wins as n grows.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Ladder</div><h2>The Curves You'll Meet</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Class</th><th>Name</th><th>Example</th><th>n=1M feels like</th></tr></thead>
+        <tbody>
+          <tr><td>O(1)</td><td>Constant</td><td>Hash map lookup, array index.</td><td>Instant.</td></tr>
+          <tr><td>O(log n)</td><td>Logarithmic</td><td>Binary search, balanced tree lookup.</td><td>~20 steps.</td></tr>
+          <tr><td>O(n)</td><td>Linear</td><td>Single pass over an array, sum, max.</td><td>Fast — milliseconds.</td></tr>
+          <tr><td>O(n log n)</td><td>Linearithmic</td><td>Mergesort, quicksort (avg), heapsort.</td><td>Comfortable — seconds at worst.</td></tr>
+          <tr><td>O(n²)</td><td>Quadratic</td><td>Nested loops, naive duplicate check.</td><td>~10¹² ops — minutes to hours.</td></tr>
+          <tr><td>O(n³)</td><td>Cubic</td><td>Triple loops, naive matrix multiply.</td><td>Don't.</td></tr>
+          <tr><td>O(2ⁿ)</td><td>Exponential</td><td>Subset enumeration, naive recursion.</td><td>Heat death.</td></tr>
+          <tr><td>O(n!)</td><td>Factorial</td><td>Permutation enumeration, brute-force TSP.</td><td>Already failed at n=20.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:14px;font-size:13.5px;color:var(--muted);">The jump from O(n log n) to O(n²) is where most real-world performance disasters live. Loops that look fine in code review become unworkable when input grows from 100 to 100,000.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reading Code</div><h2>How to Tell What an Algorithm Costs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Count the Loops</summary>
+        <div class="drill-body">
+          <p>One loop over n inputs is O(n). A nested loop where both iterate n is O(n²). A loop whose inner work halves n each iteration is O(log n). Multiply nested loops, add sequential ones — then drop everything but the dominant term.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Recursion → Recurrence</summary>
+        <div class="drill-body">
+          <p>A recursive call doing constant work and recursing twice on n/2 is T(n) = 2T(n/2) + O(1) → O(n). Mergesort splits into two halves and does O(n) work to merge: T(n) = 2T(n/2) + O(n) → O(n log n). The Master Theorem solves the common cases; for trickier ones, draw the recursion tree.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Amortized Analysis</summary>
+        <div class="drill-body">
+          <p>A dynamic array's <code>append</code> is O(n) when it resizes — but resizes happen rarely enough that the <em>average</em> cost is O(1). Same for hash maps. "Amortized O(1)" means total cost over many operations divided by their count, not each individual call.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Best / Average / Worst</summary>
+        <div class="drill-body">
+          <p>Quicksort is O(n log n) average, O(n²) worst. Hash map lookup is O(1) average, O(n) worst (everything hashes to one bucket). Pick the bound that matches your input — adversarial inputs need worst-case guarantees.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Memory</div><h2>Space Complexity Counts Too</h2></div>
+    <div class="chapter-body">
+      <p>Big-O isn't just time. <strong>Space complexity</strong> describes how much extra memory an algorithm needs as input grows. An in-place sort is O(1) extra space; mergesort is O(n) extra space. For large inputs that don't fit in RAM, space dominates the conversation — a slower algorithm that streams beats a faster one that allocates.</p>
+      <p style="margin-top:8px;">Recursion has hidden space cost: each recursive call adds a stack frame. A "simple" recursive tree walk is O(h) space where h is the tree's height — fine for balanced trees, stack-overflow for a million-node linked list.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where Big-O Lies</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Constants Matter at Real n</summary>
+        <div class="drill-body">
+          <p>An O(n log n) algorithm with a 1000× constant beats an O(n²) algorithm only past some crossover. For small n, simple O(n²) (insertion sort, linear search) often wins. Production sort implementations use insertion sort below ~16 elements for this reason.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cache and Memory Layout</summary>
+        <div class="drill-body">
+          <p>Two algorithms with the same Big-O can differ 10–100× in real time depending on cache behavior. A linear scan of an array beats a "smarter" linked-list traversal because contiguous memory is prefetched. Big-O ignores this entirely.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>I/O and Network Dominate</summary>
+        <div class="drill-body">
+          <p>An O(n²) algorithm running entirely in CPU is often faster than an O(n) algorithm that makes n network calls. When work crosses a process or disk boundary, Big-O on the in-memory part is the wrong model.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Hidden Variable</summary>
+        <div class="drill-body">
+          <p>"O(n)" — but what's n? Number of users? Number of orders per user? If you have multiple inputs, write them: O(u·o), not O(n). This is where production performance bugs hide.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Operations</div><h2>Cheat Sheet by Data Structure</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Structure</th><th>Access</th><th>Search</th><th>Insert</th><th>Delete</th></tr></thead>
+        <tbody>
+          <tr><td>Array</td><td>O(1)</td><td>O(n)</td><td>O(n)</td><td>O(n)</td></tr>
+          <tr><td>Dynamic array</td><td>O(1)</td><td>O(n)</td><td>O(1) amortized at end</td><td>O(n)</td></tr>
+          <tr><td>Linked list</td><td>O(n)</td><td>O(n)</td><td>O(1) given node</td><td>O(1) given node</td></tr>
+          <tr><td>Hash map</td><td>—</td><td>O(1) avg / O(n) worst</td><td>O(1) avg</td><td>O(1) avg</td></tr>
+          <tr><td>Balanced BST</td><td>—</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td></tr>
+          <tr><td>Heap (priority queue)</td><td>O(1) peek</td><td>—</td><td>O(log n)</td><td>O(log n)</td></tr>
+          <tr><td>Stack / Queue</td><td>O(1) top/front</td><td>O(n)</td><td>O(1)</td><td>O(1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More CS Essentials</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="stack-heap.html">← Stack &amp; Heap</a>
+        <a href="data-structures.html">Core Data Structures →</a>
+        <a href="concurrency.html">Concurrency →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

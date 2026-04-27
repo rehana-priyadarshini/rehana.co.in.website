@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Concurrency · CS Essentials Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Threads, async/await, event loops, and coroutines — how programs do many things at once without ending in chaos." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cs/concurrency.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Concurrency · CS Essentials Deep Dive" />
+<meta property="og:description" content="Threads, async/await, event loops, and coroutines — how programs do many things at once without ending in chaos." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cs/concurrency.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Concurrency · CS Essentials Deep Dive" />
+<meta name="twitter:description" content="Threads, async/await, event loops, and coroutines — how programs do many things at once without ending in chaos." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CS Essentials Deep Dive · 4 of 4</div>
+    <h1>Concurrency — Many Things at Once, Without Chaos</h1>
+    <p class="lede">Concurrency is structuring a program so multiple things make progress at the same time. Parallelism is actually running them on multiple cores. They sound the same and aren't. Get the model right and you ship a fast, correct service. Get it wrong and you ship Heisenbugs that vanish under a debugger.</p>
+    <div class="tags"><span>Threads</span><span>Async</span><span>Locks</span><span>Race Conditions</span><span>Event Loop</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Concurrency:</strong> dealing with many things at once (interleaved progress).</li>
+          <li><strong>Parallelism:</strong> doing many things at once (simultaneous execution on multiple cores).</li>
+          <li><strong>Process:</strong> isolated address space; OS-scheduled. Crashes don't take down siblings.</li>
+          <li><strong>Thread:</strong> unit of scheduling inside a process; shares memory with siblings. Cheap-ish, but not free.</li>
+          <li><strong>Coroutine / fiber / green thread:</strong> user-space "thread" the runtime schedules cooperatively. Cheap (microseconds, kilobytes).</li>
+          <li><strong>Async / await:</strong> syntactic sugar for non-blocking I/O on top of an event loop or task scheduler.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Models</div><h2>How Languages Structure It</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Model</th><th>Languages</th><th>How It Works</th></tr></thead>
+        <tbody>
+          <tr><td>OS threads + locks</td><td>C, C++, Java, C#, Rust</td><td>Kernel-scheduled threads sharing memory. Synchronize with mutexes, condition variables, atomics.</td></tr>
+          <tr><td>Event loop / single-threaded async</td><td>JavaScript (Node, browser)</td><td>One thread, callback queue. Non-blocking I/O wakes callbacks. <code>async/await</code> hides the queue.</td></tr>
+          <tr><td>Coroutines / async runtime</td><td>Python (asyncio), Rust (tokio), C# (Task), Kotlin</td><td>Cooperative tasks scheduled on a small thread pool. Awaiting yields control.</td></tr>
+          <tr><td>Goroutines + channels</td><td>Go</td><td>Cheap green threads (M:N scheduler). Communicate by sending values through channels, not by sharing memory.</td></tr>
+          <tr><td>Actors</td><td>Erlang, Elixir, Akka</td><td>Isolated processes that exchange messages. No shared memory. Failure isolation built in.</td></tr>
+          <tr><td>Software transactional memory</td><td>Clojure, Haskell</td><td>Read/write inside a transaction; runtime retries on conflict. Composable, but rare in practice.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">CPU vs I/O</div><h2>Which Tool, Which Job</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>I/O-Bound Work</summary>
+        <div class="drill-body">
+          <p>Waiting on the network, the disk, a database. The CPU is idle 99% of the time. <strong>Async/event-loop wins:</strong> one thread can juggle thousands of in-flight requests because each one's "work" is mostly waiting. Threads work too, but you pay per-thread memory (1–8MB stacks) for nothing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CPU-Bound Work</summary>
+        <div class="drill-body">
+          <p>Crunching numbers, image processing, ML inference. You want <strong>actual parallelism</strong> — one thread per core. Async doesn't help; it just shuffles work on the same core. In Python, async is useless here and the GIL prevents threads from helping — use multiprocessing, native extensions, or a different language.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mixed Workloads</summary>
+        <div class="drill-body">
+          <p>Most real services. Use async for the I/O hot path; offload CPU spikes to a thread pool, worker process, or external queue. Don't run a CPU-heavy task inside the event loop — it blocks every other request waiting behind it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Bugs</div><h2>The Classic Failure Modes</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Race Condition</summary>
+        <div class="drill-body">
+          <p>Two threads read-modify-write the same memory and the result depends on who got there first. <code>counter++</code> is not atomic — it's load, add, store. With two threads and no lock you lose updates. Fix: a mutex, an atomic, or a single-owner pattern (channels, actors).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Deadlock</summary>
+        <div class="drill-body">
+          <p>Thread A holds lock 1 and waits for lock 2. Thread B holds lock 2 and waits for lock 1. Nobody moves. Prevent by: acquiring locks in a fixed global order, using try-lock with timeouts, or eliminating shared locks with message passing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Livelock &amp; Starvation</summary>
+        <div class="drill-body">
+          <p><strong>Livelock:</strong> threads keep changing state in response to each other but make no progress (two people stepping the same way in a hallway). <strong>Starvation:</strong> a thread never gets the resource because higher-priority ones keep cutting in. Fairness in lock implementations matters here.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Memory Visibility</summary>
+        <div class="drill-body">
+          <p>Without a memory barrier, one thread's write may never become visible to another — the CPU and compiler reorder freely. Languages define a <strong>memory model</strong> (Java JMM, C++11, Go) telling you what's guaranteed. Volatile/atomic/locked operations issue the right barriers; plain reads/writes don't.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Async Pitfalls</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Blocking call inside an async function.</strong> One <code>time.sleep</code> or sync DB call freezes every other coroutine on that loop.</li>
+            <li><strong>Forgotten await.</strong> Returns a Promise/Task, not a value. Languages with strict typing catch it; JS and Python won't always.</li>
+            <li><strong>Unbounded concurrency.</strong> "Fire 10,000 requests in parallel" exhausts file descriptors or downstream rate limits. Bound with semaphores or worker pools.</li>
+            <li><strong>Cancellation leaks.</strong> A cancelled task whose finally-block doesn't release a resource leaks it — connection pools, file handles, locks.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>Synchronization Primitives</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Primitive</th><th>What It Does</th><th>When to Use</th></tr></thead>
+        <tbody>
+          <tr><td>Mutex / Lock</td><td>One holder at a time.</td><td>Protect a critical section. Default choice.</td></tr>
+          <tr><td>Read-write lock</td><td>Many readers OR one writer.</td><td>Read-heavy workloads with infrequent writes.</td></tr>
+          <tr><td>Semaphore</td><td>Lock with N permits.</td><td>Bound concurrency (e.g., "max 50 in-flight requests").</td></tr>
+          <tr><td>Condition variable</td><td>Wait for a predicate, signal others.</td><td>Producer/consumer queues, custom sync.</td></tr>
+          <tr><td>Atomic</td><td>Lock-free single-word op (CAS, increment).</td><td>Counters, flags, lock-free structures.</td></tr>
+          <tr><td>Channel</td><td>Typed queue between goroutines/tasks.</td><td>Hand off ownership; "share by communicating."</td></tr>
+          <tr><td>Future / Promise / Task</td><td>Handle for an async result.</td><td>Composing async work; <code>await</code> consumes it.</td></tr>
+          <tr><td>Barrier / Latch</td><td>Wait until N parties arrive.</td><td>Bulk-synchronous parallel phases, fan-in.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practice</div><h2>Rules of Thumb</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Prefer Immutability</summary>
+        <div class="drill-body">
+          <p>Read-only data is automatically thread-safe. Most concurrency bugs evaporate when you stop sharing mutable state. Pass copies, use persistent data structures, treat messages as values.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hold Locks Briefly, Never Across I/O</summary>
+        <div class="drill-body">
+          <p>A lock held during a network call is a queue with one server. Compute-then-lock-then-update is the pattern. If a critical section is more than ~10 lines, it's probably wrong.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Roll Your Own</summary>
+        <div class="drill-body">
+          <p>Every language has battle-tested concurrent collections (<code>ConcurrentHashMap</code>, <code>sync.Map</code>, <code>Arc&lt;Mutex&lt;T&gt;&gt;</code>, channel libraries). Custom lock-free code looks fast in microbenchmarks and ships subtle bugs that show up at 3am.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Test with Stress &amp; Race Detectors</summary>
+        <div class="drill-body">
+          <p>Go's <code>-race</code>, ThreadSanitizer (C/C++/Rust), Java Flight Recorder. Single-threaded tests will never find a race condition; you have to deliberately create contention. Property-based and chaos tests are worth the setup for anything concurrent.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More CS Essentials</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="stack-heap.html">← Stack &amp; Heap</a>
+        <a href="big-o.html">← Big-O Notation</a>
+        <a href="data-structures.html">← Core Data Structures</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

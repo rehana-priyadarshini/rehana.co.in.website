@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Core Data Structures · CS Essentials Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Arrays, linked lists, hash maps, stacks, queues, trees, graphs. The seven shapes nearly every program is built from — and how to pick the right one." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cs/data-structures.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Core Data Structures · CS Essentials Deep Dive" />
+<meta property="og:description" content="Arrays, linked lists, hash maps, stacks, queues, trees, graphs. The seven shapes nearly every program is built from — and how to pick the right one." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cs/data-structures.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Core Data Structures · CS Essentials Deep Dive" />
+<meta name="twitter:description" content="Arrays, linked lists, hash maps, stacks, queues, trees, graphs. The seven shapes nearly every program is built from — and how to pick the right one." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CS Essentials Deep Dive · 3 of 4</div>
+    <h1>Core Data Structures — Pick the Right Shape</h1>
+    <p class="lede">Most programs are a thin layer of business logic on top of a handful of data structures. Choosing the wrong one isn't a "performance problem" — it's a design problem that shows up later as one. This page is the short version of when to use each.</p>
+    <div class="tags"><span>Arrays</span><span>Hash Maps</span><span>Trees</span><span>Graphs</span><span>Queues</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Mental Model</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>How to Choose</h4>
+        <ul>
+          <li><strong>What's the access pattern?</strong> Random index, by key, by order, by relationships?</li>
+          <li><strong>What changes most often?</strong> If reads dominate, optimize for them. If writes do, the answer changes.</li>
+          <li><strong>How big does it get?</strong> A bubble-sorted array is fine at 50 items, fatal at 5 million.</li>
+          <li><strong>Is order meaningful?</strong> "Sorted by score" needs a tree or heap. "Most recent" needs a deque or log.</li>
+          <li><strong>Single-threaded or shared?</strong> Concurrent access changes the answer entirely (concurrent maps, lock-free queues).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Linear</div><h2>Arrays &amp; Lists</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Array (Static / Dynamic)</summary>
+        <div class="drill-body">
+          <p>Contiguous block of same-type elements. <strong>O(1)</strong> index access, <strong>O(n)</strong> insert/delete in the middle. Dynamic arrays (Java <code>ArrayList</code>, Python <code>list</code>, Go slice, C++ <code>vector</code>, JS array) double their capacity on resize, giving amortized O(1) append.</p>
+          <p style="margin-top:6px;">The default. Cache-friendly, simple, and almost always faster than a linked list at any reasonable size. Reach for something else only when you have a specific reason.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Linked List (Singly / Doubly)</summary>
+        <div class="drill-body">
+          <p>Nodes pointing to next (and optionally previous). <strong>O(1)</strong> insert/delete given a node, <strong>O(n)</strong> to find one. Pays a pointer chase per element — terrible cache behavior.</p>
+          <p style="margin-top:6px;">Use when: you splice nodes in/out frequently and already hold the node, or you need a stable iterator under modification. Most "linked list" use-cases in app code should be a deque or array instead.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stack (LIFO)</summary>
+        <div class="drill-body">
+          <p>Push and pop from the same end. Function calls, undo histories, expression parsing, depth-first traversal. Implement with a dynamic array — O(1) at the top, no allocator pressure.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Queue / Deque (FIFO)</summary>
+        <div class="drill-body">
+          <p>Add at one end, remove from the other. Job pipelines, BFS, producer/consumer buffers. <strong>Deque</strong> (double-ended queue) lets you do either end — used for sliding windows and work-stealing. Ring buffers are the fast bounded variant.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">By Key</div><h2>Hash Maps &amp; Sets</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Hash Map</summary>
+        <div class="drill-body">
+          <p>Average <strong>O(1)</strong> lookup, insert, delete by key. Worst case O(n) if everything collides — modern implementations (Java, Go, Rust, Python 3.7+) randomize the seed and fall back to a tree on bad buckets to defang adversarial inputs.</p>
+          <p style="margin-top:6px;">No ordering guarantee. Iteration order is implementation-defined or insertion-ordered depending on the language. If you need ordered iteration, use a tree map.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hash Set</summary>
+        <div class="drill-body">
+          <p>A hash map without values — just keys. The right tool for "have I seen this?" and "is x in the set?" Don't fake it with a list and <code>contains()</code>; that's O(n) per check.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What Makes a Good Hash Function</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Deterministic:</strong> same input → same hash.</li>
+            <li><strong>Uniform:</strong> spreads inputs across buckets so collisions stay rare.</li>
+            <li><strong>Equal objects hash equal:</strong> override <code>hashCode</code>/<code>__hash__</code> whenever you override equality. Mismatched contracts are a top-tier bug.</li>
+            <li><strong>Don't hash mutable fields:</strong> if a key's hash changes after insert, you can never find it again.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Ordered</div><h2>Trees &amp; Heaps</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Binary Search Tree (Balanced)</summary>
+        <div class="drill-body">
+          <p>Red-black trees, AVL trees, B-trees. <strong>O(log n)</strong> insert/lookup/delete, and iteration in sorted order. Use when you need both key-lookup and ordered traversal — range queries, "next-largest," sorted iteration.</p>
+          <p style="margin-top:6px;">Java <code>TreeMap</code>, C++ <code>std::map</code>, .NET <code>SortedDictionary</code>. Databases use B-trees for indexes — same idea, optimized for disk pages.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Heap / Priority Queue</summary>
+        <div class="drill-body">
+          <p>A tree where the parent is always ≤ (or ≥) its children. <strong>O(log n)</strong> push, <strong>O(log n)</strong> pop-min, <strong>O(1)</strong> peek. The right tool for: top-K, scheduling, Dijkstra's algorithm, event simulation.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Trie (Prefix Tree)</summary>
+        <div class="drill-body">
+          <p>Tree keyed by character, one path per word. Autocomplete, IP routing tables, dictionary lookup. Lookup is O(k) where k is key length — independent of how many keys are stored.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Segment Tree / Fenwick Tree</summary>
+        <div class="drill-body">
+          <p>Specialized trees for range queries (sum/min/max over [i, j]) with point updates in O(log n). Show up in competitive programming and time-series rollups.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Connected</div><h2>Graphs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Representations</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Adjacency list:</strong> for each node, a list of neighbors. Compact for sparse graphs, the default for most code.</li>
+            <li><strong>Adjacency matrix:</strong> n×n bits. Fast edge-existence check, wastes memory on sparse graphs. Useful when n is small (&lt;1000) and edges are dense.</li>
+            <li><strong>Edge list:</strong> just a list of (u, v) tuples. Simplest; useful for input/output and Kruskal's MST.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Algorithms</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>BFS:</strong> shortest path in unweighted graphs, level-by-level. Queue-based.</li>
+            <li><strong>DFS:</strong> reachability, cycle detection, topological sort. Stack/recursion-based.</li>
+            <li><strong>Dijkstra:</strong> shortest path with non-negative weights. Heap + adjacency list.</li>
+            <li><strong>A*:</strong> Dijkstra + heuristic. Pathfinding in games and maps.</li>
+            <li><strong>Topological sort:</strong> ordering of a DAG — task scheduling, build dependencies.</li>
+            <li><strong>Union-Find (DSU):</strong> tracks connected components in near-O(1) amortized. MST, network connectivity.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>When You Have a Graph and Don't Know It</summary>
+        <div class="drill-body">
+          <p>Permission inheritance, organizational hierarchies, foreign-key relationships, dependency resolution, social connections, configuration overrides — all graphs. Recognizing the shape is half the work; the algorithm follows.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Specialized</div><h2>Worth Knowing They Exist</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Bloom filter:</strong> "definitely not / probably yes." Tiny memory, false positives only. Used by databases to skip disk reads.</li>
+        <li><strong>HyperLogLog:</strong> approximate distinct-count in kilobytes for billions of items. Analytics workhorse.</li>
+        <li><strong>Skip list:</strong> probabilistic alternative to balanced BSTs. Used by Redis sorted sets and LevelDB.</li>
+        <li><strong>LSM tree:</strong> write-optimized storage layer. The reason RocksDB, Cassandra, and modern key-value stores ingest fast.</li>
+        <li><strong>LRU / LFU cache:</strong> bounded map with eviction. Linked hash map (LRU) or counting+heap (LFU).</li>
+        <li><strong>Rope:</strong> tree of strings for O(log n) splits/concatenations. Text editors with millions of lines.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Linear search inside a hot loop.</strong> Build a hash set/map once, then look up.</li>
+        <li><strong>Linked list reflex.</strong> "I might insert in the middle" rarely justifies the cache cost. Profile before reaching for one.</li>
+        <li><strong>Mutating a key after insertion.</strong> Hash and tree maps both break — the structure looks for the old position.</li>
+        <li><strong>Recursive traversal of unbounded trees.</strong> Stack overflow at 10k depth. Switch to iterative + explicit stack.</li>
+        <li><strong>Sorting then re-sorting.</strong> If you need ordered access throughout, use a tree or heap, not a list-and-sort.</li>
+        <li><strong>Picking by familiarity, not fit.</strong> "I always use a list" is how O(n²) bugs ship.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More CS Essentials</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="stack-heap.html">← Stack &amp; Heap</a>
+        <a href="big-o.html">← Big-O Notation</a>
+        <a href="concurrency.html">Concurrency →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

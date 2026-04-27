@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stack &amp; Heap · CS Essentials Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="How a running program splits memory into stack and heap — what lives where, why it matters, and how it shapes performance, lifetimes, and bugs." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cs/stack-heap.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Stack &amp; Heap · CS Essentials Deep Dive" />
+<meta property="og:description" content="How a running program splits memory into stack and heap — what lives where, why it matters, and how it shapes performance, lifetimes, and bugs." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cs/stack-heap.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Stack &amp; Heap · CS Essentials Deep Dive" />
+<meta name="twitter:description" content="How a running program splits memory into stack and heap — what lives where, why it matters, and how it shapes performance, lifetimes, and bugs." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">CS Essentials Deep Dive · 1 of 4</div>
+    <h1>Stack &amp; Heap — Where Your Data Lives</h1>
+    <p class="lede">Every running program splits its memory into two big regions. The <strong>stack</strong> is fast, ordered, and tied to the call you're inside right now. The <strong>heap</strong> is for things that need to outlive the function that made them. Most "weird" bugs — leaks, dangling pointers, surprise <code>null</code>s — are really arguments about which region a value belongs in.</p>
+    <div class="tags"><span>Memory</span><span>Lifetimes</span><span>GC</span><span>Pointers</span><span>Performance</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Stack:</strong> a per-thread region that grows and shrinks with function calls. Allocations are a single pointer bump — effectively free.</li>
+          <li><strong>Heap:</strong> a process-wide region for objects whose size or lifetime isn't known at compile time. Allocations involve a manager (malloc, GC, allocator).</li>
+          <li><strong>Stack frame:</strong> the block pushed on every function call — parameters, locals, return address. Popped on return.</li>
+          <li><strong>Reference vs value:</strong> a stack variable can hold the value directly, or a reference (pointer) to something on the heap.</li>
+          <li><strong>Lifetime:</strong> stack values die when their function returns. Heap values live until something — GC, <code>free</code>, or the end of the program — releases them.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Picture</div><h2>What's Actually In RAM</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><span class="pill">Top</span><h5>Stack</h5><p>Grows downward. One per thread. Small (typically 1–8 MB). Recursion-bombs blow it up — that's a <code>StackOverflow</code>.</p></div>
+        <div class="card teal"><span class="pill">Middle</span><h5>Heap</h5><p>Grows upward. Shared across threads. Effectively unlimited (until the OS says no). Where <code>new</code>, <code>malloc</code>, and most objects live.</p></div>
+        <div class="card mid"><span class="pill">Static</span><h5>BSS / Data / Code</h5><p>Globals, string literals, the program's instructions. Loaded once, never resized.</p></div>
+        <div class="card accent"><span class="pill">OS</span><h5>Mapped Regions</h5><p>Memory-mapped files, shared libraries, kernel pages. Visible to your process but managed by the OS.</p></div>
+      </div>
+      <p style="margin-top:14px;font-size:13.5px;color:var(--muted);">Languages with managed runtimes (JVM, .NET, Go, JS) add their own substructure on top — generations, eden space, large-object heap — but the stack/heap split is the foundation underneath all of it.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Stack</div><h2>What Lives on the Stack</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Function Frames</summary>
+        <div class="drill-body">
+          <p>Every call pushes a frame: arguments, local variables, the return address, and saved registers. Return pops it. This is why deep recursion crashes — there's a hard ceiling, and unlike the heap it doesn't grow on demand.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Value Types &amp; Small Locals</summary>
+        <div class="drill-body">
+          <p>Integers, floats, booleans, fixed-size structs. In C++/Rust/C#/Go, structs default to stack allocation when the compiler can prove they don't escape the function. In Java/Python/JS, primitive locals sit on the stack but objects always go on the heap (with escape-analysis exceptions on the JVM).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Why It's Fast</summary>
+        <div class="drill-body">
+          <p>Allocation is "subtract from the stack pointer." Deallocation is "add back." No bookkeeping, no fragmentation, no GC. Cache-friendly: the top of the stack is almost certainly hot in L1.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Heap</div><h2>What Lives on the Heap</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Things With Unknown or Long Lifetime</summary>
+        <div class="drill-body">
+          <p>A value returned from a function, an object held by a long-lived service, a cache entry, a socket buffer. Anything whose lifetime crosses a function boundary has to live somewhere stable — that's the heap.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Things With Unknown Size</summary>
+        <div class="drill-body">
+          <p>A list whose length is read from a file, a string built at runtime, a tree of arbitrary depth. The compiler can't reserve a fixed slot, so it asks the allocator for a block.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>How Allocators Work</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Free lists / size classes:</strong> jemalloc, tcmalloc, mimalloc keep buckets of pre-sized chunks to avoid fragmentation.</li>
+            <li><strong>Bump allocators / arenas:</strong> allocate forward, free everything at once. Common in compilers and per-request lifetimes.</li>
+            <li><strong>GC heaps:</strong> generational (young / old), often compacting — moves live objects together to keep allocation a pointer bump.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Languages</div><h2>How the Big Runtimes Handle It</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Language</th><th>Memory Model</th><th>Who Frees</th></tr></thead>
+        <tbody>
+          <tr><td>C / C++</td><td>Manual. Stack for locals, <code>new</code>/<code>malloc</code> for heap. RAII (C++) ties heap lifetime to stack scope via destructors.</td><td>You.</td></tr>
+          <tr><td>Rust</td><td>Ownership + borrow checker. Heap via <code>Box</code>, <code>Vec</code>, <code>Rc</code>. Compiler proves lifetimes; no GC.</td><td>Compiler-inserted drops.</td></tr>
+          <tr><td>Java / C# / Kotlin</td><td>Almost everything is on the heap. Generational GC, escape analysis can stack-allocate hot objects.</td><td>Garbage collector.</td></tr>
+          <tr><td>Go</td><td>Stack by default, escape analysis promotes to heap. Concurrent low-latency GC.</td><td>Garbage collector.</td></tr>
+          <tr><td>Python / JS / Ruby</td><td>Objects on the heap. Reference counting (CPython) or tracing GC (V8, MRI's mark-sweep).</td><td>Runtime.</td></tr>
+          <tr><td>Swift / Obj-C</td><td>Automatic Reference Counting (ARC) — compiler inserts retain/release.</td><td>ARC + you (cycles).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Bugs</div><h2>Where This Bites You</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Stack overflow:</strong> unbounded recursion or huge local arrays. Fix the recursion (iterative / trampoline) — don't just raise the stack size.</li>
+        <li><strong>Dangling pointer / use-after-free:</strong> returning a reference to a stack local, or freeing heap memory still in use. The classic source of CVEs in C/C++.</li>
+        <li><strong>Memory leaks:</strong> heap allocations the program never releases. In GC'd languages, usually a long-lived collection holding short-lived objects (a cache that never evicts, an event listener never unsubscribed).</li>
+        <li><strong>Reference cycles:</strong> A holds B, B holds A. Reference counting can't free them — needs a cycle collector or weak references.</li>
+        <li><strong>Fragmentation:</strong> heap full of holes too small to use. Long-running C/C++ services watch this; modern allocators mitigate but don't eliminate it.</li>
+        <li><strong>False sharing &amp; cache misses:</strong> heap objects touched by different threads on the same cache line tank performance. Pad or align hot structures.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Performance</div><h2>Practical Rules of Thumb</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Allocate Less</summary>
+        <div class="drill-body">
+          <p>The cheapest heap allocation is the one you skip. Pool buffers, reuse slices, prefer arrays of structs over arrays of pointers. Profile allocations the way you profile CPU — they're often the hidden cost in "GC pause" stories.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Keep Hot Data Contiguous</summary>
+        <div class="drill-body">
+          <p>An array of 1M ints walks the cache linearly. A linked list of 1M ints chases a pointer per element and stalls the CPU. Same Big-O, different real-world performance by 10–100×.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Know Your GC</summary>
+        <div class="drill-body">
+          <p>JVM, Go, .NET, V8 all have tunables and tradeoffs (throughput vs latency, generational vs region-based). For latency-sensitive services, learn what your GC does on a major collection — then either reduce allocation, switch collector, or accept the pause.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More CS Essentials</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="big-o.html">Big-O Notation →</a>
+        <a href="data-structures.html">Core Data Structures →</a>
+        <a href="concurrency.html">Concurrency →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
