@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ActiveRecord · ORM Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Rails' iconic ORM — the design that named the pattern. Convention over configuration, models that map class-to-table by name, and a query DSL that defined a generation of web apps." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/orm/active-record.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="ActiveRecord · ORM Deep Dive" />
+<meta property="og:description" content="Rails' iconic ORM — the design that named the pattern. Convention over configuration, models that map class-to-table by name, and a query DSL that defined a generation of web apps." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/orm/active-record.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="ActiveRecord · ORM Deep Dive" />
+<meta name="twitter:description" content="Rails' iconic ORM — the design that named the pattern. Convention over configuration, models that map class-to-table by name, and a query DSL that defined a generation of web apps." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">ORM &amp; Data Access · Ruby</div>
+    <h1>ActiveRecord</h1>
+    <p class="lede">Rails' ORM is the textbook implementation of the Active Record pattern Martin Fowler named — the row, the class, and the data-access methods are one object. Naming conventions do most of the configuration; you write models, not mappings. It set the bar that nearly every modern web ORM still measures itself against.</p>
+    <div class="tags"><span>Ruby on Rails</span><span>Convention over Configuration</span><span>Active Record Pattern</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Class-to-table mapping by name:</strong> <code>class Order &lt; ApplicationRecord</code> auto-binds to the <code>orders</code> table.</li>
+          <li><strong>Attributes from columns:</strong> AR introspects the schema at boot — no field declarations required.</li>
+          <li><strong>Associations:</strong> <code>has_many :line_items</code>, <code>belongs_to :customer</code>. Reads like English, generates SQL underneath.</li>
+          <li><strong>Scopes:</strong> reusable named queries — <code>scope :active, -&gt; { where(status: "active") }</code>.</li>
+          <li><strong>Migrations:</strong> Ruby DSL for schema changes — <code>add_column</code>, <code>create_table</code>, reversible by default.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Pieces</div><h2>What You'll Touch</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>ActiveRecord</h5><p>The ORM layer of Rails. Usable standalone, but ~99% of usage is inside a Rails app.</p></div>
+        <div class="card teal"><h5>Arel</h5><p>The relational algebra layer underneath AR's query DSL. You drop here when chained methods can't express what you need.</p></div>
+        <div class="card mid"><h5>Migrations &amp; schema.rb</h5><p>Schema is canonical in <code>db/schema.rb</code> (or <code>structure.sql</code>) — generated from migrations, checked in.</p></div>
+        <div class="card accent"><h5>Validations &amp; Callbacks</h5><p>Model-level validation, lifecycle hooks (<code>before_save</code>, <code>after_commit</code>). Powerful and dangerous in equal measure.</p></div>
+        <div class="card"><h5>Sequel (alternative)</h5><p>The Ruby Data Mapper. Cleaner separation, more SQL-shaped. Loved by people who outgrew AR's magic.</p></div>
+        <div class="card teal"><h5>Bullet</h5><p>The N+1 detector. Practically required on any Rails app of size — surfaces missing <code>includes</code> in dev and CI.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What ActiveRecord Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Convention Over Configuration</summary>
+        <div class="drill-body">
+          <p>Tables plural, classes singular, foreign keys named <code>{model}_id</code>, timestamps in <code>created_at</code>/<code>updated_at</code>. Follow the conventions and there's almost no mapping code. Break them and you can override with a single line. The economy of the framework comes from this discipline.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Query DSL Is Genuinely Pleasant</summary>
+        <div class="drill-body">
+          <p><code>Order.active.includes(:line_items).where("total &gt; ?", 100).order(created_at: :desc).limit(20)</code>. Lazy until enumerated, chainable, easy to read. Twenty years on, nothing in the JS or Python world has fully matched the ergonomics.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Migrations You Can Roll Back</summary>
+        <div class="drill-body">
+          <p>Most migrations are reversible automatically — <code>add_column</code> implies <code>remove_column</code> on rollback. The exceptions (data backfills, drops) require an explicit <code>up</code>/<code>down</code>. The DSL nudges you toward safe operations.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling Maturity</summary>
+        <div class="drill-body">
+          <p>Twenty years of Rails apps have produced a deep bench of gems: <code>bullet</code>, <code>scenic</code> (database views), <code>strong_migrations</code>, <code>annotate</code>, <code>rails-erd</code>. The ecosystem solves problems before you find them.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where People Get Cut</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Callbacks Are a Tar Pit</summary>
+        <div class="drill-body">
+          <p><code>after_save :send_welcome_email</code> is fine — until the test fixture creation triggers SendGrid, until the rake task creates a million records and queues a million emails, until the callback chain forms a cycle. Mature Rails teams move side effects out of callbacks into explicit service objects.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>N+1 Is Still N+1</summary>
+        <div class="drill-body">
+          <p>Forget <code>includes</code> and the loop fires a query per row. Bullet catches it; reviewers should too. The same problem every ORM has — Rails just makes it especially easy to commit.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Fat Models</summary>
+        <div class="drill-body">
+          <p>"Skinny controllers, fat models" was the original advice. Then models became 2000-line god classes. The current consensus is concerns, service objects, and form objects — break responsibilities out before AR turns into a junk drawer.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Drift</summary>
+        <div class="drill-body">
+          <p>Two devs branch, both write migrations against the same parent, both merge — <code>schema.rb</code> conflicts and timestamp ordering matters. Convention is to renumber the loser; tooling exists to automate it. Painful enough at scale that some teams switch to <code>structure.sql</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Wider Critique</summary>
+        <div class="drill-body">
+          <p>The Active Record <em>pattern</em> couples persistence to the domain object. For complex domains (DDD, CQRS, event sourcing), that coupling is the problem, not the solution. Rails apps that grow past a certain complexity often introduce a Repository / Data Mapper layer on top — at which point Sequel starts looking attractive.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Teams Actually Use It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Scopes for reusable queries</strong> — keeps controllers and views from string-concatenating <code>where</code> clauses.</li>
+        <li><strong>Service objects</strong> for multi-model orchestration — <code>OrderCheckout.new(...).call</code> instead of <code>before_save</code> chains.</li>
+        <li><strong>strong_migrations gem</strong> to reject unsafe migrations in CI (<code>add_column</code> with default on a big table, <code>add_index</code> non-concurrently).</li>
+        <li><strong>Counter caches</strong> for <code>Comment.where(post_id: 1).count</code> hot paths — denormalize the count onto the post.</li>
+        <li><strong>Drop to Arel or raw SQL</strong> for window functions and recursive CTEs. <code>find_by_sql</code> is fine when AR's DSL is in the way.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="hibernate-jpa.html">Hibernate &amp; JPA →</a>
+        <a href="python-orms.html">SQLAlchemy / Django ORM →</a>
+        <a href="query-builders.html">Raw SQL &amp; Query Builders →</a>
+        <a href="../languages/ruby.html">Ruby →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

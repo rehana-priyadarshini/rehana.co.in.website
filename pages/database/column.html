@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wide-Column Stores · Database Family Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Cassandra, ScyllaDB, HBase, Bigtable. Wide rows partitioned across many nodes — built for write-heavy, time-ordered, planet-scale workloads." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/column.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Wide-Column Stores · Database Family Deep Dive" />
+<meta property="og:description" content="Cassandra, ScyllaDB, HBase, Bigtable. Wide rows partitioned across many nodes — built for write-heavy, time-ordered, planet-scale workloads." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/column.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Wide-Column Stores · Database Family Deep Dive" />
+<meta name="twitter:description" content="Cassandra, ScyllaDB, HBase, Bigtable. Wide rows partitioned across many nodes — built for write-heavy, time-ordered, planet-scale workloads." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Family · Wide-Column</div>
+    <h1>Wide-Column Stores</h1>
+    <p class="lede">A distributed sorted map: rows partitioned by hash key, columns sorted within the partition. Built to absorb writes at firehose speed and serve them back by partition + range. The internet's time-series and feed engine.</p>
+    <div class="tags"><span>Partition key</span><span>Clustering key</span><span>LSM-tree</span><span>Tunable consistency</span><span>Linear scale</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Partition key:</strong> hashed to choose a node. Every read for that partition lands on the same shard.</li>
+          <li><strong>Clustering key:</strong> sorts rows <em>within</em> the partition. The reason range scans on time work efficiently.</li>
+          <li><strong>Wide row:</strong> a partition can hold millions of cells — the whole "time-series for sensor 42" lives together.</li>
+          <li><strong>LSM-tree storage:</strong> writes go to memory + commit log, then flush + compact. Sequential, fast — that's the trick.</li>
+          <li><strong>Tunable consistency:</strong> per-query <code>ONE</code> / <code>QUORUM</code> / <code>ALL</code> on reads and writes. CAP, made dial-able.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Engines</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Apache Cassandra</h5><p>The reference open-source wide-column DB. Masterless, multi-DC, CQL query language. Powers Discord, Apple, Netflix at scale.</p></div>
+        <div class="card teal"><h5>ScyllaDB</h5><p>Cassandra-compatible, rewritten in C++ on a shard-per-core architecture. Same model, several × the throughput per node.</p></div>
+        <div class="card mid"><h5>HBase</h5><p>The Bigtable-on-Hadoop one. HDFS underneath, master-based architecture. Common in batch + analytics stacks.</p></div>
+        <div class="card accent"><h5>Google Bigtable</h5><p>The original. Powers Search, Analytics, Maps. Available as a managed service on GCP.</p></div>
+        <div class="card"><h5>Amazon Keyspaces</h5><p>Managed, Cassandra-compatible. Serverless pricing.</p></div>
+        <div class="card teal"><h5>YugabyteDB</h5><p>Distributed SQL with a Cassandra-compatible YCQL API — wide-column semantics with optional ACID.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When Wide-Column Wins</div><h2>The Sweet Spots</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Write-Heavy, Append-Mostly</summary>
+        <div class="drill-body">
+          <p>Telemetry, IoT readings, click streams, audit logs, chat messages. Millions of writes per second, almost no updates. The LSM-tree thrives on this — sequential writes, no in-place updates, compaction in the background.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Time-Ordered Reads of a Single Entity</summary>
+        <div class="drill-body">
+          <p>"Last 100 messages in this channel." "All sensor readings for device 42 in the last hour." Partition key = entity, clustering key = timestamp DESC. One disk seek, one sequential read. This is the killer pattern.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Multi-Region Active-Active</summary>
+        <div class="drill-body">
+          <p>Cassandra was designed for it. Writes accepted in any datacenter, replicated asynchronously, conflicts resolved by last-write-wins (or CRDTs in newer versions). Geographic latency stays local; eventual convergence across regions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Linear Scale on Commodity Hardware</summary>
+        <div class="drill-body">
+          <p>Add a node, the cluster rebalances, throughput goes up roughly linearly. No master, no sharding ceremony, no read replicas to wire up — the model is "more nodes = more capacity" all the way to thousands.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Stay Away</div><h2>Bad Fits</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Ad-hoc queries.</strong> No joins, no <code>WHERE</code> on arbitrary columns, secondary indexes are weak. If you don't know the access pattern up front, you'll regret picking this.</li>
+        <li><strong>Strong cross-partition transactions.</strong> Lightweight transactions exist (Paxos in Cassandra), but they're slow and limited. Cross-partition multi-row ACID — not the model.</li>
+        <li><strong>Small data.</strong> The operational complexity (multi-node clusters, repairs, compaction tuning) doesn't pay off until you actually have the volume.</li>
+        <li><strong>Heavy update / delete workloads.</strong> Tombstones and compaction overhead pile up. If you're updating the same row 100× a day, you're fighting the engine.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Modeling</div><h2>Designing for the Query</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Pick Partition Key for Distribution</summary>
+        <div class="drill-body">
+          <p>High cardinality, even access. <code>user_id</code> usually fine. <code>country_code</code> is a hot-shard machine — a few countries dominate. <code>(user_id, day_bucket)</code> avoids unbounded partitions for users who generate millions of events.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pick Clustering Key for Order</summary>
+        <div class="drill-body">
+          <p>Whatever the read needs in order — timestamp DESC, message ID, score. The clustering key controls on-disk layout, so a range scan is one seek + sequential read.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>One Table per Query</summary>
+        <div class="drill-body">
+          <p>Need messages by channel <em>and</em> by author? Two tables, both written to. Denormalization is the design — storage is cheap, reads are the expensive thing. Use logged batches or change-data-capture to keep them in sync.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Bound the Partition Size</summary>
+        <div class="drill-body">
+          <p>Rule of thumb: keep partitions under ~100MB / 100k rows. Bucket time-series by day or hour: <code>(sensor_id, yyyymmdd)</code>. Otherwise repair, compaction, and read latency all suffer.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Querying without the partition key.</strong> Forces an <code>ALLOW FILTERING</code> scan across the cluster. Don't.</li>
+        <li><strong>Tombstone storms.</strong> Mass deletes on a partition slow reads to a crawl until compaction catches up. Prefer TTLs over <code>DELETE</code>.</li>
+        <li><strong>Counters used like SQL columns.</strong> Counter columns are not idempotent — retries can double-count. Reach for them deliberately.</li>
+        <li><strong>Skipping repair.</strong> Anti-entropy repairs need to run on schedule, or replicas drift and reads return inconsistent data.</li>
+        <li><strong>Treating it like a relational DB.</strong> Trying to JOIN, GROUP BY, or run reports — you'll bring the cluster to its knees. Push analytics to a warehouse.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="time-series.html">Time-Series →</a>
+        <a href="key-value.html">Key-Value →</a>
+        <a href="nosql.html">NoSQL Overview →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

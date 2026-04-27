@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Search Engines · Database Family Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Elasticsearch, OpenSearch, Solr, Meilisearch, Typesense. Full-text search, faceting, ranking, and the log/observability backbone." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/search.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Search Engines · Database Family Deep Dive" />
+<meta property="og:description" content="Elasticsearch, OpenSearch, Solr, Meilisearch, Typesense. Full-text search, faceting, ranking, and the log/observability backbone." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/search.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Search Engines · Database Family Deep Dive" />
+<meta name="twitter:description" content="Elasticsearch, OpenSearch, Solr, Meilisearch, Typesense. Full-text search, faceting, ranking, and the log/observability backbone." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Family · Search</div>
+    <h1>Search Engines</h1>
+    <p class="lede">Inverted indexes, analyzers, and ranking. Built to answer "find documents that match these tokens, in roughly the right order, fast" — and accidentally became the world's log database along the way.</p>
+    <div class="tags"><span>Inverted index</span><span>Analyzers</span><span>BM25</span><span>Faceting</span><span>Logs &amp; observability</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Inverted index:</strong> for each token, a sorted list of the documents that contain it. Lookups are fast because the index already has the answer.</li>
+          <li><strong>Analyzer:</strong> the pipeline that turns text into tokens — lowercase, strip punctuation, stem, fold accents, split on language rules.</li>
+          <li><strong>Scoring:</strong> BM25 is the modern default. Documents with rarer terms and shorter fields rank higher.</li>
+          <li><strong>Near-real-time:</strong> a write becomes searchable after a refresh interval (often 1s) — not instantly.</li>
+          <li><strong>Schema-flexible but typed:</strong> mappings declare per-field analyzers and types. Get them wrong and ranking suffers silently.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Engines</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Elasticsearch</h5><p>The category leader for a decade. Rich query DSL, aggregations, mature ecosystem (Beats, Logstash, Kibana). License changed in 2021 — read your terms.</p></div>
+        <div class="card teal"><h5>OpenSearch</h5><p>AWS' Apache-2.0 fork after the license change. Mostly drop-in for Elasticsearch &lt;7.10; growing its own feature set since.</p></div>
+        <div class="card mid"><h5>Apache Solr</h5><p>The other Lucene-based veteran. Strong on faceting and configurable scoring; popular in libraries, ecommerce, government.</p></div>
+        <div class="card accent"><h5>Meilisearch / Typesense</h5><p>Modern, smaller, opinionated. Built for instant-search UIs — typo-tolerant, fast to set up, no operational sprawl.</p></div>
+        <div class="card"><h5>Algolia</h5><p>Hosted search-as-a-service. Polished SDKs, edge-replicated indexes. Pay per operation; great DX, watch the bill.</p></div>
+        <div class="card teal"><h5>Postgres FTS / SQLite FTS5</h5><p>Built-in full-text search. Often enough for moderate corpora before you need a dedicated engine.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When Search Wins</div><h2>Where the Inverted Index Earns Its Keep</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Full-Text Search Over a Catalog</summary>
+        <div class="drill-body">
+          <p>Products, articles, support tickets, code. Tokens, stemming, synonyms, typo tolerance, phrase matching, fuzzy matching, language-aware analyzers. SQL <code>LIKE</code> never gets there; Postgres FTS does for moderate scale; a search engine is the answer past that.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Faceted Search &amp; Filters</summary>
+        <div class="drill-body">
+          <p>"Show me dresses, blue, size M, under $100, in stock, sorted by relevance" — and aggregate the counts beside every facet so the UI shows "Blue (412), Red (89)…" Search engines compute facets natively in one query; SQL takes one query per facet.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Logs, Metrics, Observability</summary>
+        <div class="drill-body">
+          <p>The "ELK stack" became the default for centralized logging because Elasticsearch made grep-across-everything fast. Index by day, retain by policy, query in Kibana. Modern alternatives — ClickHouse, Loki, OpenSearch — compete here now.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hybrid Lexical + Vector Search</summary>
+        <div class="drill-body">
+          <p>BM25 finds the documents that contain the right words; vector embeddings find the documents that mean the same thing. Modern search engines do both and combine the scores (RRF, learned rankers). The standard pattern for RAG retrieval over enterprise corpora.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Geo Search</summary>
+        <div class="drill-body">
+          <p>"Restaurants within 2km of here, sorted by distance, filtered by cuisine, ranked by review count." Geo points and shapes are first-class — geohash indexes make radius queries fast.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Stay Away</div><h2>Bad Fits</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>System of record.</strong> Search engines lose data more often than relational DBs and don't have foreign keys, constraints, or proper transactions. Index <em>from</em> a primary store, don't make the index <em>be</em> the primary store.</li>
+        <li><strong>Heavy updates to the same document.</strong> Every update is effectively a delete + reindex. Slow, expensive, fragments segments.</li>
+        <li><strong>Strict consistency.</strong> Refresh intervals mean reads after writes can miss the new doc. Acceptable for search; not for "did the order go through."</li>
+        <li><strong>Joins.</strong> Parent/child and nested docs exist but are awkward and slow. Denormalize at index time.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Modeling</div><h2>Designing the Index</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Mappings Matter</summary>
+        <div class="drill-body">
+          <p>A field analyzed as <code>text</code> is searchable but not aggregatable. The same field as <code>keyword</code> is filterable and aggregatable but not full-text searchable. Typical pattern: a multi-field that is both — <code>title</code> (text) and <code>title.keyword</code>. Get this wrong on day one and reindexing later is painful.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Analyzers per Language</summary>
+        <div class="drill-body">
+          <p>English stemming on French content tokenizes nonsense. Set per-field analyzers when the corpus is multilingual; consider language detection and per-document analyzer routing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Index Lifecycle</summary>
+        <div class="drill-body">
+          <p>For logs and time-series: rolling indices (<code>logs-2026.04.27</code>), hot/warm/cold tiers, automatic deletion past retention. ILM (Index Lifecycle Management) does this declaratively. Without it, the cluster fills up and stops accepting writes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reindex from Source</summary>
+        <div class="drill-body">
+          <p>Always be able to rebuild the index from the source of truth. Schema changed, analyzer changed, sharding changed — reindex. If you can't, you've coupled too tightly.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Mapping explosion.</strong> Indexing a JSON blob with arbitrary keys creates a field per key. The mapping balloons until the cluster crashes. Use <code>dynamic: strict</code> or flatten before indexing.</li>
+        <li><strong>Too many small shards.</strong> Each shard has fixed overhead. A few hundred million docs in 200 shards is worse than the same in 20.</li>
+        <li><strong>Deep pagination.</strong> <code>from + size</code> past 10k is brutal. Use <code>search_after</code> or scroll/PIT.</li>
+        <li><strong>Tuning relevance with code instead of analyzers.</strong> If the wrong tokens are in the index, no amount of query magic fixes it. Fix the analyzer first.</li>
+        <li><strong>Not accounting for refresh latency in tests.</strong> Tests that index then immediately search are flaky. Force a refresh or wait.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="../ai/vector-dbs.html">Vector DBs →</a>
+        <a href="document.html">Document →</a>
+        <a href="warehouse.html">Warehouses →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -540,15 +540,15 @@
           <table>
             <thead><tr><th>Family</th><th>Examples</th><th>Best for</th></tr></thead>
             <tbody>
-              <tr><td>Relational</td><td>PostgreSQL, MySQL, SQL Server</td><td>Transactions, joins, strong consistency.</td></tr>
-              <tr><td>Document</td><td>MongoDB, Couchbase</td><td>JSON-like records, flexible shape.</td></tr>
-              <tr><td>Key-Value</td><td>Redis, DynamoDB</td><td>Ultra-fast lookups, caches, sessions.</td></tr>
-              <tr><td>Column</td><td>Cassandra, HBase, ScyllaDB</td><td>Huge writes, time-series.</td></tr>
-              <tr><td>Graph</td><td>Neo4j, Amazon Neptune</td><td>Deep relationships — fraud, recommendations.</td></tr>
-              <tr><td>Search</td><td>Elasticsearch, OpenSearch</td><td>Full-text search, logs, observability.</td></tr>
-              <tr><td>Vector</td><td>Pinecone, Weaviate, pgvector</td><td>AI embeddings — semantic search, RAG.</td></tr>
-              <tr><td>Warehouse / Lake</td><td>Snowflake, BigQuery, Databricks</td><td>Analytics at scale; historical reporting.</td></tr>
-              <tr><td>Time-Series</td><td>InfluxDB, TimescaleDB</td><td>Metrics, IoT, sensor data.</td></tr>
+              <tr><td><a href="pages/database/sql.html">Relational →</a></td><td>PostgreSQL, MySQL, SQL Server</td><td>Transactions, joins, strong consistency.</td></tr>
+              <tr><td><a href="pages/database/document.html">Document →</a></td><td>MongoDB, Couchbase</td><td>JSON-like records, flexible shape.</td></tr>
+              <tr><td><a href="pages/database/key-value.html">Key-Value →</a></td><td>Redis, DynamoDB</td><td>Ultra-fast lookups, caches, sessions.</td></tr>
+              <tr><td><a href="pages/database/column.html">Wide-Column →</a></td><td>Cassandra, HBase, ScyllaDB</td><td>Huge writes, time-series.</td></tr>
+              <tr><td><a href="pages/database/graph.html">Graph →</a></td><td>Neo4j, Amazon Neptune</td><td>Deep relationships — fraud, recommendations.</td></tr>
+              <tr><td><a href="pages/database/search.html">Search →</a></td><td>Elasticsearch, OpenSearch</td><td>Full-text search, logs, observability.</td></tr>
+              <tr><td><a href="pages/ai/vector-dbs.html">Vector →</a></td><td>Pinecone, Weaviate, pgvector</td><td>AI embeddings — semantic search, RAG.</td></tr>
+              <tr><td><a href="pages/database/warehouse.html">Warehouse / Lake →</a></td><td>Snowflake, BigQuery, Databricks</td><td>Analytics at scale; historical reporting.</td></tr>
+              <tr><td><a href="pages/database/time-series.html">Time-Series →</a></td><td>InfluxDB, TimescaleDB</td><td>Metrics, IoT, sensor data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -558,12 +558,12 @@
         <summary>ORMs &amp; Data Access</summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><span class="pill">Java</span><h5>Hibernate / JPA</h5><p>Map objects ↔ tables. Venerable, powerful.</p></div>
-            <div class="card teal"><span class="pill">.NET</span><h5>Entity Framework</h5><p>LINQ queries, migrations.</p></div>
-            <div class="card mid"><span class="pill">Python</span><h5>SQLAlchemy / Django ORM</h5><p>The two Python standards.</p></div>
-            <div class="card accent"><span class="pill">Node</span><h5>Prisma / TypeORM / Drizzle</h5><p>Type-safe database access for TS.</p></div>
-            <div class="card"><span class="pill">Ruby</span><h5>ActiveRecord</h5><p>Rails' iconic ORM.</p></div>
-            <div class="card teal"><span class="pill">All</span><h5>Raw SQL / Query Builders</h5><p>Knex, jOOQ, sqlx — hand-crafted control when ORMs get in the way.</p></div>
+            <a class="card" href="pages/orm/hibernate-jpa.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Java</span><h5>Hibernate / JPA →</h5><p>Map objects ↔ tables. Venerable, powerful.</p></a>
+            <a class="card teal" href="pages/orm/entity-framework.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">.NET</span><h5>Entity Framework →</h5><p>LINQ queries, migrations.</p></a>
+            <a class="card mid" href="pages/orm/python-orms.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Python</span><h5>SQLAlchemy / Django ORM →</h5><p>The two Python standards.</p></a>
+            <a class="card accent" href="pages/orm/node-orms.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Node</span><h5>Prisma / TypeORM / Drizzle →</h5><p>Type-safe database access for TS.</p></a>
+            <a class="card" href="pages/orm/active-record.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Ruby</span><h5>ActiveRecord →</h5><p>Rails' iconic ORM.</p></a>
+            <a class="card teal" href="pages/orm/query-builders.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">All</span><h5>Raw SQL / Query Builders →</h5><p>Knex, jOOQ, sqlx — hand-crafted control when ORMs get in the way.</p></a>
           </div>
         </div>
       </details>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prisma · TypeORM · Drizzle · ORM Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Type-safe data access for Node and TypeScript. Prisma's schema-first generator, TypeORM's decorator-driven entities, and Drizzle's lightweight SQL-shaped DSL — three philosophies, one ecosystem." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/orm/node-orms.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Prisma · TypeORM · Drizzle · ORM Deep Dive" />
+<meta property="og:description" content="Type-safe data access for Node and TypeScript. Prisma's schema-first generator, TypeORM's decorator-driven entities, and Drizzle's lightweight SQL-shaped DSL — three philosophies, one ecosystem." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/orm/node-orms.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Prisma · TypeORM · Drizzle · ORM Deep Dive" />
+<meta name="twitter:description" content="Type-safe data access for Node and TypeScript. Prisma's schema-first generator, TypeORM's decorator-driven entities, and Drizzle's lightweight SQL-shaped DSL — three philosophies, one ecosystem." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">ORM &amp; Data Access · Node / TypeScript</div>
+    <h1>Prisma · TypeORM · Drizzle</h1>
+    <p class="lede">The Node ecosystem never settled on one ORM. Prisma owns the type-safety story with a schema generator. TypeORM brought Hibernate-style decorators to TypeScript. Drizzle is the lightweight challenger — a typed SQL DSL that thinks like SQL but reads like TypeScript. Pick by how close to SQL you want to live.</p>
+    <div class="tags"><span>TypeScript</span><span>Type-Safe</span><span>Prisma</span><span>Drizzle</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Prisma:</strong> declarative <code>schema.prisma</code> file → generated client with full TS types and a fluent API.</li>
+          <li><strong>TypeORM:</strong> classes with <code>@Entity</code>, <code>@Column</code> decorators — Hibernate's pattern in TypeScript.</li>
+          <li><strong>Drizzle:</strong> tables defined as TS objects; queries are SQL-shaped (<code>select().from(...).where(...)</code>) and fully typed.</li>
+          <li><strong>MikroORM:</strong> the dark horse — unit-of-work + identity map, the closest TS equivalent to JPA.</li>
+          <li><strong>Knex:</strong> not an ORM but the query builder underneath several of these. Still widely used directly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Contenders</div><h2>How They Differ</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Prisma</h5><p>Schema-first. <code>prisma generate</code> emits a fully typed client. Migrations via <code>prisma migrate</code>. The most popular choice for new TS projects, especially with Next.js.</p></div>
+        <div class="card teal"><h5>TypeORM</h5><p>Decorator-driven entity classes; supports both Active Record and Data Mapper styles. Mature ecosystem, but maintenance has been uneven — check release cadence before committing.</p></div>
+        <div class="card mid"><h5>Drizzle</h5><p>Thin layer over SQL. No code generation step, no separate schema language. Edge-runtime friendly, tiny bundle. Rising fast for serverless and Cloudflare Workers.</p></div>
+        <div class="card accent"><h5>MikroORM</h5><p>True unit-of-work and identity map (rare in TS). Best for teams coming from JPA who want the same patterns.</p></div>
+        <div class="card"><h5>Sequelize</h5><p>The veteran. Works with JS, has TS types but they're imperfect. Plenty of legacy projects; not a typical choice for new ones.</p></div>
+        <div class="card teal"><h5>Kysely</h5><p>Drizzle's sibling philosophy — type-safe SQL builder, no ORM features. Good when you want SQL with types, period.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>How to Choose</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Prisma if You Want the Smoothest DX</summary>
+        <div class="drill-body">
+          <p>The <code>schema.prisma</code> file is the source of truth; the generated client gives autocomplete and compile errors for invalid queries. The cost is a code-gen step and a separate query engine binary (a Rust process) — usually fine, occasionally a deployment headache on edge runtimes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Drizzle if You Want SQL with Types</summary>
+        <div class="drill-body">
+          <p>You write what looks like SQL, the types flow through. No generated client, no query engine — just a tiny library. Best for teams who already think in SQL and want TypeScript to keep them honest. Dominant in Cloudflare Workers / Vercel Edge code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>TypeORM / MikroORM if You Want JPA-Style</summary>
+        <div class="drill-body">
+          <p>If your team comes from Hibernate or Doctrine and wants entities, repositories, and unit-of-work, MikroORM is the closer match. TypeORM is the older, more popular choice but its decorator-based API has well-known type-safety holes the others have closed.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where People Get Cut</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Prisma: The Query Engine</summary>
+        <div class="drill-body">
+          <p>Prisma ships a Rust binary that the JS client talks to. Bundle sizes, cold starts on Lambda, and edge-runtime support have all been pain points historically. The team has been moving to a pure-TS engine; check current state before betting a serverless deployment on it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Prisma: Limited Raw SQL Composition</summary>
+        <div class="drill-body">
+          <p>The fluent API covers the 90%, but joins across non-relations, window functions, and complex aggregates push you to <code>$queryRaw</code> — which is a tagged template, not composable. Many teams pair Prisma with Kysely or Drizzle for the hard queries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>TypeORM: Type Inference Gaps</summary>
+        <div class="drill-body">
+          <p>Decorator-based metadata can't carry the same type info that Prisma's generated client or Drizzle's inferred types do. Relations on query results often come back as <code>any</code> or require manual typing. Active development has been intermittent; the type story hasn't fundamentally improved.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Drizzle: It's Still SQL</summary>
+        <div class="drill-body">
+          <p>The whole pitch is "you write SQL, we type it." That includes the SQL — joins, aggregations, indexes are your job. Teams that wanted an ORM to <em>not</em> write SQL find Drizzle uncomfortable. That's by design.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Connection Pooling in Serverless</summary>
+        <div class="drill-body">
+          <p>Every Lambda invocation that opens a fresh Postgres connection eats into the database's connection limit. Use Prisma Accelerate, PgBouncer, Supabase pooler, or Neon's serverless driver. Not ORM-specific, but bites Node teams especially because serverless is so common.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Teams Actually Use Them</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Prisma + Zod</strong> for input validation matching the schema — Prisma generates types, Zod validates at the boundary.</li>
+        <li><strong>Drizzle + tRPC / Hono</strong> on edge runtimes — small bundle, types end-to-end from DB to client.</li>
+        <li><strong>Prisma for the write side, Drizzle/Kysely for the read side</strong> when complex SQL outgrows Prisma's API.</li>
+        <li><strong>Migrations in CI, never on app start.</strong> All three support generate-then-review workflows.</li>
+        <li><strong>Read the generated SQL.</strong> All three log it in dev mode. ORMs that make this hard get distrusted fast.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="hibernate-jpa.html">Hibernate &amp; JPA →</a>
+        <a href="entity-framework.html">Entity Framework →</a>
+        <a href="query-builders.html">Raw SQL &amp; Query Builders →</a>
+        <a href="../languages/typescript.html">TypeScript →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

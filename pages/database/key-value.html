@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Key-Value Stores · Database Family Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The simplest possible database — give it a key, get back a value. Sub-millisecond reads, used for caches, sessions, rate limits, and feature flags." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/key-value.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Key-Value Stores · Database Family Deep Dive" />
+<meta property="og:description" content="The simplest possible database — give it a key, get back a value. Sub-millisecond reads, used for caches, sessions, rate limits, and feature flags." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/key-value.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Key-Value Stores · Database Family Deep Dive" />
+<meta name="twitter:description" content="The simplest possible database — give it a key, get back a value. Sub-millisecond reads, used for caches, sessions, rate limits, and feature flags." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Family · Key-Value</div>
+    <h1>Key-Value Stores</h1>
+    <p class="lede">A giant hash map you can talk to over the network. One operation: <code>GET key</code>, one other: <code>SET key value</code>. Everything else — sorted sets, counters, queues — is built on top. The fastest databases in the world, because they barely look like databases.</p>
+    <div class="tags"><span>O(1) lookup</span><span>In-memory</span><span>Cache</span><span>Session store</span><span>Rate limit</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>The key is opaque.</strong> The store doesn't care what's inside the value — bytes, JSON, an image, a serialized object.</li>
+          <li><strong>No queries.</strong> You can't ask "all users in California." You can only ask for keys you know, or scan ranges if the engine supports it.</li>
+          <li><strong>TTL is first-class.</strong> Set a key with an expiry; it disappears. The reason these are the default for caches and sessions.</li>
+          <li><strong>In-memory or on-disk.</strong> Redis is RAM-first with optional persistence; DynamoDB and FoundationDB are disk-backed with caches.</li>
+          <li><strong>Latency is the product.</strong> Sub-millisecond p99 is the table stakes.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Engines</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Redis / Valkey</h5><p>The de facto standard. Strings, hashes, lists, sets, sorted sets, streams, pub/sub. Single-threaded per shard, brutally fast. Valkey is the open-source fork after the license change.</p></div>
+        <div class="card teal"><h5>Memcached</h5><p>The old guard. Pure cache — no persistence, no data structures, just <code>get</code>/<code>set</code> with TTLs. Multi-threaded, dead simple.</p></div>
+        <div class="card mid"><h5>DynamoDB</h5><p>AWS' managed key-value (and document). Predictable latency, autoscaling, global tables. The price model rewards good access-pattern design.</p></div>
+        <div class="card accent"><h5>Cloudflare KV / Workers KV</h5><p>Edge key-value — eventually consistent, replicated to every PoP. Reads are <em>fast</em> from anywhere, writes propagate.</p></div>
+        <div class="card"><h5>etcd / Consul</h5><p>Strongly consistent KV for configuration and service discovery. Backed by Raft. Powers Kubernetes.</p></div>
+        <div class="card teal"><h5>FoundationDB / TiKV</h5><p>Distributed transactional KV — building blocks for higher-level databases (CockroachDB and TiDB sit on TiKV).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When KV Wins</div><h2>The Canonical Use Cases</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Cache In Front of a Slower Store</summary>
+        <div class="drill-body">
+          <p>The classic. Compute or fetch the result, stash it under a deterministic key with a TTL, serve subsequent reads from RAM. Patterns: <strong>cache-aside</strong> (app reads cache, falls back to DB), <strong>read-through</strong> (cache fetches on miss), <strong>write-through</strong> (cache updates on every write). Mind invalidation — the second-hardest problem in CS.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sessions &amp; Tokens</summary>
+        <div class="drill-body">
+          <p>Login session, JWT denylist, OAuth nonce, idempotency keys for payment requests. Short-lived, looked up by ID, written once. TTL handles cleanup automatically.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Rate Limits &amp; Counters</summary>
+        <div class="drill-body">
+          <p>Atomic <code>INCR</code> on a key like <code>rl:user:42:minute:2026-04-27T15:23</code>, with a TTL. Token bucket, leaky bucket, sliding window — all a few Redis commands. Cassandra's counter columns play here too.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Leaderboards &amp; Real-Time Ranking</summary>
+        <div class="drill-body">
+          <p>Redis sorted sets (<code>ZADD</code>, <code>ZRANGE</code>) give you "top N by score" in O(log N). Ranks, presence, trending lists, matchmaking queues — small data, hot reads, score updates.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pub/Sub &amp; Lightweight Queues</summary>
+        <div class="drill-body">
+          <p>Redis Streams and pub/sub for fan-out within a service. Not a Kafka replacement — no long retention, no exactly-once — but for "notify the websocket layer that user 42's data changed," it's perfect.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Feature Flags &amp; Config</summary>
+        <div class="drill-body">
+          <p>etcd / Consul / Cloudflare KV: small bits of config replicated everywhere, read on every request. Strong consistency matters here — flipping a flag should not race with a deploy.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>What You Give Up</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>No queries.</strong> Want "all sessions for user 42"? You build a secondary index by hand — a set keyed on <code>user:42:sessions</code> — and keep it in sync.</li>
+        <li><strong>No joins, no transactions across keys</strong> (mostly). Redis MULTI/EXEC and Lua scripts give atomicity within one shard; cross-shard is on you.</li>
+        <li><strong>Memory cost.</strong> Redis at scale is expensive — every byte is in RAM. Track key size and eviction policy (<code>allkeys-lru</code>, <code>volatile-ttl</code>).</li>
+        <li><strong>Persistence is optional and lossy.</strong> RDB snapshots and AOF logs help, but Redis is not your system of record. Treat it as cache, not truth.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Operations</div><h2>Things That Bite</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Hot Keys</summary>
+        <div class="drill-body">
+          <p>One key getting a million reads per second. Pins a single shard's CPU while the rest of the cluster idles. Mitigate with client-side caching, request coalescing (single-flight), or sharding the key (<code>counter:0..15</code>).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Big Keys / Big Values</summary>
+        <div class="drill-body">
+          <p>A 50MB list. <code>LRANGE</code> on it blocks the single thread; replicas fall behind on the sync. Cap value sizes, paginate large structures, and run <code>--bigkeys</code> regularly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cache Stampede</summary>
+        <div class="drill-body">
+          <p>A hot key expires; 10,000 requests miss simultaneously and all try to repopulate. The DB goes down. Fix with <strong>probabilistic early expiration</strong>, <strong>locking on miss</strong> (single-flight), or <strong>stale-while-revalidate</strong>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cache Inconsistency</summary>
+        <div class="drill-body">
+          <p>Update DB, then update cache — and the second step fails. Invalidate (<code>DEL</code>) instead of writing through, accept TTLs as the worst-case staleness, or use change-data-capture from the DB to drive cache updates.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Using Redis as a primary database</strong> for data you can't lose. The persistence story is "best effort"; the operational story is "RAM is finite."</li>
+        <li><strong>No TTL.</strong> Keys live forever, memory grows forever. Pick a default TTL even for "permanent" caches.</li>
+        <li><strong>KEYS in production.</strong> O(N) on the entire keyspace, blocks the server. Use <code>SCAN</code>.</li>
+        <li><strong>Serializing the world.</strong> Pickling whole Python objects into Redis values — fast to write, painful to evolve. Stick to language-neutral formats (JSON, MessagePack, Protobuf).</li>
+        <li><strong>Treating DynamoDB like SQL.</strong> No GSI for the access pattern means a scan, and scans are slow and expensive. Design the table for the queries.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="document.html">Document →</a>
+        <a href="column.html">Wide-Column →</a>
+        <a href="nosql.html">NoSQL Overview →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

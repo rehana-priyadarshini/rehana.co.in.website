@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Raw SQL &amp; Query Builders · ORM Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="When the ORM gets in the way — query builders like Knex, jOOQ, sqlx, and Kysely. Typed, composable SQL without the object-mapping ceremony. The escape hatch most mature teams keep within reach." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/orm/query-builders.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Raw SQL &amp; Query Builders · ORM Deep Dive" />
+<meta property="og:description" content="When the ORM gets in the way — query builders like Knex, jOOQ, sqlx, and Kysely. Typed, composable SQL without the object-mapping ceremony. The escape hatch most mature teams keep within reach." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/orm/query-builders.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Raw SQL &amp; Query Builders · ORM Deep Dive" />
+<meta name="twitter:description" content="When the ORM gets in the way — query builders like Knex, jOOQ, sqlx, and Kysely. Typed, composable SQL without the object-mapping ceremony. The escape hatch most mature teams keep within reach." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">ORM &amp; Data Access · All Languages</div>
+    <h1>Raw SQL &amp; Query Builders</h1>
+    <p class="lede">Sometimes the ORM is the problem. Query builders sit one rung up from raw strings — typed, composable, parameterized — without pretending the database is a graph of objects. Many production codebases use both: an ORM for CRUD, a query builder (or plain SQL) for reporting and hot paths.</p>
+    <div class="tags"><span>Cross-language</span><span>SQL-first</span><span>Composable</span><span>No Mapping</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Query builder:</strong> a programmatic API that emits SQL — chain <code>.select().from().where()</code> instead of templating strings.</li>
+          <li><strong>Parameterization:</strong> placeholders, not interpolation. The single most important defense against SQL injection.</li>
+          <li><strong>No identity map, no change tracking, no lazy loading.</strong> What you query is what comes back. No surprise queries.</li>
+          <li><strong>Typed where possible:</strong> jOOQ generates types from the schema; sqlx checks queries against the database at compile time.</li>
+          <li><strong>Output is rows, not objects.</strong> You decide how to materialize them — DTOs, plain dicts, tuples.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Tools</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Knex (JS / TS)</h5><p>The original Node query builder. Powers Bookshelf and parts of Objection.js. Maintenance has slowed; new TS code often picks Kysely or Drizzle instead.</p></div>
+        <div class="card teal"><h5>Kysely (TS)</h5><p>Type-safe SQL builder for TypeScript. Schema-aware, no code generation, runs anywhere TS does. Strong fit on edge runtimes.</p></div>
+        <div class="card mid"><h5>jOOQ (Java)</h5><p>Generates Java code from your schema; queries are compile-checked against real columns. Premium licensing for proprietary databases; free for open-source ones.</p></div>
+        <div class="card accent"><h5>sqlx (Rust)</h5><p>Macro-based — <code>sqlx::query!()</code> validates SQL against the live database at compile time. Pure SQL strings, type-safe results.</p></div>
+        <div class="card"><h5>Dapper (.NET)</h5><p>Micro-ORM / mapper. You write SQL; Dapper materializes results into objects. The default companion to EF Core.</p></div>
+        <div class="card teal"><h5>SQLAlchemy Core (Python)</h5><p>The expression language without the ORM. Composable SQL, full type support, no session machinery.</p></div>
+        <div class="card mid"><h5>Squirrel (Go)</h5><p>Fluent SQL builder. Go culture leans toward raw SQL with <code>database/sql</code> or <code>sqlx</code>; builders are an opt-in convenience.</p></div>
+        <div class="card accent"><h5>Plain SQL files</h5><p>Goose, dbmate, sqlc (Go), HugSQL (Clojure). Write SQL in <code>.sql</code> files; tooling wires it into typed code. The trend is rising.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Reach For It</div><h2>Good Fits</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Reporting and Analytics Queries</summary>
+        <div class="drill-body">
+          <p>Window functions, recursive CTEs, lateral joins, <code>GROUPING SETS</code>. ORMs translate these poorly or not at all. Express them in SQL and stop fighting the abstraction. The query lives in source control like any other code; tested with database fixtures.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Bulk Operations</summary>
+        <div class="drill-body">
+          <p>ORMs generate one INSERT per object; query builders let you write a single multi-row insert or a Postgres <code>COPY</code>. Going from 10k inserts/sec to 100k+ usually means leaving the ORM at the door.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The CQRS Read Side</summary>
+        <div class="drill-body">
+          <p>Pattern: ORM-managed entities for the write model; SQL-shaped queries for read endpoints. The reads are denormalized projections — they don't fit the entity graph anyway, and the ORM's tracking is pure overhead.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Database-Specific Features</summary>
+        <div class="drill-body">
+          <p>Postgres' <code>jsonb</code> operators, full-text search, <code>ON CONFLICT</code>, partial indexes. ORMs cover the lowest common denominator across dialects. If you've committed to one database, use it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>When the ORM Is Demonstrably Wrong</summary>
+        <div class="drill-body">
+          <p>You've optimized the eager loads, added the indexes, profiled the queries — and the ORM still emits something pathological. The repro is a 12-line raw SQL query that runs 50x faster. Use it. Save the ceremony for queries the ORM is good at.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Tradeoffs</div><h2>What You Give Up</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>No automatic mapping.</strong> Result rows are tuples or dicts. You write the DTO, or your tool generates it.</li>
+        <li><strong>No change tracking.</strong> "Update what changed" is your job — explicit UPDATE statements, no dirty-checking magic.</li>
+        <li><strong>Database portability is up to you.</strong> If you write Postgres-flavored SQL and need to run on MySQL, that's a rewrite. ORMs hide this; query builders don't.</li>
+        <li><strong>Refactoring is harder.</strong> Renaming a column means grepping SQL strings. Tools like jOOQ and sqlx flag this at compile time; raw strings don't.</li>
+        <li><strong>You own the security boundary.</strong> Always parameterize. String concatenation of user input into SQL is the textbook injection bug — every query builder has a parameter API; use it without exception.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Teams Actually Use Them</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>ORM + query builder side by side.</strong> Hibernate + jOOQ. EF Core + Dapper. Prisma + Kysely. Each does what it's good at.</li>
+        <li><strong>SQL files reviewed in PRs.</strong> Same diffability and reviewability as application code. <code>EXPLAIN</code> output in the PR description for non-trivial queries.</li>
+        <li><strong>Generated repositories.</strong> sqlc and jOOQ generate typed function signatures from <code>.sql</code> files — best of both worlds: SQL you can read, types the compiler enforces.</li>
+        <li><strong>Test against a real database.</strong> No mocks for query logic. Testcontainers or an ephemeral schema per CI run — production parity matters more here than anywhere else.</li>
+        <li><strong>Index reviews.</strong> Without an ORM hiding the SQL, the index strategy becomes visible — and reviewable.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="hibernate-jpa.html">Hibernate &amp; JPA →</a>
+        <a href="entity-framework.html">Entity Framework →</a>
+        <a href="node-orms.html">Prisma / TypeORM / Drizzle →</a>
+        <a href="../database/sql.html">SQL Databases →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SQLAlchemy &amp; Django ORM · ORM Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The two Python data access standards. SQLAlchemy: a flexible Core + ORM toolkit. Django ORM: integrated, opinionated, the Rails-style active-record path for Django apps." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/orm/python-orms.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="SQLAlchemy &amp; Django ORM · ORM Deep Dive" />
+<meta property="og:description" content="The two Python data access standards. SQLAlchemy: a flexible Core + ORM toolkit. Django ORM: integrated, opinionated, the Rails-style active-record path for Django apps." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/orm/python-orms.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="SQLAlchemy &amp; Django ORM · ORM Deep Dive" />
+<meta name="twitter:description" content="The two Python data access standards. SQLAlchemy: a flexible Core + ORM toolkit. Django ORM: integrated, opinionated, the Rails-style active-record path for Django apps." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">ORM &amp; Data Access · Python</div>
+    <h1>SQLAlchemy &amp; Django ORM</h1>
+    <p class="lede">Python has two answers to the persistence question. SQLAlchemy is the toolkit — Core for SQL expressions, ORM on top, use either or both. Django ORM is the framework — pre-wired, batteries-included, inseparable from the Django request cycle. Picking one usually picks itself based on the framework.</p>
+    <div class="tags"><span>Python</span><span>SQLAlchemy 2.0</span><span>Django</span><span>Alembic</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>SQLAlchemy Core:</strong> SQL expression language — compose queries as Python objects. No ORM required.</li>
+          <li><strong>SQLAlchemy ORM:</strong> declarative models, sessions, identity map, unit-of-work. Built on Core.</li>
+          <li><strong>Django ORM:</strong> active-record style — <code>Model.objects.filter(...)</code>. Tied to <code>settings.py</code> and Django's lifecycle.</li>
+          <li><strong>QuerySet:</strong> Django's lazy chainable query — nothing executes until you iterate or slice.</li>
+          <li><strong>Migrations:</strong> Alembic for SQLAlchemy; built-in <code>makemigrations</code>/<code>migrate</code> for Django.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Pieces</div><h2>What You'll Touch</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>SQLAlchemy 2.0</h5><p>The modern API — typed, async-capable, unified across Core and ORM. The default for FastAPI, Flask, scripts, data pipelines.</p></div>
+        <div class="card teal"><h5>Alembic</h5><p>SQLAlchemy's migration tool. Autogenerates from model diffs; humans review and edit before merging.</p></div>
+        <div class="card mid"><h5>Django ORM</h5><p>Ships with Django. Integrated with the admin, forms, signals, and the auth system. You don't pick it; Django picks it for you.</p></div>
+        <div class="card accent"><h5>Tortoise / Peewee</h5><p>Async-first (Tortoise) and minimalist (Peewee) alternatives. Niche but well-loved.</p></div>
+        <div class="card"><h5>SQLModel</h5><p>SQLAlchemy + Pydantic in one. Popular with FastAPI for unifying database models and request schemas.</p></div>
+        <div class="card teal"><h5>asyncpg / aiopg</h5><p>The drivers underneath async SQLAlchemy on Postgres — raw-SQL speed when you don't need an ORM.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking One</div><h2>Which Should You Use?</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>If You're in Django, Use Django ORM</summary>
+        <div class="drill-body">
+          <p>The whole framework — admin, generic views, forms, auth — assumes Django models. Swapping in SQLAlchemy means losing all of that. The Django ORM is less expressive than SQLAlchemy, but the integration is worth more than the expressiveness for typical web apps.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>If You're in FastAPI / Flask / Scripts, Use SQLAlchemy</summary>
+        <div class="drill-body">
+          <p>It's the de-facto standard outside Django. Async support, typed mappings, and the Core layer for when you need raw SQL power without leaving Python. SQLModel is a friendly façade if you want less boilerplate.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>If You're Doing Data Engineering, Lean Core</summary>
+        <div class="drill-body">
+          <p>ETL, analytics, scripts that move millions of rows — the ORM's identity map and change tracking are pure overhead. Use SQLAlchemy Core to compose SQL safely, or drop to <code>asyncpg</code>/<code>psycopg</code> directly.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where People Get Cut</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Django QuerySet Laziness</summary>
+        <div class="drill-body">
+          <p><code>orders.filter(...).filter(...)</code> doesn't execute until iterated. The trap is a queryset evaluated twice in the same view — two SQL trips. Cache with <code>list()</code>, or use <code>prefetch_related</code> / <code>select_related</code> to fold related lookups into one query.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>N+1 in Both</summary>
+        <div class="drill-body">
+          <p>Django: forget <code>select_related</code> on a foreign key, and every <code>order.customer</code> in a loop fires a query. SQLAlchemy: lazy-loaded relationships do the same. Both have eager-loading options (<code>joinedload</code>, <code>selectinload</code>); both punish you when you forget.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Migrations Get Out of Sync</summary>
+        <div class="drill-body">
+          <p>Two branches each generate a migration with the same parent — when both merge, Alembic and Django both refuse to apply. Resolve with <code>alembic merge</code> or <code>makemigrations --merge</code>. Common enough on busy teams that it's worth knowing the muscle memory.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Connection Pooling in Async Code</summary>
+        <div class="drill-body">
+          <p>Long-running async tasks holding sessions exhaust the pool. Use <code>async with</code> contexts so sessions close on exit, and size the pool deliberately — not all defaults match what async workers need.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SQLAlchemy 1.x vs 2.0</summary>
+        <div class="drill-body">
+          <p>The 2.0 API changed how queries are written (<code>select(User).where(...)</code> instead of <code>session.query(User).filter(...)</code>). Tutorials and Stack Overflow answers mix both freely. New code should be 2.0-style; old code may need migrating.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Teams Actually Use Them</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Django:</strong> custom <code>Manager</code>/<code>QuerySet</code> classes for reusable filters (<code>.published()</code>, <code>.for_user(u)</code>) — keeps views thin.</li>
+        <li><strong>Django:</strong> <code>F()</code> expressions for atomic updates instead of read-modify-write.</li>
+        <li><strong>SQLAlchemy:</strong> session-per-request via FastAPI/Flask dependencies; never module-level.</li>
+        <li><strong>SQLAlchemy:</strong> reach for Core (<code>insert().values(...)</code> + <code>execute</code>) when bulk-loading; the ORM path is too slow for big batches.</li>
+        <li><strong>Both:</strong> raw SQL is always available — <code>raw()</code>, <code>extra()</code>, <code>text()</code>. Use it when the ORM costs more than it saves.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="hibernate-jpa.html">Hibernate &amp; JPA →</a>
+        <a href="entity-framework.html">Entity Framework →</a>
+        <a href="active-record.html">ActiveRecord →</a>
+        <a href="../frameworks/backend/django.html">Django →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

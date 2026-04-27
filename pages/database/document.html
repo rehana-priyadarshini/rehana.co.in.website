@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Document Databases · Database Family Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="JSON-shaped records with flexible schemas. MongoDB, Couchbase, Firestore, DynamoDB document mode — when the data is naturally hierarchical and the shape evolves." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/document.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Document Databases · Database Family Deep Dive" />
+<meta property="og:description" content="JSON-shaped records with flexible schemas. MongoDB, Couchbase, Firestore, DynamoDB document mode — when the data is naturally hierarchical and the shape evolves." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/document.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Document Databases · Database Family Deep Dive" />
+<meta name="twitter:description" content="JSON-shaped records with flexible schemas. MongoDB, Couchbase, Firestore, DynamoDB document mode — when the data is naturally hierarchical and the shape evolves." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Family · Document</div>
+    <h1>Document Databases</h1>
+    <p class="lede">Records are JSON (or BSON) — nested, variable, self-describing. No fixed schema, no joins by design. Each document holds the whole entity the application reads, so one read returns one object.</p>
+    <div class="tags"><span>JSON / BSON</span><span>Schema-flexible</span><span>Aggregate-oriented</span><span>Horizontal scale</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Document:</strong> a JSON-like object stored as one unit — fields, arrays, nested sub-documents.</li>
+          <li><strong>Collection:</strong> the bucket of documents (analogous to a table, but no enforced shape).</li>
+          <li><strong>Aggregate:</strong> the unit that's read and written atomically — design around it, not around normal forms.</li>
+          <li><strong>Schema-on-read:</strong> the database accepts whatever you write; the app validates and reshapes on the way out.</li>
+          <li><strong>Secondary indexes</strong> let you query inside documents — but they cost on writes and storage.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Engines</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>MongoDB</h5><p>The default document database. Rich query language, aggregation pipeline, multi-document transactions since 4.0. Atlas runs it managed.</p></div>
+        <div class="card teal"><h5>Couchbase</h5><p>Document + key-value with SQL-like N1QL queries. Strong on caching workloads thanks to its memcached lineage.</p></div>
+        <div class="card mid"><h5>Firestore</h5><p>Google's serverless document store with real-time listeners — built for mobile/web clients that want live data sync.</p></div>
+        <div class="card accent"><h5>DynamoDB (document mode)</h5><p>AWS' managed key-document hybrid. Predictable single-digit-ms latency, but you must design around the access pattern up front.</p></div>
+        <div class="card"><h5>Cosmos DB</h5><p>Azure's multi-model. Mongo API, SQL API, and others — pick the wire protocol that fits.</p></div>
+        <div class="card teal"><h5>RavenDB / ArangoDB</h5><p>Niche choices: RavenDB for .NET-first shops; ArangoDB if you want documents and graph in one engine.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When Documents Win</div><h2>Good Fits</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Entity is Naturally a Tree</summary>
+        <div class="drill-body">
+          <p>A product with variants, options, images, and translated descriptions. A blog post with embedded comments and tags. A medical record with sections and history. Stuffing these into 8 relational tables and joining them back together every read is work the application doesn't get paid for. One document, one read.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Shape Changes Often</summary>
+        <div class="drill-body">
+          <p>Early-stage products, integrations with third parties whose payloads keep evolving, multi-tenant systems where each tenant has its own custom fields. Adding a field is just writing it; old documents simply don't have it. Migration is a backfill script, not an <code>ALTER TABLE</code> on a 200M-row table.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Read-Heavy by ID or Small Key Set</summary>
+        <div class="drill-body">
+          <p>If 95% of your reads are "give me this user's profile" or "give me this order with everything in it," documents are exactly that — one fetch, no assembly. Where they struggle is the 5% that wants to slice across documents (revenue by region, top customers by month).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Geographic / Edge Distribution</summary>
+        <div class="drill-body">
+          <p>Most document stores were built for sharding from day one. Globally distributed Cosmos DB, Firestore multi-region, DynamoDB Global Tables — the data follows the user. Distributed SQL can do this too, but it's been retrofitted; document stores assume it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Stay Away</div><h2>Bad Fits</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Cross-entity transactions.</strong> "Move money from A to B and decrement stock by 1" wants ACID across rows. Mongo can do multi-doc transactions now, but they're slow and rarely the right shape — relational is built for this.</li>
+        <li><strong>Reporting / BI.</strong> Analysts speak SQL. If finance has to query the production document store, you'll end up exporting to a warehouse anyway — start there.</li>
+        <li><strong>Highly relational data.</strong> Friend-of-a-friend, "products that share categories with this one" — graph or relational. Documents force you to denormalize the same fact into many places, then keep them in sync.</li>
+        <li><strong>Strict invariants.</strong> Foreign keys, unique constraints across collections, declared types — document stores don't enforce these. The app does, and the app is wrong sometimes.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Modeling</div><h2>Designing the Document</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Embed vs Reference</summary>
+        <div class="drill-body">
+          <p><strong>Embed</strong> when the child belongs to one parent and is read with it (order line items, blog comments on a small post). <strong>Reference</strong> when the child is shared (a product referenced by many orders) or unbounded (every comment on a Reddit thread). The 16MB Mongo document cap is a real ceiling — model around it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Design for the Query, Not the Entity</summary>
+        <div class="drill-body">
+          <p>In SQL you model the data and the query optimizer figures it out. In document stores you model the read. If two queries want different shapes of the same data, store both shapes — the duplication is the point. Maintain consistency with change streams or transactional outbox.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Validation — Use It</summary>
+        <div class="drill-body">
+          <p>Mongo's <code>$jsonSchema</code> validator, Firestore security rules, DynamoDB attribute conditions. Schema-flexible doesn't mean schema-absent; it means the schema lives where you choose. Validate at the database boundary, not just the app, so jobs and migrations can't write garbage.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Partition / Shard Key</summary>
+        <div class="drill-body">
+          <p>Pick a key with high cardinality and even access. <code>tenant_id</code> works only if tenants are roughly the same size — one whale tenant becomes a hot shard. Composite keys (<code>tenant_id + user_id</code>) usually distribute better. Once chosen, the key is hard to change.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Treating it like a JSON-shaped SQL.</strong> Throwing normalized data into collections and joining client-side. You'll fight the engine forever.</li>
+        <li><strong>Unbounded arrays.</strong> Comments embedded in a viral post grow until the document hits the size limit and writes start failing. Cap it or move to references.</li>
+        <li><strong>No indexes on filter fields.</strong> Collection scans are silent for a while, then catastrophic at scale.</li>
+        <li><strong>Trusting eventual consistency where you needed strong.</strong> Read-your-write across replicas isn't guaranteed by default — pin to primary or use causal consistency.</li>
+        <li><strong>Skipping the access-pattern doc.</strong> DynamoDB punishes this most, but every document store rewards designing the access patterns before the schema.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="nosql.html">NoSQL Overview →</a>
+        <a href="key-value.html">Key-Value →</a>
+        <a href="sql.html">SQL (Relational) →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

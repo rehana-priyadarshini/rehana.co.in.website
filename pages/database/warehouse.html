@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Warehouses &amp; Lakes · Database Family Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Snowflake, BigQuery, Databricks, Redshift, ClickHouse. Columnar engines for analytics — terabytes scanned in seconds, decoupled storage and compute." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/warehouse.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Warehouses &amp; Lakes · Database Family Deep Dive" />
+<meta property="og:description" content="Snowflake, BigQuery, Databricks, Redshift, ClickHouse. Columnar engines for analytics — terabytes scanned in seconds, decoupled storage and compute." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/warehouse.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Warehouses &amp; Lakes · Database Family Deep Dive" />
+<meta name="twitter:description" content="Snowflake, BigQuery, Databricks, Redshift, ClickHouse. Columnar engines for analytics — terabytes scanned in seconds, decoupled storage and compute." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Family · Warehouse / Lake</div>
+    <h1>Warehouses &amp; Data Lakes</h1>
+    <p class="lede">Columnar storage, massively parallel execution, separated compute and storage. Designed to scan billions of rows for one analytical answer — not to serve a request in 5ms. The engine behind dashboards, BI, and the modern data stack.</p>
+    <div class="tags"><span>Columnar</span><span>OLAP</span><span>MPP</span><span>Parquet / Iceberg</span><span>Lakehouse</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>OLTP vs OLAP</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>The Split That Justifies This Family</h4>
+        <ul>
+          <li><strong>OLTP (your app DB):</strong> many small transactions, row-oriented, milliseconds, freshness matters most. Postgres, MySQL.</li>
+          <li><strong>OLAP (warehouse):</strong> few enormous queries, column-oriented, seconds-to-minutes, throughput matters most. Snowflake, BigQuery.</li>
+          <li><strong>Columnar:</strong> store one column's values together. Aggregations read only the columns the query needs and compress beautifully.</li>
+          <li><strong>MPP:</strong> massively parallel processing — query split across hundreds of cores, results combined.</li>
+          <li><strong>Storage / compute separation:</strong> data lives in object storage (S3, GCS); compute is spun up on demand. Pay for what you query, scale independently.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Engines</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Snowflake</h5><p>The cloud warehouse that defined the modern shape — multi-cluster compute against shared storage, time travel, zero-copy clones. Cross-cloud.</p></div>
+        <div class="card teal"><h5>BigQuery</h5><p>Google's serverless warehouse. No clusters to manage; query, get billed by bytes scanned. Native ML, geospatial, streaming inserts.</p></div>
+        <div class="card mid"><h5>Databricks</h5><p>Lakehouse on Spark + Delta Lake. Strong on data engineering, ML, and notebooks. Photon engine for SQL competes with the warehouses.</p></div>
+        <div class="card accent"><h5>Amazon Redshift</h5><p>The original cloud warehouse. RA3 nodes separate storage from compute; Spectrum queries S3 directly.</p></div>
+        <div class="card"><h5>ClickHouse</h5><p>Open-source columnar DB. Brutally fast for analytics; powers product analytics tools (PostHog, Plausible) and observability platforms.</p></div>
+        <div class="card teal"><h5>DuckDB</h5><p>SQLite-shaped OLAP. An entire columnar engine in one binary, runs in your laptop or your browser. Reshaping how analysts work locally.</p></div>
+        <div class="card mid"><h5>Iceberg / Delta / Hudi</h5><p>Open table formats over Parquet in object storage. ACID, time travel, schema evolution — without locking into a single vendor's compute.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Warehouse vs Lake vs Lakehouse</div><h2>The Three Words That Get Confused</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Data Warehouse</summary>
+        <div class="drill-body">
+          <p>Curated, schema-on-write, governed. Data is loaded through pipelines, modeled, ready to query. Snowflake, BigQuery, Redshift in their classic form. The home of "the metric is right."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Data Lake</summary>
+        <div class="drill-body">
+          <p>Raw files in object storage — Parquet, JSON, CSV — schema-on-read. Cheap, infinite, undisciplined. Great for keeping everything; bad for trusting any single answer. Pure lakes are increasingly rare.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Lakehouse</summary>
+        <div class="drill-body">
+          <p>Object storage as the substrate, with an open table format (Iceberg, Delta, Hudi) layering ACID, time travel, and schema evolution on top. Multiple engines (Spark, Trino, Snowflake, DuckDB) read the same data. Where the industry is converging.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When Warehouses Win</div><h2>What They're For</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>BI Dashboards &amp; Reporting</summary>
+        <div class="drill-body">
+          <p>Tableau, Looker, Power BI, Metabase pointed at the warehouse. Finance, growth, product analytics. The warehouse is the place where every team's data meets and the same definition of "active user" lives.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Big Aggregations</summary>
+        <div class="drill-body">
+          <p>"Revenue by country by week for the last 3 years, joined with marketing spend." A query that scans terabytes and returns in seconds. OLTP databases would melt; columnar warehouses are built for exactly this.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ML Feature Engineering &amp; Training Sets</summary>
+        <div class="drill-body">
+          <p>Most ML training data starts as a warehouse query. Snowflake/BigQuery/Databricks all have ML pieces grafted on so you don't have to move the data to compute it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reverse ETL &amp; Activation</summary>
+        <div class="drill-body">
+          <p>The warehouse is the source of truth; tools (Hightouch, Census) push the segments back to Salesforce, HubSpot, ad platforms. The warehouse becomes the operational data plane, not just the analytics one.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Stay Away</div><h2>Bad Fits</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>App-facing low-latency reads.</strong> Even fast warehouses are tens-to-hundreds of milliseconds at best. Don't put one in your request path.</li>
+        <li><strong>Many small writes.</strong> Warehouses love big batched loads, not single-row inserts. Stream into a buffer (Kafka, Kinesis) and micro-batch.</li>
+        <li><strong>Point lookups.</strong> "Get user 42's record" reads one row out of billions; row-oriented stores are an order of magnitude better at this.</li>
+        <li><strong>Strict OLTP transactions.</strong> Warehouse "transactions" exist but are designed for bulk loads, not concurrent updates from a checkout flow.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Modern Data Stack</div><h2>How Data Gets Into the Warehouse</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Ingestion (E + L)</summary>
+        <div class="drill-body">
+          <p>Fivetran, Airbyte, Stitch, native CDC (Debezium) — pull from operational databases, SaaS APIs, event streams; land in the warehouse with minimal transformation. ELT, not ETL: load first, transform inside the warehouse.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Transformation (T)</summary>
+        <div class="drill-body">
+          <p>dbt is the dominant tool. SQL files + Jinja, version-controlled, tested, documented. Models build downstream models. Your <code>fct_orders</code> isn't a magic dashboard — it's a tested, lineage-tracked SQL artifact.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Orchestration</summary>
+        <div class="drill-body">
+          <p>Airflow, Dagster, Prefect schedule the DAG: ingestion runs, then dbt builds, then dashboards refresh, then reverse-ETL syncs. Failures, retries, lineage, alerts.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Quality &amp; Observability</summary>
+        <div class="drill-body">
+          <p>dbt tests for schema and freshness, Great Expectations / Monte Carlo / Soda for data quality, OpenLineage for lineage. The warehouse is now a product — it deserves the same monitoring as one.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>SELECT * on a wide table.</strong> Columnar engines reward selecting only what you need; <code>*</code> reads every column.</li>
+        <li><strong>Surprise cost spikes.</strong> Snowflake credits, BigQuery bytes-scanned — one bad query in a loop can rack up thousands of dollars overnight. Set quotas and alerts.</li>
+        <li><strong>Treating it like the OLTP DB.</strong> Updating one row at a time, micro-transactions, sub-second freshness expectations. Wrong tool.</li>
+        <li><strong>No partitioning / clustering.</strong> Without partition pruning, every query scans the whole table. Partition by the time column you actually filter on.</li>
+        <li><strong>One-warehouse-fits-all.</strong> Mixing ad-hoc analyst queries, dbt builds, and reverse-ETL on the same warehouse — they fight for resources. Separate workloads onto separate compute.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="time-series.html">Time-Series →</a>
+        <a href="search.html">Search →</a>
+        <a href="../ai/data-prep.html">AI Data Prep →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

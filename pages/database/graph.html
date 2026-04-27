@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Graph Databases · Database Family Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Nodes, edges, and traversals. Neo4j, Neptune, ArangoDB, TigerGraph — when relationships are the data, not just metadata about it." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/graph.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Graph Databases · Database Family Deep Dive" />
+<meta property="og:description" content="Nodes, edges, and traversals. Neo4j, Neptune, ArangoDB, TigerGraph — when relationships are the data, not just metadata about it." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/graph.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Graph Databases · Database Family Deep Dive" />
+<meta name="twitter:description" content="Nodes, edges, and traversals. Neo4j, Neptune, ArangoDB, TigerGraph — when relationships are the data, not just metadata about it." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Family · Graph</div>
+    <h1>Graph Databases</h1>
+    <p class="lede">Nodes connected by edges, both with properties. Traversals follow relationships in constant time per hop — no joins, no foreign-key gymnastics. The right tool when the answer to a question is "walk the network."</p>
+    <div class="tags"><span>Nodes &amp; Edges</span><span>Cypher / Gremlin</span><span>Traversals</span><span>Pattern matching</span><span>Recommendations</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Node:</strong> an entity (person, account, product), with labels and properties.</li>
+          <li><strong>Edge / relationship:</strong> a connection between two nodes — typed, directed, with its own properties.</li>
+          <li><strong>Index-free adjacency:</strong> each node holds direct pointers to its edges. Following one is a pointer chase, not an index lookup.</li>
+          <li><strong>Traversal:</strong> walking the graph from a starting node to find what you want — neighbors, paths, patterns.</li>
+          <li><strong>Property graph vs RDF:</strong> the property-graph model (Neo4j, Neptune, TigerGraph) dominates apps; RDF / triple stores (Jena, GraphDB) dominate semantic web and knowledge bases.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Engines</div><h2>Who Plays Here</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Neo4j</h5><p>The category leader. Property graph, Cypher query language (now an open standard, GQL). Excellent visualization, mature operations.</p></div>
+        <div class="card teal"><h5>Amazon Neptune</h5><p>Managed graph on AWS. Speaks both Gremlin (property graph) and SPARQL (RDF). Pairs well with the rest of the AWS data stack.</p></div>
+        <div class="card mid"><h5>ArangoDB</h5><p>Multi-model — documents, graph, and key-value in one engine. Useful when you don't want to operate two databases.</p></div>
+        <div class="card accent"><h5>TigerGraph / Memgraph</h5><p>Performance-focused; in-memory or analytics-grade traversal speed for fraud, supply chain, real-time scoring.</p></div>
+        <div class="card"><h5>JanusGraph / Dgraph</h5><p>Distributed graph. JanusGraph rides on Cassandra/HBase; Dgraph is its own thing with GraphQL native.</p></div>
+        <div class="card teal"><h5>AGE / Apache AGE</h5><p>Postgres extension that adds Cypher to a relational DB. Hedge bet — graph queries without leaving Postgres.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When Graph Wins</div><h2>The Use Cases That Justify It</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Many-Hop Relationship Queries</summary>
+        <div class="drill-body">
+          <p>"Friends of friends." "Customers who share a device with a flagged account." "Products bought by people who bought this product." In SQL, each hop is a self-join — three hops is already painful, six is impossible. In a graph DB, each hop is O(neighbors), and you can express the whole thing in one Cypher pattern.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Fraud &amp; Anti-Money-Laundering</summary>
+        <div class="drill-body">
+          <p>Detect rings: shared addresses, devices, payment instruments, IPs. The fraud pattern <em>is</em> a subgraph — graph DBs match it directly with pattern queries. A SQL system would precompute features; a graph can ask the question live.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Recommendations &amp; Knowledge Graphs</summary>
+        <div class="drill-body">
+          <p>"People like you also liked X." Walk from the user, through purchases, to other users, to their purchases — score by overlap. Knowledge graphs (entities, relations, types) power assistants, search, and increasingly, RAG context for LLMs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Identity &amp; Access (Permissions)</summary>
+        <div class="drill-body">
+          <p>"Does user U have permission P on resource R?" through groups, roles, and inherited grants. Google's Zanzibar model is a graph at heart. SpiceDB, OpenFGA — graph-shaped under the hood.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Network &amp; Supply-Chain Analysis</summary>
+        <div class="drill-body">
+          <p>Telecom topology, logistics routes, dependency graphs, infrastructure blast radius. Shortest path, centrality, community detection — algorithms that run natively on the graph instead of being shoehorned through SQL.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Querying</div><h2>The Languages</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Cypher / GQL</summary>
+        <div class="drill-body">
+          <p>ASCII-art pattern matching: <code>(user)-[:FRIEND]-&gt;(friend)-[:FRIEND]-&gt;(fof)</code>. Reads close to how you'd draw it on a whiteboard. Cypher started at Neo4j; GQL is the ISO standard descendant.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Gremlin</summary>
+        <div class="drill-body">
+          <p>Functional traversal language: <code>g.V(user).out('friend').out('friend')</code>. Imperative-feeling, more flexible but harder to read. The native language of the Apache TinkerPop ecosystem.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SPARQL</summary>
+        <div class="drill-body">
+          <p>For RDF / triple stores. Subject-predicate-object queries against a knowledge graph. Wikidata, DBpedia, biomedical ontologies — that world.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>GraphQL ≠ Graph DB</summary>
+        <div class="drill-body">
+          <p>Common confusion: GraphQL is an API query language; graph databases store and traverse graphs. They're orthogonal. You can serve GraphQL from a relational DB, and many do.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Picking graph for tabular data.</strong> If your queries are mostly "all rows where X," a relational DB is faster, cheaper, and your team already knows it.</li>
+        <li><strong>Supernodes.</strong> A celebrity user with 50M followers — a single node with millions of edges. Traversals through it explode. Mitigate with edge sampling, summary nodes, or partitioning by relationship type.</li>
+        <li><strong>Treating it as the system of record for everything.</strong> Often the right shape: relational source of truth + graph projection for the relationship-heavy queries, kept in sync via CDC.</li>
+        <li><strong>Skipping indexes on lookup properties.</strong> Index-free adjacency speeds traversals once you've found the start node — finding it is still an index lookup.</li>
+        <li><strong>Underestimating the operational lift.</strong> Graph DB ops, backups, and ecosystem are thinner than Postgres. Plan for it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="document.html">Document →</a>
+        <a href="sql.html">SQL (Relational) →</a>
+        <a href="nosql.html">NoSQL Overview →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

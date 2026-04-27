@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entity Framework Core · ORM Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Microsoft's official ORM for .NET. LINQ-based queries, code-first migrations, change tracking, and tight integration with ASP.NET Core dependency injection." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/orm/entity-framework.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Entity Framework Core · ORM Deep Dive" />
+<meta property="og:description" content="Microsoft's official ORM for .NET. LINQ-based queries, code-first migrations, change tracking, and tight integration with ASP.NET Core dependency injection." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/orm/entity-framework.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Entity Framework Core · ORM Deep Dive" />
+<meta name="twitter:description" content="Microsoft's official ORM for .NET. LINQ-based queries, code-first migrations, change tracking, and tight integration with ASP.NET Core dependency injection." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">ORM &amp; Data Access · .NET</div>
+    <h1>Entity Framework Core</h1>
+    <p class="lede">EF Core is the canonical .NET ORM. You write LINQ against <code>DbSet&lt;T&gt;</code>, EF translates to SQL, materializes into objects, and tracks the changes you make. It's the default in nearly every ASP.NET Core project that talks to a relational database.</p>
+    <div class="tags"><span>C# / .NET</span><span>LINQ</span><span>Code-First</span><span>Change Tracking</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>DbContext:</strong> the unit-of-work and connection holder — typically scoped per HTTP request.</li>
+          <li><strong>DbSet&lt;T&gt;:</strong> the queryable collection for an entity type. <code>context.Orders.Where(...)</code>.</li>
+          <li><strong>LINQ-to-Entities:</strong> queries are C# expressions translated to SQL on the fly.</li>
+          <li><strong>Change Tracker:</strong> snapshots loaded entities; <code>SaveChanges()</code> writes only what differs.</li>
+          <li><strong>Migrations:</strong> code-first by default — model changes generate timestamped migration classes.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Pieces</div><h2>What You'll Touch</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>EF Core (current)</h5><p>The cross-platform rewrite. Versions track .NET releases — EF 8/9 ship alongside .NET 8/9. The one to use for new work.</p></div>
+        <div class="card teal"><h5>EF6 (legacy)</h5><p>The .NET Framework era. Still alive in long-lived enterprise apps; not where new development goes.</p></div>
+        <div class="card mid"><h5>Providers</h5><p>SQL Server, PostgreSQL (Npgsql), MySQL, SQLite, Cosmos DB, Oracle. Same LINQ; different SQL.</p></div>
+        <div class="card accent"><h5>Dapper</h5><p>The micro-ORM many teams use alongside EF — raw SQL, fast object mapping, no tracking. Reach for it on hot paths.</p></div>
+        <div class="card"><h5>EF Power Tools</h5><p>Visual Studio extension for reverse-engineering existing schemas (database-first scaffolding).</p></div>
+        <div class="card teal"><h5>LINQPad</h5><p>The scratchpad — write LINQ against your DbContext, see SQL and results instantly.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What EF Core Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>LINQ Is the Killer Feature</summary>
+        <div class="drill-body">
+          <p>Composable, type-checked queries that refactor with the model. Rename a property and every query updates. Add a <code>.Where()</code> conditionally without string-concatenating SQL. The compiler catches what runtime errors would catch in dynamically-typed ORMs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Code-First Migrations</summary>
+        <div class="drill-body">
+          <p><code>dotnet ef migrations add AddOrderStatus</code> diffs the model against the last snapshot and emits an <code>Up</code>/<code>Down</code> pair. Reviewable in PRs, deterministic, runs in CI. The default workflow most teams settle on.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Async End-to-End</summary>
+        <div class="drill-body">
+          <p><code>ToListAsync</code>, <code>FirstOrDefaultAsync</code>, <code>SaveChangesAsync</code> — async is native, not bolted on. Important for any web tier that has to scale request concurrency.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sane Defaults with ASP.NET Core</summary>
+        <div class="drill-body">
+          <p><code>builder.Services.AddDbContext&lt;AppDbContext&gt;()</code> wires lifetime, connection string, logging, and pooling in one line. The DI container hands a fresh DbContext to each request; you almost never write the plumbing.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where People Get Cut</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Client-Side Evaluation Cliff</summary>
+        <div class="drill-body">
+          <p>Older EF Core silently ran un-translatable LINQ in memory after pulling the whole table. EF 3+ throws instead — louder, but you'll meet it. The fix is restating the query so the provider can translate it, or projecting earlier.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tracking vs No-Tracking</summary>
+        <div class="drill-body">
+          <p>Read-only queries should use <code>.AsNoTracking()</code>. Without it, every entity is snapshotted into the change tracker — slower, and a memory leak waiting to happen on long-lived contexts. Many teams set <code>QueryTrackingBehavior.NoTracking</code> as the default and opt in.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The N+1 Problem (Same as Everywhere)</summary>
+        <div class="drill-body">
+          <p>Forget <code>.Include()</code> and lazy loading silently fires a query per accessed navigation. Lazy loading is off by default in EF Core for exactly this reason — leave it off and use <code>Include</code>/<code>ThenInclude</code> or projection explicitly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SaveChanges Is Not a Bulk Insert</summary>
+        <div class="drill-body">
+          <p>Adding 100k entities and calling <code>SaveChanges</code> sends 100k <code>INSERT</code>s in batches. Fine for hundreds, terrible for millions. Reach for <code>SqlBulkCopy</code>, <code>EFCore.BulkExtensions</code>, or the <code>COPY</code> protocol on Postgres.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>DbContext Is Not Thread-Safe</summary>
+        <div class="drill-body">
+          <p>One context per scope. Sharing across <code>Task.WhenAll</code> calls produces undefined behavior. The DI scope handles this for HTTP — for background jobs and parallel work, create a context per unit.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Teams Actually Use It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Repository wrappers are usually unnecessary.</strong> <code>DbContext</code> + <code>DbSet</code> already implement the pattern. Adding an extra interface buys testability that an in-memory provider or a real test database gives you anyway.</li>
+        <li><strong>Use projection (<code>Select</code>) for read endpoints.</strong> Materialize DTOs directly instead of entities — smaller queries, no tracking overhead.</li>
+        <li><strong>Compiled queries</strong> for hot paths — <code>EF.CompileAsyncQuery</code> caches the LINQ-to-SQL translation.</li>
+        <li><strong>Drop to Dapper</strong> for reporting queries and CQRS read sides — keeps EF for the write model where tracking earns its cost.</li>
+        <li><strong>Always check the SQL.</strong> <code>ToQueryString()</code> in EF 5+, or log to console in dev. The translator is good but not magic.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="hibernate-jpa.html">Hibernate &amp; JPA →</a>
+        <a href="node-orms.html">Prisma / TypeORM / Drizzle →</a>
+        <a href="query-builders.html">Raw SQL &amp; Query Builders →</a>
+        <a href="../frameworks/backend/aspnet-core.html">ASP.NET Core →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

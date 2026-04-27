@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hibernate &amp; JPA · ORM Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The Java standard for object-relational mapping. JPA the spec, Hibernate the dominant implementation — entities, sessions, lazy loading, the L1/L2 cache, and the famously sharp edges." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/orm/hibernate-jpa.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Hibernate &amp; JPA · ORM Deep Dive" />
+<meta property="og:description" content="The Java standard for object-relational mapping. JPA the spec, Hibernate the dominant implementation — entities, sessions, lazy loading, the L1/L2 cache, and the famously sharp edges." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/orm/hibernate-jpa.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Hibernate &amp; JPA · ORM Deep Dive" />
+<meta name="twitter:description" content="The Java standard for object-relational mapping. JPA the spec, Hibernate the dominant implementation — entities, sessions, lazy loading, the L1/L2 cache, and the famously sharp edges." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">ORM &amp; Data Access · Java</div>
+    <h1>Hibernate &amp; JPA</h1>
+    <p class="lede">JPA is the specification — the contract for how Java code maps to relational tables. Hibernate is the implementation almost everyone uses to satisfy that contract. Together they have powered enterprise Java for two decades and shaped how a generation of engineers thinks about persistence.</p>
+    <div class="tags"><span>Java</span><span>JPA Spec</span><span>Persistence Context</span><span>HQL / JPQL</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Core Ideas</h4>
+        <ul>
+          <li><strong>Entity:</strong> a plain Java class annotated with <code>@Entity</code> that maps to a table.</li>
+          <li><strong>EntityManager / Session:</strong> the unit-of-work — tracks what you loaded and what changed.</li>
+          <li><strong>Persistence Context:</strong> the L1 cache. Same entity loaded twice in one session returns the same instance.</li>
+          <li><strong>JPQL / HQL:</strong> object-oriented query language — you query entities, not tables.</li>
+          <li><strong>Dirty Checking:</strong> on commit, Hibernate diffs entities against the snapshot it took at load time and writes only the changes.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Pieces</div><h2>What You'll Touch</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>JPA Spec</h5><p>The Jakarta EE standard. Defines annotations (<code>@Entity</code>, <code>@OneToMany</code>) and the <code>EntityManager</code> API. Vendor-neutral on paper.</p></div>
+        <div class="card teal"><h5>Hibernate ORM</h5><p>The reference implementation. Adds features beyond JPA — filters, envers, multi-tenancy, criteria extensions.</p></div>
+        <div class="card mid"><h5>Spring Data JPA</h5><p>The friendly face. Repository interfaces, derived queries (<code>findByEmailAndStatus</code>), pagination — all on top of JPA.</p></div>
+        <div class="card accent"><h5>EclipseLink</h5><p>The other JPA implementation. Reference for newer spec versions; rare in the wild compared to Hibernate.</p></div>
+        <div class="card"><h5>Flyway / Liquibase</h5><p>Schema migrations. Hibernate's <code>hbm2ddl</code> auto-update is for demos; real systems use these.</p></div>
+        <div class="card teal"><h5>jOOQ (alternative)</h5><p>Not JPA — a typed SQL DSL. The escape hatch when JPA's abstraction stops paying its rent.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What JPA Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Object Graphs Without the Plumbing</summary>
+        <div class="drill-body">
+          <p>An <code>Order</code> with line items, a customer, and a shipping address — load the order and walk the graph. Hibernate fetches what you need, when you ask, and tracks every change. Without an ORM, that's hundreds of lines of <code>ResultSet</code> mapping per aggregate.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Database Portability</summary>
+        <div class="drill-body">
+          <p>Dialects translate the same JPQL to PostgreSQL, MySQL, Oracle, SQL Server. The bigger win in practice is the test suite — H2 in-memory for unit tests, real Postgres in CI, with no app code changing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Unit-of-Work Pattern</summary>
+        <div class="drill-body">
+          <p>Inside a transaction, you mutate entities and commit. Hibernate decides the SQL order, batches inserts, defers updates, flushes once. The application code reads like business logic, not like database choreography.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Caching Tiers</summary>
+        <div class="drill-body">
+          <p>L1 (per-session) is automatic. L2 (shared, across sessions, with Ehcache/Infinispan/Hazelcast) caches read-mostly entities. The query cache keys SQL → result IDs. Used carefully, all three cut load by an order of magnitude.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where People Get Cut</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>N+1 Queries</summary>
+        <div class="drill-body">
+          <p>Load 50 orders, iterate, touch <code>order.getCustomer()</code> on each — that's 1 + 50 SQL statements. The fix is <code>JOIN FETCH</code>, <code>@EntityGraph</code>, or batch-size hints. The diagnosis is reading SQL logs, every time. This single problem accounts for most "Hibernate is slow" complaints.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>LazyInitializationException</summary>
+        <div class="drill-body">
+          <p>You return an entity from a service, the transaction closes, the controller serializes it, and a lazy collection blows up because the session is gone. The fixes — open-session-in-view, DTO projections, fetch joins — each come with their own tradeoffs. Many teams ban entities from crossing service boundaries entirely.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cascade Surprises</summary>
+        <div class="drill-body">
+          <p><code>CascadeType.ALL</code> on a relationship means deleting a parent deletes the children — and sometimes the children's children. <code>orphanRemoval = true</code> deletes anything detached from the collection. Both are useful; both have ended careers when applied to the wrong association.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The DTO vs Entity Debate</summary>
+        <div class="drill-body">
+          <p>Should the API return entities directly, or always project to DTOs? Entities are convenient but couple the wire format to the table schema and drag the persistence context along. Most mature codebases land on DTOs at the boundary, entities only inside transactions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Migrations Are Yours</summary>
+        <div class="drill-body">
+          <p><code>hibernate.hbm2ddl.auto=update</code> looks magical and is a production landmine — non-deterministic, can't review, can't roll back. Use Flyway or Liquibase. Hibernate generates the schema once for inspiration; humans own the migrations from there.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Teams Actually Use It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Spring Data repositories</strong> for the 80% — <code>JpaRepository&lt;Order, Long&gt;</code> with derived query methods.</li>
+        <li><strong>JPQL with named queries</strong> for the next 15% — anything more complex than a derived name supports.</li>
+        <li><strong>Criteria API</strong> for dynamic where-clauses (the search-form problem). Verbose, but type-safe with the metamodel.</li>
+        <li><strong>Native SQL</strong> (<code>@Query(nativeQuery=true)</code> or jOOQ) for the last 5% — reporting, window functions, vendor-specific tricks.</li>
+        <li><strong>Read models separate from write models</strong> — entities for the transactional side, projections or views for queries.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="entity-framework.html">Entity Framework →</a>
+        <a href="python-orms.html">SQLAlchemy / Django ORM →</a>
+        <a href="query-builders.html">Raw SQL &amp; Query Builders →</a>
+        <a href="../database/sql.html">SQL Databases →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
