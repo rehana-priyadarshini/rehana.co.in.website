@@ -1,0 +1,5 @@
+# robots.txt for Software Development — A Guided Tour
+User-agent: *
+Allow: /
+
+Sitemap: http://www.rehana.co.in/sitemap.xml

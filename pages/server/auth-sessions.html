@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Authentication & Sessions · Server Responsibilities Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Server Responsibilities · 1 of 6</div>
+    <h1>Authentication &amp; Sessions</h1>
+    <p class="lede">Proving who is on the other end of the request, and remembering it across the next thousand. The first gate every request passes through.</p>
+    <div class="tags"><span>Passwords</span><span>JWT</span><span>OAuth 2.0</span><span>OIDC</span><span>SAML</span><span>Cookies</span><span>SSO</span><span>MFA</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Authentication (AuthN):</strong> proving identity — "you are who you say you are."</li>
+          <li><strong>Authorization (AuthZ):</strong> deciding what an identity is allowed to do (separate concern — see its own page).</li>
+          <li><strong>Session:</strong> server-remembered state tying subsequent requests back to a logged-in user.</li>
+          <li><strong>Token:</strong> a self-contained credential the client carries on every request.</li>
+          <li><strong>Identity Provider (IdP):</strong> the system of record for users — Okta, Auth0, Entra ID, Cognito, your own DB.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Sessions vs Tokens</h2></div>
+    <div class="chapter-body">
+      <div class="two-col">
+        <div class="card"><h5>Server-Side Sessions</h5>
+          <p>Server stores a session record (Redis, DB). The client holds only an opaque <code>session_id</code> in a cookie.</p>
+          <p style="margin-top:6px;"><strong>Pros:</strong> trivially revocable, small cookie, no secrets in the client.</p>
+          <p><strong>Cons:</strong> needs shared session store across instances; sticky sessions get awkward at scale.</p>
+        </div>
+        <div class="card teal"><h5>Stateless Tokens (JWT)</h5>
+          <p>Server signs a JSON payload; client carries it. Server verifies signature on each request — no lookup needed.</p>
+          <p style="margin-top:6px;"><strong>Pros:</strong> horizontally scalable, friendly to microservices and mobile.</p>
+          <p><strong>Cons:</strong> revocation is hard (use short TTLs + refresh tokens); payload is visible to whoever holds the token.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Protocols</div><h2>The Standards</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>OAuth 2.0 &amp; OpenID Connect (OIDC)</summary>
+        <div class="drill-body">
+          <p><strong>OAuth 2.0</strong> is a delegation protocol — "let app X call API Y on my behalf." It issues <em>access tokens</em>. <strong>OIDC</strong> is a thin identity layer on top of OAuth 2.0 that adds an <em>ID token</em> (a JWT describing the user). If you want "Sign in with Google," you want OIDC.</p>
+          <ul style="font-size:14px;line-height:1.6;margin-top:8px;">
+            <li><strong>Authorization Code + PKCE</strong> — the modern default for web &amp; mobile apps.</li>
+            <li><strong>Client Credentials</strong> — service-to-service (no user involved).</li>
+            <li><strong>Device Code</strong> — TVs, CLIs, anything without a real keyboard.</li>
+            <li><strong>Implicit / Resource Owner Password</strong> — deprecated. Don't use.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SAML</summary>
+        <div class="drill-body">
+          <p>Pre-OIDC enterprise SSO standard, XML-based. Still everywhere in B2B and corporate IT. If your customer is a Fortune-500 buyer, expect a SAML integration request even in 2026.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JWT (JSON Web Token)</summary>
+        <div class="drill-body">
+          <p>A signed, base64-encoded payload: <code>header.payload.signature</code>. Common claims: <code>sub</code> (user id), <code>exp</code> (expiry), <code>iss</code> (issuer), <code>aud</code> (audience).</p>
+          <ul style="font-size:14px;line-height:1.6;margin-top:8px;">
+            <li>Verify <strong>signature</strong>, <strong>expiry</strong>, <strong>issuer</strong>, and <strong>audience</strong> on every request.</li>
+            <li>Never accept <code>alg: none</code>. Pin allowed algorithms server-side.</li>
+            <li>Don't put secrets, PII, or anything large in the payload — it's readable by anyone who holds the token.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Passkeys &amp; WebAuthn</summary>
+        <div class="drill-body">
+          <p>Public-key credentials backed by the device (Face ID, Touch ID, Windows Hello, hardware keys). Phishing-resistant by design and rapidly becoming the default for new consumer apps. Supported by every major browser and platform.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>API Keys</summary>
+        <div class="drill-body">
+          <p>Long-lived shared secrets — fine for server-to-server when scoped, rotated, and stored in a secret manager. Not appropriate for end-user authentication.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Storage</div><h2>Cookies, Headers, and Where Tokens Live</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Where</th><th>Pros</th><th>Cons</th></tr></thead>
+        <tbody>
+          <tr><td><strong>HttpOnly cookie</strong></td><td>Inaccessible to JS — strong against XSS. Browser auto-sends.</td><td>Needs CSRF protection (SameSite, double-submit).</td></tr>
+          <tr><td><strong>Authorization header</strong></td><td>Standard for APIs. No CSRF surface.</td><td>Client code must hold the token — XSS can read it.</td></tr>
+          <tr><td><strong>localStorage</strong></td><td>Easy.</td><td>Readable by any JS on the page. Avoid for sensitive tokens.</td></tr>
+          <tr><td><strong>In-memory only</strong></td><td>Disappears on tab close — minimal blast radius.</td><td>Lost on refresh; needs a refresh-token flow.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Hardening</div><h2>Password &amp; Account Security</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Hash, Never Encrypt</h5><p>Use <strong>argon2id</strong>, <strong>bcrypt</strong>, or <strong>scrypt</strong>. Never SHA-256 or MD5 alone.</p></div>
+        <div class="card teal"><h5>MFA / 2FA</h5><p>TOTP apps, WebAuthn, push approvals. SMS only as a fallback — SIM-swappable.</p></div>
+        <div class="card mid"><h5>Rate Limiting</h5><p>Per-IP and per-account. Lockouts after N failed attempts.</p></div>
+        <div class="card accent"><h5>Breach Detection</h5><p>Check new passwords against Have I Been Pwned's k-anonymity API.</p></div>
+        <div class="card"><h5>Email Verification</h5><p>One-time signed link; expire it. Never log the token.</p></div>
+        <div class="card teal"><h5>Session Rotation</h5><p>Issue a new session ID after login and on privilege changes — defeats fixation.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">SSO</div><h2>Single Sign-On in Practice</h2></div>
+    <div class="chapter-body">
+      <p>SSO lets a user authenticate once with an IdP and access many apps. Two flavors dominate: <strong>OIDC</strong> (modern, JSON, mobile-friendly) and <strong>SAML</strong> (XML, enterprise-entrenched). Most B2B SaaS supports both — Auth0, Okta, WorkOS, and Cognito package the integration so you don't write SAML XML by hand.</p>
+      <p style="margin-top:8px;">"<strong>SCIM</strong>" is the companion standard for syncing user accounts and groups from the IdP into your app — without it, customers manually create users twice.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Long-lived JWTs with no revocation path.</strong> Pair short access tokens (5–15 min) with refresh tokens stored server-side.</li>
+        <li><strong>Forgetting to validate <code>aud</code> / <code>iss</code>.</strong> A token issued for service A should not unlock service B.</li>
+        <li><strong>Rolling your own crypto.</strong> Use a vetted library and a managed IdP unless authentication is your product.</li>
+        <li><strong>Logging tokens or session IDs.</strong> They're credentials — treat them like passwords.</li>
+        <li><strong>Mixing AuthN and AuthZ.</strong> "Logged in" ≠ "allowed to do this thing." Keep them separate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Server Responsibilities</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="authorization.html">Authorization</a><a href="validation.html">Validation</a><a href="persistence.html">Persistence</a><a href="integrations.html">Integrations</a><a href="background-jobs.html">Background Jobs</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

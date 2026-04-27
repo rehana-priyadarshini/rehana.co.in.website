@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Component Libraries · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 6 of 8</div>
+    <h1>Component Libraries</h1>
+    <p class="lede">Pre-built buttons, modals, tables, forms — battle-tested, accessible, and themed. Save hundreds of hours; pay in bundle size and design lock-in.</p>
+    <div class="tags"><span>UI Kits</span><span>Design Systems</span><span>Headless</span><span>Accessibility</span><span>Theming</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Three altitudes:</strong> styled component libraries, headless / unstyled primitives, and full design systems.</li>
+          <li><strong>Headless</strong> = behavior + accessibility, you bring the styling. The modern winning pattern (Radix, Headless UI, React Aria).</li>
+          <li><strong>Accessibility</strong> is the #1 reason to use a library — getting WAI-ARIA right yourself is a year of work.</li>
+          <li><strong>Design system</strong> = component library + tokens + docs + governance. Bigger commitment.</li>
+          <li><strong>Bundle cost</strong> matters — tree-shake or pick libraries with per-component imports.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Libraries</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Library</th><th>Style</th><th>Framework</th></tr></thead>
+        <tbody>
+          <tr><td>Material UI (MUI)</td><td>Styled, Material Design</td><td>React</td></tr>
+          <tr><td>Ant Design</td><td>Styled, dense enterprise look</td><td>React</td></tr>
+          <tr><td>Chakra UI</td><td>Styled, theme-friendly</td><td>React</td></tr>
+          <tr><td>Mantine</td><td>Styled, modern, large set</td><td>React</td></tr>
+          <tr><td>shadcn/ui</td><td>Copy-paste components built on Radix + Tailwind</td><td>React</td></tr>
+          <tr><td>Radix UI</td><td>Headless primitives</td><td>React</td></tr>
+          <tr><td>Headless UI</td><td>Headless primitives by Tailwind team</td><td>React, Vue</td></tr>
+          <tr><td>React Aria / React Spectrum</td><td>Adobe's headless / styled lines</td><td>React</td></tr>
+          <tr><td>Bootstrap</td><td>Styled, OG framework</td><td>Any (CSS) / React-Bootstrap</td></tr>
+          <tr><td>Vuetify / PrimeVue / Quasar</td><td>Styled, Material / Bootstrap-ish</td><td>Vue</td></tr>
+          <tr><td>Angular Material / PrimeNG / Nebular</td><td>Styled</td><td>Angular</td></tr>
+          <tr><td>Skeleton / Flowbite Svelte / Bits UI</td><td>Styled / headless</td><td>Svelte</td></tr>
+          <tr><td>Nuxt UI / Tailwind UI</td><td>Premium components</td><td>Vue, React</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How to Choose</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Styled vs Headless</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>—</th><th>Styled (MUI, Ant, Chakra)</th><th>Headless (Radix, Headless UI)</th></tr></thead>
+            <tbody>
+              <tr><td>Look</td><td>Their look out of the box</td><td>Yours</td></tr>
+              <tr><td>Customization</td><td>Theme tokens; deep custom is fights</td><td>Total freedom</td></tr>
+              <tr><td>Bundle size</td><td>Heavier (includes styles)</td><td>Lighter</td></tr>
+              <tr><td>Time to first screen</td><td>Minutes</td><td>An afternoon</td></tr>
+              <tr><td>Best for</td><td>Internal tools, MVPs</td><td>Branded products, design systems</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The shadcn/ui Pattern</summary>
+        <div class="drill-body">
+          <p>Not a library you install — components you <strong>copy into your repo</strong>. Built on Radix (behavior) + Tailwind (styling). You own the code, mod freely. Wildly popular for product teams that want quick velocity without long-term lock-in.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Building Your Own Design System</summary>
+        <div class="drill-body">
+          <p>For mature product orgs. Layers usually look like:</p>
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Tokens</strong> — colors, spacing, type, motion (Style Dictionary, Tokens Studio).</li>
+            <li><strong>Primitives</strong> — Box, Stack, Inline, Icon (often from Radix or React Aria).</li>
+            <li><strong>Components</strong> — Button, Input, Modal, Table styled with your tokens.</li>
+            <li><strong>Patterns</strong> — Forms, Empty States, Toolbars built from components.</li>
+            <li><strong>Docs</strong> — Storybook, Ladle, or a custom site with usage guidance.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Storybook &amp; Component Docs</summary>
+        <div class="drill-body">
+          <p><strong>Storybook</strong> is the de-facto component workshop — render every component variant in isolation, write interaction tests, generate docs. Alternatives: <strong>Ladle</strong>, <strong>Histoire</strong>, <strong>Bit</strong>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Pitfalls</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Picking too soon.</strong> Library choice locks in style for years.</li>
+            <li><strong>Battling MUI</strong> for a custom look — at some point shadcn/ui or building your own is faster.</li>
+            <li><strong>Importing the whole library</strong> when you wanted one button (check tree-shaking).</li>
+            <li><strong>Forgetting accessibility</strong> on custom primitives. Use Radix / React Aria as a base.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Which to Choose</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Internal Tools / Admin</h5><p>MUI or Ant Design — pre-styled, dense, "looks enterprise."</p></div>
+        <div class="card teal"><h5>Branded Product (React)</h5><p>shadcn/ui or Radix + your own Tailwind classes.</p></div>
+        <div class="card mid"><h5>Vue Product</h5><p>Vuetify (Material) or Headless UI Vue + Tailwind.</p></div>
+        <div class="card accent"><h5>Marketing / Landing</h5><p>Plain HTML + Tailwind UI templates — keep it light.</p></div>
+        <div class="card"><h5>Design System Foundation</h5><p>Radix + React Aria (behavior) + your tokens + Storybook (docs).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="package-managers.html">Package Managers</a><a href="transpilers.html">Transpilers</a><a href="css-systems.html">CSS Systems</a><a href="state-management.html">State Management</a><a href="accessibility.html">Accessibility</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

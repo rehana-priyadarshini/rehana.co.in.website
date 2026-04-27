@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NoSQL · Database Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Document, key-value, column, and graph stores. Flexible schemas and horizontal scale — at the cost of joins, ad-hoc queries, and ACID across the cluster." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/nosql.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="NoSQL · Database Deep Dive" />
+<meta property="og:description" content="Document, key-value, column, and graph stores. Flexible schemas and horizontal scale — at the cost of joins, ad-hoc queries, and ACID across the cluster." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/nosql.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="NoSQL · Database Deep Dive" />
+<meta name="twitter:description" content="Document, key-value, column, and graph stores. Flexible schemas and horizontal scale — at the cost of joins, ad-hoc queries, and ACID across the cluster." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Deep Dive · 2 of 2</div>
+    <h1>NoSQL — Beyond Relational</h1>
+    <p class="lede">A family of databases that gave up some SQL guarantees to win something else: horizontal scale, schema flexibility, sub-millisecond latency, or a data shape relational struggles with. Pick the right family, then design for the queries you'll actually run.</p>
+    <div class="tags"><span>Documents</span><span>Key-Value</span><span>Wide-Column</span><span>Graph</span><span>BASE</span><span>CAP</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Schema-on-read:</strong> the store accepts whatever shape you write; the app makes sense of it on the way out.</li>
+          <li><strong>BASE:</strong> Basically Available, Soft state, Eventual consistency — the trade most NoSQL stores make for scale.</li>
+          <li><strong>CAP theorem:</strong> in a partition, choose Consistency <em>or</em> Availability. You can't have both. PACELC adds: even when there's no partition, you trade Latency vs Consistency.</li>
+          <li><strong>Partition key:</strong> the field that decides which node owns a row. Pick it wrong, you get hot shards forever.</li>
+          <li><strong>Denormalization is the design.</strong> No joins means duplicating data on purpose, shaped to the query.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Four Families</div><h2>Pick the Right Shape First</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Document</h5><p>JSON-like records keyed by ID. Nested structures, flexible fields. <strong>MongoDB, Couchbase, Firestore, DynamoDB (single-table).</strong></p></div>
+        <div class="card teal"><h5>Key-Value</h5><p>Just <code>get(key)</code> / <code>set(key, value)</code>. Blazing fast. <strong>Redis, Memcached, DynamoDB, etcd.</strong></p></div>
+        <div class="card mid"><h5>Wide-Column</h5><p>Rows with sparse, dynamic columns; sorted by clustering key within a partition. <strong>Cassandra, ScyllaDB, HBase, Bigtable.</strong></p></div>
+        <div class="card accent"><h5>Graph</h5><p>Nodes and edges as first-class citizens. Traversals over relationships. <strong>Neo4j, Neptune, ArangoDB, TigerGraph.</strong></p></div>
+      </div>
+      <p style="margin-top:10px;font-size:14px;color:var(--muted);">Adjacent stores worth knowing: <strong>Search</strong> (Elasticsearch, OpenSearch) for full-text and log analytics; <strong>Time-series</strong> (InfluxDB, TimescaleDB) for metrics; <strong>Vector</strong> (Pinecone, Weaviate, pgvector) for embeddings &amp; RAG.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Reach for It</div><h2>What NoSQL Wins At</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Massive Write Throughput</summary>
+        <div class="drill-body">
+          <p>Cassandra and Bigtable are built around write-optimized log-structured merge trees. Tens of thousands of writes per second per node, linearly scalable. Use them for telemetry, event logs, IoT — anything that ingests faster than a single relational primary can handle.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Predictable Single-Key Lookups at Any Scale</summary>
+        <div class="drill-body">
+          <p>DynamoDB and Redis answer "given this key, give me the value" in single-digit milliseconds at any size. Sessions, shopping carts, feature flags, user profiles by ID. The trade: queries that aren't keyed by the partition key get slow or expensive (or impossible).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Genuinely Variable Shapes</summary>
+        <div class="drill-body">
+          <p>Product catalogs across categories, third-party API payloads, CMS content. When fields differ per record and you don't want a hundred nullable columns, document stores fit. <em>(But Postgres JSONB does too — only reach for a document DB when you also need its scaling model.)</em></p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Deeply Connected Data</summary>
+        <div class="drill-body">
+          <p>"Friends of friends who liked the same artist." In SQL, that's a chain of joins that gets exponential. Graph databases store relationships as edges and traverse them in constant time per hop. Fraud detection, recommendation engines, identity graphs, knowledge bases.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Full-Text Search</summary>
+        <div class="drill-body">
+          <p>Elasticsearch / OpenSearch invert documents into token indexes for relevance-scored search, faceting, and aggregations across billions of records. Postgres full-text gets you surprisingly far; reach for a dedicated search store when ranking quality, scale, or analytics outgrow it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Design</div><h2>Modeling Without Joins</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Query-First Modeling</summary>
+        <div class="drill-body">
+          <p>Relational: model the entities, then write any query. NoSQL: <strong>list every query first</strong>, then design tables/items so each query hits one partition. If a new query type appears, you may need a new table populated by a stream — that's the cost of denormalization.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Single-Table Design (DynamoDB)</summary>
+        <div class="drill-body">
+          <p>Put multiple entity types in one table, distinguished by partition key prefix. Composite sort keys (<code>USER#42</code>, <code>ORDER#2026-04-27#…</code>) make hierarchical queries ("all orders for user 42 in April") a single key range scan. Powerful and unintuitive — read Alex DeBrie before you design.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Partition Keys &amp; Hot Shards</summary>
+        <div class="drill-body">
+          <p>The partition key decides which node owns the data. <strong>Choose it for even distribution.</strong> <code>user_id</code> with one whale customer = one node on fire while the rest idle. Bucket / salt high-cardinality writes; pre-split when you know the distribution.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Secondary Indexes Are Different Here</summary>
+        <div class="drill-body">
+          <p>In Cassandra, local secondary indexes are usually a trap — they fan out across the cluster. Prefer building a second table keyed by the alternate access path and writing to both. DynamoDB's GSIs are essentially exactly that, managed for you (and billed accordingly).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Consistency</div><h2>What "Eventually" Costs You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Eventual vs Strong</summary>
+        <div class="drill-body">
+          <p>Most NoSQL stores default to <strong>eventual consistency</strong> on reads — you may briefly see stale data after a write. Many offer a <em>strongly consistent</em> read mode that costs more (DynamoDB doubles RCUs; Cassandra raises the consistency level, hurting availability and latency). Reach for it on read-after-write paths; tolerate eventual for everything else.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Transactions, Sometimes</summary>
+        <div class="drill-body">
+          <p>MongoDB has multi-document ACID transactions (4.0+). DynamoDB has <code>TransactWriteItems</code> across up to 100 items in one region. Cassandra has lightweight transactions via Paxos — slow, use sparingly. None of these are free; design so you rarely need them, and isolate hot money-paths in a relational DB if you do.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Idempotency &amp; Conflict Resolution</summary>
+        <div class="drill-body">
+          <p>Eventual consistency means writes can land out of order or be retried. Make writes <strong>idempotent</strong> (deterministic key, upsert semantics). For concurrent updates, use last-writer-wins with a logical clock, conditional writes (<code>IF version = N</code>), or CRDTs for true merge.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Operations</div><h2>Running NoSQL</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Capacity is a real budget.</strong> DynamoDB charges per RCU/WCU; Cassandra cares about per-partition size (≤ 100MB rule of thumb). Capacity planning matters more here than in SQL.</li>
+        <li><strong>Backups differ by family.</strong> Managed services (DynamoDB PITR, Firestore export) are easy. Self-hosted Cassandra needs careful snapshot + commit-log strategy across all nodes.</li>
+        <li><strong>Schema migrations are app-side.</strong> No <code>ALTER TABLE</code>. Plan for old shapes coexisting with new — versioned documents, dual-read, lazy upgrade on write.</li>
+        <li><strong>Observability:</strong> watch hot partitions, throttling, replication lag, GC pauses. The failure modes are different from SQL.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Choosing NoSQL because schemas are "annoying."</strong> The schema doesn't go away — it just moves into the application code, where it's enforced inconsistently.</li>
+        <li><strong>Treating Mongo like Postgres.</strong> Embedding nothing, joining everywhere with <code>$lookup</code>. If your query pattern is relational, use a relational DB.</li>
+        <li><strong>Querying by anything but the partition key.</strong> Full table scans on a key-value or wide-column store don't scale and surprise the bill.</li>
+        <li><strong>Hot partitions.</strong> One celebrity user, one viral product, one sequential timestamp key — all classic ways to overload a single shard.</li>
+        <li><strong>Reaching for graph databases for shallow relationships.</strong> Two joins in Postgres beat a graph DB for most "user → posts → comments" patterns.</li>
+        <li><strong>Forgetting reporting.</strong> Analytics on operational NoSQL is painful. Pipe to a warehouse (BigQuery, Snowflake, Redshift) early.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>The Other Side</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="sql.html">SQL (Relational) Deep Dive →</a>
+        <a href="../server/persistence.html">Persistence (Server)</a>
+        <a href="../cloud/models/dbaas.html">DBaaS</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>State Management · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 5 of 8</div>
+    <h1>State Management</h1>
+    <p class="lede">How a UI shares data across components without prop-drilling chaos. The most fashionable corner of frontend — every framework has its own family of stores.</p>
+    <div class="tags"><span>Local vs Global</span><span>Server vs Client</span><span>Reactivity</span><span>Immutability</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Local state</strong> belongs to a component (a checkbox, a form input).</li>
+          <li><strong>Shared state</strong> is read by many components (current user, theme, cart).</li>
+          <li><strong>Server state</strong> is data fetched from APIs — needs caching, revalidation, deduplication.</li>
+          <li><strong>URL is state</strong> too — search filters, tabs, modal-open belong in the address bar.</li>
+          <li><strong>Don't reach for global state on day one.</strong> Lift it; pass props; use context. Reach for a store when prop-drilling actually hurts.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Libraries</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Library</th><th>Framework</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>React Context</td><td>React</td><td>Built-in, low-frequency shared state (theme, auth).</td></tr>
+          <tr><td>Zustand</td><td>React (mostly)</td><td>Tiny, hook-based global store; minimal boilerplate.</td></tr>
+          <tr><td>Redux Toolkit (RTK)</td><td>React + others</td><td>Battle-tested for large apps; strict patterns + devtools.</td></tr>
+          <tr><td>Jotai / Recoil</td><td>React</td><td>Atomic state — fine-grained reactivity.</td></tr>
+          <tr><td>MobX</td><td>React, Vue, anywhere</td><td>Observable objects, automatic re-render.</td></tr>
+          <tr><td>Pinia</td><td>Vue</td><td>Official Vue store (replaced Vuex).</td></tr>
+          <tr><td>NgRx / NGXS / Signals</td><td>Angular</td><td>Redux pattern for Angular; Signals for fine-grained reactivity.</td></tr>
+          <tr><td>Svelte stores / Runes</td><td>Svelte</td><td>Built-in; Svelte 5 Runes are the modern default.</td></tr>
+          <tr><td>TanStack Query (React Query)</td><td>Any</td><td>Server-state caching — fetching, revalidation, mutations.</td></tr>
+          <tr><td>SWR</td><td>React</td><td>Vercel's lighter server-state library.</td></tr>
+          <tr><td>Apollo Client / urql</td><td>Any</td><td>GraphQL clients with built-in normalized cache.</td></tr>
+          <tr><td>XState</td><td>Any</td><td>State machines &amp; statecharts for complex flows.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Right Tool for the Job</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Server State vs Client State</summary>
+        <div class="drill-body">
+          <p>The single biggest insight of the last 5 years: <strong>most "global state" was actually server data being mismanaged.</strong></p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Server state</strong> (API data) — use TanStack Query or SWR. Caching, revalidation, optimistic updates, retries are solved problems.</li>
+            <li><strong>Client state</strong> (UI flags, drafts) — Zustand, Jotai, or just React state.</li>
+            <li>Trying to put server data in Redux usually leads to a mountain of action types and stale data bugs.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Three Patterns of Reactivity</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Flux / Redux</strong> — explicit actions → reducers → new state. Predictable, verbose.</li>
+            <li><strong>Hook / Store</strong> — components call <code>useStore(selector)</code>. Modern, ergonomic. Zustand is the prototype.</li>
+            <li><strong>Signals / Atoms</strong> — fine-grained reactive primitives. Solid, Svelte 5 Runes, Angular Signals, Jotai, Vue refs.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Selector Pattern</summary>
+        <div class="drill-body">
+          <p>Subscribe a component only to the slice of state it cares about — re-renders only when that slice changes.</p>
+<pre><span class="com">// Zustand</span>
+<span class="kw">const</span> userName = <span class="fn">useStore</span>(s =&gt; s.user.name);   <span class="com">// re-renders only when name changes</span></pre>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Without selectors, every component re-renders on every state change — back to square one.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Devtools &amp; Time Travel</summary>
+        <div class="drill-body">
+          <p>Redux Devtools (also works with Zustand &amp; many others) lets you replay actions, inspect state diffs, and reproduce bugs deterministically. Essential for hard-to-reproduce UI bugs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>State Machines (XState)</summary>
+        <div class="drill-body">
+          <p>For complex flows (multi-step forms, video players, async sequences), explicit state machines beat ad-hoc booleans. XState models your UI as states + events + transitions; impossible states become impossible.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Which to Choose</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>API Data</h5><p>TanStack Query (React) or SWR — almost always.</p></div>
+        <div class="card teal"><h5>Small App / Side Project</h5><p>useState + Context. Skip global state.</p></div>
+        <div class="card mid"><h5>Medium SPA</h5><p>Zustand (React) / Pinia (Vue) / Svelte stores. Lightweight.</p></div>
+        <div class="card accent"><h5>Large Enterprise SPA</h5><p>Redux Toolkit (React) / NgRx (Angular). Strict patterns scale.</p></div>
+        <div class="card"><h5>Complex Flows</h5><p>XState — wizards, payment flows, players.</p></div>
+        <div class="card teal"><h5>Real-time Collaborative</h5><p>Yjs, Liveblocks, Replicache — CRDTs &amp; sync engines.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="package-managers.html">Package Managers</a><a href="transpilers.html">Transpilers</a><a href="css-systems.html">CSS Systems</a><a href="component-libraries.html">Component Libraries</a><a href="accessibility.html">Accessibility</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

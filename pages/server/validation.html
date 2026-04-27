@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Validation · Server Responsibilities Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Server Responsibilities · 3 of 6</div>
+    <h1>Validation</h1>
+    <p class="lede">Never trust input. Every field arriving from a client, partner API, or message queue is a potential attacker — until your server has parsed, type-checked, and constrained it.</p>
+    <div class="tags"><span>Schemas</span><span>Zod</span><span>Pydantic</span><span>JSON Schema</span><span>OpenAPI</span><span>Sanitization</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Validation</strong> = is this input <em>shaped</em> right? (types, ranges, required fields).</li>
+          <li><strong>Sanitization</strong> = stripping or escaping content before it crosses a dangerous boundary (HTML, SQL, shell).</li>
+          <li><strong>Trust boundary:</strong> any line your data crosses where the source can't be vouched for. Validate every time you cross one.</li>
+          <li><strong>Parse, don't validate:</strong> turn raw input into a strongly-typed value object once — afterwards the type system carries the proof.</li>
+          <li><strong>Fail fast:</strong> reject malformed input at the edge with a clear error, before it reaches business logic.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Layers</div><h2>What to Validate, Where</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>Responsibility</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td>Network edge / WAF</td><td>Shape attacks: huge bodies, malformed JSON, known bad payloads.</td><td>Cloudflare, AWS WAF, ModSecurity.</td></tr>
+          <tr><td>API contract</td><td>Type, required-ness, enum values, format (UUID, email, ISO date).</td><td>Zod, Pydantic, Joi, class-validator, FluentValidation, JSON Schema.</td></tr>
+          <tr><td>Domain / business rules</td><td>"End date after start date," "discount ≤ subtotal," "user owns this resource."</td><td>Hand-written invariants in the domain layer.</td></tr>
+          <tr><td>Persistence</td><td>NOT NULL, CHECK, UNIQUE, foreign keys — last line of defense.</td><td>Database constraints.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:14px;color:var(--muted);">Each layer catches what the layer above missed. Skipping DB constraints because "the app validates it" is how data corruption ships.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Schemas</div><h2>Schema-First Validation</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><span class="pill">TS</span><h5>Zod / Valibot / ArkType</h5><p>Define a schema, infer the type. Parsing fails loudly with structured errors.</p></div>
+        <div class="card teal"><span class="pill">Python</span><h5>Pydantic</h5><p>The de-facto standard; powers FastAPI's request/response models.</p></div>
+        <div class="card mid"><span class="pill">.NET</span><h5>FluentValidation / Data Annotations</h5><p>Declarative rules, integrated with model binding.</p></div>
+        <div class="card accent"><span class="pill">Java</span><h5>Bean Validation (Hibernate Validator)</h5><p>JSR-380 — annotate fields with <code>@NotNull</code>, <code>@Email</code>, <code>@Size</code>.</p></div>
+        <div class="card"><span class="pill">Go</span><h5>go-playground/validator</h5><p>Struct tags drive validation rules.</p></div>
+        <div class="card teal"><span class="pill">Cross-language</span><h5>JSON Schema / OpenAPI</h5><p>Single source of truth — generate validators, clients, and docs from one spec.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Sanitization</div><h2>Output Encoding by Context</h2></div>
+    <div class="chapter-body">
+      <p>Most "sanitization" bugs are actually <strong>output-encoding</strong> bugs. The same string is safe in one context and dangerous in another. Encode at the moment you cross the boundary, never earlier.</p>
+      <ul style="font-size:14px;line-height:1.6;margin-top:8px;">
+        <li><strong>HTML →</strong> escape <code>&lt; &gt; &amp; " '</code>. Use templating that escapes by default; use DOMPurify for rich-text input.</li>
+        <li><strong>SQL →</strong> never concatenate. Use parameterized queries / prepared statements.</li>
+        <li><strong>Shell →</strong> avoid altogether; if unavoidable, use <code>execFile</code>-style APIs that take an arg array, never <code>exec</code> with a string.</li>
+        <li><strong>URLs →</strong> <code>encodeURIComponent</code> for path/query, allow-list scheme &amp; host for redirects.</li>
+        <li><strong>Filenames →</strong> normalize, strip <code>..</code>, anchor under a known root.</li>
+        <li><strong>LDAP, XPath, NoSQL —</strong> each has its own injection class. Use the driver's parameterization.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Hard Cases</div><h2>Tricky Inputs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Files &amp; Uploads</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Cap size at the proxy <em>and</em> the app — don't let a 10 GB upload OOM your worker.</li>
+            <li>Trust the file's bytes (magic numbers), not its declared MIME or extension.</li>
+            <li>Re-encode images server-side (ImageMagick, Sharp) — strips polyglots, EXIF, and decompression bombs.</li>
+            <li>Store outside the web root; serve via signed URLs from object storage.</li>
+            <li>Virus-scan untrusted files before downstream consumption.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Numbers &amp; Money</summary>
+        <div class="drill-body">
+          <p>Reject NaN, Infinity, and negatives where they don't make sense. Use decimal types (Postgres <code>numeric</code>, Java <code>BigDecimal</code>) for currency — never <code>float</code>. Pin currency code; a missing one defaults to nothing safe.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Dates, Times, Time Zones</summary>
+        <div class="drill-body">
+          <p>Accept ISO-8601 only. Store UTC; convert at the edge. Reject dates outside a sensible window — a birthday in the year 3024 is almost certainly an attack or a bug.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JSON, XML, YAML Parsing</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>XXE:</strong> disable external entity resolution in every XML parser.</li>
+            <li><strong>YAML:</strong> use <code>safe_load</code> / <code>load(SafeConstructor)</code> — default loaders can instantiate arbitrary types.</li>
+            <li><strong>Prototype pollution:</strong> reject keys named <code>__proto__</code>, <code>constructor</code>, <code>prototype</code> in JS object merges.</li>
+            <li>Cap depth and total size before parsing — a deeply nested JSON can DoS the parser.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mass Assignment</summary>
+        <div class="drill-body">
+          <p>Don't bind a request body straight onto your DB model. The client may send <code>{ isAdmin: true }</code>. Use an explicit allow-list — DTOs, "strong parameters," <code>permit()</code>, or schema <code>.strip()</code> / <code>.strict()</code>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Validating only on the client.</strong> JS-side checks are UX; the server must re-validate.</li>
+        <li><strong>Allow-list vs deny-list.</strong> Deny-listing dangerous characters always misses one. Allow-list what's permitted.</li>
+        <li><strong>Returning attacker input verbatim in errors.</strong> A reflected XSS in a 400 page is still XSS.</li>
+        <li><strong>Schemas drifting from runtime.</strong> If your OpenAPI spec and your handler disagree, the spec is fiction. Generate one from the other.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Server Responsibilities</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="auth-sessions.html">Authentication &amp; Sessions</a><a href="authorization.html">Authorization</a><a href="persistence.html">Persistence</a><a href="integrations.html">Integrations</a><a href="background-jobs.html">Background Jobs</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

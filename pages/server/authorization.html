@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Authorization · Server Responsibilities Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Server Responsibilities · 2 of 6</div>
+    <h1>Authorization</h1>
+    <p class="lede">Once you know <em>who</em> the user is, decide <em>what</em> they're allowed to do. The most-broken layer in most apps — and the one with the highest blast radius when it fails.</p>
+    <div class="tags"><span>RBAC</span><span>ABAC</span><span>ReBAC</span><span>Policies</span><span>OPA</span><span>Cedar</span><span>OAuth Scopes</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Subject:</strong> the actor — usually a user, sometimes a service.</li>
+          <li><strong>Action:</strong> what they're trying to do (<code>read</code>, <code>delete</code>, <code>refund</code>).</li>
+          <li><strong>Resource:</strong> what they're trying to do it to (a document, an order, a tenant).</li>
+          <li><strong>Policy:</strong> the rule that says "yes" or "no" given subject + action + resource + context.</li>
+          <li><strong>Enforcement point:</strong> where the policy actually runs — middleware, controller, service, or DB row filter.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Models</div><h2>The Core Authorization Models</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>RBAC — Role-Based Access Control</summary>
+        <div class="drill-body">
+          <p>Users are assigned <strong>roles</strong> (admin, editor, viewer); roles have <strong>permissions</strong>. Simple, well-understood, and the right starting point for most apps.</p>
+          <p style="margin-top:6px;"><strong>Breaks down when</strong> permissions need to depend on <em>which</em> resource — "editor of Project A but viewer of Project B." That's where you graduate to ABAC or ReBAC.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ABAC — Attribute-Based Access Control</summary>
+        <div class="drill-body">
+          <p>Decisions consider attributes of the subject, resource, action, and environment: <code>user.department == doc.department AND time &lt; 18:00</code>. Expressive but easy to make incomprehensible. Pairs well with a policy engine.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ReBAC — Relationship-Based Access Control</summary>
+        <div class="drill-body">
+          <p>Permissions follow graph relationships: "user is a member of org that owns folder that contains this doc." Pioneered by Google's Zanzibar; productized by <strong>SpiceDB</strong>, <strong>OpenFGA</strong>, <strong>Permify</strong>, <strong>Warrant</strong>. The right tool when sharing &amp; nesting are first-class.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Policy-as-Code Engines</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Open Policy Agent (OPA) / Rego</strong> — CNCF standard; widely used for Kubernetes and microservice authorization.</li>
+            <li><strong>Cedar</strong> — AWS's open-source policy language behind Verified Permissions; designed for end-user app authorization.</li>
+            <li><strong>Casbin</strong> — embeddable library with multiple model templates (RBAC, ABAC, ACL).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>OAuth Scopes vs App Permissions</summary>
+        <div class="drill-body">
+          <p>OAuth <strong>scopes</strong> describe what an <em>API client</em> is allowed to ask for (<code>read:invoices</code>). App-level <strong>permissions</strong> describe what the <em>user behind that token</em> is allowed to do. You need both: a scope-limited token from a billing assistant should never escalate beyond what the human user already has.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Multi-Tenancy</div><h2>Tenant Isolation</h2></div>
+    <div class="chapter-body">
+      <p>The single most common authorization bug in B2B SaaS: leaking data across tenants because a query forgot the <code>tenant_id</code> filter. Mitigations:</p>
+      <ul style="font-size:14px;line-height:1.6;margin-top:8px;">
+        <li><strong>Postgres Row-Level Security (RLS)</strong> — enforces the tenant filter at the database, not in app code.</li>
+        <li><strong>Schema-per-tenant or DB-per-tenant</strong> — strongest isolation, highest operational cost.</li>
+        <li><strong>Scoped repositories</strong> — every data-access object requires tenant context to construct.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Enforcement</div><h2>Where to Check</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>What it catches</th><th>What it misses</th></tr></thead>
+        <tbody>
+          <tr><td>API Gateway / Middleware</td><td>Coarse rules: "must be logged in," "must have admin scope."</td><td>Per-resource ownership ("is this <em>your</em> invoice?").</td></tr>
+          <tr><td>Controller / Handler</td><td>Action-level checks before business logic runs.</td><td>Bulk operations that touch many resources.</td></tr>
+          <tr><td>Service / Domain</td><td>Invariants like "only the assignee can close this ticket."</td><td>Read paths if you check only on writes.</td></tr>
+          <tr><td>Database (RLS, views)</td><td>The catch-all — even buggy queries can't escape.</td><td>Performance overhead; harder to debug.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:14px;color:var(--muted);">Defense in depth: enforce at multiple layers. A bug at one layer shouldn't be a breach.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>IDOR (Insecure Direct Object Reference)</strong> — <code>GET /invoices/42</code> works for any user who guesses the ID. Always check ownership, not just authentication.</li>
+        <li><strong>Forgetting the negative case in lists</strong> — <code>GET /invoices</code> happily returns every invoice in the table because the WHERE clause was dropped.</li>
+        <li><strong>Client-side hiding</strong> — graying out a button is UX, not security. Re-check on the server.</li>
+        <li><strong>"Admin" as a single bit</strong> — eventually you need finer roles, and refactoring a boolean into an RBAC system mid-flight is painful.</li>
+        <li><strong>Stale role caches</strong> — when admin access is revoked, the user's existing JWT may still grant it for an hour. Plan for revocation.</li>
+        <li><strong>Confused deputy</strong> — a service acting "on behalf of" a user but with its own elevated rights. Pass the user's identity through, don't impersonate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Server Responsibilities</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="auth-sessions.html">Authentication &amp; Sessions</a><a href="validation.html">Validation</a><a href="persistence.html">Persistence</a><a href="integrations.html">Integrations</a><a href="background-jobs.html">Background Jobs</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

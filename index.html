@@ -5,7 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Software Development — A Guided Tour</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-<style>
+<!-- SEO -->
+<meta name="description" content="From programming fundamentals to architecture, cloud, and AI — an interactive drill-down map of the modern stack. Click any topic to dig deeper." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Software Development — A Guided Tour" />
+<meta property="og:description" content="From programming fundamentals to architecture, cloud, and AI — an interactive drill-down map of the modern stack. Click any topic to dig deeper." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://www.rehana.co.in/" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Software Development — A Guided Tour" />
+<meta name="twitter:description" content="From programming fundamentals to architecture, cloud, and AI — an interactive drill-down map of the modern stack. Click any topic to dig deeper." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" /><style>
   :root {
     --deep:   #0A2A43;
     --blue:   #065A82;
@@ -342,12 +361,12 @@
         <summary>Client Platforms</summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Web</h5><p>Runs in any browser. HTML/CSS/JS + TypeScript. Most reach, least control of device.</p></div>
-            <div class="card teal"><h5>Mobile (Native)</h5><p>iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose). Full device power, store distribution.</p></div>
-            <div class="card mid"><h5>Mobile (Cross-platform)</h5><p>React Native, Flutter (Dart), .NET MAUI. One codebase → both stores.</p></div>
-            <div class="card accent"><h5>Desktop</h5><p>Electron, Tauri, WPF, JavaFX, Qt. Usually web tech wrapped as an app.</p></div>
-            <div class="card"><h5>TV / Embedded / Wearables</h5><p>Smart TVs, kiosks, cars, watches — specialized SDKs and constraints.</p></div>
-            <div class="card teal"><h5>PWA</h5><p>Progressive Web App — web that installs like an app and works offline.</p></div>
+            <a class="card" href="pages/client-platforms/web.html" style="text-decoration:none;color:inherit;display:block;"><h5>Web →</h5><p>Runs in any browser. HTML/CSS/JS + TypeScript. Most reach, least control of device.</p></a>
+            <a class="card teal" href="pages/client-platforms/mobile-native.html" style="text-decoration:none;color:inherit;display:block;"><h5>Mobile (Native) →</h5><p>iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose). Full device power, store distribution.</p></a>
+            <a class="card mid" href="pages/client-platforms/mobile-cross-platform.html" style="text-decoration:none;color:inherit;display:block;"><h5>Mobile (Cross-platform) →</h5><p>React Native, Flutter (Dart), .NET MAUI. One codebase → both stores.</p></a>
+            <a class="card accent" href="pages/client-platforms/desktop.html" style="text-decoration:none;color:inherit;display:block;"><h5>Desktop →</h5><p>Electron, Tauri, WPF, JavaFX, Qt. Usually web tech wrapped as an app.</p></a>
+            <a class="card" href="pages/client-platforms/tv-embedded.html" style="text-decoration:none;color:inherit;display:block;"><h5>TV / Embedded / Wearables →</h5><p>Smart TVs, kiosks, cars, watches — specialized SDKs and constraints.</p></a>
+            <a class="card teal" href="pages/client-platforms/pwa.html" style="text-decoration:none;color:inherit;display:block;"><h5>PWA →</h5><p>Progressive Web App — web that installs like an app and works offline.</p></a>
           </div>
         </div>
       </details>
@@ -390,14 +409,14 @@
         <summary>Client-Side Tooling</summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><span class="pill">Bundle</span><h5>Bundlers</h5><p>Webpack, Vite, esbuild, Parcel, Rollup — package many files for the browser.</p></div>
-            <div class="card teal"><span class="pill">Install</span><h5>Package Managers</h5><p>npm, pnpm, yarn — install JavaScript libraries.</p></div>
-            <div class="card mid"><span class="pill">Translate</span><h5>Transpilers</h5><p>Babel, TypeScript, SWC — modern/typed code → browser JS.</p></div>
-            <div class="card accent"><span class="pill">Style</span><h5>CSS Systems</h5><p>Tailwind, Sass, CSS Modules, styled-components, design tokens.</p></div>
-            <div class="card"><span class="pill">State</span><h5>State Management</h5><p>Redux, Zustand, Pinia, NgRx, React Query, SWR.</p></div>
-            <div class="card teal"><span class="pill">UI Kits</span><h5>Component Libraries</h5><p>Material UI, Ant Design, shadcn/ui, Chakra, Bootstrap.</p></div>
-            <div class="card mid"><span class="pill">Accessibility</span><h5>a11y</h5><p>Screen readers, ARIA roles, keyboard nav, color contrast. Legal in many regions.</p></div>
-            <div class="card accent"><span class="pill">i18n</span><h5>Internationalization</h5><p>Multiple languages, currencies, dates, right-to-left layouts.</p></div>
+            <a class="card" href="pages/client-tooling/bundlers.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Bundle</span><h5>Bundlers →</h5><p>Webpack, Vite, esbuild, Parcel, Rollup — package many files for the browser.</p></a>
+            <a class="card teal" href="pages/client-tooling/package-managers.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Install</span><h5>Package Managers →</h5><p>npm, pnpm, yarn — install JavaScript libraries.</p></a>
+            <a class="card mid" href="pages/client-tooling/transpilers.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Translate</span><h5>Transpilers →</h5><p>Babel, TypeScript, SWC — modern/typed code → browser JS.</p></a>
+            <a class="card accent" href="pages/client-tooling/css-systems.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Style</span><h5>CSS Systems →</h5><p>Tailwind, Sass, CSS Modules, styled-components, design tokens.</p></a>
+            <a class="card" href="pages/client-tooling/state-management.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">State</span><h5>State Management →</h5><p>Redux, Zustand, Pinia, NgRx, React Query, SWR.</p></a>
+            <a class="card teal" href="pages/client-tooling/component-libraries.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">UI Kits</span><h5>Component Libraries →</h5><p>Material UI, Ant Design, shadcn/ui, Chakra, Bootstrap.</p></a>
+            <a class="card mid" href="pages/client-tooling/accessibility.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Accessibility</span><h5>a11y →</h5><p>Screen readers, ARIA roles, keyboard nav, color contrast. Legal in many regions.</p></a>
+            <a class="card accent" href="pages/client-tooling/i18n.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">i18n</span><h5>Internationalization →</h5><p>Multiple languages, currencies, dates, right-to-left layouts.</p></a>
           </div>
         </div>
       </details>
@@ -464,15 +483,15 @@
       </details>
 
       <details class="drill">
-        <summary>Server Responsibilities</summary>
+        <summary>Server Responsibilities <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— each card links to a deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Authentication &amp; Sessions</h5><p>Who are you? JWT, OAuth, cookies, SSO.</p></div>
-            <div class="card teal"><h5>Authorization</h5><p>What can you do? RBAC, ABAC, permissions.</p></div>
-            <div class="card mid"><h5>Validation</h5><p>Never trust input — validate at every boundary.</p></div>
-            <div class="card accent"><h5>Persistence</h5><p>Talk to databases via ORMs or query builders.</p></div>
-            <div class="card"><h5>Integrations</h5><p>Payments, email, SMS, 3rd-party APIs.</p></div>
-            <div class="card teal"><h5>Background Jobs</h5><p>Queue long tasks: reports, emails, ML scoring.</p></div>
+            <a class="card" href="pages/server/auth-sessions.html" style="text-decoration:none;color:inherit;display:block;"><h5>Authentication &amp; Sessions →</h5><p>Who are you? JWT, OAuth, cookies, SSO.</p></a>
+            <a class="card teal" href="pages/server/authorization.html" style="text-decoration:none;color:inherit;display:block;"><h5>Authorization →</h5><p>What can you do? RBAC, ABAC, permissions.</p></a>
+            <a class="card mid" href="pages/server/validation.html" style="text-decoration:none;color:inherit;display:block;"><h5>Validation →</h5><p>Never trust input — validate at every boundary.</p></a>
+            <a class="card accent" href="pages/server/persistence.html" style="text-decoration:none;color:inherit;display:block;"><h5>Persistence →</h5><p>Talk to databases via ORMs or query builders.</p></a>
+            <a class="card" href="pages/server/integrations.html" style="text-decoration:none;color:inherit;display:block;"><h5>Integrations →</h5><p>Payments, email, SMS, 3rd-party APIs.</p></a>
+            <a class="card teal" href="pages/server/background-jobs.html" style="text-decoration:none;color:inherit;display:block;"><h5>Background Jobs →</h5><p>Queue long tasks: reports, emails, ML scoring.</p></a>
           </div>
         </div>
       </details>
@@ -503,14 +522,14 @@
         <summary>SQL vs NoSQL</summary>
         <div class="drill-body">
           <div class="two-col">
-            <div class="card"><h5>SQL (Relational)</h5>
+            <a class="card" href="pages/database/sql.html" style="text-decoration:none;color:inherit;display:block;"><h5>SQL (Relational) →</h5>
               <p><strong>Strict schema, ACID, joins.</strong> Best for money, orders, anything with invariants.</p>
               <p style="margin-top:6px;">Examples: PostgreSQL, MySQL, SQL Server, Oracle, SQLite.</p>
-            </div>
-            <div class="card teal"><h5>NoSQL</h5>
+            </a>
+            <a class="card teal" href="pages/database/nosql.html" style="text-decoration:none;color:inherit;display:block;"><h5>NoSQL →</h5>
               <p><strong>Flexible schemas, horizontal scale.</strong> Great for unstructured or massive data.</p>
               <p style="margin-top:6px;">Families: document, key-value, column, graph.</p>
-            </div>
+            </a>
           </div>
         </div>
       </details>
@@ -1326,10 +1345,7 @@
     </div>
   </section>
 
-  <footer>
-    <p>Software Development — A Guided Tour · Interactive HTML Edition</p>
-    <p style="margin-top:6px;">Every section is collapsible. Use the side navigation (or <a href="#hub">Back to Map</a>) to jump between topics.</p>
-  </footer>
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
 </div>
 
 <script>

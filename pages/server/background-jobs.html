@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Background Jobs · Server Responsibilities Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Server Responsibilities · 6 of 6</div>
+    <h1>Background Jobs</h1>
+    <p class="lede">Anything that doesn't have to finish before the user sees a response: emails, reports, ML scoring, exports, scheduled cleanups. Move it off the request path or pay in latency forever.</p>
+    <div class="tags"><span>Queues</span><span>Workers</span><span>Sidekiq</span><span>Celery</span><span>BullMQ</span><span>SQS</span><span>Cron</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Producer:</strong> the code that enqueues a job.</li>
+          <li><strong>Broker / queue:</strong> where the job waits — Redis, RabbitMQ, SQS, Kafka, the database itself.</li>
+          <li><strong>Worker:</strong> the long-running process that pops jobs and executes them.</li>
+          <li><strong>Idempotent:</strong> safe to run more than once. Every job should be — workers crash, retries happen.</li>
+          <li><strong>Dead-letter queue (DLQ):</strong> where jobs that fail repeatedly go to be inspected instead of looping forever.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why</div><h2>What Belongs in the Background</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Slow I/O</h5><p>Email, SMS, push, third-party API calls — anything that can block for seconds.</p></div>
+        <div class="card teal"><h5>Heavy CPU</h5><p>Image/video processing, PDF generation, ML inference, exports.</p></div>
+        <div class="card mid"><h5>Fan-out</h5><p>One user action → 10,000 downstream notifications. Enqueue many small jobs.</p></div>
+        <div class="card accent"><h5>Scheduled Work</h5><p>Nightly billing, weekly reports, hourly cache warm-ups, retention deletes.</p></div>
+        <div class="card"><h5>Retries with patience</h5><p>"Webhook failed — try again in 1 min, then 5, then an hour."</p></div>
+        <div class="card teal"><h5>Decoupling</h5><p>"Order placed" event drives email, analytics, fulfillment — without coupling them to the API handler.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Systems</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Stack</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>Sidekiq</td><td>Ruby + Redis</td><td>The Rails default. Fast, mature, simple ops.</td></tr>
+          <tr><td>Celery</td><td>Python + Redis/RabbitMQ</td><td>Long-time Python standard; lots of moving parts.</td></tr>
+          <tr><td>BullMQ</td><td>Node + Redis</td><td>Modern Node default; great DX, scheduled &amp; repeatable jobs.</td></tr>
+          <tr><td>Hangfire</td><td>.NET + SQL Server / Redis</td><td>Built-in dashboard; persists jobs in the DB by default.</td></tr>
+          <tr><td>Quartz</td><td>JVM</td><td>Enterprise scheduling; rich cron and clustering.</td></tr>
+          <tr><td>Asynq / River</td><td>Go + Redis / Postgres</td><td>Idiomatic Go; type-safe payloads.</td></tr>
+          <tr><td>SQS / Pub/Sub / Service Bus</td><td>Cloud-managed</td><td>No broker to operate; plays well with serverless workers.</td></tr>
+          <tr><td>RabbitMQ</td><td>Self-hosted</td><td>Rich routing, exchanges, priorities — when shape of delivery matters.</td></tr>
+          <tr><td>Kafka</td><td>Self-hosted / Confluent / MSK</td><td>Event log, not just a queue — replayable, high-throughput.</td></tr>
+          <tr><td>Temporal / Inngest / Trigger.dev</td><td>Workflow engines</td><td>Long-lived, multi-step workflows with built-in retries &amp; durability.</td></tr>
+          <tr><td>Postgres-as-queue</td><td>pg-boss, Oban, River, Graphile Worker</td><td>Skip the broker — transactional with your data.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Designing Reliable Jobs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Delivery Semantics</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>At-most-once:</strong> may be lost. Rarely what you want.</li>
+            <li><strong>At-least-once:</strong> the practical default — may run twice. <em>Make jobs idempotent.</em></li>
+            <li><strong>Exactly-once:</strong> mostly a marketing claim; achieved by at-least-once delivery + idempotent processing.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Idempotency</summary>
+        <div class="drill-body">
+          <p>Pass an <code>operation_id</code> in the payload. Check-and-record it before doing side effects (insert into a <code>processed_jobs</code> table with a unique index). Second run hits the unique violation and exits cleanly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Retries &amp; Dead Letters</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Exponential backoff with jitter — never tight-loop a failing job.</li>
+            <li>Bound max attempts; route to DLQ after the limit.</li>
+            <li>Distinguish <strong>retriable</strong> errors (network, 503) from <strong>permanent</strong> ones (validation, 400) and stop retrying the latter.</li>
+            <li>Alert on DLQ growth — it's your signal that something needs human eyes.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Scheduling &amp; Cron</summary>
+        <div class="drill-body">
+          <p>Avoid running cron on every app instance — N replicas means N copies of your nightly job. Use a leader-elected scheduler (Hangfire, Quartz cluster, Kubernetes <code>CronJob</code>, BullMQ repeatable jobs) or a managed scheduler (EventBridge, Cloud Scheduler).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Long-Running Workflows</summary>
+        <div class="drill-body">
+          <p>For jobs that span hours or days (onboarding flows, multi-step refunds, AI pipelines), reach for a workflow engine — <strong>Temporal</strong>, <strong>Inngest</strong>, <strong>Step Functions</strong>, <strong>Cadence</strong>. They persist state between steps so a worker restart doesn't lose progress.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Priority, Concurrency, Fairness</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Separate queues per priority; never let a flood of low-priority work starve user-facing jobs.</li>
+            <li>Per-tenant rate limits — one big customer's bulk import shouldn't degrade everyone else.</li>
+            <li>Cap worker concurrency for fragile downstreams (legacy SOAP API, single-writer DB).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Observability</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Log job ID, type, attempt, duration. Trace from API request → enqueue → worker.</li>
+            <li>Track <strong>queue depth</strong>, <strong>oldest-job age</strong>, and <strong>failure rate</strong> as first-class SLIs.</li>
+            <li>Alert on age, not just depth — depth can stay flat while jobs starve at the back.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Putting domain objects in the payload.</strong> Pass IDs, re-fetch in the worker — the object on disk may have changed by the time the worker runs.</li>
+        <li><strong>Doing the DB write and the enqueue separately.</strong> If the DB commits and the enqueue fails, the side effect never happens. Use the outbox pattern or a Postgres-backed queue.</li>
+        <li><strong>Workers without graceful shutdown.</strong> SIGTERM should drain in-flight jobs; otherwise deploys lose work.</li>
+        <li><strong>Sharing the request DB pool with workers.</strong> A worker stampede starves the API. Separate pools, separate instances.</li>
+        <li><strong>Treating the queue as a database.</strong> If you find yourself querying it, you want a database with a job table, not a queue.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Server Responsibilities</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="auth-sessions.html">Authentication &amp; Sessions</a><a href="authorization.html">Authorization</a><a href="validation.html">Validation</a><a href="persistence.html">Persistence</a><a href="integrations.html">Integrations</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Accessibility (a11y) · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 7 of 8</div>
+    <h1>Accessibility (a11y)</h1>
+    <p class="lede">Building interfaces that everyone can use — including people who navigate with a keyboard, a screen reader, voice control, magnification, or in bright sunlight on a phone. Increasingly a legal requirement, not a nice-to-have.</p>
+    <div class="tags"><span>WCAG</span><span>ARIA</span><span>Screen readers</span><span>Keyboard</span><span>Contrast</span><span>axe</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>a11y</strong> is shorthand for <em>accessibility</em> — 11 letters between the <em>a</em> and the <em>y</em>.</li>
+          <li><strong>WCAG</strong> (Web Content Accessibility Guidelines) is the global standard. <strong>WCAG 2.2 AA</strong> is what most laws and contracts require.</li>
+          <li><strong>Screen readers</strong> (NVDA, JAWS, VoiceOver, TalkBack) read the page aloud — they need correct semantics, not just visuals.</li>
+          <li><strong>Keyboard navigation</strong> means every interactive element is reachable and usable with <kbd>Tab</kbd>, <kbd>Shift+Tab</kbd>, <kbd>Enter</kbd>, <kbd>Space</kbd>, and arrows — no mouse required.</li>
+          <li><strong>ARIA</strong> attributes patch semantics onto custom widgets. Rule #1: don't use ARIA if a native HTML element does the job.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Matters</div><h2>Audience &amp; Law</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Region</th><th>Law / Standard</th><th>What it requires</th></tr></thead>
+        <tbody>
+          <tr><td>EU</td><td>European Accessibility Act (in force June 2025)</td><td>Most consumer-facing digital products must meet WCAG 2.1 AA.</td></tr>
+          <tr><td>US</td><td>ADA, Section 508</td><td>Public sector and "places of public accommodation" — courts cite WCAG 2.1 AA in practice.</td></tr>
+          <tr><td>UK</td><td>Equality Act, PSBAR</td><td>Public sector bodies must publish an accessibility statement.</td></tr>
+          <tr><td>Canada</td><td>ACA, AODA (Ontario)</td><td>Federal &amp; Ontario regulations citing WCAG.</td></tr>
+          <tr><td>Global</td><td>WCAG 2.2 (2023)</td><td>The reference standard. WCAG 3.0 is in draft.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px;color:var(--muted);margin-top:12px;">Roughly <strong>1 in 6 people</strong> live with a disability that affects how they use software. Even if you ignore the law, that's a sixth of your users.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Four Principles</div><h2>POUR (WCAG)</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Perceivable</h5><p>Users can sense the content. Alt text on images, captions on video, sufficient contrast, no info conveyed by color alone.</p></div>
+        <div class="card teal"><h5>Operable</h5><p>Users can drive the UI. Keyboard support, no keyboard traps, enough time, no seizure-triggering motion.</p></div>
+        <div class="card mid"><h5>Understandable</h5><p>Content &amp; behavior are predictable. Clear labels, consistent navigation, helpful error messages.</p></div>
+        <div class="card accent"><h5>Robust</h5><p>Works across browsers and assistive tech. Valid HTML, correct semantics, ARIA where needed.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How a11y Actually Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Semantic HTML — Do This First</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Use <code>&lt;button&gt;</code>, not <code>&lt;div onclick&gt;</code>. You get keyboard, focus, and screen-reader behavior for free.</li>
+            <li>Use <code>&lt;a href&gt;</code> for navigation, <code>&lt;button&gt;</code> for actions. Don't mix them up.</li>
+            <li>Use <code>&lt;label&gt;</code> tied to every <code>&lt;input&gt;</code>. Placeholders are <em>not</em> labels.</li>
+            <li>Use heading levels in order — <code>h1</code> → <code>h2</code> → <code>h3</code>. Screen-reader users navigate by heading.</li>
+            <li>Use landmarks: <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;footer&gt;</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ARIA — When HTML Isn't Enough</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">ARIA (Accessible Rich Internet Applications) attributes describe role, state, and properties of custom widgets to assistive tech.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>role="dialog"</code>, <code>aria-modal="true"</code> — for modals.</li>
+            <li><code>aria-label</code>, <code>aria-labelledby</code> — naming an element.</li>
+            <li><code>aria-expanded</code>, <code>aria-controls</code> — disclosure widgets, menus.</li>
+            <li><code>aria-live="polite"</code> — announce dynamic updates (toasts, search results).</li>
+            <li><code>aria-hidden="true"</code> — hide decorative content from screen readers.</li>
+          </ul>
+          <p style="font-size:14px;color:var(--muted);margin-top:8px;"><strong>The first rule of ARIA:</strong> don't use ARIA. Use a native HTML element if one exists. Wrong ARIA is worse than no ARIA.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Keyboard Navigation</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Every interactive element must be reachable with <kbd>Tab</kbd>.</li>
+            <li>Focus order should match visual order.</li>
+            <li>Focus must be <em>visible</em> — never <code>outline: none</code> without a replacement style.</li>
+            <li>Modals must trap focus while open and return it on close.</li>
+            <li>Provide a <em>"Skip to content"</em> link as the first focusable element.</li>
+            <li>Arrow keys for components like menus, tabs, radio groups, listboxes (per ARIA Authoring Practices).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Color &amp; Contrast</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Body text needs <strong>4.5:1</strong> contrast (WCAG AA); large text <strong>3:1</strong>.</li>
+            <li>Don't use color alone to convey meaning — pair with icons, text, or shape.</li>
+            <li>Test with Windows High Contrast / forced-colors mode — no hard-coded backgrounds.</li>
+            <li>Honor <code>prefers-reduced-motion</code> for animations.</li>
+            <li>Honor <code>prefers-color-scheme</code> for dark mode.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forms — The Highest-Stakes UI</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Every input has a visible <code>&lt;label&gt;</code>.</li>
+            <li>Errors are announced (<code>aria-live</code>) and tied to the field via <code>aria-describedby</code>.</li>
+            <li>Group related fields with <code>&lt;fieldset&gt;</code> + <code>&lt;legend&gt;</code>.</li>
+            <li>Use the right <code>type</code> (<code>email</code>, <code>tel</code>, <code>date</code>) and <code>autocomplete</code> tokens.</li>
+            <li>Don't time out forms aggressively; warn before clearing data.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Accessibility Tree</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Browsers expose a parallel tree to assistive tech — derived from the DOM but with computed roles, names, and states. Inspect it in Chrome/Firefox DevTools' <em>Accessibility</em> panel. If a control has no name in that tree, screen readers see "button" with no context.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tooling</div><h2>Testing &amp; Linting</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Type</th><th>What it catches</th></tr></thead>
+        <tbody>
+          <tr><td>axe-core / @axe-core/react</td><td>Runtime + CI</td><td>The de-facto a11y engine — used by Lighthouse, Cypress, Playwright.</td></tr>
+          <tr><td>eslint-plugin-jsx-a11y</td><td>Lint</td><td>Catches obvious React issues at edit time (missing alt, no-onclick-on-div).</td></tr>
+          <tr><td>Lighthouse</td><td>Audit</td><td>Built into Chrome DevTools — runs axe + best practices.</td></tr>
+          <tr><td>Pa11y, WAVE</td><td>Audit</td><td>CLI / browser audits for whole-page scans.</td></tr>
+          <tr><td>Storybook a11y addon</td><td>Component</td><td>Per-story axe runs; great for design systems.</td></tr>
+          <tr><td>NVDA / VoiceOver / TalkBack</td><td>Manual</td><td>The actual screen readers. Free. Use them.</td></tr>
+          <tr><td>Accessibility Insights</td><td>Audit</td><td>Microsoft's guided assessment — covers what automation can't.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px;color:var(--muted);margin-top:12px;">Automated tools catch about <strong>30–40%</strong> of issues. The rest needs keyboard testing, screen-reader testing, and human judgment.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Where to Start</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>New project</h5><p>Add <code>eslint-plugin-jsx-a11y</code> + axe in CI on day one. Pick a component library that takes a11y seriously (Radix, React Aria, Headless UI).</p></div>
+        <div class="card teal"><h5>Existing app</h5><p>Run Lighthouse / axe to triage. Fix the highest-traffic flows first — sign-in, checkout, search.</p></div>
+        <div class="card mid"><h5>Design system</h5><p>Build accessible primitives once (<code>Button</code>, <code>Modal</code>, <code>Combobox</code>) and the rest of the app inherits it.</p></div>
+        <div class="card accent"><h5>Going to market in EU</h5><p>EAA compliance is binding from June 2025. Get a third-party audit and publish an accessibility statement.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Div soup</strong> — <code>&lt;div onclick&gt;</code> everywhere. No keyboard, no role, no name.</li>
+        <li><strong>Placeholder-as-label</strong> — vanishes on focus, low contrast, lost on autofill.</li>
+        <li><strong>Removing focus outlines</strong> for "design reasons" without replacement.</li>
+        <li><strong>Custom dropdowns</strong> that ignore arrow-key conventions and don't manage focus.</li>
+        <li><strong>Inaccessible modals</strong> — no focus trap, focus doesn't return on close.</li>
+        <li><strong>Auto-playing video / motion</strong> with no pause control.</li>
+        <li><strong>Color-only state</strong> (red = error) — invisible to colorblind users.</li>
+        <li><strong>"Click here" links</strong> — meaningless out of context for screen-reader users.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="package-managers.html">Package Managers</a><a href="transpilers.html">Transpilers</a><a href="css-systems.html">CSS Systems</a><a href="state-management.html">State Management</a><a href="component-libraries.html">Component Libraries</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

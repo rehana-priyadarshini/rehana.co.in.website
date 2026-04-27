@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TV / Embedded / Wearables · Client Platforms Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client Platforms · 5 of 6</div>
+    <h1>TV / Embedded / Wearables</h1>
+    <p class="lede">Smart TVs, set-top boxes, kiosks, cars, watches, fridges, point-of-sale terminals. Specialized SDKs, constrained hardware, and input models that aren't a mouse or a touchscreen.</p>
+    <div class="tags"><span>tvOS</span><span>Android TV</span><span>watchOS</span><span>Wear OS</span><span>CarPlay</span><span>Android Automotive</span><span>Embedded Linux</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>"Embedded"</strong> covers anything that isn't a phone, tablet, laptop, or desktop — TVs, watches, cars, kiosks, IoT, POS, signage, medical devices.</li>
+          <li><strong>Inputs differ</strong> radically: D-pad remotes (TV), tiny touchscreens with no keyboard (watch), voice (car/Alexa), bar-code scanners (POS), no input at all (signage).</li>
+          <li><strong>Hardware is constrained</strong> — slow CPUs, modest GPUs, limited RAM, often no GC headroom. Performance budgets are real.</li>
+          <li><strong>Update channels are bespoke</strong> — TV stores, watch companion apps, OTA firmware, fleet management consoles.</li>
+          <li><strong>Lifecycles are long</strong> — a smart TV ships for 7+ years; a car infotainment unit for 10+. Plan your dependencies accordingly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>Major Platform Families</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Platform</th><th>Where it runs</th><th>Stack</th></tr></thead>
+        <tbody>
+          <tr><td>tvOS</td><td>Apple TV</td><td>SwiftUI / TVMLKit; native iOS-adjacent.</td></tr>
+          <tr><td>Android TV / Google TV</td><td>Sony, Hisense, Chromecast, Nvidia Shield</td><td>Kotlin + Jetpack Compose for TV.</td></tr>
+          <tr><td>Tizen</td><td>Samsung TVs</td><td>Web (HTML/JS) apps + Samsung SDK.</td></tr>
+          <tr><td>webOS</td><td>LG TVs</td><td>Enyo / web stack.</td></tr>
+          <tr><td>Roku</td><td>Roku devices, many TV brands</td><td>BrightScript + SceneGraph (proprietary).</td></tr>
+          <tr><td>Fire OS</td><td>Amazon Fire TV / tablets</td><td>Android variant.</td></tr>
+          <tr><td>watchOS</td><td>Apple Watch</td><td>SwiftUI; companion to iOS app.</td></tr>
+          <tr><td>Wear OS</td><td>Pixel Watch, Galaxy Watch</td><td>Kotlin + Compose for Wear.</td></tr>
+          <tr><td>CarPlay / Android Auto</td><td>Phone-projected to car</td><td>App templates; tightly restricted.</td></tr>
+          <tr><td>Android Automotive OS</td><td>Built-in head units (Polestar, Ford, GM)</td><td>Full Android — apps live in the car.</td></tr>
+          <tr><td>Embedded Linux / Yocto</td><td>POS, kiosks, signage, industrial</td><td>Custom Linux + Qt / web kiosk / Flutter.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>What Makes These Different</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>10-Foot UI (TV)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Designed for a viewer ~3 m / 10 ft from the screen — large type, generous spacing, high contrast.</li>
+            <li><strong>D-pad navigation</strong> — every interactive element must have explicit focus order; "spatial navigation" lets up/down/left/right move predictably.</li>
+            <li>No hover, no precise pointing — focus state is the only "where am I?" signal.</li>
+            <li>Performance: TVs are <em>slow</em>. Long lists must virtualize aggressively; assume single-core at ~1 GHz on the cheap end.</li>
+            <li>Memory pressure kills the app silently — be defensive with image sizes and caches.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Wearables — Tiny Screens, Tiny Batteries</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Sessions are seconds, not minutes — design for "glance," not "browse."</li>
+            <li>Always-on display modes need stripped-down rendering to save battery.</li>
+            <li><strong>Complications</strong> (watch faces) and <strong>tiles</strong> are first-class — your app's reach is often via these, not the launcher.</li>
+            <li>Sensors (heart rate, GPS, accelerometer) are the input. Permissions and background-execution rules are tight.</li>
+            <li>Phone-companion model still common, but standalone wear apps (with their own LTE) are growing.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Automotive — Safety First</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>CarPlay / Android Auto</strong> are <em>projection</em> — your phone runs the app, the car shows it. Apple/Google supply restricted UI templates; you cannot draw arbitrary screens.</li>
+            <li><strong>Android Automotive OS</strong> runs in the car itself (Polestar, Volvo, Ford, GM). Full Android apps, but with categories and driving-state restrictions.</li>
+            <li><strong>App categories:</strong> media, messaging, navigation, parking, charging, IoT, weather, point-of-interest. Anything else is rejected.</li>
+            <li><strong>Distraction-Optimized</strong> rules: limited text per screen, no scrolling text, no video while driving, large touch targets.</li>
+            <li>Voice (Siri / Google Assistant / proprietary VPAs) is often the primary input.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Kiosks &amp; POS</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Often a locked-down Android tablet, iPad in Guided Access, or Windows IoT box.</li>
+            <li><strong>Single-app mode</strong> / kiosk lockdown prevents users from leaving the app.</li>
+            <li>Hardware peripherals: card readers, receipt printers, scales, barcode scanners — vendor SDKs.</li>
+            <li>Payment terminals are a regulated world (PCI-PTS) — apps usually delegate to a certified pinpad.</li>
+            <li><strong>MDM</strong> (Mobile Device Management — Jamf, Intune, AirWatch) provisions, locks, and updates the fleet.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Embedded Linux &amp; Industrial</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Yocto / Buildroot</strong> build minimal Linux images for the device.</li>
+            <li>UI stacks: <strong>Qt / QML</strong> dominate; <strong>Flutter</strong> embedder is a rising option; <strong>Chromium kiosk</strong> for web UIs.</li>
+            <li>OTA update systems: <strong>Mender</strong>, <strong>RAUC</strong>, <strong>SWUpdate</strong> — A/B partitions for safe rollback.</li>
+            <li>Fleet observability: <strong>Memfault</strong>, <strong>Balena</strong>, vendor consoles.</li>
+            <li>Real-time and safety-critical needs (medical, automotive ECUs) drift toward RTOSes (FreeRTOS, Zephyr, QNX, VxWorks) and strict standards (IEC 62304, ISO 26262).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Distribution &amp; Updates</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>TV stores: App Store (tvOS), Play Store (Android TV), Samsung Apps, LG Content Store, Roku Channel Store. Each has its own review &amp; submission process.</li>
+            <li>Watch apps usually ship as part of the phone app bundle.</li>
+            <li>Embedded fleets update over the air, often staged by ring (canary → 5% → 25% → 100%) with automatic rollback on bootloop detection.</li>
+            <li>Devices can be offline for days/weeks — design updates to be resumable and idempotent.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Common Scenarios</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Streaming app</h5><p>Native per platform (tvOS, Android TV, Tizen, webOS, Roku) or a video-optimized cross-platform engine (CTV-focused tools like Lightning/Bolt).</p></div>
+        <div class="card teal"><h5>Wearable companion</h5><p>SwiftUI for watchOS, Compose for Wear OS. Build the phone app first; the watch app is a glance-extension.</p></div>
+        <div class="card mid"><h5>In-car experience</h5><p>Start with CarPlay / Android Auto templates. Move to AAOS only if you need a full custom UI (and have OEM partnerships).</p></div>
+        <div class="card accent"><h5>Industrial HMI / Kiosk</h5><p>Embedded Linux + Qt or Flutter; OTA via Mender or similar; MDM if it's mobile.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Porting a phone app to TV unchanged</strong> — touch UI, tiny type, hover states all break with a remote.</li>
+        <li><strong>Ignoring focus management</strong> on TV / D-pad — users get stuck with no visible focus.</li>
+        <li><strong>Animating heavily on a low-end TV</strong> — 30 fps becomes 8 fps becomes a returned product.</li>
+        <li><strong>Treating the watch as a small phone</strong> — wear sessions are 5 seconds; design for that, not a list of menus.</li>
+        <li><strong>Skipping bootable rollback</strong> on embedded — one bad update bricks the fleet.</li>
+        <li><strong>Trusting battery-free TV remotes</strong> — physical remotes get lost; pair with phone control fallbacks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client Platforms</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="web.html">Web</a><a href="mobile-native.html">Mobile (Native)</a><a href="mobile-cross-platform.html">Mobile (Cross-platform)</a><a href="desktop.html">Desktop</a><a href="pwa.html">PWA</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

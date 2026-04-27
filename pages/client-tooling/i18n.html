@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Internationalization (i18n) · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 8 of 8</div>
+    <h1>Internationalization (i18n)</h1>
+    <p class="lede">Designing software so it can ship in any language, locale, currency, and writing direction without code changes. The hardest part isn't translation — it's everything around it: dates, numbers, plurals, sort order, layout direction.</p>
+    <div class="tags"><span>i18n</span><span>l10n</span><span>ICU MessageFormat</span><span>Intl API</span><span>RTL</span><span>Unicode</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>i18n</strong> = <em>internationalization</em> (18 letters between <em>i</em> and <em>n</em>): preparing software to support any locale.</li>
+          <li><strong>l10n</strong> = <em>localization</em>: adapting it to a specific locale (translating, formatting, regional rules).</li>
+          <li><strong>Locale</strong> = language + region tag, e.g. <code>en-US</code>, <code>pt-BR</code>, <code>zh-Hant-TW</code>. Drives all formatting decisions.</li>
+          <li><strong>Translation key</strong> — UI code references a stable ID (<code>checkout.placeOrder</code>); a catalog maps it to text per locale.</li>
+          <li><strong>RTL</strong> (right-to-left) — Arabic, Hebrew, Persian, Urdu. Mirrors layout, not just text.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Matters</div><h2>The Business Case</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li>Less than <strong>20%</strong> of the world speaks English. Most prefer to buy in their own language even when they understand English.</li>
+        <li>Adding a single major locale (German, Japanese, Spanish) often unlocks a market larger than the original.</li>
+        <li>Bolting i18n on later is one of the most expensive frontend retrofits — every hardcoded string, every <code>new Date().toLocaleString()</code>, every fixed-width layout.</li>
+        <li>Some markets <em>require</em> a localized product to launch (Quebec's Bill 96, China's regulations, EU consumer protection).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Layers</div><h2>What Actually Has to Be Localized</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Strings</h5><p>UI labels, microcopy, errors, emails. The visible part — but only ~30% of the work.</p></div>
+        <div class="card teal"><h5>Numbers &amp; Currency</h5><p><code>1,234.56</code> (en-US) vs <code>1.234,56</code> (de-DE) vs <code>1 234,56</code> (fr-FR). Currency symbol position varies.</p></div>
+        <div class="card mid"><h5>Dates &amp; Times</h5><p>MM/DD/YYYY vs DD/MM/YYYY vs YYYY-MM-DD. 12h vs 24h. Different calendars (Gregorian, Hijri, Japanese era).</p></div>
+        <div class="card accent"><h5>Plurals</h5><p>English has 2 forms (1, other). Russian has 4 (1, few, many, other). Arabic has 6.</p></div>
+        <div class="card"><h5>Sort &amp; Search</h5><p>Locale-aware collation. <em>ä</em> sorts after <em>z</em> in Swedish, with <em>a</em> in German.</p></div>
+        <div class="card teal"><h5>Layout Direction</h5><p>RTL languages flip the entire UI — navigation, icons, progress bars, animations.</p></div>
+        <div class="card mid"><h5>Names &amp; Addresses</h5><p>Family-name-first (Japan, Hungary). Postal-code formats. State/province vs prefecture vs canton.</p></div>
+        <div class="card accent"><h5>Units &amp; Imagery</h5><p>Metric vs imperial. Culturally appropriate icons and stock photos. Avoid hand gestures and color taboos.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How Modern i18n Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Translation Pipeline</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Extract:</strong> tooling pulls every <code>t('checkout.placeOrder')</code> call into a source catalog (usually JSON or PO).</li>
+            <li><strong>Translate:</strong> catalogs sync to a TMS (Lokalise, Phrase, Crowdin, Transifex) where translators or LLMs work.</li>
+            <li><strong>Sync back:</strong> translated catalogs return to the repo, often via webhook or CI.</li>
+            <li><strong>Bundle:</strong> the build emits one chunk per locale; the runtime loads the active one.</li>
+            <li><strong>QA:</strong> pseudo-localization (<code>réspéçt</code> mode) and longest-string tests catch overflow.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ICU MessageFormat — The Lingua Franca</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">A pattern language Unicode standardized for handling plurals, gender, and selects without if-statements in code.</p>
+<pre style="background:#f5f5f0;padding:12px;border-radius:6px;font-size:13px;line-height:1.5;overflow-x:auto;">{count, plural,
+  =0 {No messages}
+  one {# new message}
+  other {# new messages}
+}</pre>
+          <p style="font-size:14px;line-height:1.6">Translators fill in each plural category for their language without the developer caring how many categories that is.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Intl API — Built into Every Browser</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Modern JavaScript exposes ECMAScript Internationalization APIs natively. Use them before reaching for a library.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><code>Intl.NumberFormat</code> — currencies, units, scientific.</li>
+            <li><code>Intl.DateTimeFormat</code> — dates, times, calendars.</li>
+            <li><code>Intl.RelativeTimeFormat</code> — "3 days ago", "in 5 minutes".</li>
+            <li><code>Intl.PluralRules</code> — plural categories per locale.</li>
+            <li><code>Intl.Collator</code> — locale-aware sort &amp; compare.</li>
+            <li><code>Intl.ListFormat</code> — "A, B, and C" / "A, B et C".</li>
+            <li><code>Intl.Segmenter</code> — word/sentence/grapheme boundaries (essential for CJK).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>RTL — More Than Mirroring Text</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Set <code>&lt;html dir="rtl"&gt;</code> — the browser flips inline direction automatically.</li>
+            <li>Use <strong>logical CSS</strong> properties (<code>margin-inline-start</code> not <code>margin-left</code>; <code>padding-block</code> not <code>padding-top</code>).</li>
+            <li>Mirror directional icons (back arrows, progress bars) — but <em>not</em> media controls or numbers.</li>
+            <li>Bidi text: a Hebrew sentence containing an English brand name needs Unicode bidi marks (<code>&amp;lrm;</code>, <code>&amp;rlm;</code>) to render correctly.</li>
+            <li>Test layouts with a long German string <em>and</em> Arabic on the same screen.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Routing &amp; URLs</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Path prefix</strong> (<code>/en/about</code>, <code>/de/about</code>) — most common; SEO-friendly.</li>
+            <li><strong>Subdomain</strong> (<code>de.example.com</code>) — clean separation; harder for SEO consolidation.</li>
+            <li><strong>ccTLD</strong> (<code>.de</code>, <code>.fr</code>) — strongest local SEO signal; expensive to manage.</li>
+            <li>Add <code>hreflang</code> tags so Google serves the right locale per region.</li>
+            <li>Detect locale from URL first, then user setting, then <code>Accept-Language</code> header — never solely from IP geolocation.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Translation Memory &amp; Glossaries</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">A TMS keeps a <strong>translation memory</strong> (every prior translation) and a <strong>glossary</strong> (brand terms, product names that must stay untranslated). New strings are pre-filled from memory; reviewers confirm. This is what keeps cost predictable as the catalog grows.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>LLM-Assisted Translation</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Modern TMSes route strings through GPT/Claude with the glossary, brand voice, and surrounding context as the system prompt. Output goes to a human reviewer for high-visibility surfaces (legal, marketing) and ships unchecked for low-stakes microcopy. Cost per word has dropped roughly 10× since 2023.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tooling</div><h2>Libraries &amp; Platforms</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Layer</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>FormatJS / react-intl</td><td>Library</td><td>ICU MessageFormat in React; the most rigorous option.</td></tr>
+          <tr><td>i18next</td><td>Library</td><td>Framework-agnostic; huge plugin ecosystem; the JS default.</td></tr>
+          <tr><td>LinguiJS</td><td>Library</td><td>Macro-based extraction; great DX with TypeScript.</td></tr>
+          <tr><td>Vue i18n</td><td>Library</td><td>Official solution for the Vue ecosystem.</td></tr>
+          <tr><td>next-intl / next-i18next</td><td>Library</td><td>Next.js App Router-aware i18n.</td></tr>
+          <tr><td>Angular i18n / @angular/localize</td><td>Built-in</td><td>Angular's own pipeline, AOT-friendly.</td></tr>
+          <tr><td>Lokalise / Phrase / Crowdin</td><td>TMS</td><td>Hosted translation management, integrations with Git/CI.</td></tr>
+          <tr><td>Transifex / Smartling</td><td>TMS</td><td>Enterprise-grade workflows, big translator marketplaces.</td></tr>
+          <tr><td>Globalize, date-fns/locale, Luxon</td><td>Formatting</td><td>For projects targeting older browsers without full Intl.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Choosing an Approach</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Just-in-case (1 language today)</h5><p>Use <code>Intl.*</code> APIs from day one. Extract strings into a catalog file even if there's only one. The retrofit cost is huge.</p></div>
+        <div class="card teal"><h5>2–5 languages</h5><p>i18next or react-intl + a TMS like Lokalise. JSON catalogs in the repo, sync via CI.</p></div>
+        <div class="card mid"><h5>10+ languages, large surface</h5><p>FormatJS for ICU rigor, dedicated TMS, dedicated localization PM, pseudo-loc in CI, LLM pre-translation.</p></div>
+        <div class="card accent"><h5>RTL markets</h5><p>Logical CSS properties everywhere, mirrored design system, RTL visual regression tests.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>String concatenation:</strong> <code>"You have " + n + " items"</code> — impossible to translate cleanly. Use a single message with a placeholder.</li>
+        <li><strong>Sentence-fragment translation</strong> — translators need full sentences with context, not "Save" floating in space.</li>
+        <li><strong>Hardcoded plurals</strong> — <code>n === 1 ? 'item' : 'items'</code> breaks in Russian, Arabic, Polish.</li>
+        <li><strong>Fixed-width buttons</strong> — German is ~30% longer than English; layout must flex.</li>
+        <li><strong>Date strings parsed by hand</strong> instead of <code>Intl.DateTimeFormat</code>.</li>
+        <li><strong>IP-based locale forcing</strong> — a German tourist in Spain doesn't want Spanish.</li>
+        <li><strong>Time zones treated as locale</strong> — they're independent. <code>Asia/Tokyo</code> is not the same as <code>ja-JP</code>.</li>
+        <li><strong>Unicode unaware string ops</strong> — <code>"👨‍👩‍👧".length === 8</code>; use <code>Intl.Segmenter</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="package-managers.html">Package Managers</a><a href="transpilers.html">Transpilers</a><a href="css-systems.html">CSS Systems</a><a href="state-management.html">State Management</a><a href="component-libraries.html">Component Libraries</a><a href="accessibility.html">Accessibility</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

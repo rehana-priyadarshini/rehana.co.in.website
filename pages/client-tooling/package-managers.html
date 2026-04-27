@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Package Managers · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 2 of 8</div>
+    <h1>Package Managers</h1>
+    <p class="lede">The tools that install, version, and pin your dependencies — and produce the lockfile that guarantees the same code runs everywhere.</p>
+    <div class="tags"><span>npm</span><span>pnpm</span><span>yarn</span><span>bun</span><span>Lockfiles</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>package.json</strong> declares your direct dependencies and their version ranges.</li>
+          <li><strong>Lockfile</strong> (<code>package-lock.json</code>, <code>pnpm-lock.yaml</code>, <code>yarn.lock</code>, <code>bun.lockb</code>) pins exact versions for reproducibility — always commit it.</li>
+          <li><strong>SemVer:</strong> <code>^1.2.3</code> = compatible upgrades, <code>~1.2.3</code> = patch only, <code>1.2.3</code> = exact.</li>
+          <li><strong>node_modules</strong> is where installed packages live — historically huge ("heaviest object in the universe").</li>
+          <li><strong>Workspaces / monorepos</strong> let one repo host many packages with shared deps.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Package Managers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Strengths</th><th>Trade-offs</th></tr></thead>
+        <tbody>
+          <tr><td>npm</td><td>Bundled with Node.js; default everywhere.</td><td>Largest <code>node_modules</code>, slower than alternatives.</td></tr>
+          <tr><td>pnpm</td><td>Content-addressable store + symlinks → 2–3× faster, far less disk space.</td><td>Symlink quirks on edge cases; some tools choke.</td></tr>
+          <tr><td>yarn (v4 Berry)</td><td>Plug'n'Play optional, zero-installs, modern features.</td><td>PnP breaks tools that expect a real <code>node_modules</code>.</td></tr>
+          <tr><td>bun</td><td>Fastest of all (Zig); install = milliseconds.</td><td>Younger ecosystem; some incompatibilities.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How They Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Install Workflow</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li>Read <code>package.json</code> for direct deps.</li>
+            <li>Resolve the full dependency tree (transitive deps).</li>
+            <li>Check the lockfile for pinned versions.</li>
+            <li>Download tarballs from the registry (npm registry, by default).</li>
+            <li>Verify integrity (SHA hashes from the lockfile).</li>
+            <li>Place files in <code>node_modules</code> (or symlink from a global store).</li>
+            <li>Run lifecycle scripts (<code>preinstall</code>, <code>postinstall</code>).</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>pnpm's Killer Innovation</summary>
+        <div class="drill-body">
+          <p>pnpm stores every version of every package <strong>once</strong> on disk in <code>~/.pnpm-store</code>, and creates symlinks into each project's <code>node_modules</code>. Result:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Disk usage often 70% lower than npm.</li>
+            <li>Installs much faster on cold cache.</li>
+            <li>Stricter — only declared dependencies are accessible (catches phantom deps).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Workspaces / Monorepos</summary>
+        <div class="drill-body">
+          <p>A single repo with multiple <code>package.json</code> files. The package manager links workspace packages locally — change one, the others pick it up immediately.</p>
+<pre><span class="com">// package.json (root)</span>
+{
+  <span class="str">"workspaces"</span>: [<span class="str">"packages/*"</span>, <span class="str">"apps/*"</span>]
+}</pre>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">For more sophisticated monorepos, layer <strong>Turborepo</strong>, <strong>Nx</strong>, <strong>Moon</strong>, or <strong>Lerna</strong> on top.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Lockfile Discipline</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Commit the lockfile.</strong> Always. Not optional.</li>
+            <li>Use <code>npm ci</code> / <code>pnpm install --frozen-lockfile</code> in CI — fails if the lockfile is out of date.</li>
+            <li>Different package managers' lockfiles are not interchangeable; pick one for the team.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Security &amp; Supply Chain</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>npm audit</strong> / <strong>pnpm audit</strong> — vulnerability scan against the GitHub advisory DB.</li>
+            <li><strong>Dependabot / Renovate</strong> — automated PRs to update deps.</li>
+            <li><strong>Snyk / Socket.dev / GitHub Advanced Security</strong> — deeper scanning, license checks, malware detection.</li>
+            <li><strong>Lockfile lint</strong> tools verify integrity hashes &amp; provenance.</li>
+            <li><strong>Provenance</strong> (npm 9+) cryptographically links a package to its source repo.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Which to Choose</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Default / Simplest</h5><p>npm — bundled with Node, works everywhere, fine for solo projects.</p></div>
+        <div class="card teal"><h5>Disk &amp; Speed</h5><p>pnpm — best for monorepos and developers with many projects.</p></div>
+        <div class="card mid"><h5>Cutting Edge</h5><p>bun — fastest installs by far, increasingly compatible.</p></div>
+        <div class="card accent"><h5>Yarn Shop / PnP Curious</h5><p>Yarn 4 (Berry) — strong monorepo features, optional zero-install.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="transpilers.html">Transpilers</a><a href="css-systems.html">CSS Systems</a><a href="state-management.html">State Management</a><a href="component-libraries.html">Component Libraries</a><a href="accessibility.html">Accessibility</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

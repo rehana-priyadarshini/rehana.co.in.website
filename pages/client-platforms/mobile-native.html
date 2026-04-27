@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mobile (Native) · Client Platforms Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client Platforms · 2 of 6</div>
+    <h1>Mobile (Native)</h1>
+    <p class="lede">iOS in Swift, Android in Kotlin — the platform's own languages, frameworks, and design systems. Maximum performance, deepest device access, and the closest match to the user's expectations.</p>
+    <div class="tags"><span>Swift</span><span>SwiftUI</span><span>Kotlin</span><span>Jetpack Compose</span><span>Xcode</span><span>Android Studio</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>iOS</strong> uses Swift (and legacy Objective-C). UI: SwiftUI (declarative) or UIKit (imperative). Tooling: Xcode on macOS only.</li>
+          <li><strong>Android</strong> uses Kotlin (and legacy Java). UI: Jetpack Compose (declarative) or XML Views. Tooling: Android Studio, cross-platform.</li>
+          <li><strong>App stores</strong> distribute and review every release. Apple: 24–48h review; Google: hours typically.</li>
+          <li><strong>Code signing</strong> — every app is signed; iOS requires a paid developer account ($99/yr); Android requires a keystore.</li>
+          <li><strong>Sandbox</strong> — apps run in their own user, can't read each other's data without explicit sharing.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Two Stacks</div><h2>iOS vs Android, Side by Side</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>—</th><th>iOS</th><th>Android</th></tr></thead>
+        <tbody>
+          <tr><td>Language</td><td>Swift</td><td>Kotlin</td></tr>
+          <tr><td>Modern UI</td><td>SwiftUI (2019)</td><td>Jetpack Compose (2021)</td></tr>
+          <tr><td>Legacy UI</td><td>UIKit</td><td>Android Views (XML)</td></tr>
+          <tr><td>IDE</td><td>Xcode (macOS only)</td><td>Android Studio (Win/Mac/Linux)</td></tr>
+          <tr><td>Package manager</td><td>SwiftPM, CocoaPods</td><td>Gradle + Maven</td></tr>
+          <tr><td>Store</td><td>App Store (curated)</td><td>Play Store + sideloading</td></tr>
+          <tr><td>Device fragmentation</td><td>Low — Apple controls hardware</td><td>High — thousands of OEM models</td></tr>
+          <tr><td>OS-version fragmentation</td><td>Most users on latest 1–2</td><td>Long tail; minSdk choice matters</td></tr>
+          <tr><td>Distribution outside store</td><td>Enterprise / TestFlight only</td><td>APK sideload, alternative stores</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How Native Apps Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The App Lifecycle</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Apps don't really "exit" — the OS suspends them in memory and may reclaim them.</li>
+            <li><strong>iOS:</strong> launched → active → inactive → background → suspended → terminated. Background time is heavily limited.</li>
+            <li><strong>Android:</strong> Activity / Fragment lifecycle (<code>onCreate</code>, <code>onResume</code>, <code>onPause</code>, <code>onDestroy</code>). The OS may kill processes anytime under memory pressure.</li>
+            <li>Persist user state on every transition out — assume the process won't be there when they come back.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Declarative UI — SwiftUI &amp; Compose</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Both frameworks adopted the React-style "UI as a function of state" model. You describe what the UI <em>is</em>, not how to mutate it. State changes trigger a recomposition; the framework diffs and updates only what changed.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>SwiftUI:</strong> <code>@State</code>, <code>@Binding</code>, <code>@Observable</code>, <code>@Environment</code>.</li>
+            <li><strong>Compose:</strong> <code>remember</code>, <code>mutableStateOf</code>, <code>collectAsState</code>, <code>CompositionLocal</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Concurrency</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Swift Concurrency:</strong> <code>async</code>/<code>await</code>, structured concurrency, <code>actor</code> for isolation. Strict mode is the default in Swift 6.</li>
+            <li><strong>Kotlin Coroutines:</strong> suspending functions, structured scopes (<code>viewModelScope</code>, <code>lifecycleScope</code>), <code>Flow</code> for streams.</li>
+            <li>The main thread is sacred — never block it. UI work goes on it; everything else off it.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Persistence</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>iOS:</strong> SwiftData (modern), Core Data (legacy ORM), UserDefaults (small prefs), Keychain (secrets), CloudKit (sync).</li>
+            <li><strong>Android:</strong> Room (SQLite ORM), DataStore (replacing SharedPreferences), Encrypted SharedPreferences / Keystore.</li>
+            <li><strong>Cross-stack:</strong> SQLite is everywhere underneath; SQLDelight and GRDB are popular direct-SQL libraries.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>App Store Realities</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Apple's revenue cut:</strong> 30% standard, 15% small-business / subscriptions year 2+. EU's Digital Markets Act forces alternative payment processors in some cases.</li>
+            <li><strong>Google's revenue cut:</strong> 15% on first $1M, 30% beyond. User Choice Billing globally for many apps.</li>
+            <li><strong>Review focus:</strong> Apple reviews privacy &amp; UX strictly; Google focuses on policy &amp; security automation.</li>
+            <li><strong>Privacy nutrition labels:</strong> required on both stores — declare every SDK that touches user data.</li>
+            <li><strong>App Tracking Transparency</strong> (iOS) and the <strong>Privacy Sandbox</strong> (Android) have reshaped mobile advertising since 2021.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Testing &amp; Distribution Pipelines</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>iOS:</strong> XCTest / Swift Testing, XCUITest, TestFlight for beta builds, fastlane for CI automation.</li>
+            <li><strong>Android:</strong> JUnit + Espresso + Compose Test, Firebase Test Lab for device matrices, internal/closed/open testing tracks on Play.</li>
+            <li><strong>Crash reporting:</strong> Firebase Crashlytics, Sentry, Embrace, Bugsnag.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>When Native Is the Right Call</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Performance-critical UX</h5><p>Camera-heavy apps, AR, audio production, games, anything 60fps+ scrolling huge data.</p></div>
+        <div class="card teal"><h5>Deep platform integration</h5><p>Widgets, Live Activities, App Intents (iOS); App Widgets, foreground services (Android). Cross-platform layers always trail.</p></div>
+        <div class="card mid"><h5>Single-platform launch</h5><p>If you're shipping iOS-only or Android-only first, native costs less than the cross-platform overhead.</p></div>
+        <div class="card accent"><h5>Long-lived enterprise app</h5><p>Native gets first-class support for new OS features for as long as the platform exists.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Two parallel teams reinventing every feature</strong> — at least share a design system, naming, and product spec.</li>
+        <li><strong>Ignoring HIG / Material Guidelines</strong> — users notice when an iOS app feels Android and vice versa.</li>
+        <li><strong>Hardcoding screen sizes</strong> — phone, tablet, foldable, Mac (via Catalyst), Vision Pro all run iOS.</li>
+        <li><strong>Skipping accessibility</strong> — both platforms have great built-in screen readers; users expect VoiceOver / TalkBack to work.</li>
+        <li><strong>Long release cycles</strong> — review queues + staged rollouts mean a regression can take a week to fully unship.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client Platforms</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="web.html">Web</a><a href="mobile-cross-platform.html">Mobile (Cross-platform)</a><a href="desktop.html">Desktop</a><a href="tv-embedded.html">TV / Embedded / Wearables</a><a href="pwa.html">PWA</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

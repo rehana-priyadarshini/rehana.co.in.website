@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PWA · Client Platforms Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client Platforms · 6 of 6</div>
+    <h1>PWA — Progressive Web App</h1>
+    <p class="lede">A web app that installs to the home screen, runs offline, sends push notifications, and feels like a native app — without an app store. The middle path between web and native.</p>
+    <div class="tags"><span>Service Worker</span><span>Web App Manifest</span><span>Offline</span><span>Push</span><span>Installable</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>PWA</strong> = a regular website that adds a few APIs to become installable, offline-capable, and push-enabled.</li>
+          <li>Three core ingredients: <strong>HTTPS</strong>, a <strong>Web App Manifest</strong>, and a <strong>Service Worker</strong>.</li>
+          <li>Installs to home screen / desktop with no store review and no developer-account fee.</li>
+          <li>Updates ship instantly — no app review queue, no version skew.</li>
+          <li>Same codebase as your website. The PWA <em>is</em> the website, with a few extra files.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Three Ingredients</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. HTTPS</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Required. Service workers, push notifications, geolocation, camera, and most modern APIs are gated on a secure context (<code>localhost</code> exempted for dev).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Web App Manifest</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">A small JSON file linked from your HTML that tells the OS how to install the app: name, icons, theme color, start URL, display mode (<code>standalone</code> hides the browser chrome), screenshots for the install card.</p>
+<pre style="background:#f5f5f0;padding:12px;border-radius:6px;font-size:13px;line-height:1.5;overflow-x:auto;">{
+  "name": "My App",
+  "short_name": "My App",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1a4d8c",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Service Worker</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">A script that runs in a separate worker thread, intercepts network requests, and can serve from cache when offline. Acts as a programmable proxy between the page and the network.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Lifecycle:</strong> <code>install</code> (cache app shell) → <code>activate</code> (clean old caches) → <code>fetch</code> (intercept requests).</li>
+            <li>Updates in the background; activates on next page reload.</li>
+            <li>Can receive push messages and show notifications even when the page is closed.</li>
+            <li>Cannot touch the DOM directly — it talks to pages via <code>postMessage</code>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>Caching Strategies</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Strategy</th><th>What it does</th><th>Use for</th></tr></thead>
+        <tbody>
+          <tr><td>Cache First</td><td>Serve from cache, fall back to network</td><td>Static assets, fonts, app shell</td></tr>
+          <tr><td>Network First</td><td>Try network, fall back to cache</td><td>API responses where freshness matters</td></tr>
+          <tr><td>Stale While Revalidate</td><td>Serve cache immediately, refresh in background</td><td>Feeds, dashboards — fast and eventually fresh</td></tr>
+          <tr><td>Network Only</td><td>Always go to network</td><td>POSTs, analytics, anything mutating</td></tr>
+          <tr><td>Cache Only</td><td>Never hit network</td><td>Pre-cached offline content</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px;color:var(--muted);margin-top:12px;"><strong>Workbox</strong> (Google) is the de-facto library for writing service workers — handles routing, strategies, precaching, and updates.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Capabilities</div><h2>What PWAs Can Do (Today)</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Install</strong> to home screen / desktop with a launcher icon.</li>
+        <li><strong>Run offline</strong> via service worker caches.</li>
+        <li><strong>Push notifications</strong> (iOS Safari finally added this in 2023, gated on home-screen install).</li>
+        <li><strong>Background sync</strong> — queue mutations while offline, replay when back online (Chromium only).</li>
+        <li><strong>Camera, microphone, geolocation, accelerometer, Bluetooth, USB, NFC</strong> — all available via Web APIs (Bluetooth/USB/NFC mostly Chromium).</li>
+        <li><strong>File system access</strong> via the File System Access API (Chromium) or download/upload elsewhere.</li>
+        <li><strong>Share</strong> integration via the Web Share API.</li>
+        <li><strong>App shortcuts</strong> from long-pressing the icon.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Limits</div><h2>What PWAs Still Can't Do</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>App-store discovery</strong> — Microsoft Store accepts PWAs; Apple App Store and Google Play don't (you'd wrap with TWA / PWA Builder / Capacitor).</li>
+        <li><strong>Persistent background tasks</strong> are limited everywhere; iOS especially restrictive.</li>
+        <li><strong>Deep iOS integration</strong> — Live Activities, widgets, App Intents, HealthKit, ARKit are off-limits.</li>
+        <li><strong>In-app purchases through stores</strong> aren't available — but you also avoid the 30% cut on web payments.</li>
+        <li><strong>Storage quotas</strong> can be evicted by the OS under pressure (especially on iOS) — don't treat IndexedDB as durable.</li>
+        <li><strong>Safari lags</strong> — push permission flow, install UX, and some APIs land later or not at all.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Bridges</div><h2>Wrapping a PWA for the Stores</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Wrapper</th><th>Target</th><th>How</th></tr></thead>
+        <tbody>
+          <tr><td>TWA — Trusted Web Activity</td><td>Google Play</td><td>Android shell that opens your PWA fullscreen via Chrome Custom Tabs.</td></tr>
+          <tr><td>PWA Builder</td><td>Play, Microsoft Store, App Store</td><td>Microsoft tool that generates wrapper projects from a manifest URL.</td></tr>
+          <tr><td>Capacitor</td><td>iOS, Android, Web</td><td>Native shell with JS bridge; full access to native APIs from the same web codebase.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>When PWA Is the Right Choice</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Existing web app, mobile-shaped</h5><p>Add a manifest + service worker. Big ROI for low effort.</p></div>
+        <div class="card teal"><h5>Avoiding store fees / review</h5><p>Web + PWA gets you a 0% cut and instant updates.</p></div>
+        <div class="card mid"><h5>Internal tools / line-of-business</h5><p>PWAs are perfect — no MDM-store friction, deploy via URL.</p></div>
+        <div class="card accent"><h5>Need deep native integration</h5><p>Pick native or Capacitor — PWA alone won't reach widgets / HealthKit / Live Activities.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Cache lock-in</strong> — service worker caches a broken build forever. Always version caches and clean up on activate.</li>
+        <li><strong>Hijacking refresh</strong> — buggy <code>fetch</code> handlers can serve stale HTML and break updates.</li>
+        <li><strong>No update prompt</strong> — user gets old code until they remember to refresh; show a "new version available" toast.</li>
+        <li><strong>Missing icons / wrong manifest</strong> — install banners silently don't appear; test with Lighthouse.</li>
+        <li><strong>Treating IndexedDB as durable</strong> — iOS evicts after 7 days of disuse for non-installed sites.</li>
+        <li><strong>Push on iOS without install</strong> — permission UX requires home-screen install first; a generic "Allow notifications" prompt won't work.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client Platforms</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="web.html">Web</a><a href="mobile-native.html">Mobile (Native)</a><a href="mobile-cross-platform.html">Mobile (Cross-platform)</a><a href="desktop.html">Desktop</a><a href="tv-embedded.html">TV / Embedded / Wearables</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

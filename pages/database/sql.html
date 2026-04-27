@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SQL (Relational) · Database Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Strict schemas, ACID transactions, joins, and decades of tooling. The default choice when correctness matters and the shape of the data is known." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/sql.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="SQL (Relational) · Database Deep Dive" />
+<meta property="og:description" content="Strict schemas, ACID transactions, joins, and decades of tooling. The default choice when correctness matters and the shape of the data is known." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/sql.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="SQL (Relational) · Database Deep Dive" />
+<meta name="twitter:description" content="Strict schemas, ACID transactions, joins, and decades of tooling. The default choice when correctness matters and the shape of the data is known." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Deep Dive · 1 of 2</div>
+    <h1>SQL — Relational Databases</h1>
+    <p class="lede">Tables, rows, and a strict schema. ACID transactions, foreign keys, and a query language older than most engineers using it. The default for systems where the data has a shape and the truth has to be one truth.</p>
+    <div class="tags"><span>ACID</span><span>Joins</span><span>Schema</span><span>Indexes</span><span>Transactions</span><span>SQL</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Relation:</strong> a table — rows of the same shape, columns with declared types.</li>
+          <li><strong>Primary key:</strong> one column (or set) that uniquely identifies a row.</li>
+          <li><strong>Foreign key:</strong> a column that points at another table's primary key — the database enforces the link.</li>
+          <li><strong>Join:</strong> combine rows from two tables on a matching column. The reason relational won.</li>
+          <li><strong>Normalization:</strong> split data so each fact lives in exactly one place. Updates stay simple; reads need joins.</li>
+          <li><strong>ACID:</strong> Atomicity, Consistency, Isolation, Durability — the four guarantees that make money-handling possible.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Big Engines</div><h2>Pick Your Postgres</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>PostgreSQL</h5><p>The modern default. Standards-compliant, extensible (PostGIS, pgvector), excellent JSONB. Use it unless you have a specific reason not to.</p></div>
+        <div class="card teal"><h5>MySQL / MariaDB</h5><p>Ubiquitous, fast, simple. Behind much of the LAMP-era web. Watch defaults — older versions had loose ones.</p></div>
+        <div class="card mid"><h5>SQL Server</h5><p>Microsoft's enterprise stack. Tight Azure / .NET integration, strong tooling, T-SQL dialect.</p></div>
+        <div class="card accent"><h5>Oracle</h5><p>Long-standing enterprise heavyweight. Powerful, expensive, and entrenched in finance &amp; telco.</p></div>
+        <div class="card"><h5>SQLite</h5><p>An entire database in a single file linked into your app. Phones, browsers, edge — and increasingly, small servers.</p></div>
+        <div class="card teal"><h5>CockroachDB / Spanner / Yugabyte</h5><p>Distributed SQL — relational semantics across regions. Pay for it in latency.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When SQL Wins</div><h2>What Relational is Good At</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Invariants You Can't Negotiate</summary>
+        <div class="drill-body">
+          <p>Money never disappears, an order has a customer, a seat isn't sold twice. Foreign keys, <code>CHECK</code> constraints, unique indexes, and serializable transactions enforce these in the database — not hopefully in the app. If two services touch the same data, that enforcement is the only one that holds.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ad-hoc Queries You Didn't Anticipate</summary>
+        <div class="drill-body">
+          <p>SQL lets you ask new questions of old data: "revenue by cohort by month, but only for users who churned." No re-modeling, no rebuild — write the query. NoSQL stores typically answer fast <em>only</em> the questions you designed for; SQL answers most questions slowly and the right ones quickly (with the right index).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Joins Across Entities</summary>
+        <div class="drill-body">
+          <p>Orders → customers → addresses → countries. Done in one round-trip with a <code>JOIN</code>. The alternative — fetch, then fetch, then fetch — is the N+1 problem in disguise, and what you end up reinventing in document databases.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reporting &amp; BI</summary>
+        <div class="drill-body">
+          <p>Every analyst, BI tool, and dashboard speaks SQL. Choosing relational means your data is queryable by people who don't write code — a multiplier most teams underestimate.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Design</div><h2>Modeling Relational Data</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Normal Forms — The Pragmatic Take</summary>
+        <div class="drill-body">
+          <p><strong>3NF is usually the goal.</strong> Each non-key column depends on the key, the whole key, and nothing but the key. Higher forms (BCNF, 4NF) matter rarely; lower forms cause update anomalies daily.</p>
+          <p style="margin-top:6px;"><strong>Denormalize on purpose</strong> — for read-heavy paths, or to avoid joins on enormous tables. Document the duplication so the next person doesn't trust it as authoritative.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Keys &amp; IDs</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Auto-increment integers:</strong> compact, fast, but leak volume and enable enumeration. Don't put them in URLs.</li>
+            <li><strong>UUIDs:</strong> generated anywhere, no central coordination. Random UUIDs hurt B-tree locality — prefer UUIDv7 or ULID for time-ordered inserts.</li>
+            <li><strong>Composite keys:</strong> natural, but painful to reference. A surrogate key with a unique constraint on the natural columns is usually cleaner.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JSON Columns — The Escape Hatch</summary>
+        <div class="drill-body">
+          <p>Postgres <code>JSONB</code>, MySQL <code>JSON</code>, SQL Server <code>JSON</code>: store semi-structured data in a relational column when the shape is genuinely variable (settings blobs, third-party payloads). Index specific paths with expression indexes. Don't use it as an excuse to skip schema design — once you're querying inside the JSON, you're worse off than if you'd just made columns.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Polymorphism &amp; Inheritance</summary>
+        <div class="drill-body">
+          <p>Three options: <strong>single table</strong> with nullable columns (simple, sparse), <strong>table per type</strong> (clean, joins to read), <strong>shared table + type-specific tables</strong> (most flexible, most code). Pick by query patterns — most apps overengineer this.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Performance</div><h2>Where SQL Slows Down</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Indexes — the Right Ones</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Index for the queries you run, not the columns you have.</li>
+            <li>Composite indexes are <strong>order-sensitive</strong> — <code>(tenant_id, created_at)</code> ≠ <code>(created_at, tenant_id)</code>.</li>
+            <li>Covering indexes (include all columns the query needs) skip the table read entirely.</li>
+            <li>Every index slows writes and consumes space. Audit; remove the dead ones.</li>
+            <li><code>WHERE lower(email) = …</code> defeats a normal index — use a functional index or store normalized.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Read EXPLAIN Until You Can</summary>
+        <div class="drill-body">
+          <p>Sequential scan on a million-row table is the warning sign. Nested loop with millions of iterations is another. Most slow queries have one of three causes: missing index, bad statistics, or a query that fundamentally needs to read too much data.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Connection Pooling</summary>
+        <div class="drill-body">
+          <p>Postgres wants <em>fewer</em> connections than developers expect — usually 2–4× CPU cores on the DB server. Put pgBouncer or RDS Proxy in front so thousands of app connections share a small real pool. App-side pool size should account for instance count: <code>app_pool × instances ≤ db_max</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Read Replicas &amp; Sharding</summary>
+        <div class="drill-body">
+          <p><strong>Read replicas</strong> scale reads cheaply; mind replication lag — don't read your own write from a replica. <strong>Sharding</strong> (split by key) is the last resort: it gives up cross-shard joins and transactions. Consider distributed SQL (Spanner, CockroachDB) before sharding manually.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Operations</div><h2>Schema Evolution &amp; Backups</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Migrations are code.</strong> Check them in. Run them automatically. Make them backwards-compatible with the previous app version (expand → migrate → contract) so deploys can roll back.</li>
+        <li><strong>DDL on hot tables</strong> can lock for a long time. Postgres: <code>CREATE INDEX CONCURRENTLY</code>; add columns without defaults, then backfill in batches.</li>
+        <li><strong>Backups &amp; PITR:</strong> nightly snapshots plus continuous WAL archiving. Test restores — an untested backup is a wish, not a guarantee.</li>
+        <li><strong>Tools:</strong> Flyway, Liquibase (Java); Alembic (Python); Prisma Migrate, Drizzle Kit, Knex (Node); EF Core Migrations (.NET); Rails migrations (Ruby).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>String concatenation into SQL</strong> — the original sin. Always parameterize.</li>
+        <li><strong>Long-running transactions</strong> hold locks and bloat the WAL. Keep them short; never await user input inside one.</li>
+        <li><strong>Soft deletes everywhere</strong> — every query needs <code>WHERE deleted_at IS NULL</code> forever. Use them deliberately.</li>
+        <li><strong>Naive timestamps.</strong> Store <code>timestamptz</code> in UTC; convert at the edge.</li>
+        <li><strong>Premature sharding.</strong> A well-tuned single Postgres goes a long way before sharding pays for itself.</li>
+        <li><strong>Treating the ORM as the schema.</strong> The database has its own truth — keep migrations the source of authority, not generated artifacts.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>The Other Side</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="nosql.html">NoSQL Deep Dive →</a>
+        <a href="../server/persistence.html">Persistence (Server)</a>
+        <a href="../cloud/models/dbaas.html">DBaaS</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

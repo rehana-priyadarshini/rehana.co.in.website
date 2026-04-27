@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bundlers · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 1 of 8</div>
+    <h1>Bundlers</h1>
+    <p class="lede">The tools that turn hundreds of source files into a handful of optimized browser bundles. The single most consequential build-time choice in a modern frontend.</p>
+    <div class="tags"><span>Webpack</span><span>Vite</span><span>esbuild</span><span>Rollup</span><span>Parcel</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Module graph:</strong> the bundler reads your entry file, follows every <code>import</code>, and builds a graph of all source files.</li>
+          <li><strong>Tree-shaking</strong> drops unused exports — so importing <code>lodash-es</code> only ships what you use.</li>
+          <li><strong>Code-splitting</strong> emits multiple chunks loaded on demand, keeping the first-paint bundle small.</li>
+          <li><strong>HMR (Hot Module Replacement)</strong> swaps changed modules into the running app without losing state.</li>
+          <li><strong>Dev server vs production build</strong> — usually two very different pipelines; dev is fast and unminified, prod is slow and aggressive.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Bundlers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Built in</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>Vite</td><td>Rollup + esbuild + native ESM</td><td>Modern default for SPAs &amp; SSR; instant dev server.</td></tr>
+          <tr><td>Webpack</td><td>JavaScript</td><td>Mature, plugin-rich, still the default in many enterprise codebases.</td></tr>
+          <tr><td>esbuild</td><td>Go</td><td>10–100× faster than JS bundlers; powers many other tools.</td></tr>
+          <tr><td>Rollup</td><td>JavaScript</td><td>Library author's favorite — smallest, cleanest output.</td></tr>
+          <tr><td>Parcel</td><td>Rust + JS</td><td>Zero-config, automatic everything.</td></tr>
+          <tr><td>Turbopack</td><td>Rust</td><td>Vercel's next-gen bundler powering Next.js (Webpack successor).</td></tr>
+          <tr><td>Rspack</td><td>Rust</td><td>Drop-in Webpack-compatible bundler from ByteDance.</td></tr>
+          <tr><td>Bun (bundler)</td><td>Zig</td><td>Bun's all-in-one runtime + package manager + bundler.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How Bundlers Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Pipeline</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Resolve:</strong> figure out where each <code>import</code> points (node_modules / aliases / virtual modules).</li>
+            <li><strong>Load &amp; parse:</strong> read source files, often via loaders/plugins (TS, JSX, CSS, SVG, images).</li>
+            <li><strong>Transform:</strong> transpile, inject env vars, expand macros, generate code.</li>
+            <li><strong>Bundle:</strong> walk the graph, deduplicate, merge into chunks.</li>
+            <li><strong>Optimize:</strong> minify, tree-shake, hash filenames, generate source maps.</li>
+            <li><strong>Emit:</strong> write the final assets to <code>dist/</code>.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Code-Splitting Patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Route-based:</strong> each page becomes its own chunk (most meta-frameworks do this automatically).</li>
+            <li><strong>Component-level:</strong> <code>const Modal = lazy(() =&gt; import('./Modal'))</code> for heavy UI.</li>
+            <li><strong>Vendor splitting:</strong> isolate large third-party libs (React, MUI) so they cache across deploys.</li>
+            <li><strong>Critical CSS:</strong> inline above-the-fold styles; defer the rest.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Vite vs Webpack — The Modern Showdown</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>—</th><th>Vite</th><th>Webpack</th></tr></thead>
+            <tbody>
+              <tr><td>Dev server</td><td>Native ESM, no bundling — instant</td><td>Bundles upfront — slow on big apps</td></tr>
+              <tr><td>HMR</td><td>Sub-50ms by design</td><td>Fine, but slower</td></tr>
+              <tr><td>Production build</td><td>Rollup under the hood</td><td>Webpack with optimization plugins</td></tr>
+              <tr><td>Config complexity</td><td>Minimal, sensible defaults</td><td>Powerful, often verbose</td></tr>
+              <tr><td>Plugin ecosystem</td><td>Growing fast (Rollup-compatible)</td><td>Largest, most mature</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Source Maps &amp; Debugging</summary>
+        <div class="drill-body">
+          <p>Source maps map minified production code back to original source — essential for debugging in browser dev tools and parsing errors in Sentry. Common modes: <code>cheap-module-source-map</code> (dev), <code>hidden-source-map</code> (prod, uploaded to Sentry, not exposed to users).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The "Rust-ification" of Bundling</summary>
+        <div class="drill-body">
+          <p>Most modern bundling tools are now written in Rust or Go: <strong>esbuild</strong> (Go), <strong>SWC</strong>, <strong>Turbopack</strong>, <strong>Rspack</strong>, <strong>Lightning CSS</strong>, <strong>Biome</strong>. Result: 10–100× faster builds, especially in monorepos.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Common Pitfalls</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Massive vendor chunk</strong> — one big import (moment.js, lodash) bloats everything.</li>
+            <li><strong>Tree-shaking failures</strong> — CommonJS modules aren't shaken; use ESM where possible.</li>
+            <li><strong>Polyfill explosion</strong> — over-aggressive browserslist targets ship megabytes of unneeded shims.</li>
+            <li><strong>Source-map size</strong> — eats build time &amp; bandwidth if not using <code>hidden-source-map</code>.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Which to Choose</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>New SPA / Project</h5><p>Vite — fastest DX, sane defaults, growing ecosystem.</p></div>
+        <div class="card teal"><h5>Library Author</h5><p>Rollup or tsup (esbuild) — smallest output, ESM/CJS dual builds.</p></div>
+        <div class="card mid"><h5>Existing Webpack Codebase</h5><p>Stay or migrate to Rspack — drop-in compatibility, much faster.</p></div>
+        <div class="card accent"><h5>Next.js / React Stack</h5><p>Whatever your meta-framework ships with (Turbopack increasingly).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="package-managers.html">Package Managers</a><a href="transpilers.html">Transpilers</a><a href="css-systems.html">CSS Systems</a><a href="state-management.html">State Management</a><a href="component-libraries.html">Component Libraries</a><a href="accessibility.html">Accessibility</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

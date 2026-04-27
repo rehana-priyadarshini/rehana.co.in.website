@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Integrations · Server Responsibilities Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Server Responsibilities · 5 of 6</div>
+    <h1>Integrations</h1>
+    <p class="lede">Calling someone else's API — payments, email, SMS, CRMs, AI providers — without making their outage your outage. The shape of resilience in a distributed world.</p>
+    <div class="tags"><span>Stripe</span><span>Twilio</span><span>SendGrid</span><span>Webhooks</span><span>Retries</span><span>Idempotency</span><span>Secrets</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Outbound integration:</strong> your server calls a third-party API (charge a card, send an SMS).</li>
+          <li><strong>Inbound integration / webhook:</strong> a third party calls <em>you</em> when something happens on their side.</li>
+          <li><strong>Idempotency key:</strong> a unique ID on a request so retries don't double-charge or double-send.</li>
+          <li><strong>Circuit breaker:</strong> stop calling an obviously broken downstream so your own service doesn't pile up.</li>
+          <li><strong>Anti-corruption layer:</strong> a thin internal wrapper that hides the vendor's data model from your domain.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Usual Vendors</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Capability</th><th>Common providers</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td>Payments</td><td>Stripe, Adyen, Braintree, Square</td><td>PCI scope, idempotency, webhook signature verification, 3DS / SCA flows.</td></tr>
+          <tr><td>Email (transactional)</td><td>SendGrid, Postmark, AWS SES, Resend</td><td>SPF / DKIM / DMARC, bounce + complaint handling, deliverability reputation.</td></tr>
+          <tr><td>SMS &amp; voice</td><td>Twilio, Vonage, MessageBird</td><td>Country regulations (10DLC, A2P), opt-out handling, cost surprises.</td></tr>
+          <tr><td>Push notifications</td><td>APNs, FCM, OneSignal</td><td>Token rotation, silent vs visible payloads, quiet hours.</td></tr>
+          <tr><td>Identity</td><td>Auth0, Okta, Cognito, Clerk, WorkOS</td><td>SSO contracts (SAML, OIDC), SCIM provisioning, vendor lock-in.</td></tr>
+          <tr><td>Search</td><td>Algolia, Elastic, Typesense, Meilisearch</td><td>Index drift vs source of truth, reindex storms.</td></tr>
+          <tr><td>AI / LLMs</td><td>Anthropic, OpenAI, Bedrock, Vertex</td><td>Streaming, token costs, rate limits, prompt injection from upstream data.</td></tr>
+          <tr><td>Analytics &amp; CRM</td><td>Segment, HubSpot, Salesforce, Intercom</td><td>PII handling, GDPR deletion, eventual consistency.</td></tr>
+          <tr><td>Storage &amp; CDN</td><td>S3, GCS, Cloudflare R2, Cloudinary</td><td>Signed URLs, lifecycle rules, egress costs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Outbound</div><h2>Calling Someone Else's API</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Timeouts, Retries, and Backoff</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Set an explicit <strong>connect timeout</strong> and <strong>read timeout</strong>. Default-infinite timeouts hang your service.</li>
+            <li>Retry on transient failures (5xx, network errors, 429) with <strong>exponential backoff + jitter</strong>.</li>
+            <li>Never retry non-idempotent calls without an idempotency key — duplicate charges and double-sent emails come from this.</li>
+            <li>Cap total retry budget; a 30-second cascade on every request takes down the whole service.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Idempotency Keys</summary>
+        <div class="drill-body">
+          <p>Most modern APIs (Stripe, Square, AWS) accept an <code>Idempotency-Key</code> header. Generate one per logical operation and persist it alongside the operation. Reusing the key lets you retry safely without double-side-effects.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Circuit Breakers &amp; Bulkheads</summary>
+        <div class="drill-body">
+          <p><strong>Circuit breaker:</strong> after N consecutive failures, stop calling the dependency for a cool-off period. Fail fast with a fallback. Libraries: Resilience4j (JVM), Polly (.NET), opossum (Node).</p>
+          <p style="margin-top:6px;"><strong>Bulkhead:</strong> isolate resources per dependency (separate thread pools / semaphores) so one slow vendor can't starve every request thread.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-Corruption Layer</summary>
+        <div class="drill-body">
+          <p>Wrap each vendor in an internal interface — <code>EmailSender</code>, <code>PaymentProcessor</code>. Your domain code talks to the interface, not to SendGrid's SDK. When you switch from SendGrid to Postmark in a year, you change one file.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Secrets Management</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Never commit API keys. Use AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault, or Doppler.</li>
+            <li>Inject at runtime via env vars or sidecar — not baked into images.</li>
+            <li>Rotate on a schedule and after any suspected leak. Use <strong>scoped</strong> keys (read-only / write-only) wherever the vendor offers them.</li>
+            <li>Have a kill-switch: a way to revoke a vendor key in &lt; 5 minutes.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Inbound</div><h2>Receiving Webhooks</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Verify the signature.</strong> Stripe, GitHub, Slack, etc. all sign their payloads with HMAC. An unverified webhook endpoint is an open door.</li>
+        <li><strong>Respond quickly.</strong> Acknowledge with 2xx in &lt; 1–2 seconds. Hand the heavy work to a queue (see Background Jobs).</li>
+        <li><strong>Be idempotent.</strong> Vendors retry on timeouts and the same event will arrive twice. Dedupe by event ID.</li>
+        <li><strong>Replay capability.</strong> Log raw payloads so you can re-process a missed window after an outage.</li>
+        <li><strong>Order isn't guaranteed.</strong> A "subscription.updated" can arrive before the "customer.created" you expected. Design for out-of-order events.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Outbound Network</div><h2>SSRF &amp; Egress Controls</h2></div>
+    <div class="chapter-body">
+      <p>Any feature that fetches a user-supplied URL (image previews, OAuth callbacks, webhook test buttons) is an SSRF risk — the user can point it at your cloud metadata service or internal admin endpoints.</p>
+      <ul style="font-size:14px;line-height:1.6;margin-top:8px;">
+        <li>Allow-list schemes (<code>https</code> only) and resolve DNS yourself; block private IP ranges (RFC 1918, link-local, IMDS).</li>
+        <li>Run outbound calls from a network that <em>cannot</em> reach internal services or the metadata endpoint.</li>
+        <li>Tag and rate-limit egress per vendor — useful for cost control too.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Inline calls on the request path</strong> — a 12s vendor latency becomes a 12s user wait. Move non-essential work to a queue.</li>
+        <li><strong>Trusting webhook payloads to be correct.</strong> Treat them as a hint; re-fetch from the vendor's API for the canonical state.</li>
+        <li><strong>No vendor-down plan.</strong> Decide in advance: degrade gracefully, queue and retry, or fail loudly?</li>
+        <li><strong>Hard-coded vendor specifics</strong> leaking through your domain — Stripe IDs in business logic, SendGrid templates in core code paths.</li>
+        <li><strong>Running integration tests against prod.</strong> Use sandbox modes; record/replay (VCR, MSW) in CI.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Server Responsibilities</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="auth-sessions.html">Authentication &amp; Sessions</a><a href="authorization.html">Authorization</a><a href="validation.html">Validation</a><a href="persistence.html">Persistence</a><a href="background-jobs.html">Background Jobs</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

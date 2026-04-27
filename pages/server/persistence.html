@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Persistence · Server Responsibilities Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Server Responsibilities · 4 of 6</div>
+    <h1>Persistence</h1>
+    <p class="lede">How the server moves data between memory and durable storage — through ORMs, query builders, transactions, and migrations. Where most performance and correctness problems eventually surface.</p>
+    <div class="tags"><span>ORMs</span><span>Transactions</span><span>Migrations</span><span>Connection Pools</span><span>N+1</span><span>Caching</span></div>
+    <a class="back" href="../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Repository / DAO:</strong> the layer that hides "how data is stored" from "what the app does."</li>
+          <li><strong>ORM:</strong> object-relational mapper — maps rows to objects so you can write code instead of SQL.</li>
+          <li><strong>Transaction:</strong> a unit of work that succeeds or fails atomically (the A in ACID).</li>
+          <li><strong>Migration:</strong> a versioned, repeatable change to the schema, checked into source control.</li>
+          <li><strong>Connection pool:</strong> a fixed set of reusable DB connections, sized to match the database — not the app.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Layers</div><h2>From Object to Row</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Raw SQL Drivers</h5><p>pg, mysql2, jdbc. Fastest, most explicit, no magic. Pair with parameterized queries always.</p></div>
+        <div class="card teal"><h5>Query Builders</h5><p>Knex, jOOQ, sqlx, Kysely. Programmatic SQL — composable, type-safe, no surprises.</p></div>
+        <div class="card mid"><h5>Lightweight ORMs</h5><p>Drizzle, Prisma, SQLAlchemy Core. Schema-aware but stay close to SQL.</p></div>
+        <div class="card accent"><h5>Full ORMs</h5><p>Hibernate/JPA, Entity Framework, Django ORM, ActiveRecord. Rich object graphs, lazy loading, lifecycle hooks.</p></div>
+      </div>
+      <p style="margin-top:10px;font-size:14px;color:var(--muted);">Heavier ORMs trade clarity for productivity. They shine on CRUD-heavy apps and obscure performance characteristics on hot paths — know when to drop down.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Transactions</div><h2>Getting Atomicity Right</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Isolation Levels</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Level</th><th>Allows</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td>Read Committed</td><td>Non-repeatable reads, phantoms.</td><td>Default in Postgres &amp; Oracle. Fine for most CRUD.</td></tr>
+              <tr><td>Repeatable Read</td><td>Phantoms (in some DBs).</td><td>Reports needing a stable snapshot mid-transaction.</td></tr>
+              <tr><td>Serializable</td><td>Nothing — behaves as if transactions ran one at a time.</td><td>Money, inventory, anywhere correctness &gt; throughput. Expect retries on conflict.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Optimistic vs Pessimistic Locking</summary>
+        <div class="drill-body">
+          <p><strong>Optimistic:</strong> include a <code>version</code> column; on UPDATE, check the version hasn't changed; retry on conflict. Great for low contention.</p>
+          <p style="margin-top:6px;"><strong>Pessimistic:</strong> <code>SELECT ... FOR UPDATE</code> — others wait. Right when contention is high or retries are expensive.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Unit of Work</summary>
+        <div class="drill-body">
+          <p>Group all changes a request makes, flush once, commit once. Don't sprinkle individual saves through your service — it makes rollback ineffective and produces N round-trips where one would do.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Outbox Pattern</summary>
+        <div class="drill-body">
+          <p>If a transaction must <em>also</em> publish an event ("order placed → email user"), write the event to an <code>outbox</code> table in the same transaction. A separate worker reads the outbox and publishes — guaranteeing the event ships iff the data was committed. Avoids the dual-write problem.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Performance</div><h2>The Usual Suspects</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The N+1 Query Problem</summary>
+        <div class="drill-body">
+          <p>You load 50 orders, then iterate to load each one's customer — 1 + 50 round-trips instead of 1. Fix with eager loading (<code>JOIN FETCH</code>, <code>include</code>, <code>select_related</code>) or DataLoader-style batching. The single biggest performance bug in ORM-heavy code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Connection Pool Sizing</summary>
+        <div class="drill-body">
+          <p>App pool size should be smaller than the DB's <code>max_connections</code> divided by the number of app instances. Postgres usually wants <strong>fewer</strong> connections than developers expect — pgBouncer or RDS Proxy in front lets thousands of app connections share a small pool of real ones.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Indexes &amp; Query Plans</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Read <code>EXPLAIN ANALYZE</code> until you can. Sequential scan on a million-row table is the warning sign.</li>
+            <li>Index for the queries you actually run — composite indexes are order-sensitive.</li>
+            <li>Every index slows writes. Audit them periodically; remove unused ones.</li>
+            <li>Functions in WHERE clauses defeat indexes (<code>WHERE lower(email) = …</code>) — use a functional index or store normalized.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Caching Layers</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>In-process:</strong> LRU caches inside the app — fastest, but per-instance and stale-prone.</li>
+            <li><strong>Distributed:</strong> Redis / Memcached. Set a TTL; design for cache miss being correct, not just fast.</li>
+            <li><strong>Read-through vs write-through:</strong> read-through is simpler; write-through keeps cache fresh but doubles write latency.</li>
+            <li><strong>Invalidation</strong> is the hard part — prefer short TTLs over clever event-based invalidation when you can.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Schema Evolution</div><h2>Migrations Without Downtime</h2></div>
+    <div class="chapter-body">
+      <p>Migrations are code. Check them in. Run them automatically. Make them <strong>backwards-compatible</strong> with the previous app version so deploys can roll back.</p>
+      <ul style="font-size:14px;line-height:1.6;margin-top:8px;">
+        <li><strong>Expand → Migrate → Contract:</strong> add new column, dual-write, backfill, switch reads, drop old column. Each step ships independently.</li>
+        <li><strong>Avoid long-locking DDL on hot tables.</strong> In Postgres, prefer <code>CREATE INDEX CONCURRENTLY</code>; add columns with no default, then backfill.</li>
+        <li><strong>Tools:</strong> Flyway, Liquibase (Java); Alembic (Python); Prisma Migrate, Drizzle Kit, Knex (Node); EF Core Migrations (.NET); Rails migrations (Ruby).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Long-running transactions</strong> — they hold locks and bloat the WAL. Keep them short; never await user input inside one.</li>
+        <li><strong>Distributed transactions across services</strong> — usually a sign you've drawn the service boundary wrong. Prefer the outbox pattern or sagas.</li>
+        <li><strong>Soft deletes everywhere</strong> — every query needs <code>WHERE deleted_at IS NULL</code> forever. Use them deliberately, not by default.</li>
+        <li><strong>Forgetting timezone-aware timestamps</strong> — store as <code>timestamptz</code>; never as a naive <code>timestamp</code>.</li>
+        <li><strong>Auto-increment IDs in URLs</strong> — they leak volume and enable enumeration. Use UUIDs (or ULIDs) for anything user-visible.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Server Responsibilities</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="auth-sessions.html">Authentication &amp; Sessions</a><a href="authorization.html">Authorization</a><a href="validation.html">Validation</a><a href="integrations.html">Integrations</a><a href="background-jobs.html">Background Jobs</a>
+        <a href="../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Web · Client Platforms Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client Platforms · 1 of 6</div>
+    <h1>Web</h1>
+    <p class="lede">The browser is the most-installed runtime on Earth — no SDK, no app store, instant updates. The trade is sandboxed access to the device and a moving target of standards across vendors.</p>
+    <div class="tags"><span>HTML</span><span>CSS</span><span>JavaScript</span><span>TypeScript</span><span>WebAssembly</span><span>Web APIs</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Three core technologies:</strong> HTML for structure, CSS for presentation, JavaScript for behavior. TypeScript compiles down to JS.</li>
+          <li><strong>Rendering engines:</strong> Blink (Chrome, Edge, Brave), WebKit (Safari, all iOS browsers), Gecko (Firefox). Three implementations of the same standards.</li>
+          <li><strong>Same-origin policy</strong> isolates each site. CORS opens specific cross-origin holes.</li>
+          <li><strong>The platform is the spec:</strong> WHATWG (HTML, DOM, Fetch), W3C (CSS, ARIA), TC39 (JavaScript). Vendors implement, devs use.</li>
+          <li><strong>Backwards compatibility</strong> is a hard rule — code from 1996 still runs. Nothing else in computing has this property.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reach</div><h2>Why Web Wins on Distribution</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Zero install:</strong> click a link, you're using the app. No store review, no version skew.</li>
+        <li><strong>Instant deploy:</strong> ship 20 times a day. Native apps wait days for review.</li>
+        <li><strong>Universal:</strong> every OS, every form factor, every locale.</li>
+        <li><strong>Discoverable:</strong> search engines index it. Apps don't.</li>
+        <li><strong>No revenue cut</strong> on payments — vs 15–30% on iOS/Android stores.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How a Page Becomes Pixels</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Critical Rendering Path</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Parse HTML</strong> → DOM tree.</li>
+            <li><strong>Parse CSS</strong> → CSSOM. Render-blocking by default.</li>
+            <li><strong>Render tree</strong> = DOM × CSSOM, minus <code>display:none</code> nodes.</li>
+            <li><strong>Layout</strong> (a.k.a. reflow) — compute geometry.</li>
+            <li><strong>Paint</strong> — fill pixels into layers.</li>
+            <li><strong>Composite</strong> — GPU stitches layers together.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Rendering Modes</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>CSR</strong> (Client-Side Rendering) — server ships an empty shell, JS builds the UI. Fast subsequent navigation, slow first paint.</li>
+            <li><strong>SSR</strong> (Server-Side Rendering) — server renders HTML per request. Good first paint, more server cost.</li>
+            <li><strong>SSG</strong> (Static Site Generation) — pre-render at build time. Fast and cheap; stale until rebuild.</li>
+            <li><strong>ISR</strong> (Incremental Static Regen) — SSG with on-demand revalidation. Vercel/Next popularized it.</li>
+            <li><strong>RSC</strong> (React Server Components) — components rendered on the server stream into a client app.</li>
+            <li><strong>Edge</strong> — SSR running in a region near the user (Cloudflare, Vercel Edge).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Core Web Vitals — What Google Measures</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Metric</th><th>Measures</th><th>Good</th></tr></thead>
+            <tbody>
+              <tr><td>LCP (Largest Contentful Paint)</td><td>When the main content appears</td><td>≤ 2.5s</td></tr>
+              <tr><td>INP (Interaction to Next Paint)</td><td>Responsiveness to user input</td><td>≤ 200ms</td></tr>
+              <tr><td>CLS (Cumulative Layout Shift)</td><td>How much content jumps around</td><td>≤ 0.1</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:14px;color:var(--muted);margin-top:8px;">INP replaced FID in March 2024. These feed Google search ranking.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Web Platform APIs</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Storage:</strong> localStorage, IndexedDB, Cache API, OPFS.</li>
+            <li><strong>Network:</strong> Fetch, WebSockets, Server-Sent Events, WebRTC, WebTransport.</li>
+            <li><strong>Hardware:</strong> WebGL, WebGPU, Web Audio, MediaDevices (camera/mic), Geolocation, WebUSB, WebHID, Web Bluetooth.</li>
+            <li><strong>Workers:</strong> Web Workers, Service Workers (offline), Shared Workers.</li>
+            <li><strong>Graphics:</strong> Canvas 2D, WebGL, WebGPU.</li>
+            <li><strong>Identity &amp; payments:</strong> WebAuthn (passkeys), Payment Request, Credential Management.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>WebAssembly</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">A binary format that runs near-native speed in every modern browser. Lets C/C++/Rust/Go ship to the web — Figma's editor, Photoshop Web, Google Earth, ffmpeg.wasm. Not a JS replacement; pairs with JS via the <code>WebAssembly</code> JS API.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Browser Compatibility</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Baseline</strong> (web.dev/baseline) — features supported across the latest two versions of all major browsers.</li>
+            <li><strong>caniuse.com</strong> — the canonical "is this safe yet?" reference.</li>
+            <li><strong>Browserslist</strong> — config used by Babel, autoprefixer, ESLint to know what to compile down to.</li>
+            <li><strong>Safari often lags</strong> on new APIs by 6–18 months. Plan for it.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Security Model</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Same-origin policy</strong> — scheme + host + port must match.</li>
+            <li><strong>CORS</strong> — server opt-in for cross-origin requests.</li>
+            <li><strong>CSP</strong> (Content Security Policy) — header that restricts what scripts/styles can load.</li>
+            <li><strong>SameSite cookies</strong> — default Lax; mitigates CSRF.</li>
+            <li><strong>HTTPS-only</strong> — required for service workers, most modern APIs, and just in general.</li>
+            <li><strong>Subresource Integrity</strong> — hash third-party scripts so a CDN compromise can't inject code.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>When Web Is and Isn't the Right Choice</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Reach &amp; SEO matter most</h5><p>Web. Marketing sites, B2B SaaS, content, dashboards — almost always start here.</p></div>
+        <div class="card teal"><h5>Need camera/sensors/background</h5><p>Web has gotten 80% there (PWA), but native still wins for the last mile — barcode scanning, ARKit, persistent background work.</p></div>
+        <div class="card mid"><h5>Want app-store presence</h5><p>Either ship native or wrap a PWA in Capacitor / Tauri / TWA.</p></div>
+        <div class="card accent"><h5>Heavy graphics / games</h5><p>WebGPU + WebAssembly is now viable for many cases (Figma, Photoshop Web). For AAA games, still native.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Shipping a 3 MB JS bundle</strong> for a content site. Code-split, lazy-load, prefer SSR/SSG.</li>
+        <li><strong>Layout shift</strong> from images without dimensions or late-loading fonts.</li>
+        <li><strong>Blocking the main thread</strong> with sync work — use Web Workers for anything heavy.</li>
+        <li><strong>Polyfilling for IE11</strong> in 2026. Drop it; use Baseline.</li>
+        <li><strong>Treating the web like an app</strong> — breaking back/forward, link sharing, scroll restoration.</li>
+        <li><strong>Ignoring Safari</strong> until launch week.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client Platforms</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="mobile-native.html">Mobile (Native)</a><a href="mobile-cross-platform.html">Mobile (Cross-platform)</a><a href="desktop.html">Desktop</a><a href="tv-embedded.html">TV / Embedded / Wearables</a><a href="pwa.html">PWA</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mobile (Cross-platform) · Client Platforms Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client Platforms · 3 of 6</div>
+    <h1>Mobile (Cross-platform)</h1>
+    <p class="lede">One codebase, two app stores. The promise is real — and so are the trade-offs in performance, native integration, and platform-feel.</p>
+    <div class="tags"><span>React Native</span><span>Flutter</span><span>.NET MAUI</span><span>Kotlin Multiplatform</span><span>Ionic / Capacitor</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Cross-platform</strong> = one codebase that compiles or runs on iOS and Android (often web/desktop too).</li>
+          <li>Three architectural approaches: <em>JS bridge → native widgets</em> (RN), <em>own renderer over a canvas</em> (Flutter), <em>shared logic + native UI</em> (KMP).</li>
+          <li>You still need <strong>a Mac and Xcode</strong> to ship the iOS build — no framework escapes Apple's tooling.</li>
+          <li>Most apps end up writing <strong>some native code</strong> for camera, push, payments, deep links, widgets.</li>
+          <li>App-store review applies the same rules — frameworks don't get you a faster path.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Options</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Framework</th><th>Language</th><th>UI strategy</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>React Native</td><td>JS / TS</td><td>JS → native widgets</td><td>React teams; products that want platform-native feel.</td></tr>
+          <tr><td>Flutter</td><td>Dart</td><td>Skia/Impeller canvas — own widgets</td><td>Pixel-identical brand UI across platforms; great animations.</td></tr>
+          <tr><td>.NET MAUI</td><td>C#</td><td>Abstraction over native widgets</td><td>Microsoft shops; line-of-business apps.</td></tr>
+          <tr><td>Kotlin Multiplatform</td><td>Kotlin</td><td>Shared logic; native UI per platform</td><td>Native UI quality with shared business logic / networking / DB.</td></tr>
+          <tr><td>Ionic + Capacitor</td><td>JS / TS (web)</td><td>WebView wrapping a web app</td><td>Web teams shipping a "good enough" mobile app.</td></tr>
+          <tr><td>Expo (RN)</td><td>JS / TS</td><td>RN with managed tooling</td><td>Most new RN projects start here.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How They Actually Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>React Native — Native widgets, JS logic</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">JS executes in JSC (or Hermes) on a separate thread. The new <strong>Fabric</strong> renderer + <strong>JSI</strong> (JavaScript Interface) replaced the old async bridge — synchronous calls into native, no more JSON serialization on every frame. Result: scroll perf and gesture handling close to native.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>UI is real <code>UIView</code> / <code>android.View</code>, not a canvas.</li>
+            <li>Hot reload &amp; OTA updates (CodePush, EAS Update) — ship JS changes without store review.</li>
+            <li><strong>Expo</strong> is now the recommended way in.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Flutter — Own renderer, Dart everywhere</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Dart compiles AOT to native ARM. Flutter draws every pixel itself via Skia / Impeller — your <code>Button</code> isn't a <code>UIButton</code>, it's a Flutter widget that <em>looks like</em> one. Pros: identical UI across OS/version, great animations. Cons: accessibility &amp; platform conventions need explicit work; binary size baseline is larger.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Hot reload is famously fast.</li>
+            <li>Ships to iOS, Android, web, macOS, Windows, Linux, embedded — one codebase.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Kotlin Multiplatform — Share logic, not UI</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Different philosophy: share networking, models, business logic, persistence in Kotlin; write the UI <em>natively</em> (SwiftUI on iOS, Compose on Android). Compose Multiplatform (JetBrains) is bringing shared UI as an option, but the value prop is "native UI without parallel logic codebases."</p>
+          <p style="font-size:14px;line-height:1.6">Used in production by Netflix, Cash App, Philips, JetBrains.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>.NET MAUI — Successor to Xamarin</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">C# / XAML, abstracts native controls per platform. Same C# you write for the backend. Targets iOS, Android, macOS (Catalyst), Windows. Most popular inside Microsoft-stack enterprises.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ionic + Capacitor — The WebView Approach</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">A web app rendered in a <code>WKWebView</code> / <code>Android WebView</code>, with a JS bridge for native APIs (camera, geolocation, etc.). Capacitor replaced the older Cordova. Cheapest path if you already have a web app — but the gestures, scroll feel, and keyboard handling never quite reach native.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The "Native Module" Reality</summary>
+        <div class="drill-body">
+          <p style="font-size:14px;line-height:1.6">Every cross-platform app eventually needs a native module — for the camera library that doesn't have a JS wrapper, for the audio session, for the in-app purchase quirk. Plan for this: pick a framework whose native bridge you'd actually want to write in (Swift / Kotlin / Objective-C / Java).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Performance Trade-offs</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Startup:</strong> Flutter and KMP cold-start close to native; RN is improving with Hermes; WebView-based apps are the slowest.</li>
+            <li><strong>Scrolling huge lists:</strong> RN (with <code>FlashList</code>) and Flutter both ship 60+ fps; WebView typically can't.</li>
+            <li><strong>Heavy animations:</strong> Flutter's strength. RN has <code>Reanimated</code> on the UI thread.</li>
+            <li><strong>Binary size:</strong> RN ~10–15 MB minimum, Flutter ~20+ MB minimum, KMP near-native.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Choosing a Framework</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Web team going mobile</h5><p>React Native (Expo). The mental model and ecosystem carry over.</p></div>
+        <div class="card teal"><h5>Brand-driven UI everywhere</h5><p>Flutter. Same pixels on every device.</p></div>
+        <div class="card mid"><h5>Native UI is non-negotiable</h5><p>Kotlin Multiplatform — share logic, write SwiftUI / Compose.</p></div>
+        <div class="card accent"><h5>Existing web app, minimal budget</h5><p>Ionic + Capacitor (or wrap a PWA). Accept the WebView feel.</p></div>
+        <div class="card"><h5>Microsoft stack shop</h5><p>.NET MAUI. C# everywhere from API to phone.</p></div>
+        <div class="card teal"><h5>Single-platform launch</h5><p>Don't go cross-platform. Just write native.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Assuming "write once, run everywhere"</strong> — you'll still have iOS-only and Android-only branches in your code.</li>
+        <li><strong>Ignoring platform UI guidelines</strong> — back gestures, share sheets, system fonts, status bar handling differ.</li>
+        <li><strong>OTA-updating native code</strong> — Apple's review rules forbid runtime-shipping new <em>features</em> as JS.</li>
+        <li><strong>Skipping native engineers</strong> — you'll need at least one who can debug Xcode build errors and write a native module.</li>
+        <li><strong>Binary bloat</strong> from over-eager dependencies — every npm package shows up in app size.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client Platforms</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="web.html">Web</a><a href="mobile-native.html">Mobile (Native)</a><a href="desktop.html">Desktop</a><a href="tv-embedded.html">TV / Embedded / Wearables</a><a href="pwa.html">PWA</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

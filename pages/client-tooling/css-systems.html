@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CSS Systems · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 4 of 8</div>
+    <h1>CSS Systems</h1>
+    <p class="lede">How a frontend team scales styling across thousands of components without losing its mind. Utility-first, scoped CSS, design tokens — every approach has a vocal fan club.</p>
+    <div class="tags"><span>Tailwind</span><span>Sass</span><span>CSS Modules</span><span>CSS-in-JS</span><span>Design Tokens</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Cascade:</strong> CSS resolves conflicting rules by specificity, source order, and origin.</li>
+          <li><strong>Specificity wars</strong> are why teams reach for scoped systems (CSS Modules, Tailwind, BEM) — naming + isolation prevent global collisions.</li>
+          <li><strong>Design tokens</strong> are named values (colors, spacing, type) defined once, used everywhere.</li>
+          <li><strong>CSS variables</strong> (custom properties) make theming &amp; dark mode trivial in modern browsers.</li>
+          <li><strong>The platform has caught up</strong> — modern CSS (container queries, <code>:has()</code>, nesting, cascade layers) eliminates many old reasons to reach for preprocessors.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Approaches</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Approach</th><th>Examples</th><th>One-line summary</th></tr></thead>
+        <tbody>
+          <tr><td>Utility-first</td><td>Tailwind CSS, UnoCSS, Windi</td><td>Compose UI from atomic classes; no naming.</td></tr>
+          <tr><td>CSS Modules</td><td>CSS Modules, Vue scoped <code>&lt;style&gt;</code>, Svelte scoped <code>&lt;style&gt;</code></td><td>Local-by-default class names, no globals.</td></tr>
+          <tr><td>Preprocessors</td><td>Sass, Less, Stylus</td><td>Variables, nesting, mixins — predates modern CSS but still everywhere.</td></tr>
+          <tr><td>CSS-in-JS</td><td>styled-components, Emotion, vanilla-extract, Linaria</td><td>Write styles in JS/TS; per-component, dynamic.</td></tr>
+          <tr><td>Atomic / Functional</td><td>Tailwind, Tachyons, ACSS</td><td>Generate one class per CSS declaration.</td></tr>
+          <tr><td>Design systems</td><td>Material 3, Apple HIG, Carbon, Spectrum</td><td>Curated tokens + components.</td></tr>
+          <tr><td>Reset / Normalize</td><td>Normalize.css, modern-css-reset, Tailwind Preflight</td><td>Smooth out browser defaults.</td></tr>
+          <tr><td>Post-processors</td><td>PostCSS, Lightning CSS, Autoprefixer</td><td>Vendor prefixes, modern syntax → old, optimizations.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Major Approaches in Depth</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Tailwind CSS — Utility-First</summary>
+        <div class="drill-body">
+          <p>Class names <em>are</em> the styles. No CSS files for components.</p>
+<pre>&lt;<span class="tag">button</span> class=<span class="str">"px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"</span>&gt;
+  Save
+&lt;/<span class="tag">button</span>&gt;</pre>
+          <ul style="font-size:14px;line-height:1.6;margin-top:8px">
+            <li>JIT scans your templates and generates only the classes you use → tiny bundles.</li>
+            <li>Design tokens defined in <code>tailwind.config.js</code>.</li>
+            <li>Loved for velocity, polarizing for verbose markup.</li>
+            <li>Tailwind 4 (Oxide engine) is now Rust-built, lightning fast.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CSS Modules &amp; Scoped Styles</summary>
+        <div class="drill-body">
+          <p>Class names get hashed at build time, so <code>.button</code> in two files won't collide.</p>
+<pre><span class="com">/* Button.module.css */</span>
+.primary { background: <span class="str">#0066cc</span>; }
+
+<span class="com">// Button.tsx</span>
+<span class="kw">import</span> styles <span class="kw">from</span> <span class="str">'./Button.module.css'</span>;
+&lt;<span class="tag">button</span> className={styles.primary}&gt;Save&lt;/<span class="tag">button</span>&gt;</pre>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Vue and Svelte ship the same idea in their <code>&lt;style scoped&gt;</code> blocks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sass — The Original Preprocessor</summary>
+        <div class="drill-body">
+          <p>Variables, nesting, mixins, partials, math. Most modern CSS now supports nesting natively, but Sass still wins on:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Mixins</strong> — parameterized snippets you call.</li>
+            <li><strong>Functions</strong> — reusable logic for color manipulation, sizing.</li>
+            <li><strong>@use / @forward</strong> module system for big design systems.</li>
+            <li><strong>Loops</strong> for generating repetitive utilities.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CSS-in-JS — Pros &amp; the Modern Backlash</summary>
+        <div class="drill-body">
+          <p>Writing styles in JS gave per-component scope and dynamic theming, but classic runtime libraries (styled-components, Emotion) inject styles at runtime — slower and incompatible with React Server Components.</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Runtime CSS-in-JS</strong> (styled-components, Emotion) — falling out of favor.</li>
+            <li><strong>Zero-runtime CSS-in-JS</strong> (vanilla-extract, Linaria, Panda CSS) — write JS-y syntax, ship plain CSS.</li>
+            <li><strong>Object styles</strong> are still nice for one-off dynamic values; reach for inline <code>style</code> for those today.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Modern CSS Features Worth Knowing</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Custom properties</strong> (CSS variables) — runtime theming &amp; dark mode.</li>
+            <li><strong>Nesting</strong> — write Sass-style nested selectors in plain CSS.</li>
+            <li><strong>Container queries</strong> — style based on parent size, not viewport.</li>
+            <li><strong>:has()</strong> — parent selector, finally.</li>
+            <li><strong>Cascade layers (@layer)</strong> — predictable specificity for design systems.</li>
+            <li><strong>Subgrid</strong>, <strong>Anchor positioning</strong>, <strong>View transitions</strong>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Design Tokens</summary>
+        <div class="drill-body">
+          <p>Named values (color, spacing, font-size) defined once, consumed everywhere — usually as CSS variables or in a token JSON consumed by Tailwind / Style Dictionary / Tokens Studio.</p>
+<pre>:root {
+  --color-primary: <span class="str">#065A82</span>;
+  --space-md:     <span class="str">1rem</span>;
+  --radius-md:    <span class="str">8px</span>;
+}</pre>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Which to Choose</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>New Project, Modern Stack</h5><p>Tailwind v4 + a small set of design tokens.</p></div>
+        <div class="card teal"><h5>Component Library</h5><p>CSS Modules or vanilla-extract — predictable, framework-agnostic.</p></div>
+        <div class="card mid"><h5>Design System / Theming</h5><p>CSS custom properties + a token pipeline (Style Dictionary).</p></div>
+        <div class="card accent"><h5>Static / Marketing Site</h5><p>Plain modern CSS is enough — <em>actually</em>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="package-managers.html">Package Managers</a><a href="transpilers.html">Transpilers</a><a href="state-management.html">State Management</a><a href="component-libraries.html">Component Libraries</a><a href="accessibility.html">Accessibility</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

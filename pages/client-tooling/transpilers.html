@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transpilers · Client-Side Tooling Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client-Side Tooling · 3 of 8</div>
+    <h1>Transpilers</h1>
+    <p class="lede">Translate modern, typed, JSX-laden source into the boring JavaScript every browser understands. Babel made the modern web possible — and now Rust-based successors are 30× faster.</p>
+    <div class="tags"><span>Babel</span><span>TypeScript</span><span>SWC</span><span>esbuild</span><span>Source Maps</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Transpiler</strong> = source-to-source compiler. Modern JS / TS / JSX in, older browser-friendly JS out.</li>
+          <li><strong>Polyfill</strong> = runtime shim for missing APIs (e.g. <code>Array.flat</code> on older browsers).</li>
+          <li><strong>browserslist</strong> defines your support targets — drives which transforms &amp; polyfills are included.</li>
+          <li><strong>Type stripping</strong>: TypeScript &amp; JSX are usually erased at build time, never reach the browser.</li>
+          <li><strong>Source maps</strong> let you debug original source even after transformation.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Major Transpilers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Built in</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Babel</td><td>JavaScript</td><td>The original; biggest plugin ecosystem; still default in many older codebases.</td></tr>
+          <tr><td>TypeScript Compiler (tsc)</td><td>TypeScript</td><td>Type checking + emission. Slower than alternatives — most teams type-check with tsc and emit with another tool.</td></tr>
+          <tr><td>SWC</td><td>Rust</td><td>20–70× faster than Babel; powers Next.js, Parcel, Deno, Vercel.</td></tr>
+          <tr><td>esbuild</td><td>Go</td><td>Even faster; primarily a bundler but excellent transpiler.</td></tr>
+          <tr><td>Sucrase</td><td>JavaScript</td><td>20× faster than Babel for the common subset; dev-mode transforms.</td></tr>
+          <tr><td>OXC / Rolldown</td><td>Rust</td><td>Voidzero's next-gen toolchain — Rust everything.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How Transpilers Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Three Stages</summary>
+        <div class="drill-body">
+          <ol style="font-size:14px;line-height:1.6">
+            <li><strong>Parse:</strong> source text → AST (abstract syntax tree).</li>
+            <li><strong>Transform:</strong> walk the AST, apply transforms (strip types, lower JSX, downcompile <code>?.</code>, etc.).</li>
+            <li><strong>Generate:</strong> AST → target JS, plus a source map.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Type Checking vs Type Stripping</summary>
+        <div class="drill-body">
+          <p>An important distinction in modern TypeScript pipelines:</p>
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Stripping types</strong> (esbuild, SWC, Sucrase): drop <code>: string</code> annotations, rewrite enums, emit JS. Doesn't validate types — <em>fast</em>.</li>
+            <li><strong>Type checking</strong> (tsc, with <code>--noEmit</code>): walks the program, verifies every type. <em>Slow but catches bugs.</em></li>
+            <li>Modern setup: type-check with <code>tsc --noEmit</code> in CI; emit with esbuild/SWC at build time.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Polyfills &amp; browserslist</summary>
+        <div class="drill-body">
+          <p>Define your target browsers in <code>package.json</code>:</p>
+<pre>{
+  <span class="str">"browserslist"</span>: [
+    <span class="str">"&gt; 0.5%"</span>,
+    <span class="str">"last 2 versions"</span>,
+    <span class="str">"not dead"</span>
+  ]
+}</pre>
+          <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Babel + <code>core-js</code> auto-inject only the polyfills your targets need. Modern apps targeting only evergreen browsers can usually skip polyfills entirely.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JSX Transforms</summary>
+        <div class="drill-body">
+          <p>JSX is just sugar — <code>&lt;div /&gt;</code> compiles to <code>React.createElement('div')</code> (classic) or the newer <code>jsx()</code> runtime (since React 17). The new transform doesn't require <code>import React</code> at the top of every file.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Why Speed Matters Now</summary>
+        <div class="drill-body">
+          <p>On a large codebase, Babel can spend 30+ seconds in a clean build. SWC drops the same job to 1–2 seconds. esbuild often under a second. The downstream effect — sub-second HMR, instant CI — has reshaped how frontends are built.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Which to Choose</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Modern Project</h5><p>SWC (often automatic via Vite / Next.js).</p></div>
+        <div class="card teal"><h5>Library Author</h5><p>tsup or unbuild (esbuild-powered) for fast dual-format publish.</p></div>
+        <div class="card mid"><h5>Need Custom Transforms</h5><p>Babel — the plugin ecosystem is unmatched.</p></div>
+        <div class="card accent"><h5>Type Safety</h5><p>tsc with <code>--noEmit</code> in CI alongside whatever you ship with.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client-Side Tooling</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="bundlers.html">Bundlers</a><a href="package-managers.html">Package Managers</a><a href="css-systems.html">CSS Systems</a><a href="state-management.html">State Management</a><a href="component-libraries.html">Component Libraries</a><a href="accessibility.html">Accessibility</a><a href="i18n.html">Internationalization</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

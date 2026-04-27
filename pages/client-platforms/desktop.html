@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Desktop · Client Platforms Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Client Platforms · 4 of 6</div>
+    <h1>Desktop</h1>
+    <p class="lede">Windows, macOS, Linux. Big screens, real keyboards, multi-window workflows, and full filesystem access. Less hyped than mobile but still where most "professional" software lives.</p>
+    <div class="tags"><span>Electron</span><span>Tauri</span><span>WPF / WinUI</span><span>JavaFX</span><span>Qt</span><span>SwiftUI / AppKit</span></div>
+    <a class="back" href="../../index.html#ch-client">← Back to Client Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Three OSes</strong> with very different conventions: Windows (most users), macOS (most developers), Linux (most servers/devs).</li>
+          <li><strong>Two big architectures:</strong> native toolkits per OS, or one cross-platform shell wrapping web tech.</li>
+          <li><strong>Distribution</strong> happens via direct download, vendor stores (Microsoft Store, Mac App Store), or package managers (winget, Homebrew, apt).</li>
+          <li><strong>Code signing &amp; notarization</strong> — required on macOS (Apple notarization) and strongly expected on Windows (Authenticode).</li>
+          <li><strong>Auto-update</strong> is your responsibility unless you're in a store — Squirrel, Sparkle, Velopack, MSIX.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Landscape</div><h2>The Toolkits</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Toolkit</th><th>Language</th><th>Approach</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td>Electron</td><td>JS / TS</td><td>Chromium + Node</td><td>VS Code, Slack, Figma desktop. Largest ecosystem; biggest binaries.</td></tr>
+          <tr><td>Tauri</td><td>Rust + JS</td><td>OS WebView + Rust backend</td><td>Modern Electron alternative. ~10× smaller, much less RAM.</td></tr>
+          <tr><td>WinUI 3 / WPF / WinForms</td><td>C# / .NET</td><td>Native Windows</td><td>First-class Windows apps; deep OS integration.</td></tr>
+          <tr><td>SwiftUI / AppKit</td><td>Swift</td><td>Native macOS</td><td>Native Mac apps; Catalyst brings iOS apps over.</td></tr>
+          <tr><td>Qt</td><td>C++ / QML</td><td>Cross-platform native</td><td>Industrial / scientific / automotive UIs.</td></tr>
+          <tr><td>JavaFX / Compose Multiplatform</td><td>Java / Kotlin</td><td>JVM cross-platform</td><td>Existing JVM teams; line-of-business apps.</td></tr>
+          <tr><td>Flutter Desktop</td><td>Dart</td><td>Own renderer</td><td>One codebase from mobile to desktop.</td></tr>
+          <tr><td>GTK / Qt on Linux</td><td>C / C++ / Rust</td><td>Native Linux</td><td>GNOME and KDE applications.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Desktop-Specific Concerns</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Electron vs Tauri — The Modern Choice</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>—</th><th>Electron</th><th>Tauri</th></tr></thead>
+            <tbody>
+              <tr><td>Browser engine</td><td>Bundled Chromium</td><td>OS WebView (WebView2 / WebKit)</td></tr>
+              <tr><td>Backend language</td><td>Node.js</td><td>Rust</td></tr>
+              <tr><td>Binary size</td><td>~120–200 MB</td><td>~5–15 MB</td></tr>
+              <tr><td>RAM baseline</td><td>~150–250 MB</td><td>~30–80 MB</td></tr>
+              <tr><td>Browser consistency</td><td>Identical everywhere</td><td>Differs per OS WebView</td></tr>
+              <tr><td>Maturity</td><td>Powers VS Code, Slack, Discord</td><td>1.x stable, fast-growing</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Window &amp; Process Model</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Multi-window apps need explicit window state management — restoring positions, multi-monitor DPI scaling.</li>
+            <li>Electron splits into a <strong>main process</strong> (Node, OS) and <strong>renderer processes</strong> (one per window). They talk via IPC.</li>
+            <li>Tauri has a similar split: Rust core, WebView frontend, message-passing.</li>
+            <li>System tray, dock badges, jump lists, menu bars are platform-specific APIs.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Code Signing &amp; Notarization</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>macOS:</strong> Apple Developer ID + notarization (a malware scan). Without it, Gatekeeper blocks the app on first launch.</li>
+            <li><strong>Windows:</strong> Authenticode certificate (EV preferred) so SmartScreen doesn't warn users away.</li>
+            <li><strong>Linux:</strong> typically signed packages (.deb, .rpm) or Flatpak/Snap with their own signing.</li>
+            <li>Renewals expire — set calendar reminders. Expired certs break already-shipped installers.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Auto-Update</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Squirrel</strong> (Electron's default) — differential updates, used by Slack, GitHub Desktop.</li>
+            <li><strong>Sparkle</strong> — the macOS standard; works with native apps too.</li>
+            <li><strong>Velopack</strong> — modern cross-platform replacement.</li>
+            <li><strong>MSIX</strong> on Windows handles signing + update via the OS.</li>
+            <li>Stores (Mac App Store, Microsoft Store) handle updates for you — but enforce sandboxing limits.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Filesystem &amp; OS Integration</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Settings live in OS-specific locations: <code>%APPDATA%</code> (Windows), <code>~/Library/Application Support</code> (macOS), <code>~/.config</code> (Linux XDG).</li>
+            <li>File associations, URL schemes (<code>myapp://</code>), drag-and-drop, clipboard formats — all platform-specific APIs.</li>
+            <li>Native menu bars on macOS (top of screen) vs in-window menus on Windows/Linux.</li>
+            <li>Notifications go through the OS notification center; permission prompts on first use (macOS).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>App Stores vs Direct Distribution</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Mac App Store:</strong> sandboxing required — kills many pro-app use cases. 30%/15% revenue cut.</li>
+            <li><strong>Microsoft Store / MSIX:</strong> friendlier sandboxing; growing share but not the default channel.</li>
+            <li><strong>Direct download</strong> remains the default for most professional desktop apps. You own updates, signing, billing.</li>
+            <li><strong>Setapp / Homebrew Cask / winget</strong> are alternative discovery channels.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Choosing a Stack</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Web team, big team</h5><p>Electron — battle-tested, every problem already solved on Stack Overflow.</p></div>
+        <div class="card teal"><h5>Web team, performance-focused</h5><p>Tauri — same web frontend, much smaller and lighter.</p></div>
+        <div class="card mid"><h5>Mac-first product</h5><p>SwiftUI / AppKit — best-in-class feel, Catalyst brings it to iPad.</p></div>
+        <div class="card accent"><h5>Windows enterprise app</h5><p>WinUI 3 or WPF — deep OS integration, enterprise deployment via MSIX.</p></div>
+        <div class="card"><h5>Existing JVM codebase</h5><p>Compose Multiplatform or JavaFX.</p></div>
+        <div class="card teal"><h5>Cross-platform native feel</h5><p>Qt — proven for decades, especially in scientific / industrial software.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Common Anti-Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.6">
+        <li><strong>Treating it like a website</strong> — desktop users expect keyboard shortcuts, multi-window, drag-and-drop, native menus.</li>
+        <li><strong>Forgetting offline-first</strong> — desktop users open apps on planes.</li>
+        <li><strong>Ignoring high-DPI</strong> — 4K monitors and Retina displays need crisp rendering at every zoom level.</li>
+        <li><strong>Letting code-signing certs expire</strong> — breaks installers, panics users.</li>
+        <li><strong>Shipping a 300 MB Electron bundle</strong> when the app is 30 KB of UI logic.</li>
+        <li><strong>Not testing on all three OSes</strong> — file paths, fonts, permissions all differ.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Client Platforms</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="web.html">Web</a><a href="mobile-native.html">Mobile (Native)</a><a href="mobile-cross-platform.html">Mobile (Cross-platform)</a><a href="tv-embedded.html">TV / Embedded / Wearables</a><a href="pwa.html">PWA</a>
+        <a href="../../index.html#ch-client">↑ Back to Client Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
