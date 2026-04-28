@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Windows · Operating Systems Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Microsoft's NT-based operating system — the dominant desktop OS, .NET runtime, PowerShell, and how WSL bridges the Linux world." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/os/windows.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Windows · Operating Systems Deep Dive" />
+<meta property="og:description" content="Microsoft's NT-based operating system — the dominant desktop OS, .NET runtime, PowerShell, and WSL." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/os/windows.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Windows · Operating Systems Deep Dive" />
+<meta name="twitter:description" content="Microsoft's NT-based operating system — the dominant desktop OS, .NET runtime, PowerShell, and WSL." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Operating Systems Deep Dive · 2 of 6</div>
+    <h1>Windows — The Desktop the Enterprise Runs On</h1>
+    <p class="lede">Windows is the OS most people sit in front of at work. It's the home of .NET, PowerShell, DirectX games, and Active Directory. Modern Windows is two systems in a trenchcoat: the classic Win32 world and a new POSIX-friendly side built around WSL, Terminal, and Visual Studio Code.</p>
+    <div class="tags"><span>NT Kernel</span><span>.NET</span><span>PowerShell</span><span>WSL</span><span>Active Directory</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Windows Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>NT kernel:</strong> Designed by Dave Cutler (also of VMS fame) starting in 1989. Modern, preemptive, supports multiple personalities (Win32, POSIX, OS/2 historically).</li>
+          <li><strong>Win32 API:</strong> The classic C API for windows, files, threads. Still the foundation of every desktop app.</li>
+          <li><strong>Registry:</strong> A hierarchical key-value database under <code>HKEY_LOCAL_MACHINE</code>, <code>HKEY_CURRENT_USER</code>, etc. Stores most system and app config.</li>
+          <li><strong>Backwards compatibility:</strong> A near-religious commitment. Apps written for Windows 95 still launch on Windows 11.</li>
+          <li><strong>Editions:</strong> Home, Pro, Enterprise, Server. Same kernel, different features (BitLocker, Group Policy, AD).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture</div><h2>How NT Works</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Kernel + Subsystems</summary>
+        <div class="drill-body">
+          <p>The NT kernel is a microkernel-ish hybrid: an executive layer (object manager, process manager, I/O manager) sits above the kernel proper. On top of it run <strong>subsystems</strong> — Win32 is the main one. WSL2 runs a real Linux kernel as a lightweight VM next to it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Process &amp; Thread Model</summary>
+        <div class="drill-body">
+          <p>Processes are heavier to create than on Linux (no <code>fork</code>; you call <code>CreateProcess</code> directly). Threads are the primary unit of work — Windows code is more thread-heavy than equivalent Unix code. The scheduler is preemptive with priority levels and dynamic boosting.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Filesystem</summary>
+        <div class="drill-body">
+          <p><strong>NTFS</strong> is the default — journaled, ACL-based permissions, supports sparse files, hard links, symbolic links, alternate data streams. Drive letters (<code>C:\</code>) descend from DOS but the kernel itself is path-agnostic. <strong>ReFS</strong> is the newer filesystem for servers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Security Model</summary>
+        <div class="drill-body">
+          <p>Every kernel object has a security descriptor with an access control list (ACL). Users have <strong>SIDs</strong>, not numeric UIDs. <strong>UAC</strong> (User Account Control) prompts elevate from standard to admin token. <strong>Active Directory</strong> extends this across a network — single sign-on, group policy, Kerberos.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Developer Stack</div><h2>What You Build With on Windows</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool / Framework</th><th>What It's For</th></tr></thead>
+        <tbody>
+          <tr><td>.NET / C#</td><td>The default app and service framework — desktop, web, cloud.</td></tr>
+          <tr><td>Visual Studio / VS Code</td><td>The IDE pair — VS for big .NET/C++ work, VS Code for everything else.</td></tr>
+          <tr><td>PowerShell</td><td>Object-pipeline shell. Cmdlets pass .NET objects, not text.</td></tr>
+          <tr><td>Windows Terminal</td><td>Modern multi-tab terminal that hosts cmd, PowerShell, WSL, SSH side by side.</td></tr>
+          <tr><td>WSL / WSL2</td><td>A real Linux kernel running as a hypervisor-backed VM with tight Windows integration.</td></tr>
+          <tr><td>winget / Chocolatey / Scoop</td><td>Package managers — finally, a sane way to install dev tooling.</td></tr>
+          <tr><td>Hyper-V</td><td>Microsoft's type-1 hypervisor; powers WSL2, Docker Desktop, sandboxes.</td></tr>
+          <tr><td>DirectX</td><td>Graphics/audio/input API. The reason Windows is the gaming platform.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>Where Windows Dominates</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Enterprise Identity &amp; Management</summary>
+        <div class="drill-body">
+          <p>Active Directory + Group Policy is the single biggest moat. Tens of thousands of laptops centrally managed, joined to a domain, patched by SCCM, signed into via Kerberos. No competing stack matches the breadth.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Backwards Compatibility</summary>
+        <div class="drill-body">
+          <p>A 30-year-old line-of-business app that nobody has the source for still runs. For hospitals, factories, banks — that property alone is worth the OS license.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Gaming</summary>
+        <div class="drill-body">
+          <p>DirectX, mature GPU drivers, anti-cheat hooks, and the install base mean PC gaming is functionally Windows gaming. Steam Deck on Linux is closing the gap, but slowly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The "Both Worlds" Story</summary>
+        <div class="drill-body">
+          <p>WSL2 + Windows Terminal + VS Code Remote turned Windows into a credible Linux dev box. You get Office, Outlook, Teams, and corporate AV on one side; a real Ubuntu shell on the other. For many shops it's the new default.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where Windows Struggles</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Server market share.</strong> Windows Server is shrinking against Linux for cloud workloads — even .NET Core runs natively on Linux now.</li>
+        <li><strong>Path quirks.</strong> Backslashes, drive letters, MAX_PATH (260 chars) historically, case-insensitive filesystems — all friction when sharing code with Unix.</li>
+        <li><strong>Updates.</strong> Forced reboots and sprawling patch Tuesdays are still a meme for a reason.</li>
+        <li><strong>Telemetry &amp; bundled apps.</strong> Modern Windows ships with ads in the Start menu and opinionated defaults that enterprises spend GP cycles undoing.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Operating Systems</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linux.html">← Linux</a>
+        <a href="macos.html">macOS →</a>
+        <a href="unix-bsd.html">Unix &amp; BSD →</a>
+        <a href="android.html">Android →</a>
+        <a href="ios.html">iOS →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

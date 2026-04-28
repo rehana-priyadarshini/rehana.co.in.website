@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Linux · Operating Systems Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The open-source Unix-like kernel that runs most servers, containers, and the cloud — distributions, kernel, package managers, and why it dominates the data center." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/os/linux.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Linux · Operating Systems Deep Dive" />
+<meta property="og:description" content="The open-source Unix-like kernel that runs most servers, containers, and the cloud." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/os/linux.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Linux · Operating Systems Deep Dive" />
+<meta name="twitter:description" content="The open-source Unix-like kernel that runs most servers, containers, and the cloud." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Operating Systems Deep Dive · 1 of 6</div>
+    <h1>Linux — The Kernel That Runs the Internet</h1>
+    <p class="lede">Linux isn't one operating system; it's a kernel and a thousand distributions built on top of it. It's free, it's modular, and it powers nearly every cloud VM, container, supercomputer, and Android phone on the planet. If you write backend software, you ship to Linux.</p>
+    <div class="tags"><span>Open Source</span><span>Unix-like</span><span>Kernel</span><span>POSIX</span><span>Servers</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Linux Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Kernel:</strong> Linus Torvalds, 1991. The Linux kernel is the part the name refers to — process scheduling, memory, drivers, networking.</li>
+          <li><strong>GNU userland:</strong> Coreutils, bash, glibc — the commands and libraries that wrap the kernel into a usable system. Hence "GNU/Linux".</li>
+          <li><strong>Distribution (distro):</strong> Kernel + userland + package manager + defaults, packaged. Ubuntu, Debian, Fedora, Arch, Alpine.</li>
+          <li><strong>POSIX-compatible:</strong> Follows the Unix process/file/signal model — code written for one Unix usually runs on another.</li>
+          <li><strong>Free &amp; open source:</strong> GPLv2 license. Anyone can read, modify, and redistribute the source.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>Major Distributions</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Distro</th><th>Family</th><th>Package Manager</th><th>Where You See It</th></tr></thead>
+        <tbody>
+          <tr><td>Ubuntu</td><td>Debian</td><td><code>apt</code></td><td>Default cloud VM, beginner desktops, dev laptops.</td></tr>
+          <tr><td>Debian</td><td>Debian</td><td><code>apt</code></td><td>Stable servers, the upstream of Ubuntu.</td></tr>
+          <tr><td>Red Hat Enterprise Linux (RHEL)</td><td>Red Hat</td><td><code>dnf</code> / <code>yum</code></td><td>Big enterprises, banks, government.</td></tr>
+          <tr><td>Fedora</td><td>Red Hat</td><td><code>dnf</code></td><td>Cutting-edge upstream of RHEL; developer workstations.</td></tr>
+          <tr><td>Alpine</td><td>Independent</td><td><code>apk</code></td><td>Containers — minimal, ~5MB base image. <code>musl</code> instead of glibc.</td></tr>
+          <tr><td>Arch</td><td>Independent</td><td><code>pacman</code></td><td>Rolling-release; tinkerers and "I use Arch btw".</td></tr>
+          <tr><td>Amazon Linux</td><td>Red Hat</td><td><code>dnf</code></td><td>EC2 default; tuned for AWS.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture</div><h2>Layers of the System</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Kernel Space vs User Space</summary>
+        <div class="drill-body">
+          <p>The kernel runs in privileged mode and talks to hardware. Your programs run in user space and ask the kernel for things via <strong>system calls</strong> (<code>open</code>, <code>read</code>, <code>write</code>, <code>fork</code>, <code>execve</code>). A crash in user space kills one process; a kernel crash is a panic.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Everything Is a File</summary>
+        <div class="drill-body">
+          <p>Files, directories, devices (<code>/dev/sda</code>), pipes, sockets, even running processes (<code>/proc/1234</code>) appear in the filesystem. One small set of syscalls (<code>read</code>, <code>write</code>, <code>ioctl</code>) handles them all. This is what makes shell pipelines so powerful.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Process Model</summary>
+        <div class="drill-body">
+          <p>Processes form a tree, rooted at PID 1 (<code>init</code>, usually <strong>systemd</strong>). New processes are created with <code>fork()</code> (clone the parent) followed by <code>execve()</code> (replace memory with a new program). Threads share memory via <code>clone()</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Filesystem Hierarchy</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.7">
+            <li><code>/bin</code>, <code>/usr/bin</code> — executables.</li>
+            <li><code>/etc</code> — system config.</li>
+            <li><code>/var</code> — logs, mail, variable state.</li>
+            <li><code>/home</code> — user home directories.</li>
+            <li><code>/proc</code>, <code>/sys</code> — virtual filesystems exposing kernel state.</li>
+            <li><code>/dev</code> — device nodes.</li>
+            <li><code>/tmp</code> — scratch space, often wiped on boot.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Daily Tools</div><h2>The Toolbox a Developer Lives In</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr><td><code>bash</code> / <code>zsh</code></td><td>The shell — your text-based interface to the OS.</td></tr>
+          <tr><td><code>ssh</code></td><td>Secure remote login. The way you reach a server.</td></tr>
+          <tr><td><code>systemd</code></td><td>Init system + service manager. <code>systemctl start nginx</code>.</td></tr>
+          <tr><td><code>cron</code> / <code>systemd timers</code></td><td>Scheduled jobs.</td></tr>
+          <tr><td><code>iptables</code> / <code>nftables</code></td><td>Firewall rules.</td></tr>
+          <tr><td><code>top</code> / <code>htop</code> / <code>ps</code></td><td>See what's running and what's eating CPU/memory.</td></tr>
+          <tr><td><code>strace</code> / <code>perf</code> / <code>bpftrace</code></td><td>Trace syscalls and profile performance — Linux's killer feature.</td></tr>
+          <tr><td><code>journalctl</code></td><td>Read system + service logs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>Linux in the Cloud Era</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Containers Are Linux</summary>
+        <div class="drill-body">
+          <p>Docker, Kubernetes, and the entire container revolution are built on Linux kernel features: <strong>namespaces</strong> (process/network/filesystem isolation) and <strong>cgroups</strong> (CPU and memory limits). Containers are not VMs — they're just Linux processes pretending they're alone.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>It's Free and Modifiable</summary>
+        <div class="drill-body">
+          <p>No license fees per VM, no audits, no per-core charges. Cloud providers couldn't have built a $200B/year industry on a per-seat OS. The same property lets Amazon, Google, and Meta tune the kernel for their workloads.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Predictable Server Behavior</summary>
+        <div class="drill-body">
+          <p>Same kernel, same syscalls, same tools across every machine — laptop, container, EC2 instance, Raspberry Pi. The "works on my machine" gap collapses when "my machine" is also Linux.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>WSL — Linux on Windows</summary>
+        <div class="drill-body">
+          <p>Windows Subsystem for Linux runs a real Linux kernel under Windows, so developers can use Linux toolchains on a Windows laptop without dual-booting. It's how a lot of .NET shops standardized on Docker.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where Linux Struggles</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Desktop fragmentation.</strong> GNOME vs KDE vs Xfce vs… every distro picks differently. Hardware drivers (Wi-Fi, GPUs, printers) are hit-or-miss.</li>
+        <li><strong>Audio and creative tooling.</strong> Pro audio, Adobe, and most AAA games still target Windows/macOS first.</li>
+        <li><strong>Configuration sprawl.</strong> Three valid ways to do networking (NetworkManager, systemd-networkd, ifupdown) — none of them wrong, all of them present somewhere.</li>
+        <li><strong>Steep first hour.</strong> The shell rewards investment, but a beginner staring at <code>vim</code> with no GUI will not feel that yet.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Operating Systems</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="windows.html">Windows →</a>
+        <a href="macos.html">macOS →</a>
+        <a href="unix-bsd.html">Unix &amp; BSD →</a>
+        <a href="android.html">Android →</a>
+        <a href="ios.html">iOS →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

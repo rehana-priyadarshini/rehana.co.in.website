@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>macOS · Operating Systems Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Apple's Unix-certified desktop OS built on Darwin — XNU kernel, Cocoa, the App Store, and why most software engineers ship on a Mac." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/os/macos.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="macOS · Operating Systems Deep Dive" />
+<meta property="og:description" content="Apple's Unix-certified desktop OS built on Darwin." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/os/macos.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="macOS · Operating Systems Deep Dive" />
+<meta name="twitter:description" content="Apple's Unix-certified desktop OS built on Darwin." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Operating Systems Deep Dive · 3 of 6</div>
+    <h1>macOS — Unix Underneath, Polished On Top</h1>
+    <p class="lede">macOS is the rare desktop OS that is genuinely Unix-certified. Underneath the polished glass UI sits Darwin — a BSD-derived userland on the XNU kernel. That combination (real Unix, real fonts, real battery life) is why so much of the software industry develops on a Mac and ships to Linux.</p>
+    <div class="tags"><span>Darwin</span><span>XNU</span><span>BSD</span><span>Apple Silicon</span><span>Cocoa</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What macOS Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Darwin:</strong> The open-source core — XNU kernel + BSD userland. macOS, iOS, iPadOS, tvOS, watchOS all share it.</li>
+          <li><strong>XNU kernel:</strong> "X is Not Unix." Hybrid: Mach microkernel for IPC + BSD layer for syscalls + I/O Kit for drivers.</li>
+          <li><strong>Cocoa / AppKit:</strong> The native app framework — Objective-C historically, Swift today. SwiftUI is the modern declarative layer.</li>
+          <li><strong>Apple Silicon (M-series):</strong> ARM64 SoCs since 2020. Unified memory, huge perf-per-watt jump. Rosetta 2 emulates x86 transparently.</li>
+          <li><strong>Tight hardware/software integration:</strong> Apple controls both. Predictable behavior, narrow hardware matrix.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture</div><h2>The Layers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr><td>XNU kernel</td><td>Mach + BSD + I/O Kit. Process scheduling, memory, syscalls, drivers.</td></tr>
+          <tr><td>Darwin userland</td><td>BSD-style command line — <code>ls</code>, <code>ps</code>, <code>launchd</code>, dyld linker.</td></tr>
+          <tr><td>Core OS / Foundation</td><td>Objective-C runtime, Foundation framework (<code>NSString</code>, etc.), Grand Central Dispatch.</td></tr>
+          <tr><td>Cocoa / AppKit</td><td>Windowing, controls, drag-and-drop, the desktop app model.</td></tr>
+          <tr><td>SwiftUI / Catalyst</td><td>Modern declarative UI shared with iOS; lets iPad apps run on Mac.</td></tr>
+          <tr><td>Metal</td><td>Low-level GPU API (replaces OpenGL on Apple platforms).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Daily Use</div><h2>Developer Toolchain</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Terminal</summary>
+        <div class="drill-body">
+          <p>Default shell is <strong>zsh</strong> (bash before 2019). Most Linux commands work — same POSIX syscalls — but flags occasionally differ (BSD <code>sed</code> vs GNU <code>sed</code>). Many developers install <strong>coreutils</strong> via Homebrew to get the GNU versions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Homebrew</summary>
+        <div class="drill-body">
+          <p><code>brew install</code> is the de-facto package manager for macOS. Not from Apple — community-maintained. Drops binaries into <code>/opt/homebrew</code> on Apple Silicon, <code>/usr/local</code> on Intel. <code>brew cask</code> handles GUI apps.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Xcode</summary>
+        <div class="drill-body">
+          <p>Apple's IDE and toolchain. Required to build for the App Store. Bundles the Swift compiler, simulators for iPhone/iPad/Watch/TV, Instruments profiler, and the SDKs. Even non-Apple devs install <code>xcode-select --install</code> for the command-line compilers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>launchd</summary>
+        <div class="drill-body">
+          <p>The macOS init + service manager (predates systemd). Plist-based job definitions in <code>~/Library/LaunchAgents</code> for user services, <code>/Library/LaunchDaemons</code> for system. <code>launchctl</code> controls them.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Security</div><h2>The Walled Garden</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Gatekeeper &amp; Notarization</summary>
+        <div class="drill-body">
+          <p>Apps from outside the App Store must be code-signed by an Apple Developer ID and <strong>notarized</strong> by Apple. First launch shows a confirmation prompt. This is the price of being the OS people don't get malware on.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>System Integrity Protection (SIP)</summary>
+        <div class="drill-body">
+          <p>Even root can't modify <code>/System</code>, <code>/usr</code>, or kernel extensions while SIP is on. Requires Recovery Mode to disable. This is what prevents an installer from quietly replacing system binaries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sandboxing &amp; Permissions</summary>
+        <div class="drill-body">
+          <p>App Store apps run sandboxed. The <strong>TCC</strong> framework prompts for camera, microphone, contacts, full disk access. Annoying for power users; bulletproof for everyone else.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>Why Developers Choose macOS</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Real Unix shell + native apps.</strong> The same machine builds Docker containers and runs Slack, Figma, Office — without WSL gymnastics.</li>
+        <li><strong>Required for iOS/macOS dev.</strong> Xcode runs only here. App Store submission is Mac-only.</li>
+        <li><strong>Apple Silicon performance and battery.</strong> Multi-day runtime on a laptop fundamentally changed expectations.</li>
+        <li><strong>Hardware/software polish.</strong> Trackpad, fonts, color management, audio — the small things that compound across years of use.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where macOS Struggles</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Locked hardware.</strong> No upgrades after purchase, repair limits, premium price floor.</li>
+        <li><strong>Kernel extensions are dying.</strong> Apple is replacing them with restricted system extensions — some legacy tooling (VPNs, AV) breaks.</li>
+        <li><strong>Container story is awkward.</strong> Docker Desktop runs a Linux VM; you don't get bare-metal Linux containers.</li>
+        <li><strong>Gaming.</strong> Improving with Apple Silicon GPTK and Metal, still far behind Windows.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Operating Systems</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linux.html">← Linux</a>
+        <a href="windows.html">← Windows</a>
+        <a href="unix-bsd.html">Unix &amp; BSD →</a>
+        <a href="android.html">Android →</a>
+        <a href="ios.html">iOS →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

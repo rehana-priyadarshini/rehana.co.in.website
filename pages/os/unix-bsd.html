@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unix &amp; BSD · Operating Systems Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The original Unix family — FreeBSD, OpenBSD, NetBSD, and Solaris. Where the POSIX model, the shell, and TCP/IP all came from." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/os/unix-bsd.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Unix &amp; BSD · Operating Systems Deep Dive" />
+<meta property="og:description" content="The original Unix family — FreeBSD, OpenBSD, NetBSD, and Solaris." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/os/unix-bsd.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Unix &amp; BSD · Operating Systems Deep Dive" />
+<meta name="twitter:description" content="The original Unix family — FreeBSD, OpenBSD, NetBSD, and Solaris." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Operating Systems Deep Dive · 4 of 6</div>
+    <h1>Unix &amp; BSD — The Family Tree Everything Else Branched From</h1>
+    <p class="lede">Unix is the operating system the rest of computing keeps re-implementing. Born at Bell Labs in 1969, its descendants — BSD, Solaris, AIX, HP-UX, macOS, and (philosophically) Linux — define the POSIX model: processes, files, pipes, signals, sockets. Knowing the BSD branch tells you why your Mac, your router, and your PlayStation all feel a little familiar.</p>
+    <div class="tags"><span>POSIX</span><span>FreeBSD</span><span>OpenBSD</span><span>Solaris</span><span>BSD License</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What "Unix" Means</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Original Unix:</strong> AT&amp;T Bell Labs, 1969. Ken Thompson, Dennis Ritchie. Written in C — itself invented to write Unix.</li>
+          <li><strong>BSD:</strong> Berkeley Software Distribution. Started as patches to AT&amp;T Unix at UC Berkeley; eventually a full re-implementation. Origin of TCP/IP, sockets, vi, csh.</li>
+          <li><strong>POSIX:</strong> The IEEE standard that codified Unix syscalls and the shell. The reason Linux, macOS, and BSD code is roughly portable.</li>
+          <li><strong>"Unix" trademark:</strong> Owned by The Open Group. Linux is Unix-<em>like</em>; macOS is the most prominent <em>certified</em> Unix.</li>
+          <li><strong>BSD license:</strong> Permissive — you can take the code closed-source. Sony's PlayStation OS and parts of macOS are downstream of FreeBSD.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Branches</div><h2>Major Members of the Family</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>OS</th><th>Focus</th><th>Where You See It</th></tr></thead>
+        <tbody>
+          <tr><td>FreeBSD</td><td>General-purpose, performance.</td><td>Netflix CDN, WhatsApp servers (historically), PlayStation 4/5 OS.</td></tr>
+          <tr><td>OpenBSD</td><td>Security, code correctness.</td><td>Firewalls, VPN gateways. Birthplace of OpenSSH, OpenSMTPD, LibreSSL.</td></tr>
+          <tr><td>NetBSD</td><td>Portability — runs on everything.</td><td>Embedded devices, exotic CPUs. "Of course it runs NetBSD."</td></tr>
+          <tr><td>DragonFly BSD</td><td>SMP, HAMMER filesystem experiments.</td><td>Niche — research and enthusiasts.</td></tr>
+          <tr><td>Solaris / illumos</td><td>Big-iron Unix from Sun.</td><td>Legacy enterprise, Oracle databases. ZFS and DTrace originated here.</td></tr>
+          <tr><td>AIX, HP-UX</td><td>Proprietary big-iron Unix.</td><td>Banks, telcos, mainframe-adjacent enterprise.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Hallmarks</div><h2>Ideas That Came From Here</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Everything Is a File</summary>
+        <div class="drill-body">
+          <p>The Unix insight: model devices, pipes, and sockets as file descriptors. One small set of syscalls (<code>open</code>, <code>read</code>, <code>write</code>, <code>close</code>) covers a huge surface. Pipelines (<code>foo | bar | baz</code>) only work because of this.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Small, Composable Tools</summary>
+        <div class="drill-body">
+          <p>"Do one thing well." <code>grep</code>, <code>awk</code>, <code>sed</code>, <code>cut</code>, <code>sort</code>, <code>uniq</code> — each is a single program. Composition is the shell's job. The whole UNIX philosophy fits in McIlroy's three lines on a napkin.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The C Language &amp; Sockets</summary>
+        <div class="drill-body">
+          <p>C was invented to make Unix portable. Berkeley sockets — <code>socket()</code>, <code>bind()</code>, <code>connect()</code>, <code>accept()</code> — became the universal API for network programming on every OS that followed.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tools That Stayed</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.7">
+            <li><strong>vi</strong> (Bill Joy, BSD) — still on every Unix.</li>
+            <li><strong>OpenSSH</strong> (OpenBSD) — how you log into remote servers.</li>
+            <li><strong>ZFS</strong> (Solaris) — copy-on-write filesystem with snapshots; on FreeBSD, Linux, illumos.</li>
+            <li><strong>DTrace</strong> (Solaris) — production tracing without restarts; inspired bpftrace.</li>
+            <li><strong>pf</strong> (OpenBSD) — packet filter ported to FreeBSD and macOS.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">BSD vs Linux</div><h2>What's Actually Different</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Aspect</th><th>BSD</th><th>Linux</th></tr></thead>
+        <tbody>
+          <tr><td>Project structure</td><td>Whole system in one tree (kernel + userland together).</td><td>Kernel + many separately-developed userlands (GNU, BusyBox, musl).</td></tr>
+          <tr><td>License</td><td>Permissive BSD — closed-source forks allowed.</td><td>GPL — derivative kernels must stay open.</td></tr>
+          <tr><td>Init system</td><td>BSD <code>rc</code> scripts.</td><td>systemd, OpenRC, runit, etc.</td></tr>
+          <tr><td>Filesystem</td><td>UFS, ZFS standard.</td><td>ext4 default, ZFS/Btrfs available.</td></tr>
+          <tr><td>Packages</td><td>FreeBSD <code>pkg</code> + Ports tree (build from source).</td><td>Distribution-specific (apt, dnf, pacman, apk).</td></tr>
+          <tr><td>Documentation</td><td>Famously thorough man pages, the "BSD handbook."</td><td>Varies wildly by project.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Matters</div><h2>Why You Should Care Even If You Run Linux</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>You probably are running BSD.</strong> macOS, iOS, PlayStation, Junos (Juniper routers), Netflix's CDN — all BSD-derived.</li>
+        <li><strong>The mental model is identical.</strong> Skills transfer almost 1:1 — only flag flavors and init systems differ.</li>
+        <li><strong>Reference quality.</strong> When the Linux man page is confusing, the FreeBSD one often isn't.</li>
+        <li><strong>Security &amp; correctness culture.</strong> OpenBSD's audits give the rest of the industry safe defaults (LibreSSL, OpenSSH).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Operating Systems</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linux.html">← Linux</a>
+        <a href="windows.html">← Windows</a>
+        <a href="macos.html">← macOS</a>
+        <a href="android.html">Android →</a>
+        <a href="ios.html">iOS →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

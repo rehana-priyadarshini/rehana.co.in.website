@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Android · Operating Systems Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Linux kernel + Google's runtime — the most-used OS on Earth. AOSP, ART, the app sandbox, and how Android really differs from desktop Linux." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/os/android.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Android · Operating Systems Deep Dive" />
+<meta property="og:description" content="Linux kernel + Google's runtime — the most-used OS on Earth." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/os/android.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Android · Operating Systems Deep Dive" />
+<meta name="twitter:description" content="Linux kernel + Google's runtime — the most-used OS on Earth." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Operating Systems Deep Dive · 5 of 6</div>
+    <h1>Android — Linux With a Mobile Brain Transplant</h1>
+    <p class="lede">Android runs on more devices than any other operating system on Earth. The kernel is Linux, but almost everything above it — the runtime, the app model, the IPC layer, the security sandbox — is Google's own. Understanding Android is understanding how a Linux kernel was bent into a battery-aware, sandboxed, app-store-driven mobile platform.</p>
+    <div class="tags"><span>AOSP</span><span>Linux Kernel</span><span>ART</span><span>Kotlin</span><span>Sandbox</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Android Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>AOSP:</strong> Android Open Source Project. The base, free for any vendor to ship. Samsung, Xiaomi, Amazon (Fire OS) all start here.</li>
+          <li><strong>Google services layer:</strong> Play Store, Maps, Gmail, Push (FCM) are <em>not</em> in AOSP — they're proprietary Google add-ons licensed to phone makers.</li>
+          <li><strong>Linux kernel:</strong> Real Linux, but with Android-specific patches (Binder IPC, low-memory killer, wakelocks, anonymous shared memory).</li>
+          <li><strong>App language:</strong> Kotlin (preferred) or Java; native code via NDK in C/C++. Apps ship as <code>.apk</code> / <code>.aab</code>.</li>
+          <li><strong>Runtime:</strong> ART (Android Runtime). Bytecode compiled ahead-of-time and just-in-time.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture</div><h2>The Stack From the Bottom Up</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>What It Contains</th></tr></thead>
+        <tbody>
+          <tr><td>Linux kernel</td><td>Process scheduling, memory, drivers — plus Android extras (Binder, ashmem, wakelocks).</td></tr>
+          <tr><td>HAL (Hardware Abstraction Layer)</td><td>Vendor-implemented interfaces for camera, audio, sensors, radio.</td></tr>
+          <tr><td>Native libraries</td><td>Bionic libc (smaller than glibc), OpenGL/Vulkan, SQLite, WebKit/Chromium.</td></tr>
+          <tr><td>ART runtime</td><td>Executes app bytecode. AOT compiles on install, JIT for hot paths.</td></tr>
+          <tr><td>System services</td><td>ActivityManager, PackageManager, WindowManager — all reachable via Binder.</td></tr>
+          <tr><td>Framework APIs</td><td>The Java/Kotlin SDK apps call (<code>android.*</code>, Jetpack libraries).</td></tr>
+          <tr><td>Apps</td><td>Sandboxed, signed APKs running in their own process.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">App Model</div><h2>How an Android App Actually Runs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>One App, One Linux User</summary>
+        <div class="drill-body">
+          <p>Every installed app gets its own Linux UID. The kernel's standard file permissions enforce isolation — your app literally cannot read another app's files, because it doesn't own them. This is the entire foundation of Android's sandbox.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Activities, Services, Broadcasts</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.7">
+            <li><strong>Activity:</strong> A screen the user interacts with.</li>
+            <li><strong>Service:</strong> Background work without UI (music playback, sync).</li>
+            <li><strong>BroadcastReceiver:</strong> Listens for system events (boot complete, network change).</li>
+            <li><strong>ContentProvider:</strong> Structured data shared between apps (Contacts, Media).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Binder IPC</summary>
+        <div class="drill-body">
+          <p>The secret sauce. Binder is a kernel driver that lets apps and system services pass typed objects across process boundaries cheaply and securely. Every <code>Intent</code>, every system API call, ultimately goes through Binder.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Permissions</summary>
+        <div class="drill-body">
+          <p>Manifest declares what the app needs (<code>CAMERA</code>, <code>ACCESS_FINE_LOCATION</code>). Dangerous permissions require a runtime prompt (Android 6.0+). Background location, photo access, and others tightened progressively across versions.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It's Different</div><h2>How Android Diverges From Desktop Linux</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>No GNU userland.</strong> Bionic libc, toybox shell. Most familiar Linux tools aren't there.</li>
+        <li><strong>No traditional package manager.</strong> Apps come from the Play Store (or sideloaded APKs), not <code>apt</code>.</li>
+        <li><strong>No <code>fork()</code>-friendly process tree.</strong> All app processes are spawned from <code>zygote</code>, a pre-warmed VM that copy-on-writes its heap.</li>
+        <li><strong>Aggressive lifecycle management.</strong> The OS kills your app whenever it wants. State must be saved or it's gone.</li>
+        <li><strong>Battery first.</strong> Doze mode, App Standby, JobScheduler — all designed to keep the radio and CPU idle.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Build Tools</div><h2>The Developer Toolchain</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Android Studio</td><td>The official IDE — IntelliJ-based with Android-specific tooling.</td></tr>
+          <tr><td>Gradle + Android Gradle Plugin</td><td>Build system. Kotlin/Java → DEX → APK/AAB.</td></tr>
+          <tr><td>Jetpack Compose</td><td>Declarative Kotlin UI toolkit (replaces XML layouts).</td></tr>
+          <tr><td>adb</td><td>Android Debug Bridge — install, shell into, log from a device.</td></tr>
+          <tr><td>Emulator</td><td>QEMU-based, runs full system images of various Android versions.</td></tr>
+          <tr><td>Play Console</td><td>Submission, staged rollouts, crash analytics.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where Android Struggles</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Fragmentation.</strong> Hundreds of OEMs, many Android versions in the wild, vendor skins on top. Testing surface is enormous.</li>
+        <li><strong>Update lag.</strong> Even in 2026, many devices are years behind on the OS. Project Mainline and Treble help, but the ecosystem trails iOS.</li>
+        <li><strong>Vendor blobs.</strong> Drivers and HAL implementations are usually proprietary, complicating long-term kernel updates.</li>
+        <li><strong>Background work is hard.</strong> Reliable scheduling fights an OS designed to kill you to save battery.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Operating Systems</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linux.html">← Linux</a>
+        <a href="windows.html">← Windows</a>
+        <a href="macos.html">← macOS</a>
+        <a href="unix-bsd.html">← Unix &amp; BSD</a>
+        <a href="ios.html">iOS →</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

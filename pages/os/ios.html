@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>iOS · Operating Systems Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Apple's mobile OS, sibling to macOS — Darwin underneath, sandboxed apps, App Store gatekeeping, and the unified Apple-Silicon ecosystem." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/os/ios.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="iOS · Operating Systems Deep Dive" />
+<meta property="og:description" content="Apple's mobile OS — Darwin underneath, sandboxed apps, App Store gatekeeping." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/os/ios.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="iOS · Operating Systems Deep Dive" />
+<meta name="twitter:description" content="Apple's mobile OS — Darwin underneath, sandboxed apps, App Store gatekeeping." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Operating Systems Deep Dive · 6 of 6</div>
+    <h1>iOS — The Sandbox With a Premium Address</h1>
+    <p class="lede">iOS shares a kernel and most frameworks with macOS, but lives under far stricter rules: every app is sandboxed, every binary is signed, every install goes through Apple. That tradeoff — less freedom for developers, fewer footguns for users — is why iPhone is the platform people pay for and developers ship to first.</p>
+    <div class="tags"><span>Darwin</span><span>XNU</span><span>Swift</span><span>Sandbox</span><span>App Store</span></div>
+    <a class="back" href="../../index.html#ch-foundations">← Back to Foundations</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What iOS Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Shared core with macOS:</strong> Same Darwin (XNU + BSD userland), same Foundation, same Swift compiler. Different UI frameworks and policies.</li>
+          <li><strong>Family of OSes:</strong> iOS (iPhone), iPadOS (iPad), watchOS (Watch), tvOS (Apple TV), visionOS (Vision Pro). One toolchain, one language.</li>
+          <li><strong>UI frameworks:</strong> UIKit (imperative, since 2007), SwiftUI (declarative, since 2019). Apps in production today usually mix both.</li>
+          <li><strong>App distribution:</strong> Through the App Store. Sideloading is restricted — a court-mandated alt-store path exists in some regions but Apple still gates signing.</li>
+          <li><strong>Hardware:</strong> ARM64 since the iPhone 5s (2013). Apple's own SoCs (A-series, now the M-series shared with iPad/Mac).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture</div><h2>The Layers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>What It Does</th></tr></thead>
+        <tbody>
+          <tr><td>XNU kernel</td><td>Same Mach + BSD hybrid as macOS. Process scheduling, memory, syscalls.</td></tr>
+          <tr><td>Core OS</td><td>Bionic-style libc, dyld linker, security daemons, kernel extensions.</td></tr>
+          <tr><td>Core Services</td><td>Foundation, Core Data, CloudKit, Network framework, Grand Central Dispatch.</td></tr>
+          <tr><td>Media</td><td>Core Animation, Core Graphics, Metal, AVFoundation.</td></tr>
+          <tr><td>Cocoa Touch</td><td>UIKit — the touch-first app framework. SwiftUI sits beside it.</td></tr>
+          <tr><td>Apps</td><td>Sandboxed, signed, distributed via Apple.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Security Model</div><h2>Why Malware Is Rare</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Mandatory Code Signing</summary>
+        <div class="drill-body">
+          <p>The kernel will not execute unsigned code. Every binary — app, framework, dylib — must be signed by an Apple-issued certificate. This blocks an entire class of attacks where malware drops a payload to disk and runs it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>App Sandbox</summary>
+        <div class="drill-body">
+          <p>Every app runs as its own user with access only to its container directory. To touch the camera, microphone, photos, contacts, or location, the app must declare an entitlement <em>and</em> the user must approve a runtime prompt. Background access is further gated.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Secure Enclave</summary>
+        <div class="drill-body">
+          <p>A separate coprocessor with its own OS (sepOS), holding biometric data, keychain keys, and Apple Pay tokens. Even a fully-rooted main OS can't extract secrets from it. Face ID / Touch ID never leave the enclave.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>App Review</summary>
+        <div class="drill-body">
+          <p>Every submission is reviewed before reaching the store. Inconsistent in practice, but it filters obvious malware and policy violations. Combined with kill-switch revocation, Apple can yank a malicious app from every device in hours.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Developer Stack</div><h2>What You Build With</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool / Framework</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Swift</td><td>The modern primary language. Strongly typed, ARC-managed, value-type-friendly.</td></tr>
+          <tr><td>Objective-C</td><td>Legacy but still pervasive — UIKit's history is here. Bridges seamlessly with Swift.</td></tr>
+          <tr><td>Xcode</td><td>The only supported IDE. Includes simulators, Instruments, code signing, App Store submission.</td></tr>
+          <tr><td>SwiftUI</td><td>Declarative UI shared across iOS, macOS, watchOS, tvOS, visionOS.</td></tr>
+          <tr><td>UIKit</td><td>Imperative UI framework. Still used heavily for complex apps and animations.</td></tr>
+          <tr><td>TestFlight</td><td>Beta-distribution service for staged rollouts.</td></tr>
+          <tr><td>CloudKit</td><td>Apple-hosted backend for storing user data without running servers.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">App Lifecycle</div><h2>How Apps Behave</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Foreground / background / suspended.</strong> The OS suspends apps quickly when backgrounded. Memory is reclaimed under pressure.</li>
+        <li><strong>Background modes are explicit.</strong> Audio, location, VoIP, BLE, Push — each requires a declared capability.</li>
+        <li><strong>Push notifications</strong> wake apps briefly via APNs. There is no equivalent to Android's freeform background services.</li>
+        <li><strong>Background tasks</strong> are scheduled by the system and run when battery and network conditions permit.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What iOS Does Better Than Anyone</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>One target, one toolchain.</strong> A handful of device sizes, a single OS to support — testing matrix is a fraction of Android's.</li>
+        <li><strong>Long updates.</strong> Devices receive major OS upgrades for ~6 years. Your minimum supported version moves predictably.</li>
+        <li><strong>User willingness to pay.</strong> Higher ARPU, fewer abandoned carts, better subscription conversion.</li>
+        <li><strong>Hardware-software integration.</strong> Apple controls the SoC, the OS, the frameworks — features like ProMotion, Metal, Secure Enclave just work.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where iOS Struggles</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>Mac required.</strong> Xcode is macOS-only. CI for iOS means renting Mac runners.</li>
+        <li><strong>App Review friction.</strong> Rejections can derail launches; rules shift; appeals are slow.</li>
+        <li><strong>30% / 15% commission</strong> on App Store sales — the tax that funds the platform and that developers love to dispute.</li>
+        <li><strong>Less openness.</strong> No alternative app stores in most regions, sideloading limited, kernel and many frameworks closed.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Operating Systems</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linux.html">← Linux</a>
+        <a href="windows.html">← Windows</a>
+        <a href="macos.html">← macOS</a>
+        <a href="unix-bsd.html">← Unix &amp; BSD</a>
+        <a href="android.html">← Android</a>
+        <a href="../../index.html#ch-foundations">↑ Back to Foundations</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
