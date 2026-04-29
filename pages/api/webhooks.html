@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Webhooks · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Reverse APIs — the third party calls you when something happens. The plumbing behind Stripe charges, GitHub pushes, and Slack events." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/webhooks.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Webhooks · API Styles Deep Dive" />
+<meta property="og:description" content="Reverse APIs — the third party calls you when something happens." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/webhooks.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Webhooks · API Styles Deep Dive" />
+<meta name="twitter:description" content="Reverse APIs — the third party calls you when something happens." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 6 of 7</div>
+    <h1>Webhooks — Reverse APIs</h1>
+    <p class="lede">A webhook flips the usual direction of an API call. You register a URL with a third party; when an event happens on their side, they <code>POST</code> a JSON payload to your URL. No polling, near-real-time delivery, and a pile of operational details that separate "works in dev" from "survives Black Friday."</p>
+    <div class="tags"><span>HTTP Callbacks</span><span>Event Notifications</span><span>Push</span><span>Stripe</span><span>GitHub</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Webhook Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Direction:</strong> the third party is the client; you are the server. They call your URL when an event fires.</li>
+          <li><strong>Transport:</strong> almost always <code>POST</code> with a JSON body, sometimes form-encoded for legacy providers.</li>
+          <li><strong>Registration:</strong> you give the third party a URL and select which events to receive. Stripe, GitHub, Slack, Shopify, Twilio — all let you configure webhooks per resource.</li>
+          <li><strong>Public URL required:</strong> the third party has to reach you. For local dev, use a tunnel (<code>ngrok</code>, <code>cloudflared</code>, <code>localtunnel</code>).</li>
+          <li><strong>Delivery semantics:</strong> at-least-once. The same event will sometimes arrive twice. Build for that.</li>
+          <li><strong>The third party retries:</strong> if you return non-2xx or time out, they back off and retry — usually for hours.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>No Polling</summary>
+        <div class="drill-body">
+          <p>The alternative is calling <code>GET /events?since=...</code> every minute forever. That's expensive, rate-limit-prone, and slow to react. Webhooks turn it into push: you find out about a charge, push, build, or message within seconds of it happening.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Industry Standard</summary>
+        <div class="drill-body">
+          <p>If you integrate with payments (Stripe, PayPal), source control (GitHub, GitLab), messaging (Slack, Twilio, Discord), CRMs, e-commerce (Shopify), or virtually any SaaS, webhooks are the integration mechanism. Knowing how to consume them well is a backend skill that pays off everywhere.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Build It Right</div><h2>The Five Things to Get Right</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Verify Signatures</summary>
+        <div class="drill-body">
+          <p>Anyone on the internet can <code>POST</code> to your webhook URL. Without verification, you'll process forged events. Every reputable provider signs the body — Stripe uses an HMAC-SHA256 in the <code>Stripe-Signature</code> header; GitHub uses <code>X-Hub-Signature-256</code>; Slack uses <code>X-Slack-Signature</code>.</p>
+          <p style="margin-top:8px;"><strong>Compute the HMAC over the raw body</strong> (not the parsed JSON — whitespace and key order matter), compare with constant-time comparison, reject if it doesn't match. This is the line between "secure integration" and "anyone can mark any order paid."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Respond Fast</summary>
+        <div class="drill-body">
+          <p>Most providers time out after a few seconds. Don't do real work in the webhook handler — accept it, persist the raw payload to a queue or DB, return <code>200 OK</code>, then process asynchronously. Slow handlers cause retries, retries cause duplicates, duplicates cause double-charges.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Be Idempotent</summary>
+        <div class="drill-body">
+          <p>The same event will arrive twice. Maybe ten times. The provider retried because your handler timed out, or your DB blip returned a 500. Use the event's unique ID (<code>id</code>, <code>event_id</code>, <code>delivery_id</code>) as a deduplication key — record it, refuse to process the same one twice. "Send a refund email twice" is annoying; "charge a card twice" is a phone call.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Plan for Out-of-Order Delivery</summary>
+        <div class="drill-body">
+          <p>Webhooks aren't ordered. <code>order.refunded</code> can arrive before <code>order.charged</code> if the network reorders or one retried. Use the event payload's timestamps and resource IDs to reconcile state — when an event arrives, fetch the canonical resource state from the provider's REST API rather than trusting the webhook's snapshot.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Monitor and Alert</summary>
+        <div class="drill-body">
+          <p>Most providers expose a webhook log in their dashboard with delivery success/failure. Wire alerts on:</p>
+          <ul style="margin-top:8px; font-size:14px; line-height:1.6;">
+            <li>Sustained 4xx/5xx responses from your endpoint.</li>
+            <li>Webhook latency creeping up.</li>
+            <li>Provider-side delivery backlog.</li>
+            <li>Signature verification failures (could indicate misconfig — or an attack).</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When You're the Sender</div><h2>Designing Webhooks for Others to Consume</h2></div>
+    <div class="chapter-body">
+      <p>The best practices for shipping webhooks are the inverse of consuming them:</p>
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Sign every payload</strong> with HMAC and a per-tenant secret rotated regularly.</li>
+        <li><strong>Include a unique <code>id</code></strong> on every event so consumers can dedupe.</li>
+        <li><strong>Retry with exponential backoff</strong> on non-2xx responses — typically 3 days of retries is industry standard.</li>
+        <li><strong>Provide an admin UI</strong> showing delivery attempts, status, and a "retry" button.</li>
+        <li><strong>Document the event types and schemas</strong> with versioning. Add fields, never break.</li>
+        <li><strong>Offer a webhook simulator / test event</strong> so consumers can wire it up without waiting for a real event.</li>
+        <li><strong>Use a dedicated worker pool</strong> — webhook delivery shouldn't share resources with your synchronous API.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Webhooks</h2></div>
+    <div class="chapter-body">
+      <p>Webhooks are the right answer when one system needs to tell <em>another</em> system that something happened — without making the second system poll. They're the standard for SaaS-to-customer notifications, partner integrations, and async confirmations across organizations.</p>
+      <p style="margin-top:10px;">Inside your own platform, prefer a real message broker (Kafka, RabbitMQ, SNS/SQS) — webhooks add HTTP overhead and rely on every consumer running a public endpoint. Webhooks shine across organizational and trust boundaries; brokers shine inside one.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">← REST</a>
+        <a href="graphql.html">← GraphQL</a>
+        <a href="grpc.html">← gRPC</a>
+        <a href="websockets.html">← WebSockets</a>
+        <a href="sse.html">← Server-Sent Events</a>
+        <a href="soap.html">SOAP →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

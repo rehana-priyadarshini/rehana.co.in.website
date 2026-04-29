@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Event Streaming · Messaging &amp; Event Streaming Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The append-only, partitioned, replayable log. Kafka, Kinesis, Pulsar — the substrate of event-driven architectures, analytics pipelines, and CDC at scale." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/event-streaming.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Event Streaming · Messaging &amp; Event Streaming Deep Dive" />
+<meta property="og:description" content="The append-only, partitioned, replayable log." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/event-streaming.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Event Streaming · Messaging &amp; Event Streaming Deep Dive" />
+<meta name="twitter:description" content="The append-only, partitioned, replayable log." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Messaging &amp; Event Streaming Deep Dive · 2 of 3</div>
+    <h1>Event Streaming — The Log as the Source of Truth</h1>
+    <p class="lede">Kafka's big idea: model the world as an append-only, partitioned, durable log. Producers append; consumers read at their own pace and remember their own offset. The same stream is consumed by ten different services for ten different purposes — today and next year. The log is the truth; everything else is a projection.</p>
+    <div class="tags"><span>Kafka</span><span>Kinesis</span><span>Pulsar</span><span>Append-Only Log</span><span>Replay</span><span>CDC</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Streaming Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Topic:</strong> a named, ordered, append-only log. Producers write to the end; consumers read from any offset.</li>
+          <li><strong>Partition:</strong> a topic is split into N partitions for parallelism. Order is guaranteed <em>within</em> a partition, not across.</li>
+          <li><strong>Offset:</strong> the position of a message in a partition. Consumers track their own offset; the broker doesn't know who's read what.</li>
+          <li><strong>Consumer group:</strong> a set of consumers that share a topic — each partition goes to exactly one member of the group. Add consumers (up to partition count) to scale read throughput.</li>
+          <li><strong>Retention:</strong> messages stay for hours, days, or forever. Unlike a queue, reading doesn't consume.</li>
+          <li><strong>Replay:</strong> reset a consumer's offset to the past and reprocess. The defining feature.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What Streaming Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Replayability</summary>
+        <div class="drill-body">
+          <p>Bug fix in the order-totals projection? Rewind that consumer to the start of the topic and replay. New analytics service launching? Read the topic from the beginning to backfill its model. With a queue, the message is gone the moment it's consumed; with a log, every consumer can rewind independently.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Many Consumers, No Coordination</summary>
+        <div class="drill-body">
+          <p>The same <code>OrderPlaced</code> stream feeds the warehouse, billing, fraud detection, recommendations training, the analytics warehouse, and the customer-email service. Each consumer keeps its own offset; the producer never knew. Add a new consumer next quarter without touching anything that exists today.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Massive Throughput</summary>
+        <div class="drill-body">
+          <p>Append-only writes are sequential — disks love that. Kafka regularly handles millions of messages per second per cluster. Partitioning fans the load across brokers; the only limit on read throughput is "did you give the consumer group enough partitions?"</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stream Processing</summary>
+        <div class="drill-body">
+          <p>Once events are on a stream, you can transform them in flight: filter, join, aggregate over windows, materialize into a search index or cache. Kafka Streams, Apache Flink, ksqlDB, Spark Structured Streaming. This is how real-time fraud detection, leaderboards, and ML feature pipelines get built.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Patterns You Need</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Partitioning Keys</summary>
+        <div class="drill-body">
+          <p>Order is only guaranteed within a partition. Pick a partition key that groups events that must stay in order — usually the entity ID (<code>user_id</code>, <code>order_id</code>, <code>account_id</code>). Same key → same partition → same consumer → same order.</p>
+          <p style="margin-top:8px;"><strong>Pick badly</strong> and you get <em>hot partitions:</em> one consumer pinned at 100% while the others idle. Picking too coarse-grained a key (<code>customer_country</code>) is the classic trap.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Delivery Semantics</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>At-most-once:</strong> commit offset before processing. Lossy. Used for non-critical metrics.</li>
+            <li><strong>At-least-once:</strong> process then commit. Duplicates possible — the realistic default.</li>
+            <li><strong>Exactly-once (within Kafka):</strong> Kafka transactions guarantee a producer can write to multiple topics atomically with offset commits. End-to-end exactly-once across external systems is much harder.</li>
+          </ul>
+          <p style="margin-top:8px;"><strong>Idempotency is your friend.</strong> Process by a unique <code>event_id</code> and ignore duplicates — cheaper than chasing exactly-once.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Evolution</summary>
+        <div class="drill-body">
+          <p>Events outlive the code that wrote them. Use a schema (Avro, Protobuf, JSON Schema) and a registry (Confluent Schema Registry, Apicurio, Buf Schema Registry) so producers and consumers can evolve independently.</p>
+          <p style="margin-top:8px;"><strong>Rule of thumb:</strong> only add optional fields, never repurpose one. Enforce backward and forward compatibility in CI.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Outbox Pattern</summary>
+        <div class="drill-body">
+          <p>How do you write to your DB <em>and</em> publish an event without one of them silently failing? Write the event to an <code>outbox</code> table in the same DB transaction; a separate process (or Debezium-style CDC) reads the table and publishes to Kafka. Atomic on the DB side, eventually consistent on the bus side. Essential whenever a state change must produce an event.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Compacted Topics</summary>
+        <div class="drill-body">
+          <p>A regular topic retains by time. A <strong>compacted topic</strong> retains by key — the last value for each key is kept forever, older values for the same key are eventually deleted. Lets the topic act as a permanent "current state" view: replaying gives you the latest of everything. Used for config distribution, slowly-changing dimensions, and stateful stream processors.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Change Data Capture (CDC)</summary>
+        <div class="drill-body">
+          <p>Stream every row change in a database (Postgres, MySQL, MongoDB) onto a Kafka topic. Tools: Debezium, AWS DMS. Lets downstream services react to DB changes without modifying the source app, and is the core of "the database is just another producer" architectures.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Players</div><h2>The Common Streaming Brokers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Broker</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Apache Kafka</td><td>The de-facto standard. Self-managed, or via Confluent Cloud, AWS MSK, Aiven, Redpanda (Kafka-compatible).</td></tr>
+          <tr><td>AWS Kinesis Data Streams</td><td>Managed, Kafka-like. Tighter AWS integration, simpler ops, lower throughput per shard.</td></tr>
+          <tr><td>Apache Pulsar</td><td>Log + queue hybrid. Multi-tenant from day one; separates compute (brokers) from storage (BookKeeper); native geo-replication.</td></tr>
+          <tr><td>Google Pub/Sub</td><td>Managed pub/sub with persistence; less of a "log" model but covers many streaming use cases on GCP.</td></tr>
+          <tr><td>Azure Event Hubs</td><td>Kafka-protocol compatible managed service on Azure.</td></tr>
+          <tr><td>Redpanda</td><td>Kafka-API-compatible, written in C++; lower-latency, simpler operationally.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Operational Tax</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Operational weight.</strong> Self-managed Kafka is three brokers minimum, ZooKeeper or KRaft, partition planning, retention tuning, ACLs, mTLS, monitoring. Use a managed service unless you're sure.</li>
+        <li><strong>Capacity planning by partitions.</strong> Partitions are easy to add but hard to remove; pick generously up front but not absurdly.</li>
+        <li><strong>Eventual consistency everywhere.</strong> Downstream views lag the log by milliseconds to seconds. Design UIs and APIs for staleness.</li>
+        <li><strong>Schema discipline is non-optional.</strong> One team adds a field, another team's consumer crashes at 3 a.m. Compatibility checks in CI prevent this.</li>
+        <li><strong>Don't reinvent a database.</strong> Streams are not stores you query randomly. Project into a database the consumer owns.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Streaming</h2></div>
+    <div class="chapter-body">
+      <p>Pick event streaming when you need durable, ordered, replayable history of business events with multiple independent consumers — the substrate for event-driven architectures, analytics pipelines, audit trails, and CDC.</p>
+      <p style="margin-top:10px;">Don't reach for Kafka for plain background jobs (a queue is simpler) or for one-to-one fire-and-forget messages (use SQS, Service Bus, RabbitMQ). Streaming earns its operational weight when replay and many-consumers-on-one-stream are real requirements, not aspirational ones.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More on Messaging</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="message-queues.html">← Message Queues</a>
+        <a href="pubsub.html">Pub/Sub →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -624,22 +624,22 @@
       </div>
 
       <details class="drill" open>
-        <summary>API Styles</summary>
+        <summary>API Styles <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>REST</h5><p>Resources + HTTP verbs. Simple, cacheable, ubiquitous.</p></div>
-            <div class="card teal"><h5>GraphQL</h5><p>Client asks for exactly the fields it needs. One endpoint.</p></div>
-            <div class="card mid"><h5>gRPC</h5><p>Binary protocol using Protocol Buffers. Very fast for service-to-service.</p></div>
-            <div class="card accent"><h5>WebSockets</h5><p>Two-way always-on channel. Chats, dashboards, games.</p></div>
-            <div class="card"><h5>SOAP</h5><p>XML-based, heavy but still seen in legacy enterprise.</p></div>
-            <div class="card teal"><h5>Webhooks</h5><p>Reverse APIs — the server calls you when an event happens.</p></div>
-            <div class="card mid"><h5>Server-Sent Events</h5><p>One-way stream from server to client.</p></div>
+            <a class="card" href="pages/api/rest.html" style="text-decoration:none;color:inherit;display:block;"><h5>REST →</h5><p>Resources + HTTP verbs. Simple, cacheable, ubiquitous.</p></a>
+            <a class="card teal" href="pages/api/graphql.html" style="text-decoration:none;color:inherit;display:block;"><h5>GraphQL →</h5><p>Client asks for exactly the fields it needs. One endpoint.</p></a>
+            <a class="card mid" href="pages/api/grpc.html" style="text-decoration:none;color:inherit;display:block;"><h5>gRPC →</h5><p>Binary protocol using Protocol Buffers. Very fast for service-to-service.</p></a>
+            <a class="card accent" href="pages/api/websockets.html" style="text-decoration:none;color:inherit;display:block;"><h5>WebSockets →</h5><p>Two-way always-on channel. Chats, dashboards, games.</p></a>
+            <a class="card" href="pages/api/soap.html" style="text-decoration:none;color:inherit;display:block;"><h5>SOAP →</h5><p>XML-based, heavy but still seen in legacy enterprise.</p></a>
+            <a class="card teal" href="pages/api/webhooks.html" style="text-decoration:none;color:inherit;display:block;"><h5>Webhooks →</h5><p>Reverse APIs — the server calls you when an event happens.</p></a>
+            <a class="card mid" href="pages/api/sse.html" style="text-decoration:none;color:inherit;display:block;"><h5>Server-Sent Events →</h5><p>One-way stream from server to client.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Networking Fundamentals</summary>
+        <summary>Networking Fundamentals <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/api/networking.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
         <div class="drill-body">
           <div class="flow">
             <div class="step">Client</div><div class="arrow">→</div>
@@ -663,13 +663,13 @@
       </details>
 
       <details class="drill">
-        <summary>Messaging &amp; Event Streaming</summary>
+        <summary>Messaging &amp; Event Streaming <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <p>When services don't want to wait for each other, they exchange messages.</p>
           <div class="grid">
-            <div class="card"><h5>Message Queues</h5><p>RabbitMQ, ActiveMQ, Amazon SQS. One producer → one consumer, with durable delivery.</p></div>
-            <div class="card teal"><h5>Event Streaming</h5><p>Apache Kafka, AWS Kinesis, Google Pub/Sub. Replayable logs of events, many consumers.</p></div>
-            <div class="card mid"><h5>Pub/Sub</h5><p>Publishers broadcast events; subscribers listen. Decoupling 101.</p></div>
+            <a class="card" href="pages/api/message-queues.html" style="text-decoration:none;color:inherit;display:block;"><h5>Message Queues →</h5><p>RabbitMQ, ActiveMQ, Amazon SQS. One producer → one consumer, with durable delivery.</p></a>
+            <a class="card teal" href="pages/api/event-streaming.html" style="text-decoration:none;color:inherit;display:block;"><h5>Event Streaming →</h5><p>Apache Kafka, AWS Kinesis, Google Pub/Sub. Replayable logs of events, many consumers.</p></a>
+            <a class="card mid" href="pages/api/pubsub.html" style="text-decoration:none;color:inherit;display:block;"><h5>Pub/Sub →</h5><p>Publishers broadcast events; subscribers listen. Decoupling 101.</p></a>
           </div>
         </div>
       </details>
@@ -697,23 +697,23 @@
       </div>
 
       <details class="drill" open>
-        <summary>Architectural Styles</summary>
+        <summary>Architectural Styles <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Monolith</h5><p>One deployable app. Simple early on; hard to scale teams.</p></div>
-            <div class="card teal"><h5>Modular Monolith</h5><p>Monolith with strict internal boundaries. Often the right default.</p></div>
-            <div class="card mid"><h5>Microservices</h5><p>Many small services, independently deployed. Powerful but complex.</p></div>
-            <div class="card accent"><h5>Serverless</h5><p>Functions triggered by events. No servers to manage.</p></div>
-            <div class="card"><h5>Event-Driven</h5><p>Services communicate via events on a bus. Loose coupling, eventual consistency.</p></div>
-            <div class="card teal"><h5>Layered / N-tier</h5><p>Presentation → Application → Domain → Data. The classic.</p></div>
-            <div class="card mid"><h5>Hexagonal / Clean</h5><p>Domain core, adapters on the edges. Swap DB or UI without touching logic.</p></div>
-            <div class="card accent"><h5>CQRS + Event Sourcing</h5><p>Separate read/write models; store events, not state.</p></div>
+            <a class="card" href="pages/architecture/monolith.html" style="text-decoration:none;color:inherit;display:block;"><h5>Monolith →</h5><p>One deployable app. Simple early on; hard to scale teams.</p></a>
+            <a class="card teal" href="pages/architecture/modular-monolith.html" style="text-decoration:none;color:inherit;display:block;"><h5>Modular Monolith →</h5><p>Monolith with strict internal boundaries. Often the right default.</p></a>
+            <a class="card mid" href="pages/architecture/microservices.html" style="text-decoration:none;color:inherit;display:block;"><h5>Microservices →</h5><p>Many small services, independently deployed. Powerful but complex.</p></a>
+            <a class="card accent" href="pages/architecture/serverless.html" style="text-decoration:none;color:inherit;display:block;"><h5>Serverless →</h5><p>Functions triggered by events. No servers to manage.</p></a>
+            <a class="card" href="pages/architecture/event-driven.html" style="text-decoration:none;color:inherit;display:block;"><h5>Event-Driven →</h5><p>Services communicate via events on a bus. Loose coupling, eventual consistency.</p></a>
+            <a class="card teal" href="pages/architecture/layered.html" style="text-decoration:none;color:inherit;display:block;"><h5>Layered / N-tier →</h5><p>Presentation → Application → Domain → Data. The classic.</p></a>
+            <a class="card mid" href="pages/architecture/hexagonal.html" style="text-decoration:none;color:inherit;display:block;"><h5>Hexagonal / Clean →</h5><p>Domain core, adapters on the edges. Swap DB or UI without touching logic.</p></a>
+            <a class="card accent" href="pages/architecture/cqrs.html" style="text-decoration:none;color:inherit;display:block;"><h5>CQRS + Event Sourcing →</h5><p>Separate read/write models; store events, not state.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Design Principles (SOLID &amp; Friends)</summary>
+        <summary>Design Principles (SOLID &amp; Friends) <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/architecture/principles.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
         <div class="drill-body">
           <ul style="font-size: 14px; line-height: 1.6;">
             <li><strong>S — Single Responsibility:</strong> one reason to change per class.</li>
@@ -727,13 +727,13 @@
       </details>
 
       <details class="drill">
-        <summary>Common Design Patterns</summary>
+        <summary>Common Design Patterns <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Creational</h5><p>Singleton, Factory, Builder, Prototype.</p></div>
-            <div class="card teal"><h5>Structural</h5><p>Adapter, Decorator, Facade, Proxy, Composite.</p></div>
-            <div class="card mid"><h5>Behavioral</h5><p>Strategy, Observer, Command, Iterator, State.</p></div>
-            <div class="card accent"><h5>Enterprise</h5><p>Repository, Unit of Work, DTO, Dependency Injection.</p></div>
+            <a class="card" href="pages/architecture/creational.html" style="text-decoration:none;color:inherit;display:block;"><h5>Creational →</h5><p>Singleton, Factory, Builder, Prototype.</p></a>
+            <a class="card teal" href="pages/architecture/structural.html" style="text-decoration:none;color:inherit;display:block;"><h5>Structural →</h5><p>Adapter, Decorator, Facade, Proxy, Composite.</p></a>
+            <a class="card mid" href="pages/architecture/behavioral.html" style="text-decoration:none;color:inherit;display:block;"><h5>Behavioral →</h5><p>Strategy, Observer, Command, Iterator, State.</p></a>
+            <a class="card accent" href="pages/architecture/enterprise-patterns.html" style="text-decoration:none;color:inherit;display:block;"><h5>Enterprise →</h5><p>Repository, Unit of Work, DTO, Dependency Injection.</p></a>
           </div>
         </div>
       </details>

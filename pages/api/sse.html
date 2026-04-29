@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Server-Sent Events · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="A long-lived HTTP response that keeps streaming text events to the browser. Simpler than WebSockets, friendlier to proxies — and the workhorse behind every AI token stream you've seen." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/sse.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Server-Sent Events · API Styles Deep Dive" />
+<meta property="og:description" content="A long-lived HTTP response that keeps streaming text events to the browser." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/sse.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Server-Sent Events · API Styles Deep Dive" />
+<meta name="twitter:description" content="A long-lived HTTP response that keeps streaming text events to the browser." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 5 of 7</div>
+    <h1>Server-Sent Events — One-Way Streams over HTTP</h1>
+    <p class="lede">Server-Sent Events (SSE) is a standard HTTP response that just… never ends. The server keeps writing <code>data:</code> lines; the browser's <code>EventSource</code> API reads them. It's the simplest way to push from server to client, it survives corporate proxies in ways WebSockets don't, and it's what powers the streaming output of every modern AI chat product.</p>
+    <div class="tags"><span>HTTP</span><span>One-Way</span><span>EventSource</span><span>Auto-Reconnect</span><span>AI Streaming</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What SSE Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Standardized:</strong> part of the HTML5 spec. Native <code>EventSource</code> in every browser.</li>
+          <li><strong>Just HTTP:</strong> a normal response with <code>Content-Type: text/event-stream</code> that doesn't end. No protocol upgrade, no special framing.</li>
+          <li><strong>Format:</strong> plain text. Each event is one or more lines like <code>data: {"foo":1}</code>, separated by a blank line.</li>
+          <li><strong>One-way:</strong> server → client only. The client uses regular REST calls to talk back.</li>
+          <li><strong>Auto-reconnect built in.</strong> If the connection drops, the browser reconnects automatically and sends <code>Last-Event-ID</code> so the server can resume.</li>
+          <li><strong>Works with HTTP/2 and HTTP/3</strong> — modern multiplexing means many SSE streams over one connection without exhausting browser limits.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Radically Simple</summary>
+        <div class="drill-body">
+          <p>The server writes lines; the client reads lines. No framing protocol. No <code>Upgrade</code> handshake. No subprotocol negotiation. A working SSE server is ten lines of Express, FastAPI, or Spring code.</p>
+<pre style="margin-top:8px; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;">id: 42
+event: message
+data: {"role":"assistant","content":"Hello"}
+
+id: 43
+data: {"role":"assistant","content":"!"}</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Survives Proxies and Firewalls</summary>
+        <div class="drill-body">
+          <p>It's an ordinary HTTP response. Every proxy, every CDN, every corporate firewall already understands it. Compare with WebSockets, where one corporate proxy that doesn't pass <code>Upgrade</code> headers cleanly takes down the whole feature.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Free Reconnection and Resume</summary>
+        <div class="drill-body">
+          <p>The browser handles reconnect automatically. The server's optional <code>id:</code> field becomes a resume cursor — on reconnect the browser sends <code>Last-Event-ID</code>, and the server can pick up where it left off. None of this requires application-level code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Plays Nicely with Auth</summary>
+        <div class="drill-body">
+          <p>Standard cookies, bearer tokens, and CORS preflights work — it's just HTTP. Compare with WebSockets, where the browser's API blocks custom headers and you end up with query-string tokens or short-lived tickets.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>Real Constraints</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>One-Way Only</summary>
+        <div class="drill-body">
+          <p>The server can push but the client can't push back over the same connection. Use a regular <code>POST</code> for client-to-server messages. For most use cases this is a non-issue (and arguably cleaner — separate the concerns), but if you really need symmetric push, WebSockets win.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>UTF-8 Text Only</summary>
+        <div class="drill-body">
+          <p>SSE is a text protocol. Binary payloads need base64 — fine for small things, wasteful for large ones. If you're streaming raw audio or video frames, look elsewhere (WebSockets, WebRTC, gRPC streaming).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Connection Limits on HTTP/1.1</summary>
+        <div class="drill-body">
+          <p>Browsers limit connections per host (typically 6 on HTTP/1.1). Each SSE stream burns one of those slots. Open six streams and other requests stall. Mitigation: use HTTP/2 (no per-host limit), or fan multiple logical streams through one SSE connection with an event channel.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Server Resource Use</summary>
+        <div class="drill-body">
+          <p>Long-lived connections are still long-lived. Per-connection memory, file descriptors, and worker slots add up. Plan capacity by concurrent connections, not by RPS. Use async runtimes (Node, Go, async Python, Spring WebFlux) — thread-per-connection servers fall over fast.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Some Proxies Buffer</summary>
+        <div class="drill-body">
+          <p>NGINX with the wrong config will buffer the entire response and defeat streaming. Set <code>X-Accel-Buffering: no</code>, ensure <code>proxy_buffering off</code> for the location, and disable response compression on the stream (<code>gzip off</code> for SSE responses).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Use Cases</div><h2>Where SSE Shines</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>AI token streaming</strong> — every modern LLM-backed product (ChatGPT, Claude.ai, Copilot) ships tokens to the browser via SSE.</li>
+        <li><strong>Notifications and toasts</strong> — order status, "someone mentioned you", deploy completed.</li>
+        <li><strong>Live dashboards</strong> — metrics, leaderboards, build pipelines.</li>
+        <li><strong>Log tailing</strong> — follow logs from a server in the browser.</li>
+        <li><strong>Progress feedback</strong> — long-running jobs that report incremental progress.</li>
+        <li><strong>GraphQL subscriptions over SSE</strong> (<code>graphql-sse</code>) — an alternative to WebSockets for real-time GraphQL.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>SSE vs WebSockets vs Polling</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Need</th><th>Pick</th></tr></thead>
+        <tbody>
+          <tr><td>Server pushes occasional updates; client uses normal REST to act</td><td><strong>SSE.</strong> Simpler than WebSockets and just as effective.</td></tr>
+          <tr><td>Both sides push frequently and tiny payloads</td><td><strong>WebSockets.</strong> Lower per-message overhead, true full-duplex.</td></tr>
+          <tr><td>Pushes are infrequent (minutes apart) and clients can tolerate delay</td><td><strong>Polling</strong> or long-polling. Don't over-engineer.</td></tr>
+          <tr><td>Streaming AI completions</td><td><strong>SSE.</strong> Industry default for a reason.</td></tr>
+          <tr><td>Binary streams (audio, video)</td><td><strong>WebSockets, WebRTC, or HLS</strong>, not SSE.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">← REST</a>
+        <a href="graphql.html">← GraphQL</a>
+        <a href="grpc.html">← gRPC</a>
+        <a href="websockets.html">← WebSockets</a>
+        <a href="webhooks.html">Webhooks →</a>
+        <a href="soap.html">SOAP →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

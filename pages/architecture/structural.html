@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Structural Patterns · Design Patterns Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Adapter, Decorator, Facade, Proxy, Composite, Bridge, Flyweight — patterns for composing classes and objects into bigger structures." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/structural.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Structural Patterns · Design Patterns Deep Dive" />
+<meta property="og:description" content="Adapter, Decorator, Facade, Proxy, Composite, Bridge, Flyweight — patterns for composing classes and objects." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/structural.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Structural Patterns · Design Patterns Deep Dive" />
+<meta name="twitter:description" content="Adapter, Decorator, Facade, Proxy, Composite, Bridge, Flyweight." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Design Patterns Deep Dive · 2 of 4</div>
+    <h1>Structural Patterns — How Objects Plug Together</h1>
+    <p class="lede">Structural patterns are about composition: how to assemble classes and objects into larger structures while keeping them flexible. They show up everywhere — in HTTP middleware stacks, in ORM query builders, in DOM trees, in remote procedure calls. Most of them you'll recognize the moment you see the diagram, even if you've never named them.</p>
+    <div class="tags"><span>Adapter</span><span>Decorator</span><span>Facade</span><span>Proxy</span><span>Composite</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Structural Patterns Solve</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>The problem:</strong> two classes have to work together but their shapes don't match — different interfaces, different lifecycles, different access patterns.</li>
+          <li><strong>The solution:</strong> introduce a third object that bridges, wraps, or hides the mismatch.</li>
+          <li><strong>The trade-off:</strong> indirection. The chain of wrappers is harder to read than direct calls.</li>
+          <li><strong>Where they live:</strong> at boundaries — between your code and a third-party SDK, between a domain and its persistence, between an in-process API and a remote one.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Patterns</div><h2>Seven Structural Patterns</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Adapter</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Wrap an object so it matches a different interface your code expects.</p>
+          <p style="margin-top:8px;">Classic use: integrating a third-party library whose API doesn't match yours. The Adapter is glue; the adapted object is unchanged. You write a thin class that implements <em>your</em> interface and translates each call into the third-party shape.</p>
+          <p style="margin-top:8px;"><strong>In hexagonal architecture, "adapters" are exactly this</strong> — they wrap REST clients, ORMs, message brokers behind ports the domain owns. The whole architecture is named after this pattern.</p>
+          <p style="margin-top:8px;"><strong>Class adapter vs object adapter:</strong> class adapter inherits from the adaptee (rare in modern code, requires multiple inheritance or interfaces); object adapter holds a reference to it (the typical form).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Decorator</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Attach additional responsibilities to an object dynamically by wrapping it in another object that implements the same interface.</p>
+          <p style="margin-top:8px;">Decorators implement the same interface as what they wrap, so they nest. Caching, logging, retries, auth, tracing — all natural decorators around an HTTP client, a repository, or a message handler.</p>
+<pre style="margin-top:8px; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;">HttpClient client = new RetryingClient(
+    new LoggingClient(
+        new TimeoutClient(
+            new BasicHttpClient())));</pre>
+          <p style="margin-top:8px;"><strong>Compared to inheritance:</strong> Decorator stacks behaviors at runtime; subclassing fixes them at compile time. You can mix and match decorators per call site without a combinatorial class explosion.</p>
+          <p style="margin-top:8px;"><strong>In the wild:</strong> Java's I/O streams (<code>BufferedReader(new FileReader(...))</code>), Python's function decorators, ASP.NET middleware, Express middleware — all decorators with different syntactic dressing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Facade</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Provide a single, unified interface to a set of interfaces in a subsystem. A Facade defines a higher-level interface that makes the subsystem easier to use.</p>
+          <p style="margin-top:8px;">Behind one method, ten classes coordinate. Useful when you want to expose a small surface area to most callers while still allowing power users to drop down to the underlying APIs.</p>
+          <p style="margin-top:8px;"><em>Example:</em> a <code>VideoConverter.convert(file, format)</code> facade hides the codec lookup, parameter negotiation, encoder pipeline, and metadata copy that would otherwise be 200 lines of imperative glue.</p>
+          <p style="margin-top:8px;"><strong>Watch out:</strong> facades that grow without bound become god objects. If your facade has 50 methods, it's no longer simplifying — it's just a thicker layer over the same complexity.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Proxy</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Provide a surrogate or placeholder for another object to control access to it.</p>
+          <p style="margin-top:8px;">A Proxy implements the same interface as the real object, but adds something — distance, lazy initialization, access control, caching, instrumentation. Variants:</p>
+          <ul style="font-size: 14px; line-height: 1.6; margin-top:8px;">
+            <li><strong>Remote proxy:</strong> stub for an object on another machine. RPC, gRPC, RMI client stubs.</li>
+            <li><strong>Virtual proxy:</strong> creates the heavyweight resource only when first used. ORM lazy-loaded associations.</li>
+            <li><strong>Protection proxy:</strong> auth checks before delegation. Often built into method-level security frameworks.</li>
+            <li><strong>Caching proxy:</strong> returns memoized results without calling the real object.</li>
+            <li><strong>Smart reference:</strong> reference-counts, locks, or otherwise tracks usage of the underlying object.</li>
+          </ul>
+          <p style="margin-top:8px;"><strong>Proxy vs Decorator:</strong> they look identical from the outside (same-interface wrapper) but Decorator adds behavior; Proxy controls access. The semantics differ even if the structure doesn't.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Composite</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Compose objects into tree structures to represent part-whole hierarchies. Treat individual objects and groups of objects uniformly through a shared interface.</p>
+          <p style="margin-top:8px;">The DOM is a Composite: a single <code>&lt;div&gt;</code> and a tree of nested elements both expose the same node API. Filesystems, organizational charts, UI widget trees, AST nodes, scene graphs — all natural composites.</p>
+          <p style="margin-top:8px;"><em>Example:</em> a <code>render()</code> method on a UI <code>Component</code>. <code>Button.render()</code> draws a button; <code>Panel.render()</code> draws itself and recursively calls <code>render()</code> on its children. The caller doesn't care which.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Bridge</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Decouple an abstraction from its implementation so the two can vary independently.</p>
+          <p style="margin-top:8px;">If you have N abstractions and M implementations, naive inheritance gives you N×M classes. Bridge gives you N + M by separating "what" from "how" with a reference instead of inheritance. Different shapes (Circle, Square, Triangle) × different rendering backends (SVG, Canvas, OpenGL) — three shape classes plus three renderer classes, not nine combined classes.</p>
+          <p style="margin-top:8px;"><strong>Reality check:</strong> the textbook example is contrived; the real-world cases are subtler — JDBC's <code>Driver</code> abstraction, GUI toolkits' platform-specific peers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Flyweight</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Share fine-grained objects efficiently to support large numbers of them. Separate <em>intrinsic</em> state (shared) from <em>extrinsic</em> state (passed in per use).</p>
+          <p style="margin-top:8px;">Glyphs in a text editor: one shared object per character code holds the font outline; the per-position state (x/y, color override) lives outside. Otherwise rendering a 1 MB document allocates a million tiny objects.</p>
+          <p style="margin-top:8px;"><strong>Modern echo:</strong> string interning, <code>Integer.valueOf</code> caching for small ints, immutable value types in databases — all flyweight-flavored sharing.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">In Practice</div><h2>The Patterns You Actually Reach For</h2></div>
+    <div class="chapter-body">
+      <p>In day-to-day modern code, three structural patterns dominate:</p>
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Adapter</strong> — wherever your code meets a third-party API, an adapter sits at the boundary.</li>
+        <li><strong>Decorator</strong> — middleware stacks, resilience layers (retry, circuit breaker), instrumentation, caching.</li>
+        <li><strong>Proxy</strong> — RPC stubs, ORM lazy loading, security interceptors, caching layers. Often generated by frameworks rather than hand-written.</li>
+      </ul>
+      <p style="margin-top:10px;">Composite pops up whenever a tree shows up. Bridge and Flyweight are real but rarer — recognize them when they appear in the libraries you use, but you won't often invent one from scratch.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Pattern Families</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="creational.html">← Creational Patterns</a>
+        <a href="behavioral.html">Behavioral Patterns →</a>
+        <a href="enterprise-patterns.html">Enterprise Patterns →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

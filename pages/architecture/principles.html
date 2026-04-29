@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Design Principles · Architecture Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="SOLID, DRY, KISS, YAGNI, and the principles every senior engineer reaches for — what they really mean, where they come from, and where they go wrong." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/principles.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Design Principles · Architecture Deep Dive" />
+<meta property="og:description" content="SOLID, DRY, KISS, YAGNI, and the principles every senior engineer reaches for — what they really mean and where they go wrong." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/principles.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Design Principles · Architecture Deep Dive" />
+<meta name="twitter:description" content="SOLID, DRY, KISS, YAGNI, and the principles every senior engineer reaches for." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architecture Deep Dive · 2 of 3</div>
+    <h1>Design Principles — SOLID and Friends</h1>
+    <p class="lede">Principles aren't rules; they're heuristics that, applied with judgment, keep code changeable for years. Applied dogmatically, they generate the over-engineered abstractions they were meant to prevent. The trick is knowing when to reach for one and when to ignore it.</p>
+    <div class="tags"><span>SOLID</span><span>DRY</span><span>KISS</span><span>YAGNI</span><span>Coupling</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>Why Principles Exist</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Code is read more than written.</strong> Optimize for the next person — usually you, six months from now.</li>
+          <li><strong>Change is the constant.</strong> Software lives by being modified. Principles aim at making that cheap.</li>
+          <li><strong>Coupling vs cohesion:</strong> low coupling between modules, high cohesion within them. Most principles are restatements of this.</li>
+          <li><strong>Heuristics, not laws.</strong> A principle that produces a worse design in this specific case is being misapplied.</li>
+          <li><strong>Trade-offs are the work.</strong> "When does this rule stop applying?" is more useful than the rule.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">SOLID</div><h2>The Five Principles, One Letter at a Time</h2></div>
+    <div class="chapter-body">
+      <p style="margin-bottom: 14px; color: var(--muted); font-size: 14px;">Coined by Robert C. Martin in the early 2000s. Originally aimed at OO design, but the underlying ideas — small responsibilities, stable abstractions, depend on interfaces — apply everywhere.</p>
+
+      <details class="drill" open>
+        <summary>S — Single Responsibility Principle</summary>
+        <div class="drill-body">
+          <p>"A class should have one reason to change." Not "do one thing" — that's too easy to misread. The real test: <em>who</em> would ask for this code to change? If billing and reporting both ask for changes to the same class, it has two responsibilities and should split.</p>
+          <p style="margin-top:8px;"><strong>Common smell:</strong> a 2,000-line <code>UserService</code> that handles auth, profile edits, email, and analytics. Split by axis of change.</p>
+          <p style="margin-top:8px;"><strong>Don't:</strong> shatter every class into single-method classes. Cohesion matters too.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>O — Open/Closed Principle</summary>
+        <div class="drill-body">
+          <p>"Open to extension, closed to modification." You should be able to add new behavior without editing tested, working code. The classic mechanism: polymorphism. New payment provider? Add a new <code>PaymentProvider</code> implementation; don't add a new <code>else if</code> in a switch statement.</p>
+          <p style="margin-top:8px;"><strong>Caveat:</strong> applied prematurely, this produces speculative interfaces with one implementation. Wait until the second variant exists before extracting the abstraction.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>L — Liskov Substitution Principle</summary>
+        <div class="drill-body">
+          <p>If <code>S</code> is a subtype of <code>T</code>, you should be able to use an <code>S</code> anywhere a <code>T</code> is expected without breaking the program. Subclasses must honor the contract of the parent — same preconditions or weaker, same postconditions or stronger, no surprise exceptions.</p>
+          <p style="margin-top:8px;"><strong>Classic violation:</strong> <code>Square extends Rectangle</code>. Setting width on a Rectangle leaves height alone; on a Square it changes both. Code that worked on Rectangle now misbehaves on Square. The "is-a" of math doesn't match the "is-a" of behavior.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>I — Interface Segregation Principle</summary>
+        <div class="drill-body">
+          <p>"Clients shouldn't be forced to depend on methods they don't use." Many small focused interfaces beat one fat interface. A <code>Printer</code> that needs only <code>print()</code> shouldn't have to depend on a <code>MultiFunctionDevice</code> interface with <code>scan()</code>, <code>fax()</code>, and <code>staple()</code>.</p>
+          <p style="margin-top:8px;">In practice: if you find yourself stubbing methods with <code>throw new NotSupportedException()</code>, your interface is too wide.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>D — Dependency Inversion Principle</summary>
+        <div class="drill-body">
+          <p>High-level modules shouldn't depend on low-level modules; both should depend on abstractions. The order processor depends on an <code>EmailSender</code> interface, not the concrete <code>SmtpClient</code>. Wire the concrete one in at the edge (composition root, DI container).</p>
+          <p style="margin-top:8px;">This is what makes hexagonal architecture work: the domain depends on a port; an adapter implements it. Swap adapters without touching the domain.</p>
+          <p style="margin-top:8px;"><strong>Don't confuse with Dependency Injection</strong> — DI is one mechanism for achieving DIP, not the principle itself.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Acronym Shelf</div><h2>DRY, KISS, YAGNI, and Their Friends</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>DRY — Don't Repeat Yourself</summary>
+        <div class="drill-body">
+          <p>"Every piece of <em>knowledge</em> must have a single, unambiguous, authoritative representation." It's about knowledge, not code shape. Two functions that happen to have similar code today but represent <em>different</em> business rules will diverge — merging them now creates a fake abstraction that fights every future change.</p>
+          <p style="margin-top:8px;"><strong>Rule of three:</strong> wait until you see the same idea three times before extracting. Two might be coincidence.</p>
+          <p style="margin-top:8px;"><strong>Counter-principle: WET</strong> — "Write Everything Twice." Sometimes duplication is cheaper than the wrong abstraction. <em>"Duplication is far cheaper than the wrong abstraction." — Sandi Metz.</em></p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>KISS — Keep It Simple, Stupid</summary>
+        <div class="drill-body">
+          <p>The simplest design that solves today's problem usually wins. Cleverness costs the next reader minutes; clarity costs the writer minutes. Spend the cost on the side that happens once.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>YAGNI — You Aren't Gonna Need It</summary>
+        <div class="drill-body">
+          <p>Don't build what isn't asked for. Speculative generality (extra config knobs, plugin hooks, generic types nobody uses) almost always costs more than a future refactor would have. Build the concrete thing; generalize when a second case actually shows up.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Law of Demeter — "Only Talk to Your Friends"</summary>
+        <div class="drill-body">
+          <p>An object should only call methods on itself, its parameters, objects it creates, or its direct components. <code>order.customer.address.zip</code> reaches through three objects — change any of them and the caller breaks. Prefer <code>order.shippingZip()</code>.</p>
+          <p style="margin-top:8px;">Sometimes called "no train wrecks" because of the dot-chains.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Composition Over Inheritance</summary>
+        <div class="drill-body">
+          <p>Inheritance binds you to a base class's whole shape, forever. Composition lets you assemble behavior from small pieces. Most "is-a" relationships are better modeled as "has-a" — a <code>Robot</code> <em>has a</em> <code>WheelDrive</code>, not <em>is a</em> <code>WheeledVehicle</code>.</p>
+          <p style="margin-top:8px;">Modern languages encourage this — Go has no inheritance at all; Rust uses traits; even Java/C# style guides now lean composition-first.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tell, Don't Ask</summary>
+        <div class="drill-body">
+          <p>Don't pull data out of an object to make a decision; tell the object to make the decision. Instead of <code>if (account.balance &gt; amount) account.debit(amount)</code>, write <code>account.tryDebit(amount)</code>. Behavior lives with the data.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Principle of Least Astonishment</summary>
+        <div class="drill-body">
+          <p>Code should do what a reasonable reader expects. A function called <code>getUser()</code> shouldn't also send an email. A method that says it returns a list shouldn't return null. Surprise is a bug in the API design.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Fail Fast</summary>
+        <div class="drill-body">
+          <p>If something is wrong, crash at the boundary where it can be caught and diagnosed — not silently five layers later when the corrupted state finally explodes. Validate inputs, assert invariants, and let bugs be loud during development.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Cohesion &amp; Coupling</div><h2>The Underlying Game</h2></div>
+    <div class="chapter-body">
+      <p>Almost every principle on this page is a restatement of one rule: <strong>maximize cohesion, minimize coupling.</strong> A module is cohesive when its parts belong together (single responsibility). It's loosely coupled when changes elsewhere don't ripple through it (interface segregation, dependency inversion, Law of Demeter).</p>
+
+      <details class="drill" open>
+        <summary>Types of Coupling, Worst to Best</summary>
+        <div class="drill-body">
+          <ul style="font-size: 14px; line-height: 1.7;">
+            <li><strong>Content coupling:</strong> module A reads/writes module B's internals. Worst.</li>
+            <li><strong>Common coupling:</strong> shared global state. Hard to test, hard to reason about.</li>
+            <li><strong>Control coupling:</strong> A passes a flag telling B how to behave. Smells like missing polymorphism.</li>
+            <li><strong>Stamp coupling:</strong> A passes a big object when B only needs two fields.</li>
+            <li><strong>Data coupling:</strong> A passes the exact data B needs. Acceptable.</li>
+            <li><strong>Message coupling:</strong> A sends a message; B decides what to do. Best — used in events, actor models.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Connascence</summary>
+        <div class="drill-body">
+          <p>A more precise vocabulary than "coupling." Two pieces of code are connascent if a change in one requires a change in the other. <em>Connascence of name</em> (rename a variable) is mild; <em>connascence of position</em> (argument order) is fragile; <em>connascence of timing</em> (B must run within 50ms of A) is brittle. Push connascence inward — keep tightly-connascent code close together; only weak forms cross module boundaries.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Architecture-Level</div><h2>Beyond the Class</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Separation of Concerns</summary>
+        <div class="drill-body">
+          <p>Different concerns — UI, business logic, persistence, transport — live in different places. Lets you change one without disturbing the others. The macro version of single-responsibility.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Encapsulate What Varies</summary>
+        <div class="drill-body">
+          <p>Identify the parts of your design likely to change and isolate them behind an interface. Stable parts depend on the interface; volatile parts hide behind it. Pricing rules, tax tables, third-party integrations are classic candidates.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stable Abstractions Principle</summary>
+        <div class="drill-body">
+          <p>The more a module is depended upon, the more stable (slow to change) it should be. A core domain module shared by ten services should be near-frozen; a leaf adapter can change every sprint. Volatile modules at the bottom of the dependency graph cause cascading breakage.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Architecture Decision Records (ADRs)</summary>
+        <div class="drill-body">
+          <p>Short markdown files in the repo: title, context, decision, consequences. Capture <em>why</em> a choice was made — the constraints, the alternatives considered, the trade-offs accepted. Six months later, someone asks "why isn't this Postgres?" and the answer is committed history, not folklore.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Cautionary Notes</div><h2>Where Principles Mislead</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Premature Abstraction Is Worse Than Duplication</summary>
+        <div class="drill-body">
+          <p>Extracting a "general" abstraction from one example almost always overfits to that example. The next caller has slightly different needs; you bolt parameters onto the abstraction; eventually it becomes harder to use than three direct copies would have been.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SOLID Doesn't Replace Domain Knowledge</summary>
+        <div class="drill-body">
+          <p>You can write code that obeys every SOLID principle and still solves the wrong problem. Principles shape <em>how</em> you build something; they don't tell you <em>what</em> to build. Domain modeling and clear thinking come first.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Context Beats Dogma</summary>
+        <div class="drill-body">
+          <p>A 50-line script doesn't need DIP. A throwaway prototype doesn't need ISP. A library used by thousands does. Apply principles in proportion to the change-cost they're meant to reduce.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More Architecture</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="styles.html">← Architectural Styles</a>
+        <a href="patterns.html">Common Design Patterns →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

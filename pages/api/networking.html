@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Networking Fundamentals · APIs &amp; Networking Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="DNS, TCP, TLS, HTTP, ports, CORS, load balancers, reverse proxies — the trip a packet takes from a browser to a server, and the moving parts that get in the way." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/networking.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Networking Fundamentals · APIs &amp; Networking Deep Dive" />
+<meta property="og:description" content="DNS, TCP, TLS, HTTP, CORS, load balancers — the full request path." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/networking.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Networking Fundamentals · APIs &amp; Networking Deep Dive" />
+<meta name="twitter:description" content="DNS, TCP, TLS, HTTP, CORS, load balancers — the full request path." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">APIs &amp; Networking Deep Dive · 2 of 3</div>
+    <h1>Networking Fundamentals — From URL to Response</h1>
+    <p class="lede">Type a URL, hit enter. In about 200 milliseconds, your laptop finds an unrelated machine somewhere in the world, agrees on a shared encryption key with it, asks it a question, and renders the answer. Almost every layer of that trip is a place your app can break.</p>
+    <div class="tags"><span>DNS</span><span>TCP</span><span>TLS</span><span>HTTP</span><span>OSI</span><span>CORS</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Trip</div><h2>What Happens When You Hit Enter</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>The Six Steps</h4>
+        <ul>
+          <li><strong>1. DNS lookup.</strong> <code>example.com</code> → <code>93.184.216.34</code>. Your OS asks a resolver, which asks the root, the TLD, then the authoritative server. Cached aggressively.</li>
+          <li><strong>2. TCP handshake.</strong> SYN → SYN-ACK → ACK. Both sides agree to talk. One round trip.</li>
+          <li><strong>3. TLS handshake.</strong> Certificate, key exchange, cipher selection. One more round trip (TLS 1.3) or two (TLS 1.2).</li>
+          <li><strong>4. HTTP request.</strong> <code>GET /path HTTP/1.1</code> + headers + body.</li>
+          <li><strong>5. Server processes.</strong> Reverse proxy → load balancer → app → database → back.</li>
+          <li><strong>6. Response.</strong> Status line, headers, body. Connection stays open for the next request (keep-alive).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Stack</div><h2>OSI &amp; TCP/IP Layers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>What It Does</th><th>You'll See</th></tr></thead>
+        <tbody>
+          <tr><td>Application</td><td>What humans care about</td><td>HTTP, gRPC, WebSocket, DNS, SMTP, SSH</td></tr>
+          <tr><td>Transport</td><td>Reliable (or fast) delivery between programs</td><td>TCP, UDP, QUIC</td></tr>
+          <tr><td>Network</td><td>Routing packets between machines, anywhere</td><td>IP (v4/v6), ICMP</td></tr>
+          <tr><td>Link</td><td>Moving frames over a single hop of cable/wifi</td><td>Ethernet, Wi-Fi, MAC addresses</td></tr>
+          <tr><td>Physical</td><td>Electrons, light, radio</td><td>Cables, fibre, antennas</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px; font-size:13.5px; color:var(--muted)">Most of your career will live in the top two layers. When something feels broken below them — packet loss, MTU issues, asymmetric routing — that's when you call the network team.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Drilldown</div><h2>The Concepts You'll Hit Daily</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>DNS — The Internet's Phone Book</summary>
+        <div class="drill-body">
+          <p>Hierarchical, cached, and slower than you think on a cold lookup. Records you'll touch: <code>A</code> (IPv4), <code>AAAA</code> (IPv6), <code>CNAME</code> (alias), <code>MX</code> (mail), <code>TXT</code> (verification, SPF/DKIM), <code>NS</code> (delegation).</p>
+          <p><strong>The TTL is a contract.</strong> Set it short before a migration, long for stability. "DNS hasn't propagated yet" almost always means a cache somewhere is honoring an old TTL.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>TCP vs UDP vs QUIC</summary>
+        <div class="drill-body">
+          <p><strong>TCP</strong> guarantees ordered, reliable bytes. Costs: handshake, retransmits, head-of-line blocking. The web rides on this.</p>
+          <p><strong>UDP</strong> is fire-and-forget. No handshake, no retransmit. Used for DNS, video, games, VoIP — anywhere "stale" beats "late."</p>
+          <p><strong>QUIC</strong> is UDP with the good parts of TCP rebuilt in user space — faster handshake, no head-of-line blocking, connection migration across networks. It's the foundation of HTTP/3.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>TLS — Encryption and Identity</summary>
+        <div class="drill-body">
+          <p>TLS does two jobs: <strong>encrypt</strong> the channel and <strong>authenticate</strong> the server (and optionally the client) via certificates signed by a CA. Your browser ships with a list of trusted CAs; the server presents a chain that ends at one.</p>
+          <p><strong>Things to know:</strong> certs expire (set up auto-renewal — Let's Encrypt + cert-manager); SNI lets one IP host many domains; mTLS adds client certs for service-to-service trust; HSTS tells browsers to refuse HTTP for your domain forever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>HTTP/1.1 → HTTP/2 → HTTP/3</summary>
+        <div class="drill-body">
+          <ul>
+            <li><strong>1.1:</strong> text, one request at a time per connection. Browsers opened 6 connections in parallel to fake concurrency.</li>
+            <li><strong>2:</strong> binary frames, multiplexed streams over one TCP connection, header compression.</li>
+            <li><strong>3:</strong> same as 2 but on QUIC/UDP — kills head-of-line blocking at the transport layer, faster on flaky networks.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>IP Addresses, Ports, NAT</summary>
+        <div class="drill-body">
+          <p><strong>IP</strong> identifies a machine; <strong>port</strong> identifies a program on it (80 = HTTP, 443 = HTTPS, 22 = SSH, 5432 = Postgres). IPv4 ran out of addresses years ago — IPv6 has 2¹²⁸ of them. <strong>NAT</strong> lets a whole home network share one public IPv4 by rewriting source addresses.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CORS — The Browser's Safety Belt</summary>
+        <div class="drill-body">
+          <p>By default a page on <code>a.com</code> cannot read responses from <code>b.com</code>. The server at <code>b.com</code> opts in by sending <code>Access-Control-Allow-Origin</code>. For non-trivial requests the browser first sends an <code>OPTIONS</code> preflight asking permission.</p>
+          <p>CORS is enforced by the browser, not the server. <code>curl</code> ignores it entirely — that's why the same call works in your terminal and fails in your app.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Load Balancers &amp; Reverse Proxies</summary>
+        <div class="drill-body">
+          <p>A <strong>load balancer</strong> spreads traffic across many backend servers. <strong>L4</strong> (TCP) ones route on IP/port; <strong>L7</strong> (HTTP) ones route on path, header, cookie. Algorithms: round-robin, least-connections, IP hash for sticky sessions.</p>
+          <p>A <strong>reverse proxy</strong> (nginx, HAProxy, Envoy, Cloudflare, AWS ALB) sits in front of your app and does TLS termination, caching, rate-limiting, header rewrites, and load balancing. Almost every production app has one.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CDNs — Caches Near the User</summary>
+        <div class="drill-body">
+          <p>Cloudflare, Fastly, CloudFront, Akamai. Hundreds of edge locations cache static assets and increasingly run code. <code>Cache-Control</code> headers tell the CDN how long to hold a response; cache keys decide what counts as "the same" request. Get the keys wrong and one user's data leaks to another.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cookies, Sessions, &amp; Same-Site</summary>
+        <div class="drill-body">
+          <p>A cookie is just a header the browser echoes back. Flags that matter: <code>Secure</code> (HTTPS only), <code>HttpOnly</code> (no JS access), <code>SameSite=Lax/Strict/None</code> (cross-site behavior). Modern browsers default to <code>Lax</code>, which kills most CSRF — but you still need to think about it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Toolbox</div><h2>How Engineers Debug Networks</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>What It's For</th></tr></thead>
+        <tbody>
+          <tr><td><code>dig</code> / <code>nslookup</code></td><td>Inspect DNS records and resolver chain.</td></tr>
+          <tr><td><code>curl -v</code></td><td>See the full request, response headers, and status.</td></tr>
+          <tr><td><code>ping</code> / <code>traceroute</code></td><td>Reachability and the path packets take.</td></tr>
+          <tr><td><code>openssl s_client</code></td><td>Inspect a TLS handshake and certificate chain.</td></tr>
+          <tr><td><code>tcpdump</code> / Wireshark</td><td>Packet capture for the hard cases.</td></tr>
+          <tr><td>Browser DevTools → Network</td><td>Waterfall, timing, headers, response. The first place to look on the client side.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>Where Networks Bite</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7">
+        <li><strong>The network is not reliable.</strong> Packets drop, connections die, retries duplicate work. Build for it: timeouts, circuit breakers, idempotent operations.</li>
+        <li><strong>Latency &gt; bandwidth, usually.</strong> Twenty serial round-trips will dominate any payload size. Batch requests, pipeline, push instead of poll.</li>
+        <li><strong>"It works on localhost"</strong> usually means TLS, CORS, DNS, or a corporate proxy is the difference.</li>
+        <li><strong>Time isn't free.</strong> A new TLS connection across a continent costs ~150 ms — keep-alive and connection pooling are not optional at scale.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More on APIs &amp; Networking</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">REST →</a>
+        <a href="graphql.html">GraphQL →</a>
+        <a href="grpc.html">gRPC →</a>
+        <a href="websockets.html">WebSockets →</a>
+        <a href="message-queues.html">Message Queues →</a>
+        <a href="event-streaming.html">Event Streaming →</a>
+        <a href="pubsub.html">Pub/Sub →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

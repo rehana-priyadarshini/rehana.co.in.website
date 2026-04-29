@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enterprise Patterns · Design Patterns Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Repository, Unit of Work, DTO, Dependency Injection, Specification, Circuit Breaker, Outbox, Idempotency Key — patterns for real backend services." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/enterprise-patterns.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Enterprise Patterns · Design Patterns Deep Dive" />
+<meta property="og:description" content="Repository, Unit of Work, DTO, DI, Specification, Circuit Breaker, Outbox, Idempotency Key — patterns for real backend services." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/enterprise-patterns.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Enterprise Patterns · Design Patterns Deep Dive" />
+<meta name="twitter:description" content="Repository, Unit of Work, DTO, DI, Specification, Circuit Breaker, Outbox, Idempotency Key." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Design Patterns Deep Dive · 4 of 4</div>
+    <h1>Enterprise Patterns — The Ones You'll Actually Wire Into a Service</h1>
+    <p class="lede">The Gang of Four catalog stops at the boundary of one process. Real services have to deal with persistence, transactions, transport, retries, distributed failures, and idempotent APIs. Most of these patterns come from Martin Fowler's <em>Patterns of Enterprise Application Architecture</em> (2002) and the distributed-systems literature that followed. They're the names that come up in every backend architecture review.</p>
+    <div class="tags"><span>Repository</span><span>Unit of Work</span><span>DTO</span><span>DI</span><span>Outbox</span><span>Circuit Breaker</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Counts as "Enterprise"</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Persistence patterns:</strong> how the domain talks to a database without becoming the database.</li>
+          <li><strong>Boundary patterns:</strong> how data crosses process or service edges.</li>
+          <li><strong>Resilience patterns:</strong> how to keep working when dependencies fail.</li>
+          <li><strong>Workflow patterns:</strong> how to coordinate multi-step operations across services.</li>
+          <li><strong>Most are framework-supported.</strong> Spring, .NET, Django, Rails — all ship with first-class support for the persistence and DI patterns. The resilience and distributed patterns require explicit libraries (Resilience4j, Polly) and explicit thinking.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Persistence</div><h2>Talking to the Database</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Repository</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Mediate between the domain and data-mapping layers using a collection-like interface for accessing domain objects.</p>
+          <p style="margin-top:8px;"><code>userRepository.findById(id)</code>, <code>userRepository.save(user)</code>. The repository hides whether data lives in Postgres, Mongo, a remote API, or memory. The domain depends on the abstraction, not the storage.</p>
+          <p style="margin-top:8px;"><strong>Why it matters:</strong> tests inject an in-memory repo and run in milliseconds. Swapping storage means writing one new repo, not changing the domain. It's the canonical example of dependency inversion in business code.</p>
+          <p style="margin-top:8px;"><strong>Don't:</strong> let the repository return ORM entities the domain has to know about, and don't add <code>findUsersByEmailAndStatusAndCreatedBetween</code>-style methods for every query — that's where Repositories turn into <code>UserDao</code>s in disguise.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Unit of Work</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Track all the objects loaded and modified during a business transaction, then coordinate writing out changes and resolving concurrency at commit.</p>
+          <p style="margin-top:8px;">Built into nearly every ORM: Hibernate's session, EF Core's <code>DbContext</code>, SQLAlchemy's session. You change a few entities; on <code>commit()</code>, the UoW flushes them in dependency order in one transaction.</p>
+          <p style="margin-top:8px;"><strong>What it gives you:</strong> "save the order, save the customer, save the invoice — atomically" in one call. Optimistic concurrency checks, dirty tracking, change ordering — all UoW concerns.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Data Mapper vs Active Record</summary>
+        <div class="drill-body">
+          <p><strong>Active Record:</strong> the entity knows how to save itself. <code>order.save()</code>. Rails' ActiveRecord is the namesake; great for thin domains and rapid iteration. Domain logic and persistence are intertwined.</p>
+          <p style="margin-top:8px;"><strong>Data Mapper:</strong> a separate layer maps between domain objects and the DB. The domain doesn't know it's persisted. Hibernate, EF Core, JPA. More code, cleaner separation; the right call for richer domains.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Specification</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Encapsulate a business rule as a small object that can be combined with other rules using <code>and</code>, <code>or</code>, <code>not</code>.</p>
+          <p style="margin-top:8px;"><code>activeCustomers.and(inEurope)</code>. Cleaner than long boolean conditions sprinkled across services. Often used to build query criteria; some ORMs (EF Core, Spring Data) translate composed specifications into SQL <code>WHERE</code> clauses.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Boundaries</div><h2>Data Crossing Edges</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>DTO — Data Transfer Object</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> A flat, serializable object whose only job is moving data across a process or service boundary.</p>
+          <p style="margin-top:8px;">DTOs keep your domain model from leaking into the wire format. Letting your <code>User</code> entity be your API response is convenient until you need to add a sensitive field, version the API, or shape the response differently per client. DTOs decouple the two concerns.</p>
+          <p style="margin-top:8px;"><strong>Mapping:</strong> hand-written, MapStruct (Java), AutoMapper (.NET), or just a constructor that takes the domain object. Don't over-engineer the mapping layer — the boundary code lives forever, but it doesn't need to be clever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Dependency Injection &amp; Inversion of Control</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Don't construct your dependencies inside a class — receive them through the constructor, a setter, or a function parameter. The composition root wires concrete implementations together once, at startup.</p>
+          <p style="margin-top:8px;">DI is what makes Repository, Strategy, and Adapter actually pay off — none of them help if callers <code>new</code> their concrete dependencies anyway. Frameworks: Spring, .NET DI, NestJS, Guice, Dagger.</p>
+          <p style="margin-top:8px;"><strong>Constructor injection &gt; setter injection &gt; service locator.</strong> Constructor injection makes dependencies explicit and the object immutable; service locator hides them and recreates the global-state problems DI was meant to solve.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-Corruption Layer</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Insulate your domain from another model's vocabulary, especially when integrating with a legacy or third-party system whose concepts don't match yours.</p>
+          <p style="margin-top:8px;">A translator sits at the boundary, converting their model into yours and vice versa. Critical when integrating with a system whose design choices you don't want to inherit — the ACL is what stops their concepts from leaking everywhere.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Resilience</div><h2>When Things Fail (and They Will)</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Circuit Breaker</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Wrap calls to a remote service. After N consecutive failures, "open" the circuit and fail fast for a cooldown window — don't keep hammering a sick dependency.</p>
+          <p style="margin-top:8px;">After the timeout, the breaker goes <em>half-open</em>, lets one trial request through, and either closes (success) or re-opens (failure). Built into Resilience4j (Java), Polly (.NET), Hystrix (deprecated but historically important), Istio, Envoy.</p>
+          <p style="margin-top:8px;"><strong>Why it matters:</strong> without a breaker, a slow dependency drains your thread/connection pool until the whole service falls over. The breaker turns "everything is timing out" into "we know that one thing is sick; everything else is fine."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Bulkhead</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Isolate resources per dependency so one failing collaborator can't drain shared pools.</p>
+          <p style="margin-top:8px;">Separate thread pools, connection pools, or semaphore counts per downstream. The recommendations service can saturate its pool without starving the checkout service of threads. Named for ship bulkheads — flooding one compartment doesn't sink the whole ship.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Retry, Timeout, Backoff</summary>
+        <div class="drill-body">
+          <p><strong>Timeout:</strong> every cross-service call has one. Always. The default in most HTTP clients is "infinite" — don't accept it.</p>
+          <p style="margin-top:8px;"><strong>Retry:</strong> with exponential backoff and jitter. Only on idempotent operations — retrying a non-idempotent <code>POST</code> may double-charge a card. Always cap the total retry budget.</p>
+          <p style="margin-top:8px;"><strong>The combination matters.</strong> Retry without backoff turns one outage into a self-inflicted DoS. Retry without idempotency turns transient errors into duplicated business actions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Idempotency Key</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> The caller sends a unique key with each mutating request; the server records it and short-circuits duplicates with the original response.</p>
+          <p style="margin-top:8px;">Lets clients retry safely over flaky networks. Stripe, payment APIs, and most modern <code>POST</code> endpoints support this — the key lives in a header (<code>Idempotency-Key</code>), the server stores it for some retention window.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Distributed Workflows</div><h2>Patterns Across Services</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Outbox Pattern</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Reliably publish events from a service that owns a relational DB, without dual-write inconsistency.</p>
+          <p style="margin-top:8px;">Inside the same DB transaction as the state change, write the event to an <code>outbox</code> table. A separate process polls the outbox (or uses CDC like Debezium) and publishes to the broker. No "wrote to DB but failed to publish" gap. Essential whenever an event has to go out as a consequence of a DB write.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Saga</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Implement a long-running business transaction across services where ACID isn't possible. Each step has a compensating action that undoes it.</p>
+          <p style="margin-top:8px;">Place order → reserve inventory → charge card → notify warehouse. If the charge fails, fire compensating actions backward: release the reservation, mark the order canceled. Implement choreographed (events) or orchestrated (workflow engine like Temporal, Step Functions).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>API Gateway / BFF</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Provide a single entry point for clients in front of many backend services.</p>
+          <p style="margin-top:8px;">Handles auth, rate limiting, request shaping, response composition. The <strong>Backend-for-Frontend</strong> variant goes further: one gateway per client type (web, iOS, Android), each composing the underlying services into the exact shape that client needs. Stops backend services from getting cluttered with client-specific endpoints.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Strangler Fig</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Incrementally replace a legacy system by routing more and more traffic to the new one, until the old one can be removed.</p>
+          <p style="margin-top:8px;">Named after the strangler fig vine that grows around a host tree until the host dies. Used for monolith-to-microservices migrations: a routing layer sends traffic for a slice of functionality to the new service while everything else still hits the old monolith. Repeat until the monolith is empty.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sidecar</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Deploy a helper process alongside the main service to handle cross-cutting concerns — TLS, observability, config, service discovery.</p>
+          <p style="margin-top:8px;">The basis of service meshes (Istio, Linkerd). Your application stays focused on business logic; the sidecar handles mTLS, traffic shaping, retries, telemetry. Ambient meshes (Istio Ambient, Linkerd) move some of this off-pod, but the pattern is the same.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Pattern Families</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="creational.html">← Creational Patterns</a>
+        <a href="structural.html">← Structural Patterns</a>
+        <a href="behavioral.html">← Behavioral Patterns</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

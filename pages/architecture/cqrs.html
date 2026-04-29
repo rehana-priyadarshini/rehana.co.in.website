@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CQRS + Event Sourcing · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Separate read and write models; store the events that produced state, not the state itself. Audit trails, time travel, and a steep complexity ceiling." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/cqrs.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="CQRS + Event Sourcing · Architectural Styles Deep Dive" />
+<meta property="og:description" content="Separate read and write models; store the events that produced state, not the state itself." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/cqrs.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="CQRS + Event Sourcing · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="Separate read and write models; store events, not state." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 8 of 8</div>
+    <h1>CQRS + Event Sourcing — Two Halves of One Powerful, Heavy Idea</h1>
+    <p class="lede">CQRS splits the write path (commands that change state) from the read path (queries that return data). Event Sourcing stores the sequence of events that produced state, instead of the state itself. They're often paired and often confused with each other; they're independent ideas that compose well — and bring the highest complexity ceiling on this list. Reach for them when audit, replay, or read-model variety is a real product requirement, not before.</p>
+    <div class="tags"><span>CQRS</span><span>Event Sourcing</span><span>Audit</span><span>Eventual Consistency</span><span>DDD</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>Two Ideas, Often Combined</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>CQRS — Command Query Responsibility Segregation:</strong> the model used to write data and the model used to read it are different. Same database or different — the <em>shapes</em> differ.</li>
+          <li><strong>Event Sourcing:</strong> persist a sequence of immutable events. Current state is computed by folding the events. The event log is the source of truth.</li>
+          <li><strong>You can do CQRS without ES.</strong> Many systems do — separate read replicas, materialized views, denormalized search indexes are all CQRS-flavored.</li>
+          <li><strong>You can do ES without CQRS</strong>, though it's awkward — building queries against an event store usually means projecting it into a read model anyway.</li>
+          <li><strong>Together:</strong> commands produce events; events are appended to the store; projections build read models that queries hit. Reads and writes are fully decoupled.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">CQRS</div><h2>Separating Reads from Writes</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Why Split?</summary>
+        <div class="drill-body">
+          <p>Reads and writes have different needs. Writes care about invariants, transactions, validation. Reads care about query shape, joins, latency. Forcing one model to serve both leads to overloaded entities and slow joins — or denormalization that drifts out of sync with the rules.</p>
+          <p style="margin-top:8px;">CQRS lets each side optimize independently. Write side: a normalized OLTP DB tuned for consistency. Read side: a denormalized projection (Postgres views, Elasticsearch, Redis, a graph index) shaped for the queries that actually run.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sync vs Async Projection</summary>
+        <div class="drill-body">
+          <p><strong>Sync (same transaction):</strong> writes update the read model atomically. No staleness, no extra infra, but the read model has to live in the same DB.</p>
+          <p style="margin-top:8px;"><strong>Async:</strong> writes emit events; a projector updates the read model after the fact. Read can lag by milliseconds to seconds. The classic CQRS shape.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Eventual Consistency on the Read Side</summary>
+        <div class="drill-body">
+          <p>Async projection means "save then read" can return stale data. UIs need to plan for this — optimistic updates, "your change is processing" states, or a read-from-write fallback for the user's own recent writes.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Event Sourcing</div><h2>Storing the Story, Not the Snapshot</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Core Idea</summary>
+        <div class="drill-body">
+          <p>Don't UPDATE rows. Append events. <code>OrderPlaced</code>, <code>ItemAdded</code>, <code>DiscountApplied</code>, <code>OrderShipped</code> — every state change is recorded as a fact. To get the current state of an order, replay its events from the start.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What You Buy</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Perfect audit log.</strong> Every change is preserved. "Why does this account have a $50 balance?" is answered by reading its events.</li>
+            <li><strong>Time travel.</strong> Replay events up to any past timestamp to see what state was then.</li>
+            <li><strong>New projections retroactively.</strong> Need a new read model? Replay history into it. No migration of historical data.</li>
+            <li><strong>Rich domain model.</strong> Forces explicit business events with meaningful names — much more expressive than "row was updated."</li>
+            <li><strong>Debugging.</strong> Reproduce a bug by replaying the exact event sequence that caused it.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What You Pay For</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Schema evolution forever.</strong> Yesterday's events must still deserialize. Plan upcasters and versioning from day one.</li>
+            <li><strong>GDPR / right to erasure.</strong> The event log is immutable by design — but personal data sometimes has to disappear. Solutions: crypto-shredding (delete the encryption key), tombstoning, or keeping PII in a separate referenced store.</li>
+            <li><strong>Snapshotting.</strong> Replaying 100,000 events to load one aggregate is slow. Periodically snapshot state and replay only events since the snapshot.</li>
+            <li><strong>Querying the event store directly is awful.</strong> You almost always need read projections — which is exactly why CQRS pairs with it.</li>
+            <li><strong>Steep learning curve.</strong> Most engineers haven't seen it; mistakes are subtle and hard to undo.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stores</summary>
+        <div class="drill-body">
+          <p>Purpose-built: <strong>EventStoreDB</strong>, <strong>Axon Server</strong>, <strong>Marten</strong> (Postgres-based, .NET). Many teams roll their own on top of Postgres or Kafka — append-only table, monotonic version per aggregate, careful indexing.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Together</div><h2>The Combined Picture</h2></div>
+    <div class="chapter-body">
+      <p>A typical CQRS+ES request flow:</p>
+      <ol style="font-size:14px; line-height:1.7;">
+        <li>Client sends a <strong>command</strong> (<code>PlaceOrder</code>) to the write side.</li>
+        <li>Write side loads the relevant aggregate by replaying its events (or from a snapshot).</li>
+        <li>Aggregate validates the command against its invariants and produces new <strong>events</strong>.</li>
+        <li>Events are appended to the event store atomically.</li>
+        <li>A projector (or several) consumes the events and updates one or more <strong>read models</strong>.</li>
+        <li>Queries hit the read model directly — they never touch the event store or the write aggregate.</li>
+      </ol>
+      <p style="margin-top:12px;">Workflows that span aggregates use <strong>process managers / sagas</strong> reacting to events.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When (and When Not) to Pick This</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Signal</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Audit trail is a hard requirement (finance, healthcare, regulated industry)</td><td>Event Sourcing is a strong fit.</td></tr>
+          <tr><td>Reads vastly outnumber writes, with multiple query shapes</td><td>CQRS pays off.</td></tr>
+          <tr><td>Domain is naturally event-shaped (workflow, ledger, claims processing)</td><td>Both are natural fits.</td></tr>
+          <tr><td>You'll need to build new read models retroactively</td><td>Event Sourcing wins.</td></tr>
+          <tr><td>CRUD app: users edit rows</td><td>Don't. Use a layered or modular monolith.</td></tr>
+          <tr><td>Team has never operated an event store</td><td>Defer. The learning cost is real.</td></tr>
+          <tr><td>You want CQRS only for query separation</td><td>Use read replicas / materialized views first; full CQRS adds infra.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:14px; color: var(--muted); font-size: 14px;"><em>"Most applications most of the time should not use Event Sourcing." — Greg Young, who coined CQRS, on the appropriate use of his own pattern.</em></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="modular-monolith.html">← Modular Monolith</a>
+        <a href="microservices.html">← Microservices</a>
+        <a href="serverless.html">← Serverless</a>
+        <a href="event-driven.html">← Event-Driven</a>
+        <a href="layered.html">← Layered / N-tier</a>
+        <a href="hexagonal.html">← Hexagonal / Clean</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

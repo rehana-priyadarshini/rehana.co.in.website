@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Modular Monolith · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="A monolith with enforced internal boundaries — the simplicity of one deploy with the option to extract services later. Often the right default." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/modular-monolith.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Modular Monolith · Architectural Styles Deep Dive" />
+<meta property="og:description" content="A monolith with enforced internal boundaries — the simplicity of one deploy with the option to extract services later." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/modular-monolith.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Modular Monolith · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="A monolith with enforced internal boundaries — the simplicity of one deploy with the option to extract services later." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 2 of 8</div>
+    <h1>Modular Monolith — Boundaries Without Networks</h1>
+    <p class="lede">A modular monolith ships as one deployable, but inside it has hard internal walls — explicit modules, defined interfaces, no cross-imports. You get monolith simplicity with the option to extract any module into its own service later, without rewriting it. For most companies, most of the time, this is the right default.</p>
+    <div class="tags"><span>Bounded Contexts</span><span>Internal APIs</span><span>One Deploy</span><span>Pragmatic</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Makes It "Modular"</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>One deploy, many modules:</strong> still a single binary, but built from several internal modules with explicit boundaries.</li>
+          <li><strong>Modules talk through interfaces.</strong> No reaching into another module's internals — same discipline as microservices, in-process.</li>
+          <li><strong>Each module owns its data.</strong> Even with a shared database, each module owns its tables; no cross-module SQL joins.</li>
+          <li><strong>Boundaries are enforced by tooling</strong>, not just policy. CI fails when a module imports another module's internals.</li>
+          <li><strong>Future-proof:</strong> when one module needs to scale separately or be owned by a separate team, you extract it as a service. The internal API becomes an HTTP/gRPC contract.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>The Best of Both Worlds</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Microservices Without the Tax</summary>
+        <div class="drill-body">
+          <p>You get clear bounded contexts, team ownership, swappable internals — and skip the service mesh, distributed tracing, schema registry, contract tests, and on-call rotations per service. The complexity stays inside one process where it's cheap.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Refactoring Across Modules Stays Cheap</summary>
+        <div class="drill-body">
+          <p>Need to move a concept from one module to another? It's a code refactor in one repo, atomic in one PR. The same change across microservices is a multi-team, multi-deploy migration that takes weeks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Extract Only When Pain Justifies It</summary>
+        <div class="drill-body">
+          <p>If a module never needs separate scaling or independent deploys, it stays in. You've paid no premium for keeping it. The architecture lets you defer the "should this be a service?" question until you have evidence — instead of guessing on day one.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How to Enforce Boundaries</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Package &amp; Module Structure</summary>
+        <div class="drill-body">
+          <p>Organize the codebase by <em>bounded context</em>, not by technical layer. Top-level folders are <code>billing/</code>, <code>orders/</code>, <code>inventory/</code> — each containing its own controllers, services, repositories, and domain.</p>
+          <p style="margin-top:8px;"><strong>Anti-pattern:</strong> top-level <code>controllers/</code>, <code>services/</code>, <code>repositories/</code>. That's a layered monolith — modules end up smeared across all three.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Public APIs Per Module</summary>
+        <div class="drill-body">
+          <p>Each module exposes a small public surface — a few interfaces, a few DTOs. Everything else is internal. Other modules call only the public surface; they have no idea what's behind it.</p>
+          <ul style="margin-top:8px; font-size:14px; line-height:1.6;">
+            <li><strong>Java:</strong> public class in a <code>.api</code> package; the rest in <code>.internal</code>.</li>
+            <li><strong>Go:</strong> put internals in <code>internal/</code> — the compiler refuses cross-module imports.</li>
+            <li><strong>JavaScript / TypeScript:</strong> a single <code>index.ts</code> per module exporting the public API; ESLint <code>no-restricted-imports</code> for the rest.</li>
+            <li><strong>.NET:</strong> separate projects per module; only <code>public</code> types reachable across project references.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Enforce in CI</summary>
+        <div class="drill-body">
+          <p>Without automation, modules drift back into a ball of mud within months. Tools that fail builds on boundary violations:</p>
+          <ul style="margin-top:8px; font-size:14px; line-height:1.6;">
+            <li><strong>ArchUnit</strong> (Java/Kotlin) — write architecture rules as JUnit tests.</li>
+            <li><strong>dependency-cruiser, Nx, Turborepo</strong> (JS/TS) — declare allowed dependencies; CI enforces.</li>
+            <li><strong>NetArchTest</strong> (.NET) — ArchUnit equivalent.</li>
+            <li><strong>import-linter</strong> (Python).</li>
+            <li><strong>Go's <code>internal/</code></strong> — built into the compiler.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Database Discipline</summary>
+        <div class="drill-body">
+          <p>Same database, but each module owns its tables. No module reads or writes another module's tables directly. To get billing data, the orders module calls <code>BillingFacade</code>, not <code>SELECT * FROM invoices</code>.</p>
+          <p style="margin-top:8px;">This is the rule that pays off most when extracting. Modules with shared SQL joins are nearly impossible to split; modules that already talk via APIs are a one-week extraction.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Internal Events</summary>
+        <div class="drill-body">
+          <p>Modules can publish events on an in-process bus (Spring's <code>ApplicationEventPublisher</code>, MediatR, simple pub/sub). Consumers subscribe without coupling to the producer. When you extract a module later, the in-process bus becomes Kafka or RabbitMQ — the producer/consumer code barely changes.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Discipline Tax</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>It Requires Constant Vigilance</summary>
+        <div class="drill-body">
+          <p>Without CI enforcement, the modules will quietly merge. A "quick fix" that imports across boundaries to ship a feature is the first crack; six months later, it's a regular monolith again. The architecture only works if the rules are mechanical.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Up-Front Modeling Cost</summary>
+        <div class="drill-body">
+          <p>Drawing module boundaries requires understanding the domain. Get it wrong and modules talk to each other constantly through awkward APIs. Bounded-context modeling (DDD) helps but takes time and senior judgment.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Doesn't Solve Operational Scaling</summary>
+        <div class="drill-body">
+          <p>Still one process, still scales as a unit. If one module has a fundamentally different load profile — say a CPU-heavy ML inference module versus a CRUD admin module — you'll eventually need to extract it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick a Modular Monolith</h2></div>
+    <div class="chapter-body">
+      <p>Default to this when:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>You have multiple teams but not 20+ teams.</li>
+        <li>The domain has clear-ish bounded contexts but you're not 100% sure where they belong.</li>
+        <li>You want microservice-ready code without paying microservice operational cost yet.</li>
+        <li>Your scaling needs are met by horizontal replicas of one app.</li>
+      </ul>
+      <p style="margin-top:12px;">When a module's scaling profile, team ownership, or release cadence diverges sharply from the rest, extract that <em>one</em> module. Do not extract everything; do not preemptively split based on speculation. <strong>Distillation, not big-bang.</strong></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="microservices.html">Microservices →</a>
+        <a href="serverless.html">Serverless →</a>
+        <a href="event-driven.html">Event-Driven →</a>
+        <a href="layered.html">Layered / N-tier →</a>
+        <a href="hexagonal.html">Hexagonal / Clean →</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

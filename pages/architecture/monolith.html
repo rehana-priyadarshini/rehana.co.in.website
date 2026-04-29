@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monolith · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="One codebase, one deployable, one process. The simplest architecture — and the right starting point for almost every product." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/monolith.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Monolith · Architectural Styles Deep Dive" />
+<meta property="og:description" content="One codebase, one deployable, one process. The simplest architecture — and the right starting point for almost every product." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/monolith.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Monolith · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="One codebase, one deployable, one process. The simplest architecture — and the right starting point for almost every product." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 1 of 8</div>
+    <h1>Monolith — One App, One Deploy</h1>
+    <p class="lede">A monolith is a single codebase compiled into a single deployable unit. The whole product starts up together, runs in one process, and shares one database. It's the most boring, fastest, and — for most products on most days — the right architecture.</p>
+    <div class="tags"><span>Single Process</span><span>Shared DB</span><span>One Deploy</span><span>Simple</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Monolith Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>One codebase:</strong> all features live together in a single repository.</li>
+          <li><strong>One process:</strong> at runtime, it's one binary, one JVM, one Python process — all calls are in-memory function calls.</li>
+          <li><strong>One database:</strong> usually a single relational DB. ACID transactions span the whole feature set.</li>
+          <li><strong>One deploy:</strong> ship the whole thing at once. Roll back the whole thing at once.</li>
+          <li><strong>Not "legacy":</strong> Shopify, GitHub, Stack Overflow, Basecamp run massive monoliths on purpose.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>The Boring Advantages</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Operational Simplicity</summary>
+        <div class="drill-body">
+          <p>One thing to build, one to deploy, one to monitor, one to alert on. No service mesh, no distributed tracing required to debug a request, no schema registry. A junior engineer can run the whole stack on their laptop in five minutes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Refactoring Is Cheap</summary>
+        <div class="drill-body">
+          <p>Rename a function, the IDE updates every caller. Move a column, write a single migration. Try the same across a dozen microservices and you'll discover what "distributed coordination" really costs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ACID Transactions Just Work</summary>
+        <div class="drill-body">
+          <p>"Save the order, save the customer, save the invoice — atomically" is one DB transaction. No sagas, no compensating actions, no eventual consistency to explain to the business.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Performance — Yes, Really</summary>
+        <div class="drill-body">
+          <p>An in-memory function call is ~1 nanosecond. A network hop, even on a fast LAN, is ~500,000 nanoseconds. Monoliths skip the network entirely for every internal call. They're often <em>faster</em> than the equivalent microservices system at small to medium scale.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>When the Monolith Strains</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Deploy Coordination</summary>
+        <div class="drill-body">
+          <p>Every team's PRs land in the same artifact. One bad change blocks all releases until it's reverted or fixed. With 5 engineers this is fine; with 200, it's a daily fire.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Scaling the Wrong Things Together</summary>
+        <div class="drill-body">
+          <p>The reporting endpoint is slow and CPU-heavy. The login endpoint is fast and frequent. In a monolith, you scale them by adding instances of the whole app — wasting memory replicating login code to handle reporting load.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>One Process, One Blast Radius</summary>
+        <div class="drill-body">
+          <p>A memory leak in the analytics module crashes the checkout. A long-running report drains the connection pool away from real users. Without internal isolation, one weak feature can take down the whole product.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Module Boundaries Erode</summary>
+        <div class="drill-body">
+          <p>Without enforcement, internal modules import each other freely. After a few years you have a "big ball of mud" — every change touches half the codebase. This is what gives monoliths their bad name; it's a discipline failure, not an architectural inevitability.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How to Keep a Monolith Healthy</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Internal modules with enforced boundaries.</strong> Use ArchUnit (Java), dependency-cruiser (JS), or Go's <code>internal/</code> packages to fail CI when modules cross-import improperly. This is the "modular monolith" approach.</li>
+        <li><strong>Feature flags.</strong> Decouple deploy from release. Ship code dark; flip on for a percentage of users.</li>
+        <li><strong>Background workers.</strong> Move slow or async work to a worker process reading the same DB. Same codebase, different runtime profile.</li>
+        <li><strong>Read replicas.</strong> Direct heavy reads at a follower DB. The simplest scaling lever before you split anything.</li>
+        <li><strong>Vertical scaling first.</strong> A 64-core server running a monolith handles a remarkable amount of traffic. Cheaper than the ops cost of going distributed.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick a Monolith</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Signal</th><th>Monolith?</th></tr></thead>
+        <tbody>
+          <tr><td>Team size &lt; 30 engineers</td><td>Yes.</td></tr>
+          <tr><td>Domain still being figured out</td><td>Yes — boundaries change weekly.</td></tr>
+          <tr><td>Tight transactional consistency required</td><td>Yes.</td></tr>
+          <tr><td>Need rich cross-feature queries</td><td>Yes — joins are free.</td></tr>
+          <tr><td>20+ teams blocked by shared releases</td><td>Time to extract.</td></tr>
+          <tr><td>One feature has a wildly different scaling profile</td><td>Extract that one.</td></tr>
+          <tr><td>Compliance demands hard isolation (PCI scope)</td><td>Extract.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px; font-size:14px; color: var(--muted);"><em>"If you can't build a well-structured monolith, you can't build well-structured microservices." — Simon Brown.</em></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="modular-monolith.html">Modular Monolith →</a>
+        <a href="microservices.html">Microservices →</a>
+        <a href="serverless.html">Serverless →</a>
+        <a href="event-driven.html">Event-Driven →</a>
+        <a href="layered.html">Layered / N-tier →</a>
+        <a href="hexagonal.html">Hexagonal / Clean →</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

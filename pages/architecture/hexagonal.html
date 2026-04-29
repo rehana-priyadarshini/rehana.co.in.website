@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hexagonal / Clean Architecture · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Domain core in the middle, adapters on the edges. Swap DBs, transports, and frameworks without touching business logic." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/hexagonal.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Hexagonal / Clean Architecture · Architectural Styles Deep Dive" />
+<meta property="og:description" content="Domain core in the middle, adapters on the edges. Swap DBs, transports, and frameworks without touching business logic." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/hexagonal.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Hexagonal / Clean Architecture · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="Domain core in the middle, adapters on the edges." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 7 of 8</div>
+    <h1>Hexagonal &amp; Clean — Keep the Domain in the Middle</h1>
+    <p class="lede">Hexagonal architecture (Alistair Cockburn, 2005) — also called Ports &amp; Adapters and, in Robert Martin's variant, Clean Architecture — puts your business domain in the center and pushes everything else to the edges. The domain depends on nothing concrete. HTTP, databases, message brokers, file systems are all adapters that plug into <em>ports</em> the domain owns. Swap any one of them without touching business logic.</p>
+    <div class="tags"><span>Ports &amp; Adapters</span><span>Domain-Centric</span><span>Dependency Inversion</span><span>Testable</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Shape</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Domain (the hexagon's interior):</strong> entities, value objects, domain services. Pure business logic. No imports from frameworks, no <code>@Entity</code>, no SQL.</li>
+          <li><strong>Ports:</strong> interfaces the domain owns. <em>Driving ports</em> are how the outside world calls in (use-case interfaces). <em>Driven ports</em> are how the domain calls out (repository, email, payment).</li>
+          <li><strong>Adapters:</strong> the concrete implementations. <em>Driving adapters</em> are HTTP controllers, CLI handlers, message consumers. <em>Driven adapters</em> are Postgres repos, Stripe clients, SMTP senders.</li>
+          <li><strong>The dependency rule:</strong> dependencies point inward only. Adapters know about ports; ports know about the domain; the domain knows about nothing outside itself.</li>
+          <li><strong>Clean Architecture</strong> (Uncle Bob's variant) draws the same idea as concentric circles: Entities → Use Cases → Interface Adapters → Frameworks. Same dependency rule.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Infrastructure Becomes Pluggable</summary>
+        <div class="drill-body">
+          <p>Postgres → DynamoDB? Swap one adapter. REST → gRPC? Add a new driving adapter, leave the old one. Stripe → Adyen? New payment adapter. The use cases don't change because they never knew which one was wired in.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tests Run Without the World</summary>
+        <div class="drill-body">
+          <p>Unit tests for use cases inject fake adapters — in-memory repository, fake email sender. No DB container, no network, no flaky integration. Domain logic tests run in milliseconds.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Domain Lives Longer Than the Stack</summary>
+        <div class="drill-body">
+          <p>Frameworks come and go (Struts → Spring MVC → WebFlux → who's next). When the domain is framework-free, you survive each migration with a stable core and a rewritten outer ring.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forces Honest Modeling</summary>
+        <div class="drill-body">
+          <p>Without an ORM in the room, you can't blur "domain" with "row in the orders table." Entities have to express invariants in code; the persistence shape is a separate problem solved by an adapter.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>How to Build It</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Source Layout</summary>
+        <div class="drill-body">
+          <p>Typical packages:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><code>domain/</code> — entities, value objects, domain services. No third-party imports.</li>
+            <li><code>application/</code> — use cases (one class per business operation), driving and driven port interfaces.</li>
+            <li><code>adapters/in/</code> — HTTP controllers, message consumers, CLI commands.</li>
+            <li><code>adapters/out/</code> — DB repositories, external API clients, email senders.</li>
+            <li><code>config/</code> — composition root: wires concrete adapters to ports.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Driving vs Driven Ports</summary>
+        <div class="drill-body">
+          <p><strong>Driving (inbound):</strong> the use-case interface. <code>PlaceOrderUseCase.execute(command)</code>. The HTTP controller calls this; so could a Kafka consumer or a CLI command. The domain doesn't know which.</p>
+          <p style="margin-top:8px;"><strong>Driven (outbound):</strong> what the use case needs from the world. <code>OrderRepository.save(order)</code>, <code>PaymentGateway.charge(amount)</code>. The use case calls the interface; an adapter implements it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Domain Stays Pure</summary>
+        <div class="drill-body">
+          <p>No <code>@Entity</code>, no <code>@JsonProperty</code>, no DB session, no HTTP request object. If your domain class needs a JPA annotation, you've leaked persistence into the domain. Use a separate persistence model in the adapter; map between the two at the boundary.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Composition Root</summary>
+        <div class="drill-body">
+          <p>One place — startup, the DI container's config — wires concrete adapters to port interfaces. <code>PlaceOrderUseCase(new PostgresOrderRepository(), new StripePaymentGateway(), ...)</code>. Everything else only sees interfaces.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mapping at the Boundary</summary>
+        <div class="drill-body">
+          <p>Adapters translate between the outside world's shape and the domain's. HTTP request → command DTO → use case input. Domain output → response DTO → JSON. JPA entity → domain entity in the repository adapter. This mapping is the price; it's what keeps the domain pure.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Tax</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Boilerplate</summary>
+        <div class="drill-body">
+          <p>Adding a field can mean: domain entity, JPA entity, mapper, request DTO, response DTO, port interface, adapter implementation. For a CRUD app where the domain has no real logic, this overhead doesn't pay back. Hexagonal is for <em>rich</em> domains.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Two Models for One Concept</summary>
+        <div class="drill-body">
+          <p>The domain entity and the persistence entity are usually distinct classes. Engineers new to the codebase often try to "simplify" by merging them — and quietly destroy the boundary. Documentation and code review have to defend it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Easy to Over-apply</summary>
+        <div class="drill-body">
+          <p>Not every service deserves hexagonal. A glue service that calls one third-party API and writes to one queue doesn't need a domain layer; it <em>is</em> an adapter. Forcing the structure adds friction with no benefit.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Cousins</div><h2>Hexagonal, Clean, Onion — Same Idea</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Name</th><th>Author</th><th>Twist</th></tr></thead>
+        <tbody>
+          <tr><td>Hexagonal / Ports &amp; Adapters</td><td>Cockburn (2005)</td><td>The original. Hexagon is metaphor only — could have any number of sides.</td></tr>
+          <tr><td>Onion Architecture</td><td>Jeffrey Palermo (2008)</td><td>Concentric rings; emphasizes domain-centric layering.</td></tr>
+          <tr><td>Clean Architecture</td><td>Robert C. Martin (2012)</td><td>Adds the explicit Use Case layer between Entities and Adapters.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px; font-size: 14px;">All three share the dependency rule: source code dependencies point inward. Pick whichever vocabulary your team already knows; the substance is the same.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Hexagonal</h2></div>
+    <div class="chapter-body">
+      <p>Worth the boilerplate when:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>The domain is genuinely rich — non-trivial rules, invariants, calculations.</li>
+        <li>The system will outlive its current infrastructure choices (5+ years).</li>
+        <li>You'll have multiple driving adapters: web + mobile API + admin CLI + scheduled jobs all calling the same use cases.</li>
+        <li>You have engineers experienced enough to maintain the boundary under deadline pressure.</li>
+      </ul>
+      <p style="margin-top:12px;">Skip it for thin CRUD apps, glue services, prototypes, and anything where the domain logic is essentially "save this and notify that."</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="modular-monolith.html">← Modular Monolith</a>
+        <a href="microservices.html">← Microservices</a>
+        <a href="serverless.html">← Serverless</a>
+        <a href="event-driven.html">← Event-Driven</a>
+        <a href="layered.html">← Layered / N-tier</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

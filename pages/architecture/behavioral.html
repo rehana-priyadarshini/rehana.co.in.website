@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Behavioral Patterns · Design Patterns Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Strategy, Observer, Command, Iterator, State, Template Method, Chain of Responsibility, Mediator, Visitor, Memento — patterns for how objects coordinate." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/behavioral.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Behavioral Patterns · Design Patterns Deep Dive" />
+<meta property="og:description" content="Strategy, Observer, Command, Iterator, State, Template Method, Chain of Responsibility — patterns for how objects coordinate." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/behavioral.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Behavioral Patterns · Design Patterns Deep Dive" />
+<meta name="twitter:description" content="Strategy, Observer, Command, Iterator, State, Template Method, Chain of Responsibility." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Design Patterns Deep Dive · 3 of 4</div>
+    <h1>Behavioral Patterns — How Objects Talk to Each Other</h1>
+    <p class="lede">Behavioral patterns describe how objects collaborate — who calls whom, who notifies whom, who decides what. They're how flexibility is added without inheritance, how event-driven UIs work, and how you avoid 500-line <code>switch</code> statements that branch on type or status.</p>
+    <div class="tags"><span>Strategy</span><span>Observer</span><span>Command</span><span>State</span><span>Iterator</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Behavioral Patterns Solve</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>The problem:</strong> coupling between objects gets stiff. A class hard-codes which collaborator to call, or branches on a status enum scattered everywhere, or notifies dependents by knowing them all by name.</li>
+          <li><strong>The solution:</strong> introduce an indirection — an interface, a notification mechanism, a decoupled command — so the rigid coupling becomes flexible plumbing.</li>
+          <li><strong>The trade-off:</strong> more types and more indirection. Worth it when behavior changes often or new variants get added.</li>
+          <li><strong>Modern context:</strong> first-class functions and pattern matching collapse some of these to one-liners. Strategy is "pass a function." Iterator is built into <code>for</code>. The patterns survive because the <em>names</em> still help on a whiteboard.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Core</div><h2>The Five You'll Use Often</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Strategy</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.</p>
+          <p style="margin-top:8px;">Sorting comparators, pricing rules, retry policies, compression algorithms, auth strategies. Same caller, different behavior plugged in.</p>
+          <p style="margin-top:8px;"><strong>Functional collapse:</strong> in JS, Python, Kotlin, modern Java, "Strategy" is usually just passing a function. <code>list.sort(by: priceAscending)</code>. The OO ceremony of a <code>Strategy</code> interface plus N classes is overkill when a lambda fits.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Observer (Pub/Sub)</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Define a one-to-many dependency between objects so that when one changes state, all its dependents are notified and updated automatically.</p>
+          <p style="margin-top:8px;">Subjects keep a list of observers; on change, they notify each one. The basis of UI event systems, reactive frameworks (RxJS, Combine, signals), MVVM bindings, and (scaled up to a network) event-driven architectures across services.</p>
+          <p style="margin-top:8px;"><strong>Watch out:</strong> who owns the lifecycle? Observers that outlive the subject leak memory ("listener leak" in Android, JS DOM event handlers). Subjects that outlive observers fire into the void.</p>
+          <p style="margin-top:8px;"><strong>Push vs pull:</strong> push sends the new state with the notification; pull just signals "something changed" and the observer re-queries. Push is faster; pull is more flexible.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Command</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Encapsulate a request as an object, letting you parameterize clients with different requests, queue or log them, and support undoable operations.</p>
+          <p style="margin-top:8px;">A Command bundles target + method + arguments + (optional) undo logic into one object you can pass around. Buys you queueing, logging, retry, audit, undo/redo, and macro recording.</p>
+          <p style="margin-top:8px;"><strong>In the wild:</strong> CQRS' "command" comes from this idea. Job queues are commands awaiting execution. Database transaction logs and editor undo stacks are command sequences.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>State</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Allow an object to alter its behavior when its internal state changes. The object will appear to change its class.</p>
+          <p style="margin-top:8px;">Instead of a giant <code>switch (status)</code> in every method, the object delegates to a state class that gets swapped on transitions. <code>Order</code> in <code>DraftState</code> behaves differently than in <code>SubmittedState</code> or <code>FulfilledState</code>; the rules for "can cancel?" "can edit?" "can ship?" live with the state, not with the order.</p>
+          <p style="margin-top:8px;"><strong>Used heavily in:</strong> workflow engines, network protocols (TCP state machine), game AI, document editors, anything with non-trivial lifecycles.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Iterator</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Provide a way to access the elements of a collection sequentially without exposing its internal structure.</p>
+          <p style="margin-top:8px;">The pattern itself is a relic — every modern language builds it in as <code>for...of</code>, generators, <code>IEnumerable</code>, <code>Iterable</code>. But the <em>concept</em> — separating "how do I traverse this?" from "what is this?" — is everywhere. Streams, async iterators, paginated API clients, database cursors are all iterators in spirit.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Rest</div><h2>Five More Worth Knowing</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Template Method</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Define the skeleton of an algorithm in a method, deferring some steps to subclasses. Subclasses redefine specific steps without changing the algorithm's structure.</p>
+          <p style="margin-top:8px;">Useful when several variants share a backbone but differ in details. Common in test frameworks (<code>setUp</code>/<code>test</code>/<code>tearDown</code>), import pipelines, scheduled-job base classes.</p>
+          <p style="margin-top:8px;"><strong>Composition alternative:</strong> Strategy + a small orchestrator is often more flexible — pieces can be mixed and matched at runtime. Template Method locks in inheritance.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Chain of Responsibility</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Pass a request along a chain of handlers; each one either handles it or forwards it to the next.</p>
+          <p style="margin-top:8px;">Web middleware pipelines (Express, Koa, ASP.NET Core, Rack) are exactly this. Logging → auth → rate limit → router → handler. Each link decides whether to short-circuit or call <code>next()</code>.</p>
+          <p style="margin-top:8px;"><strong>Used for:</strong> request middleware, exception handling chains, GUI event bubbling, document-approval workflows.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mediator</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Define an object that encapsulates how a set of objects interact, so they don't have to refer to each other directly.</p>
+          <p style="margin-top:8px;">Reduces N² coupling between collaborators to N (each one talks only to the mediator). Air-traffic control, chat-room hubs, complex form coordination. The MediatR library in .NET is named for this pattern.</p>
+          <p style="margin-top:8px;"><strong>Watch out:</strong> the mediator turning into a god object that knows everything. The pattern centralizes coupling; that centralization can become its own problem.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Visitor</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Represent an operation to be performed on the elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements.</p>
+          <p style="margin-top:8px;">Useful for compilers and AST transformations — adding a new pass (type-check, optimize, codegen) shouldn't require editing every node class. The Visitor "double dispatches" so the right operation runs for each node type.</p>
+          <p style="margin-top:8px;"><strong>Modern alternative:</strong> sealed types + pattern matching (Scala, Kotlin, modern Java, Rust) often expresses the same intent more directly. Visitor remains useful when you can't modify the element classes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Memento</summary>
+        <div class="drill-body">
+          <p><strong>Intent:</strong> Capture and externalize an object's internal state — without breaking encapsulation — so the state can be restored later.</p>
+          <p style="margin-top:8px;">Undo stacks, save games, editor history, transactional rollbacks. The Memento exposes only what's needed to restore; the originator stays in control of which fields are saved.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Interpreter (Honorable Mention)</summary>
+        <div class="drill-body">
+          <p>Define a representation of a grammar plus an interpreter that evaluates sentences in it. In modern code, almost always replaced by parser generators or off-the-shelf expression engines. Worth recognizing when someone names it; rarely worth implementing from scratch.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anti-Patterns Nearby</div><h2>What Behavioral Patterns Replace</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Giant <code>switch</code> on type or status.</strong> Replace with State or polymorphism (Strategy).</li>
+        <li><strong>Hard-coded notification of dependents.</strong> Replace with Observer.</li>
+        <li><strong>Long parameter lists describing "what to do."</strong> Replace with Command.</li>
+        <li><strong>"if-else for every middleware concern" inline in a controller.</strong> Replace with Chain of Responsibility.</li>
+        <li><strong>Cross-class boolean flags driving behavior.</strong> Smell of missing Strategy or State.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Pattern Families</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="creational.html">← Creational Patterns</a>
+        <a href="structural.html">← Structural Patterns</a>
+        <a href="enterprise-patterns.html">Enterprise Patterns →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pub/Sub · Messaging &amp; Event Streaming Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="One publisher, many subscribers. Fan-out without coupling. The pattern at the heart of event-driven systems and how internal services stop knowing each other by name." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/pubsub.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Pub/Sub · Messaging &amp; Event Streaming Deep Dive" />
+<meta property="og:description" content="One publisher, many subscribers. Fan-out without coupling." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/pubsub.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Pub/Sub · Messaging &amp; Event Streaming Deep Dive" />
+<meta name="twitter:description" content="One publisher, many subscribers. Fan-out without coupling." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Messaging &amp; Event Streaming Deep Dive · 3 of 3</div>
+    <h1>Pub/Sub — One Event, Many Subscribers</h1>
+    <p class="lede">Pub/Sub flips the addressing model. Publishers emit events to a topic without knowing who's listening; subscribers receive copies of every event for topics they care about. It's how a single <em>OrderPlaced</em> event reaches inventory, billing, fraud, analytics, and the customer-email service from one publish — without those teams knowing each other exists.</p>
+    <div class="tags"><span>Fan-Out</span><span>Decoupling</span><span>Topics</span><span>Event-Driven</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Pub/Sub Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Publisher:</strong> the producer of events. Doesn't know or care who subscribes.</li>
+          <li><strong>Subscriber:</strong> registers interest in a topic. Receives every event published to that topic (filtered by rules, in some systems).</li>
+          <li><strong>Topic:</strong> a named channel. Events flow through it; subscribers attach to it.</li>
+          <li><strong>Subscription:</strong> the binding between a subscriber and a topic. Each subscription has its own delivery state — what's been delivered, what's pending.</li>
+          <li><strong>Many-to-many:</strong> one topic can have many publishers and many subscribers. Each subscriber gets its own copy of each event.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Decoupling Producers from Consumers</summary>
+        <div class="drill-body">
+          <p>The order service publishes <code>OrderPlaced</code>. It doesn't know that emails get sent, analytics gets updated, the warehouse picks the package, and the loyalty system credits points. It just emits the event. Add a new consumer (fraud detection, recommendation training) without touching the producer or coordinating with anyone.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Natural Fan-Out</summary>
+        <div class="drill-body">
+          <p>One event, ten subscribers, ten copies — each delivered, acked, and tracked independently. A slow subscriber doesn't slow down a fast one; they just lag at different rates.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Org-Scale Loose Coupling</summary>
+        <div class="drill-body">
+          <p>Pub/Sub is how a 200-engineer org integrates services without weekly cross-team coordination. Producer teams ship contracts (event schemas); consumer teams subscribe at their own pace. The dependency graph becomes "everyone reads from these topics" rather than "every service calls every other service."</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Patterns That Matter</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Topic Naming &amp; Granularity</summary>
+        <div class="drill-body">
+          <p>Coarse topics (<code>orders</code>) force every subscriber to filter; fine topics (<code>order.placed</code>, <code>order.shipped</code>, <code>order.refunded</code>) let subscribers attach only to what they care about. Most teams settle on noun-dot-verb naming, past tense for events: <code>order.placed</code>, not <code>place-order</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Filtering &amp; Routing</summary>
+        <div class="drill-body">
+          <p>Most managed pub/sub systems support attribute filters or routing rules. AWS SNS lets a subscription specify a JSON filter policy on message attributes. Google Pub/Sub supports filter expressions. RabbitMQ topic exchanges route by routing-key wildcards (<code>order.*</code>). Use these to keep topics simple and let subscribers pick the slice they want.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Delivery Semantics</summary>
+        <div class="drill-body">
+          <p>Most pub/sub systems guarantee at-least-once. Build idempotent subscribers — store the event ID, skip if already processed. The same event can and will arrive twice; pretending it can't is how you double-charge a card.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Per-Subscription Backlogs</summary>
+        <div class="drill-body">
+          <p>Each subscription tracks its own delivery state. A slow subscriber accumulates a backlog without affecting the others. Watch backlog metrics — sustained growth means the subscriber can't keep up, time to scale or fix.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pub/Sub vs Queue</summary>
+        <div class="drill-body">
+          <p>The classic pattern is <strong>SNS + SQS fan-out:</strong> a publisher writes to one SNS topic; multiple SQS queues subscribe; each queue is read by its own pool of competing consumers. Pub/sub does the fan-out; queues do the per-subscriber load balancing. Same pattern in Google Pub/Sub (one topic → many subscriptions, each backed by competing pull subscribers).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pub/Sub vs Streaming</summary>
+        <div class="drill-body">
+          <p>Pub/sub typically delivers each event once per subscription and forgets. A streaming log (Kafka, Kinesis) persists every event for a retention window and lets consumers replay from any offset. Need replay or "new consumer reads from the beginning"? Use streaming. Need plain fan-out delivery without history? Use pub/sub.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Players</div><h2>The Common Pub/Sub Systems</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>System</th><th>Style</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>AWS SNS</td><td>Managed pub/sub with multiple delivery protocols</td><td>Pairs with SQS for fan-out + work-distribution; also delivers to Lambda, HTTP, email, SMS.</td></tr>
+          <tr><td>Google Pub/Sub</td><td>Managed, global, durable</td><td>Push or pull; per-message ack with retention up to 7 days.</td></tr>
+          <tr><td>Azure Service Bus Topics</td><td>Managed pub/sub with subscription rules</td><td>Sessions, transactions, scheduled delivery.</td></tr>
+          <tr><td>RabbitMQ topic exchanges</td><td>Self-hosted AMQP</td><td>Routing-key wildcards make selective subscriptions easy.</td></tr>
+          <tr><td>NATS</td><td>Lightweight pub/sub (with optional JetStream persistence)</td><td>Edge, IoT, and microservices needing low overhead.</td></tr>
+          <tr><td>Redis Pub/Sub</td><td>In-memory, fire-and-forget</td><td>Ephemeral — no delivery guarantees if a subscriber is offline. Fine for transient signals; not for business events.</td></tr>
+          <tr><td>Kafka</td><td>Streaming log used as pub/sub</td><td>Many teams run Kafka as their pub/sub layer to keep replay as an option.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Real Pain</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>"What happens after this event?"</strong> requires grepping every service to find subscribers. Document the event catalog and downstream consumers.</li>
+        <li><strong>Schema drift breaks consumers.</strong> Use a registry (Confluent, Apicurio, internal) and enforce backward-compatible changes only.</li>
+        <li><strong>Distributed tracing is essential.</strong> Without trace IDs propagated through messages, an end-to-end debug session becomes guesswork.</li>
+        <li><strong>Eventual consistency.</strong> Downstream state lags the publish. UIs and APIs need to plan for it.</li>
+        <li><strong>Hidden coupling at the schema level.</strong> Publishers don't know their consumers, but consumers know the publisher's schema. Treat events as a public contract.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Pub/Sub</h2></div>
+    <div class="chapter-body">
+      <p>Pick pub/sub when one event genuinely needs to reach multiple independent consumers and you don't need replay or long-term retention. It's the right substrate for cross-team integration inside a platform — producers don't know who consumes, consumers add themselves without coordinating.</p>
+      <p style="margin-top:10px;">Pick a <strong>queue</strong> when one producer hands work to one consumer pool. Pick <strong>streaming</strong> when replay, ordered history, and long retention matter. The three patterns aren't competitors — most mature platforms use all three for the use cases each fits best.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More on Messaging</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="message-queues.html">← Message Queues</a>
+        <a href="event-streaming.html">← Event Streaming</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

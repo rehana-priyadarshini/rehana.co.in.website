@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Layered / N-tier · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Presentation → Application → Domain → Data. The classic enterprise layout — easy to understand, easy to misuse." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/layered.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Layered / N-tier · Architectural Styles Deep Dive" />
+<meta property="og:description" content="Presentation → Application → Domain → Data. The classic enterprise layout." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/layered.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Layered / N-tier · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="Presentation → Application → Domain → Data. The classic enterprise layout." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 6 of 8</div>
+    <h1>Layered / N-tier — Stacks of Responsibility</h1>
+    <p class="lede">Layered architecture splits a system into horizontal layers — usually Presentation, Application, Domain, Data — where each layer only depends on the one below. It's the classic enterprise layout you'll meet in nearly every Java EE, Spring, ASP.NET, or Django app. Easy to understand, easy to teach, and surprisingly easy to misuse.</p>
+    <div class="tags"><span>Tiers</span><span>Top-Down Dependency</span><span>Enterprise</span><span>Classic</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Standard Layers</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Presentation:</strong> controllers, view templates, request/response shaping. Knows the protocol (HTTP, gRPC).</li>
+          <li><strong>Application / Service:</strong> orchestrates a use case — calls the domain, manages transactions, returns DTOs.</li>
+          <li><strong>Domain:</strong> business entities and rules. Should be the part with the most behavior.</li>
+          <li><strong>Data Access / Persistence:</strong> repositories, ORM mappings, raw SQL. Talks to the DB.</li>
+          <li><strong>The dependency rule:</strong> each layer depends only on layers below it. Presentation calls Application, never the reverse.</li>
+          <li><strong>"N-tier"</strong> historically referred to physical deployment (web tier, app tier, DB tier). Today it's used interchangeably with "layered."</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It's Everywhere</div><h2>The Reasons It Stuck</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Easy to Onboard</summary>
+        <div class="drill-body">
+          <p>Show a new engineer the folder structure and they immediately know where things live. <code>controllers/</code>, <code>services/</code>, <code>repositories/</code>. Every framework's official tutorial uses some version of it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Frameworks Cooperate</summary>
+        <div class="drill-body">
+          <p>Spring, ASP.NET, Django, Rails, NestJS — every major framework has annotations, scaffolds, and conventions for layered code. <code>@Controller</code>, <code>@Service</code>, <code>@Repository</code> map directly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Swap Below, Not Above</summary>
+        <div class="drill-body">
+          <p>If presentation talks only to the service layer, you can add a new front end (REST, GraphQL, gRPC, CLI) without touching domain or data. If services talk only to repository interfaces, swapping the persistence backend is bounded.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Classic Failure Modes</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Anemic Domain Model</summary>
+        <div class="drill-body">
+          <p>Domain entities become bags of getters and setters; all the behavior leaks into "services" that read fields and decide. The "domain" layer ends up with no domain in it. Sound familiar? This is the layered pattern's most common failure.</p>
+          <p style="margin-top:8px;">Antidote: push behavior back onto entities. <code>account.debit(amount)</code> instead of <code>service.debit(account, amount)</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Layer Leakage</summary>
+        <div class="drill-body">
+          <p>Controllers query the DB directly "just for this one endpoint." Repositories return ORM entities that the controller serializes straight to JSON, leaking schema to clients. Without enforcement, the lines blur and the architecture stops paying off.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Smearing Modules Across Layers</summary>
+        <div class="drill-body">
+          <p>If you organize top-level by layer (<code>controllers/</code>, <code>services/</code>, <code>repositories/</code>), the billing module is smeared across all three folders. Reading "what does billing do?" requires opening three places. Modular monoliths flip this — top-level by feature, layers <em>inside</em> each module.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Service Layer Becomes a God Object</summary>
+        <div class="drill-body">
+          <p>"I need to add this logic somewhere — services, I guess?" Result: 5,000-line service classes orchestrating everything because nobody knew where else to put it. The pattern doesn't tell you when to split a service, so most teams don't.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Strict Layering Adds Boilerplate</summary>
+        <div class="drill-body">
+          <p>Adding one field can mean updating: DTO → controller → service → mapper → entity → repository → DB schema. Six edits to add one column. Many teams quietly relax strict layering for this reason.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Variants</div><h2>Three-Tier and Beyond</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Classic Three-Tier (Physical)</summary>
+        <div class="drill-body">
+          <p>Web servers, app servers, database — deployed on different machines. The browser hits a load balancer, which hits app servers, which hit the DB. Still the basis of most web architectures, even ones that call themselves something else.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>MVC / MVVM / MVP</summary>
+        <div class="drill-body">
+          <p>Presentation-layer patterns within layered architecture. <strong>MVC</strong> (Model-View-Controller) is the workhorse for server-rendered apps. <strong>MVVM</strong> binds views to view-models for data-binding-heavy clients (WPF, Vue). <strong>MVP</strong> adds a presenter that drives passive views.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Open vs Closed Layers</summary>
+        <div class="drill-body">
+          <p><strong>Closed:</strong> a layer can only call the one directly below. Strictest; most boilerplate.</p>
+          <p style="margin-top:8px;"><strong>Open:</strong> a layer can call any layer below it. Practical; risks turning into a free-for-all.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Layered</h2></div>
+    <div class="chapter-body">
+      <p>Reasonable default for:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>Small to medium business apps where the team values onboarding speed over domain purity.</li>
+        <li>CRUD-heavy systems where the domain is genuinely thin.</li>
+        <li>Anything where the framework's defaults are layered (Rails, Spring Boot, Django, ASP.NET MVC) — fighting the framework rarely pays off.</li>
+      </ul>
+      <p style="margin-top:12px;">Reach instead for <strong>hexagonal / clean</strong> when the domain is rich, long-lived, and has to outlive multiple infrastructure choices. Reach for <strong>modular monolith</strong> organization when multiple bounded contexts coexist — slice top-level by feature, then keep layers inside each feature.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="modular-monolith.html">← Modular Monolith</a>
+        <a href="microservices.html">← Microservices</a>
+        <a href="serverless.html">← Serverless</a>
+        <a href="event-driven.html">← Event-Driven</a>
+        <a href="hexagonal.html">Hexagonal / Clean →</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

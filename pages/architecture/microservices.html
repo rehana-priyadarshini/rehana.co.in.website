@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Microservices · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Many small services, independently deployed, each owning its data. Powerful at scale, expensive at the start — and easy to do badly." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/microservices.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Microservices · Architectural Styles Deep Dive" />
+<meta property="og:description" content="Many small services, independently deployed, each owning its data." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/microservices.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Microservices · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="Many small services, independently deployed, each owning its data." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 3 of 8</div>
+    <h1>Microservices — Many Small Services, Owned and Shipped Independently</h1>
+    <p class="lede">A microservices architecture splits the system into many small services, each owned by one team, each with its own database, each deployed independently. It buys you team autonomy, polyglot stacks, and targeted scaling — at the cost of every problem in distributed systems landing in your lap.</p>
+    <div class="tags"><span>Distributed</span><span>Bounded Contexts</span><span>Independent Deploys</span><span>DevOps-Heavy</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Microservices Are</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Small, focused services:</strong> sized by <em>bounded context</em> (DDD), not by lines of code. Could be 200 lines, could be 20,000.</li>
+          <li><strong>Independently deployable:</strong> service A ships without rebuilding or coordinating with service B.</li>
+          <li><strong>Own their data:</strong> each service has its own database. No other service touches it directly.</li>
+          <li><strong>Communicate over the network:</strong> sync (HTTP/REST, gRPC) or async (Kafka, RabbitMQ, SNS).</li>
+          <li><strong>Decentralized governance:</strong> each team picks its language, framework, DB — within guardrails set centrally.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Independent Deploys at Scale</summary>
+        <div class="drill-body">
+          <p>20 teams shipping 20× a day without stepping on each other. The signal that justifies microservices isn't "we want clean code" — it's "we can't ship fast enough together."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Targeted Scaling</summary>
+        <div class="drill-body">
+          <p>Scale the search service to 100 replicas because it's CPU-heavy; keep the user-profile service at 3 because it's barely used. With a monolith you'd scale everything to the bottleneck.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Team Autonomy</summary>
+        <div class="drill-body">
+          <p>Each team owns a service end to end — code, deploy, on-call. Decisions stay local; the team picks the right tool for its workload (Go for the high-throughput pricing engine, Python for the ML scoring service).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Fault Isolation (When Done Right)</summary>
+        <div class="drill-body">
+          <p>If the recommendations service is down, the homepage can degrade gracefully. The whole product doesn't go with it. <em>If done right</em> — without circuit breakers and timeouts, one slow dependency cascades into a full outage.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Tax</div><h2>What You Pay For</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Distributed Systems Are Hard</summary>
+        <div class="drill-body">
+          <p>Networks fail, packets reorder, machines crash mid-call, latency varies by 100×. Every cross-service call needs timeouts, retries (with backoff and jitter), idempotency keys, and circuit breakers. None of this exists in a monolith.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>No Distributed Transactions</summary>
+        <div class="drill-body">
+          <p>You can't run an ACID transaction across services. To "place an order, charge a card, reserve inventory" you write a <strong>saga</strong> — a sequence of local transactions with compensating actions if any step fails. Significantly more complex than <code>BEGIN ... COMMIT</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Operational Surface Area</summary>
+        <div class="drill-body">
+          <p>Each service brings: a CI pipeline, a Helm chart, dashboards, alerts, runbooks, an on-call rotation, log aggregation, distributed tracing, a service-mesh sidecar, secret rotation, and certificate management. Multiplied by 50 services. You need a platform team — sometimes a platform org.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Debugging Is Multi-Hop</summary>
+        <div class="drill-body">
+          <p>"Why did this checkout fail?" used to be one stack trace. Now it's: distributed trace across 7 services, correlated logs, possibly a Kafka offset to inspect. Without OpenTelemetry, Jaeger, or similar, you're guessing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Distributed Monolith — The Worst Outcome</summary>
+        <div class="drill-body">
+          <p>Microservices that must deploy together (because their schemas are coupled) get all of the operational tax with none of the autonomy. Common signs: changing service A breaks service B; releases require a "release train"; nobody can deploy alone. This is microservices done wrong.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>The Patterns That Make It Work</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Service Discovery &amp; Mesh</summary>
+        <div class="drill-body">
+          <p>Services find each other via DNS (Kubernetes service objects), a registry (Consul, Eureka), or a service mesh (Istio, Linkerd). The mesh adds mTLS, traffic shaping, retries, and observability without changing application code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>API Gateway / BFF</summary>
+        <div class="drill-body">
+          <p>A single entry point for clients (web, mobile). Handles auth, rate limiting, request shaping. The <em>Backend-for-Frontend</em> pattern goes further — one gateway per client type, each composing the underlying services into the shape that client needs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Resilience Patterns</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Timeout</strong> — every cross-service call has one.</li>
+            <li><strong>Retry</strong> — with exponential backoff and jitter, only on idempotent calls.</li>
+            <li><strong>Circuit breaker</strong> — stop calling a sick dependency for a cooldown.</li>
+            <li><strong>Bulkhead</strong> — separate thread/connection pools per dependency, so one failing service can't drain the rest.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Async Eventing</summary>
+        <div class="drill-body">
+          <p>For workflows where the producer doesn't need a synchronous reply, prefer events on a broker. Looser coupling, natural fan-out, easy audit. Sync RPC is better for "give me data right now to render this page."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Discipline</summary>
+        <div class="drill-body">
+          <p>Versioned APIs (URL or header), schema registry for events (Avro, Protobuf), backward-compatible changes only, contract tests in CI (Pact). Without this, schema drift turns "independent deploys" into "two-week coordination meetings."</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Microservices</h2></div>
+    <div class="chapter-body">
+      <p>Pick microservices when <em>at least</em> these are true:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>You have many teams that need to ship independently — typically 50+ engineers.</li>
+        <li>You have a platform team capable of running a service mesh, observability stack, and CI/CD at scale.</li>
+        <li>Your domain has clear, stable bounded contexts you can cut along.</li>
+        <li>At least one service has a scaling, security, or compliance profile that genuinely differs from the others.</li>
+      </ul>
+      <p style="margin-top:12px;">Picking microservices on day one of a startup is the most common over-engineering mistake in the field. Start with a modular monolith; extract services when the pain is concrete, not theoretical.</p>
+      <p style="margin-top:8px; font-size:14px; color:var(--muted);"><em>"You should build a new system with a monolith first, even if you think your system would benefit from microservices later." — Martin Fowler, "MonolithFirst" (2015).</em></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="modular-monolith.html">← Modular Monolith</a>
+        <a href="serverless.html">Serverless →</a>
+        <a href="event-driven.html">Event-Driven →</a>
+        <a href="layered.html">Layered / N-tier →</a>
+        <a href="hexagonal.html">Hexagonal / Clean →</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOAP · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="XML envelopes, WSDL contracts, and the WS-* spec stack. Heavy by today's standards, still common in banking, insurance, telco, and government integrations." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/soap.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="SOAP · API Styles Deep Dive" />
+<meta property="og:description" content="XML envelopes, WSDL contracts, and the WS-* spec stack." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/soap.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="SOAP · API Styles Deep Dive" />
+<meta name="twitter:description" content="XML envelopes, WSDL contracts, and the WS-* spec stack." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 7 of 7</div>
+    <h1>SOAP — XML, WSDL, and the Enterprise Stack</h1>
+    <p class="lede">SOAP is a protocol from the late 1990s for exchanging XML messages over HTTP (or anything else). It's heavy by today's standards, but its strict contracts and built-in security made it the default in regulated industries — and you'll still meet it integrating with banks, payment networks, governments, telcos, and old SAP/Oracle systems. You don't choose SOAP; SOAP chooses you.</p>
+    <div class="tags"><span>XML</span><span>WSDL</span><span>WS-Security</span><span>Enterprise</span><span>Legacy</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What SOAP Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Origin:</strong> "Simple Object Access Protocol", Microsoft &amp; IBM, late 1990s. W3C standard from 2003.</li>
+          <li><strong>Envelope:</strong> every message is an XML <code>&lt;Envelope&gt;</code> with a <code>&lt;Header&gt;</code> (auth, addressing, transactions) and a <code>&lt;Body&gt;</code> (the actual payload or fault).</li>
+          <li><strong>WSDL — Web Services Description Language:</strong> an XML file describing every operation, its inputs, outputs, and faults. The contract.</li>
+          <li><strong>Tooling generates clients</strong> — point a code generator at the WSDL and you get typed stubs in Java, .NET, Python, etc.</li>
+          <li><strong>WS-* spec stack:</strong> WS-Security (signing &amp; encryption at the message level), WS-Addressing, WS-ReliableMessaging, WS-AtomicTransaction, and many more. Heavy, comprehensive, and rarely all needed at once.</li>
+          <li><strong>Transport-agnostic:</strong> usually HTTP, but SOAP can ride SMTP, JMS, or message queues.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Stuck</div><h2>What SOAP Got Right</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Contract Comes First</summary>
+        <div class="drill-body">
+          <p>WSDL is a strongly-typed, machine-readable contract. Generate clients in any language; the wire shape and types are guaranteed to match. This is the same idea gRPC and OpenAPI deliver today — SOAP did it 20 years earlier, just with a lot more XML.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Built-in Security at the Message Level</summary>
+        <div class="drill-body">
+          <p>WS-Security signs and encrypts parts of the message (not just the transport), so a SOAP envelope can pass through intermediaries without losing its integrity guarantees. Banks, governments, and healthcare systems lean on this — the message is signed end-to-end regardless of how many hops it makes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reliable Messaging and Transactions</summary>
+        <div class="drill-body">
+          <p>WS-ReliableMessaging delivers exactly-once even over flaky transports. WS-AtomicTransaction coordinates distributed transactions across SOAP services. Heavy machinery, but it's there if your industry's compliance requires it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Lost</div><h2>Where SOAP Showed Its Age</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>XML Verbosity</summary>
+        <div class="drill-body">
+          <p>The same payload that's 100 bytes of JSON is a kilobyte of XML with namespaces and envelopes. CPU cost to parse, network cost to ship, human cost to read — all higher.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tooling-Heavy</summary>
+        <div class="drill-body">
+          <p>You can't <code>curl</code> a SOAP service meaningfully. You parse a WSDL, generate stubs, compile, run. The "open a browser, hit the URL, see JSON" workflow doesn't exist. Productivity in modern IDEs depends on plugins; in scripting languages it's outright painful.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>WS-* Sprawl</summary>
+        <div class="drill-body">
+          <p>The standards stack tried to solve every distributed-systems problem at the protocol layer. The result was an enormous spec surface where no two implementations agreed on every corner. The pendulum swung to "do less at the protocol layer, push concerns to the app" — REST, then gRPC.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Browser-Hostile</summary>
+        <div class="drill-body">
+          <p>SOAP doesn't fit the web. Calling a SOAP service from JavaScript is awkward; XML is verbose to construct; CORS and security headers were never designed with SOAP in mind. As browsers became the dominant API client, SOAP's relevance faded.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">In the Wild</div><h2>Where You'll Still Meet It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Banking and payment networks</strong> — SWIFT, FIX adjacency, card-network integrations, many ACH/SEPA gateways.</li>
+        <li><strong>Insurance</strong> — claims, underwriting, and reinsurance protocols.</li>
+        <li><strong>Telecom</strong> — provisioning, billing, and OSS/BSS systems built before 2010.</li>
+        <li><strong>Government and healthcare integrations</strong> — eHealth interfaces, customs, tax filing endpoints, social-security systems.</li>
+        <li><strong>SAP, Oracle, and old Microsoft BizTalk pipelines</strong> — enterprise SOA from the 2000s.</li>
+        <li><strong>Shipping carriers' legacy APIs</strong> — FedEx, UPS, and DHL had SOAP for years; many have REST now but the SOAP surfaces still exist.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pragmatics</div><h2>How to Survive a SOAP Integration</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Get the WSDL early.</strong> The contract is the integration. Generate clients with <code>wsimport</code> (Java), <code>svcutil</code> (.NET), <code>zeep</code> (Python), or <code>node-soap</code>.</li>
+        <li><strong>Don't hand-write XML.</strong> The namespace and ordering rules are unforgiving. Let the generated client do it.</li>
+        <li><strong>Read the partner's interpretation of WS-*.</strong> Specs allow ambiguity; partners pick interpretations. Their integration guide is more important than the spec.</li>
+        <li><strong>Wrap it in an anti-corruption layer.</strong> Don't let SOAP types and exceptions leak into your domain. Translate at the boundary.</li>
+        <li><strong>Log raw envelopes</strong> (with PII redacted). When something goes wrong, you'll need the actual XML, not a parsed object.</li>
+        <li><strong>Test against their sandbox</strong> early — SOAP errors range from "missing namespace" to "wrong WS-Security policy" and they're hard to diagnose without the partner's logs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When You Pick SOAP</h2></div>
+    <div class="chapter-body">
+      <p>You don't, anymore — for new APIs, REST or gRPC are the right call. SOAP comes up only when you're integrating with a partner who already speaks it. When that happens, accept the contract, generate the client, build a clean adapter, and don't fight the protocol.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">← REST</a>
+        <a href="graphql.html">← GraphQL</a>
+        <a href="grpc.html">← gRPC</a>
+        <a href="websockets.html">← WebSockets</a>
+        <a href="sse.html">← Server-Sent Events</a>
+        <a href="webhooks.html">← Webhooks</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

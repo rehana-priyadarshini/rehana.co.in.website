@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Serverless · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Functions triggered by events. Scale from zero, pay per request, no servers to patch — and a unique set of constraints to design around." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/serverless.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Serverless · Architectural Styles Deep Dive" />
+<meta property="og:description" content="Functions triggered by events. Scale from zero, pay per request, no servers to patch." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/serverless.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Serverless · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="Functions triggered by events. Scale from zero, pay per request, no servers to patch." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 4 of 8</div>
+    <h1>Serverless — Functions That Wake Up on Demand</h1>
+    <p class="lede">You hand a function to the platform; it scales from zero to thousands of concurrent invocations on demand and bills you per request and per ms of execution. There are servers — they're just not yours to patch, scale, or wake up at 3 a.m. for. The trade-off is a tightly constrained execution model.</p>
+    <div class="tags"><span>FaaS</span><span>Event-Driven</span><span>Pay-per-use</span><span>Auto-Scale</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Serverless Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Function-as-a-Service (FaaS):</strong> deploy a single function; the platform invokes it on every event.</li>
+          <li><strong>Event-driven:</strong> triggered by HTTP requests, queue messages, scheduled timers, file uploads, DB changes.</li>
+          <li><strong>Scale to zero:</strong> no idle cost. No traffic, no charge.</li>
+          <li><strong>Stateless:</strong> each invocation gets a fresh execution context (or maybe a warm one — you don't get to choose).</li>
+          <li><strong>The platforms:</strong> AWS Lambda, Google Cloud Functions / Cloud Run, Azure Functions, Cloudflare Workers, Vercel/Netlify Functions.</li>
+          <li><strong>Beyond FaaS:</strong> "serverless" also covers managed DBs, queues, and storage where you don't pick instance sizes (Aurora Serverless, DynamoDB on-demand).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>No Servers to Run</summary>
+        <div class="drill-body">
+          <p>No OS patches. No autoscaling groups. No fleet rotation for security CVEs. The platform runs everything; you write business logic.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Spiky Traffic, Cheap</summary>
+        <div class="drill-body">
+          <p>If you're idle 23 hours a day and slammed for one, a serverless function pays for the busy hour and nothing for the rest. Compared to a always-on EC2 instance, it can be 10–100× cheaper.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tiny Unit of Deployment</summary>
+        <div class="drill-body">
+          <p>Each function is its own deployable. Roll out, roll back, version, alias — all per function. Trial a fix on 5% of traffic; promote if metrics hold.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Native Event Plumbing</summary>
+        <div class="drill-body">
+          <p>The cloud provider's event sources wire directly to functions: S3 upload → Lambda; new row in DynamoDB → Lambda; queue message → Lambda; cron → Lambda. Glue work that would take a service in microservices is one config block here.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Sharp Edges</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Cold Starts</summary>
+        <div class="drill-body">
+          <p>The first request after idle time pays for spinning up a fresh container. Latency: ~10ms (Cloudflare V8 isolates) to several seconds (Java on Lambda with a fat dependency tree). For latency-sensitive APIs, mitigate with provisioned concurrency, smaller bundles, or warm-up pings — or pick a different style.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Execution Limits</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Wall-clock timeout:</strong> Lambda 15 min, Cloud Functions 9–60 min, Cloudflare Workers 30s. Long jobs need step functions or a different runtime.</li>
+            <li><strong>Memory caps:</strong> a few GB at most.</li>
+            <li><strong>Payload size:</strong> 6 MB sync, 256 KB async on Lambda. No streaming gigabytes through.</li>
+            <li><strong>Package size:</strong> ~50–250 MB depending on platform. Native binaries and ML models often don't fit.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>DB Connection Storms</summary>
+        <div class="drill-body">
+          <p>Each function instance opens its own connection. Scale to 1,000 concurrent invocations and your Postgres collapses. Front the DB with a pooler (RDS Proxy, PgBouncer, Supabase) or use HTTP-native datastores (DynamoDB, Firestore, PlanetScale's edge driver).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>No Local State</summary>
+        <div class="drill-body">
+          <p>You can't keep an in-memory cache, a websocket connection, or a long-running session in the function. Push state to Redis, Durable Objects, or a database. Even "warm" instances can be killed at any moment.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Vendor Lock-in</summary>
+        <div class="drill-body">
+          <p>Function signatures, event shapes, IAM, observability tooling — all platform-specific. Lambda code doesn't run on Cloud Functions without rewrites. Frameworks like Serverless Framework, SST, and OpenFaaS reduce this but don't eliminate it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Local Dev &amp; Debugging</summary>
+        <div class="drill-body">
+          <p>Reproducing the cloud event shape and IAM context on your laptop is awkward. Tools (LocalStack, SAM, SST live mode) help but don't match production exactly. Distributed traces are essential — without them, debugging multi-function flows is guesswork.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Variants</div><h2>Beyond Plain FaaS</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Serverless Containers</summary>
+        <div class="drill-body">
+          <p>Cloud Run, AWS App Runner, Azure Container Apps, Fargate. Bring a container, get scale-to-zero and per-request billing without function-style constraints. Same image runs locally and in prod. The middle ground between FaaS and Kubernetes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Edge Functions</summary>
+        <div class="drill-body">
+          <p>Cloudflare Workers, Vercel Edge, Lambda@Edge. Code runs in PoPs close to the user — single-digit-ms latency. Constrained runtimes (V8 isolates, no Node-native modules) but the cold start is near-zero. Sweet spot: auth, A/B routing, personalization, geolocation, image transforms.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Step Functions / Workflows</summary>
+        <div class="drill-body">
+          <p>Orchestrate multiple functions into durable workflows that survive crashes and run for days. AWS Step Functions, Google Workflows, Temporal, Azure Durable Functions. Used for sagas, ETL, long-running approvals.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Serverless</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Workload</th><th>Serverless Fit</th></tr></thead>
+        <tbody>
+          <tr><td>Webhooks, integrations</td><td>Excellent — bursty, stateless, short.</td></tr>
+          <tr><td>Scheduled jobs / cron</td><td>Excellent — pay only when running.</td></tr>
+          <tr><td>Image / file processing on upload</td><td>Excellent — event-driven by nature.</td></tr>
+          <tr><td>Low-traffic APIs &amp; admin tools</td><td>Great — scale-to-zero saves money.</td></tr>
+          <tr><td>BFF / API gateway logic</td><td>Great — especially at the edge.</td></tr>
+          <tr><td>High-throughput latency-sensitive APIs</td><td>Iffy — cold starts hurt; cost surprises at scale.</td></tr>
+          <tr><td>Long-running jobs (&gt;15 min)</td><td>No — use containers or Step Functions.</td></tr>
+          <tr><td>Heavy in-memory state, ML inference</td><td>No — package limits, cold starts, GPU access.</td></tr>
+          <tr><td>WebSockets, persistent connections</td><td>Use specialized runtimes (API Gateway WebSockets, Durable Objects).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="modular-monolith.html">← Modular Monolith</a>
+        <a href="microservices.html">← Microservices</a>
+        <a href="event-driven.html">Event-Driven →</a>
+        <a href="layered.html">Layered / N-tier →</a>
+        <a href="hexagonal.html">Hexagonal / Clean →</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

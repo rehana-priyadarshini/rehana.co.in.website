@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Event-Driven Architecture · Architectural Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Services emit events on a bus and others react. Loose coupling, easy fan-out, natural audit trail — at the cost of eventual consistency and harder debugging." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/event-driven.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Event-Driven Architecture · Architectural Styles Deep Dive" />
+<meta property="og:description" content="Services emit events on a bus and others react. Loose coupling, easy fan-out, natural audit trail." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/event-driven.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Event-Driven Architecture · Architectural Styles Deep Dive" />
+<meta name="twitter:description" content="Services emit events on a bus and others react. Loose coupling, easy fan-out, natural audit trail." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architectural Styles Deep Dive · 5 of 8</div>
+    <h1>Event-Driven Architecture — Tell, Don't Ask</h1>
+    <p class="lede">Services emit events when something happens — "OrderPlaced", "PaymentReceived", "UserSignedUp" — onto a shared bus. Other services subscribe to what they care about and react. Producers don't know who consumes; consumers don't know who produced. The result is loosely coupled systems that fan out naturally and leave a perfect audit trail.</p>
+    <div class="tags"><span>Pub/Sub</span><span>Async</span><span>Loose Coupling</span><span>Eventual Consistency</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Event-Driven Means</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Event:</strong> a fact about something that happened in the past. Past tense, immutable, named for the business meaning ("OrderPlaced", not "InsertOrderRow").</li>
+          <li><strong>Producer:</strong> the service that publishes the event. Doesn't know or care who's listening.</li>
+          <li><strong>Consumer:</strong> a service that subscribes to a topic and reacts. Each consumer keeps its own offset.</li>
+          <li><strong>Broker:</strong> the middleware that routes events. Kafka, RabbitMQ, AWS SNS/SQS, Google Pub/Sub, Azure Service Bus, NATS.</li>
+          <li><strong>Topic / Stream:</strong> a named channel events flow through. Often partitioned for parallelism.</li>
+          <li><strong>Event ≠ Command.</strong> "OrderPlaced" announces a fact (event); "PlaceOrder" requests an action (command). Confusing them tangles ownership.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Loose Coupling</summary>
+        <div class="drill-body">
+          <p>The order service doesn't know that emails get sent, analytics gets updated, the warehouse picks the package, and the loyalty system credits points. It just publishes "OrderPlaced". Add a new consumer (fraud detection, recommendation training) without touching the producer.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Natural Fan-Out</summary>
+        <div class="drill-body">
+          <p>One event, ten consumers. Each one gets its own copy and processes at its own pace. Slow consumers don't slow down fast ones; they just lag behind on the topic.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Audit &amp; Replay</summary>
+        <div class="drill-body">
+          <p>The event log is a durable history. New consumer? Replay the topic from the start to backfill. Bug fix? Replay since the bad commit to repair downstream state. With Kafka, retention can be effectively infinite.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Resilience to Downstream Outages</summary>
+        <div class="drill-body">
+          <p>If the email service is down for an hour, "OrderPlaced" events queue up on its topic. When it comes back, it catches up. The order service never knew there was a problem.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Tax</div><h2>What You Pay For</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Eventual Consistency</summary>
+        <div class="drill-body">
+          <p>"Place an order, then immediately query the order list" may not show the new order if the read model lags the event. Designs that assume read-after-write consistency break here. Solutions: optimistic UI updates, "your order is processing" states, or a read model with monotonic guarantees.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ordering Is Hard</summary>
+        <div class="drill-body">
+          <p>Across a partitioned topic, global order is impossible. You get order <em>within a partition</em>. Partition by aggregate key (e.g., order ID) so all events for one entity stay in order — but events across different aggregates can interleave.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>At-Least-Once Delivery</summary>
+        <div class="drill-body">
+          <p>Most brokers guarantee "at least once", which means consumers <em>will</em> see duplicates. Make consumers idempotent — store the event ID, skip if already processed. "Exactly once" exists in name (Kafka transactions) but is brittle and rare in practice.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Evolution</summary>
+        <div class="drill-body">
+          <p>An event lives in the topic for years; consumers come and go. Yesterday's events must keep deserializing. Use a schema registry (Confluent, Apicurio) and enforce backward-compatible changes only — add optional fields, never rename or remove without versioning.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>End-to-End Visibility</summary>
+        <div class="drill-body">
+          <p>"What happens after OrderPlaced?" requires grepping every service to see who subscribes. Distributed tracing across event hops is harder than across HTTP — propagate trace IDs in event headers and instrument both sides.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Outbox Problem</summary>
+        <div class="drill-body">
+          <p>If a service writes to its DB and then publishes an event, what if the publish fails after the DB commits? Inconsistency. The <strong>outbox pattern</strong> writes the event to an <code>outbox</code> table in the same DB transaction; a separate process reads the outbox and publishes. Solves the dual-write problem.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Coordination</div><h2>Choreography vs Orchestration</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Choreography — No Conductor</summary>
+        <div class="drill-body">
+          <p>Each service reacts to events independently. No central controller. Simple to build, hard to see — "what's the full checkout flow?" requires walking every service. Best for small flows with 2–3 steps.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Orchestration — A Workflow Drives It</summary>
+        <div class="drill-body">
+          <p>A workflow engine (Temporal, AWS Step Functions, Camunda, Netflix Conductor) drives the saga step by step. Visible, testable, with built-in retries and compensation. The right call for long-running multi-step flows like onboarding, refunds, KYC. Slightly more central coupling, much more debuggable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sagas — Distributed Transactions</summary>
+        <div class="drill-body">
+          <p>You can't BEGIN/COMMIT across services. A saga is a sequence of local transactions, each with a <strong>compensating action</strong>. If step 4 fails, fire compensations for steps 1–3. Implement choreographed (events) or orchestrated (workflow engine).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Brokers</div><h2>Pick the Right Pipe</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Broker</th><th>Model</th><th>Best For</th></tr></thead>
+        <tbody>
+          <tr><td>Apache Kafka</td><td>Append-only log, partitioned, persistent</td><td>High-throughput event streaming, replay, analytics pipelines.</td></tr>
+          <tr><td>RabbitMQ</td><td>Queue + exchange routing</td><td>Task queues, request/reply, complex routing.</td></tr>
+          <tr><td>AWS SNS + SQS</td><td>Pub/sub fan-out + queues</td><td>Decoupling Lambdas and microservices on AWS.</td></tr>
+          <tr><td>Google Pub/Sub</td><td>Managed pub/sub</td><td>Cloud-native eventing on GCP.</td></tr>
+          <tr><td>NATS / JetStream</td><td>Lightweight messaging + persistent streams</td><td>Edge, IoT, microservices needing low overhead.</td></tr>
+          <tr><td>Redis Streams</td><td>In-memory log</td><td>Small-scale eventing alongside an existing Redis.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Event-Driven</h2></div>
+    <div class="chapter-body">
+      <p>Reach for events when:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>The producer genuinely doesn't need to know who consumes — fan-out is real, not speculative.</li>
+        <li>Workflows are async, multi-step, and benefit from being decoupled in time.</li>
+        <li>You need a durable audit log of what happened, in order.</li>
+        <li>Downstream services should keep working when one is briefly down.</li>
+      </ul>
+      <p style="margin-top:12px;">Don't reach for events when you actually need a synchronous answer ("did the payment go through?"), when consistency must be immediate, or when the team can't yet operate a broker reliably. Sync RPC over HTTP/gRPC is fine — sometimes ideal — for request/response.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Architectural Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="monolith.html">← Monolith</a>
+        <a href="modular-monolith.html">← Modular Monolith</a>
+        <a href="microservices.html">← Microservices</a>
+        <a href="serverless.html">← Serverless</a>
+        <a href="layered.html">Layered / N-tier →</a>
+        <a href="hexagonal.html">Hexagonal / Clean →</a>
+        <a href="cqrs.html">CQRS + Event Sourcing →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

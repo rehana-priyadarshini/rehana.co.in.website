@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>REST · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Resources at URLs, HTTP verbs as actions, JSON over the wire — the lingua franca of public APIs and the most cacheable, most debuggable style." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/rest.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="REST · API Styles Deep Dive" />
+<meta property="og:description" content="Resources at URLs, HTTP verbs as actions, JSON over the wire — the lingua franca of public APIs." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/rest.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="REST · API Styles Deep Dive" />
+<meta name="twitter:description" content="Resources at URLs, HTTP verbs as actions, JSON over the wire." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 1 of 7</div>
+    <h1>REST — Resources, Verbs, and the Web's Native API Style</h1>
+    <p class="lede">REST models the world as <strong>resources</strong> at URLs and acts on them with HTTP verbs. It's not a protocol — it's an architectural style — but it has become the lingua franca of public web APIs because it cooperates with everything the web already does: caching, proxying, authentication, debugging.</p>
+    <div class="tags"><span>HTTP</span><span>JSON</span><span>Stateless</span><span>Cacheable</span><span>Public APIs</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What REST Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Origin:</strong> Roy Fielding's 2000 PhD dissertation. "Representational State Transfer."</li>
+          <li><strong>Resources:</strong> nouns at URLs. <code>/users/42</code>, <code>/orders/2026-04-29</code>. Not verbs in URLs ever — <code>/getUser?id=42</code> is RPC, not REST.</li>
+          <li><strong>Verbs:</strong> <code>GET</code> (read), <code>POST</code> (create), <code>PUT</code> (replace), <code>PATCH</code> (partial update), <code>DELETE</code> (remove).</li>
+          <li><strong>Stateless:</strong> the server doesn't remember the client between calls. Each request carries everything it needs.</li>
+          <li><strong>Representations:</strong> JSON is the default; XML, CSV, even HTML are valid REST responses.</li>
+          <li><strong>Status codes do real work:</strong> <code>200</code> OK, <code>201</code> Created, <code>204</code> No Content, <code>400</code> bad request, <code>404</code> not found, <code>409</code> conflict, <code>422</code> validation error, <code>429</code> rate-limited, <code>5xx</code> server fault.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Ubiquitous Tooling</summary>
+        <div class="drill-body">
+          <p>Every language has an HTTP client. Every browser dev-tools panel speaks HTTP. <code>curl</code>, Postman, Insomnia, browser extensions — debugging a REST call requires nothing exotic. The barrier to integration for any third-party developer is "you already have what you need."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CDN-Friendly Caching</summary>
+        <div class="drill-body">
+          <p><code>GET</code> is cacheable by default. CloudFront, Fastly, browsers, and corporate proxies all cache REST responses based on <code>Cache-Control</code>, <code>ETag</code>, <code>Last-Modified</code>. A well-designed REST API serves most of its read traffic from cache without the origin server seeing it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stateless Scales Horizontally</summary>
+        <div class="drill-body">
+          <p>No session affinity. Any request can hit any server. Add ten replicas behind a load balancer and you've ten-x'd your capacity. This is why REST is the default behind every <code>kubectl scale</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Self-Describing</summary>
+        <div class="drill-body">
+          <p>The verb describes the action; the URL describes the resource; the status code describes the outcome; the headers describe the metadata. A response is readable by a human and a machine without an SDK.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Real Pain Points</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Over-fetching and Under-fetching</summary>
+        <div class="drill-body">
+          <p><strong>Over-fetch:</strong> <code>GET /users/42</code> returns the whole user when you wanted only the name. Wasted bandwidth on every request.</p>
+          <p style="margin-top:8px;"><strong>Under-fetch:</strong> rendering one screen needs <code>/users/42</code>, <code>/users/42/orders</code>, <code>/orders/100/items</code> — three round-trips, each adding latency. The N+1 problem of HTTP APIs.</p>
+          <p style="margin-top:8px;">This is GraphQL's entire pitch. REST mitigates with sparse fieldsets (<code>?fields=name,email</code>), expansion (<code>?include=orders</code>), and BFF aggregator endpoints — none as elegant.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>No Schema by Default</summary>
+        <div class="drill-body">
+          <p>"What does this endpoint return?" Read the docs, hope they're current. OpenAPI / Swagger fixes this — bolt on a schema, generate clients and docs — but it's an addition, not native to REST. Compare with gRPC where the schema is the API.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Versioning Is Forever</summary>
+        <div class="drill-body">
+          <p>Once a public client is using <code>/v1/users</code>, you can't break that shape. Common strategies:</p>
+          <ul style="margin-top:8px; font-size:14px; line-height:1.6;">
+            <li><strong>URL versioning:</strong> <code>/v1/</code>, <code>/v2/</code>. Simple, visible, what most public APIs use.</li>
+            <li><strong>Header versioning:</strong> <code>Accept: application/vnd.example.v2+json</code>. Cleaner URLs; harder to debug in a browser.</li>
+            <li><strong>Additive evolution:</strong> never break — only add optional fields. Most APIs do this in practice within a major version.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>HATEOAS — The Purist Version Nobody Ships</summary>
+        <div class="drill-body">
+          <p>The original REST dissertation requires "Hypermedia as the Engine of Application State" — responses include links to next actions. In practice, almost no API does it; clients hard-code URLs. The pragmatic REST you'll meet in the wild is "RPC-flavored REST" — and that's fine.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Conventions</div><h2>What "Good REST" Looks Like</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Operation</th><th>Verb &amp; Path</th><th>Status on Success</th></tr></thead>
+        <tbody>
+          <tr><td>List users</td><td><code>GET /users</code></td><td><code>200</code></td></tr>
+          <tr><td>Get one user</td><td><code>GET /users/42</code></td><td><code>200</code> or <code>404</code></td></tr>
+          <tr><td>Create user</td><td><code>POST /users</code></td><td><code>201</code> + <code>Location</code> header</td></tr>
+          <tr><td>Replace user</td><td><code>PUT /users/42</code></td><td><code>200</code> or <code>204</code></td></tr>
+          <tr><td>Patch user</td><td><code>PATCH /users/42</code></td><td><code>200</code></td></tr>
+          <tr><td>Delete user</td><td><code>DELETE /users/42</code></td><td><code>204</code></td></tr>
+          <tr><td>List a user's orders</td><td><code>GET /users/42/orders</code></td><td><code>200</code></td></tr>
+          <tr><td>Search</td><td><code>GET /users?email=x@y.com</code></td><td><code>200</code></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:14px;"><strong>Production extras:</strong> idempotency keys on <code>POST</code>, cursor pagination (not page numbers — they break under writes), <code>ETag</code> on <code>GET</code>, problem-detail JSON (<a href="https://www.rfc-editor.org/rfc/rfc9457" style="color:var(--accent);">RFC 9457</a>) for errors, rate-limit headers (<code>X-RateLimit-*</code>).</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick REST</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li>Public APIs, third-party integrations, partner ecosystems — REST's tooling and discoverability win every time.</li>
+        <li>Browser-facing APIs where you want CDN caching to do real work.</li>
+        <li>CRUD-shaped surfaces where the resource model fits naturally.</li>
+        <li>When you need the API to be debuggable from a terminal or a browser dev-tools panel.</li>
+      </ul>
+      <p style="margin-top:12px;">Reach for <strong>GraphQL</strong> instead when one screen needs nested data from many backends. Reach for <strong>gRPC</strong> for service-to-service inside your platform where binary speed and schema-first matter. Reach for <strong>WebSockets</strong> or <strong>SSE</strong> when the conversation is long-lived rather than request/response.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="graphql.html">GraphQL →</a>
+        <a href="grpc.html">gRPC →</a>
+        <a href="websockets.html">WebSockets →</a>
+        <a href="sse.html">Server-Sent Events →</a>
+        <a href="webhooks.html">Webhooks →</a>
+        <a href="soap.html">SOAP →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

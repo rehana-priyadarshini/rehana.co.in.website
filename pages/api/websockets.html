@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WebSockets · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="A persistent two-way TCP channel upgraded from HTTP. The right tool for chat, presence, multiplayer, and live dashboards — and the wrong tool for almost everything else." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/websockets.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="WebSockets · API Styles Deep Dive" />
+<meta property="og:description" content="A persistent two-way TCP channel upgraded from HTTP." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/websockets.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="WebSockets · API Styles Deep Dive" />
+<meta name="twitter:description" content="A persistent two-way TCP channel upgraded from HTTP." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 4 of 7</div>
+    <h1>WebSockets — The Always-On Two-Way Pipe</h1>
+    <p class="lede">A WebSocket starts as an HTTP request with an <code>Upgrade</code> header, then turns the underlying TCP connection into a full-duplex frame channel. Both sides push whenever they want, no polling, no reconnecting per message. It's the right tool when both sides genuinely have things to say to each other in real time — and overkill for most other things.</p>
+    <div class="tags"><span>Full-Duplex</span><span>Persistent</span><span>Real-Time</span><span>Chat</span><span>Multiplayer</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What WebSockets Are</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Standardized:</strong> RFC 6455 (2011). Native in every browser, every server platform, every mobile runtime.</li>
+          <li><strong>Handshake:</strong> client sends an HTTP <code>GET</code> with <code>Upgrade: websocket</code>; server replies <code>101 Switching Protocols</code>; the TCP socket then carries WebSocket frames instead of HTTP messages.</li>
+          <li><strong>Full-duplex:</strong> either side can send any time. No request/response coupling.</li>
+          <li><strong>Frames:</strong> binary or UTF-8 text. The protocol does framing and pings; you put your own JSON or binary inside.</li>
+          <li><strong>URLs:</strong> <code>ws://</code> (plain) or <code>wss://</code> (TLS). Always use <code>wss://</code> in production.</li>
+          <li><strong>Subprotocols:</strong> the handshake can negotiate a protocol on top — STOMP, MQTT-over-WebSocket, GraphQL subscriptions, your own.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Real-Time, Both Ways</summary>
+        <div class="drill-body">
+          <p>A typing indicator, a cursor moving in a shared doc, a price tick, a chess move — anything where either side wants to push instantly and the other side wants to react. Polling that 100× per second would be brutal; with WebSockets it's one open connection and a handful of frames per second.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Low Per-Message Overhead</summary>
+        <div class="drill-body">
+          <p>HTTP/1.1 sends headers on every request — a few hundred bytes minimum. A WebSocket frame is 2–14 bytes plus the payload. For high-frequency tiny messages (cursors, ticks, presence heartbeats), that's a 50–100× reduction in overhead.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Universal Browser Support</summary>
+        <div class="drill-body">
+          <p>Native <code>WebSocket</code> API in every browser since IE 10. No polyfills. No flash fallbacks. Same on iOS, Android, desktop runtimes.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Real Operational Pain</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Connections Die</summary>
+        <div class="drill-body">
+          <p>Mobile networks drop. Wi-Fi switches. Corporate proxies kill idle TCP after a few minutes. You need:</p>
+          <ul style="margin-top:8px; font-size:14px; line-height:1.6;">
+            <li>Application-level pings/heartbeats every 20–30s.</li>
+            <li>Auto-reconnect with exponential backoff and jitter.</li>
+            <li>A way to resume — message IDs the server can replay from.</li>
+            <li>Graceful UI degradation when reconnecting.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Scaling Across Servers</summary>
+        <div class="drill-body">
+          <p>A WebSocket is bound to one server process. If user A is connected to server 1 and user B to server 2, and A sends B a message, server 1 can't deliver it directly. You need a fan-out backplane — Redis pub/sub, Kafka, NATS, a cloud broker — that all servers subscribe to. Building this <em>after</em> the connection count grows is painful.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sticky Sessions on Load Balancers</summary>
+        <div class="drill-body">
+          <p>The HTTP <code>Upgrade</code> handshake hits a load balancer; the long-lived TCP connection that follows must keep going to the same backend. Configure session affinity (or use a TCP/L4 load balancer for WebSocket traffic). Sticky sessions complicate blue/green deploys — drain connections gracefully.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Back-Pressure</summary>
+        <div class="drill-body">
+          <p>What if the server pushes faster than a slow consumer can read? Frames buffer in the OS socket; the buffer fills; the server's writes block. Without explicit back-pressure (drop, coalesce, slow down), one bad client can pin a thread or a connection forever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Authentication Is Awkward</summary>
+        <div class="drill-body">
+          <p>The browser <code>WebSocket</code> API doesn't let you set custom headers, so the typical "<code>Authorization: Bearer ...</code>" pattern doesn't work. Options: pass the token as a query param (visible in logs), authenticate after connection on the first frame, or use a short-lived ticket your REST API issues just for the WebSocket handshake.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>No Built-in Versioning, Schema, or Caching</summary>
+        <div class="drill-body">
+          <p>WebSockets are a transport, not a contract. You bring your own schema (Protobuf, Avro, JSON Schema), your own versioning, your own validation. Caches and CDNs don't help — every byte goes back to your origin.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Use Cases</div><h2>Where WebSockets Are the Right Answer</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Use Case</th><th>Why WebSockets</th></tr></thead>
+        <tbody>
+          <tr><td>Chat &amp; messaging</td><td>Both sides push; messages need to arrive instantly.</td></tr>
+          <tr><td>Multiplayer games</td><td>Frequent tiny updates from many players; latency matters.</td></tr>
+          <tr><td>Collaborative editing (cursors, edits)</td><td>Sub-100ms presence and operational-transform updates.</td></tr>
+          <tr><td>Trading dashboards</td><td>High-frequency price ticks, order book updates.</td></tr>
+          <tr><td>Live ops dashboards / observability</td><td>Stream metrics and events as they happen.</td></tr>
+          <tr><td>IoT command + telemetry</td><td>Devices push sensor data; server pushes commands back.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:14px;">For one-way server-to-client streams (notifications, log tail, AI token streaming), <strong>Server-Sent Events</strong> are simpler and survive proxies more reliably. For request/response with occasional pushes, REST + SSE often beats WebSockets on operational simplicity.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick WebSockets</h2></div>
+    <div class="chapter-body">
+      <p>Pick WebSockets when you genuinely need a persistent two-way channel and the team is ready to operate one — heartbeats, reconnect logic, a cross-node fan-out backplane, sticky sessions, capacity planning by connection count, not by RPS.</p>
+      <p style="margin-top:10px;">Otherwise, prefer SSE for one-way streams or polling/long-polling for occasional pushes. Many "we need WebSockets" requirements are actually "we need to push a few events per minute," which doesn't justify the operational tax.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">← REST</a>
+        <a href="graphql.html">← GraphQL</a>
+        <a href="grpc.html">← gRPC</a>
+        <a href="sse.html">Server-Sent Events →</a>
+        <a href="webhooks.html">Webhooks →</a>
+        <a href="soap.html">SOAP →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

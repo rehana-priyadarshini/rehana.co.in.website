@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>gRPC · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Binary RPC over HTTP/2 with Protocol Buffers. Tiny payloads, very fast, schema-first — the default for service-to-service inside modern platforms." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/grpc.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="gRPC · API Styles Deep Dive" />
+<meta property="og:description" content="Binary RPC over HTTP/2 with Protocol Buffers. Tiny payloads, very fast, schema-first." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/grpc.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="gRPC · API Styles Deep Dive" />
+<meta name="twitter:description" content="Binary RPC over HTTP/2 with Protocol Buffers." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 3 of 7</div>
+    <h1>gRPC — Binary RPC for Service-to-Service</h1>
+    <p class="lede">gRPC is Google's open-source RPC framework over HTTP/2, with <strong>Protocol Buffers</strong> as both schema and wire format. You write a <code>.proto</code> file, generate clients and servers in any language, and call remote methods like local functions — typed, fast, and tiny on the wire.</p>
+    <div class="tags"><span>Protocol Buffers</span><span>HTTP/2</span><span>RPC</span><span>Schema-First</span><span>Streaming</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What gRPC Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Origin:</strong> Google's internal Stubby, open-sourced as gRPC in 2016. Now a CNCF graduated project.</li>
+          <li><strong>Schema-first:</strong> a <code>.proto</code> file defines messages and service methods. The schema <em>is</em> the API.</li>
+          <li><strong>Protocol Buffers:</strong> compact binary format. Field numbers (not names) on the wire. Backward/forward compatibility via field-number rules.</li>
+          <li><strong>Transport:</strong> HTTP/2 with multiplexed streams. End-to-end HTTP/2 required (no HTTP/1.1 hop in the middle).</li>
+          <li><strong>Four call types:</strong> unary (one request, one response), server streaming, client streaming, bidirectional streaming.</li>
+          <li><strong>Code generation:</strong> <code>protoc</code> generates clients and servers in 10+ languages — Go, Java, C++, Python, Node, C#, Rust, Swift, Kotlin, Dart.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Tiny Payloads, Very Fast</summary>
+        <div class="drill-body">
+          <p>Protobuf encodes an integer in 1–10 bytes, a typical message in a fraction of the JSON size. No field names on the wire. Combined with HTTP/2 multiplexing and header compression, gRPC routinely beats REST/JSON by 5–10× on throughput at the same hardware.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Schema Is the Source of Truth</summary>
+        <div class="drill-body">
+          <p>You don't write the API and document it; you write the schema and generate the API. The Java service, the Go client, and the Node test harness all derive from the same <code>.proto</code>. Drift between client and server expectations becomes a compile error, not a 3 a.m. page.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Native Streaming</summary>
+        <div class="drill-body">
+          <p>HTTP/2 streams give gRPC first-class streaming in any direction without a separate protocol. Server-streaming for log tails, client-streaming for batched uploads, bidirectional for chat-style exchanges. No WebSocket framing to invent.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Deadlines and Cancellation Propagate</summary>
+        <div class="drill-body">
+          <p>A client sets a deadline; servers receive it; if they call downstream services, the deadline rides along. Cancellation propagates the same way. Compared to REST — where every service has to set its own timeout — this is a major operational gift.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Real Constraints</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Not Browser-Native</summary>
+        <div class="drill-body">
+          <p>Browsers can't speak gRPC directly — the JS fetch API can't expose the HTTP/2 frames gRPC needs. You either run <strong>gRPC-Web</strong> (a subset, with a proxy like Envoy translating to native gRPC behind the scenes) or you put a REST/GraphQL gateway in front. This is why most public APIs aren't gRPC even when the backend is.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Opaque on the Wire</summary>
+        <div class="drill-body">
+          <p>You can't <code>curl</code> a gRPC call meaningfully — the binary payload is unreadable without the schema. Tools like <code>grpcurl</code>, <code>evans</code>, BloomRPC fill the gap, but the casual debuggability of REST is gone.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>HTTP/2 End-to-End</summary>
+        <div class="drill-body">
+          <p>Every hop — load balancers, proxies, CDNs — has to support HTTP/2 trailers and gRPC framing. Older AWS ALBs, classic CloudFront setups, and corporate proxies often don't. Modern infra (Envoy, NGINX 1.13.10+, Kubernetes ingress with proper config) handles it; older infra fights you.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Schema Evolution Discipline</summary>
+        <div class="drill-body">
+          <p>Field numbers are sacred — once assigned, never reuse them. Renaming a field is fine on the wire (only numbers matter); deleting one and reusing the number breaks every old client. Use a tool like <code>buf</code> in CI to enforce backward compatibility.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Build-Time Coupling</summary>
+        <div class="drill-body">
+          <p>Clients and servers depend on generated code from the schema. You need a discipline for distributing the schema (a shared <code>.proto</code> repo, a Buf Schema Registry) and rebuilding when it changes. More involved than "the curl command still works."</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Lives</div><h2>The Sweet Spot</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size: 14px; line-height: 1.7;">
+        <li><strong>Service-to-service inside Kubernetes.</strong> Service mesh (Istio, Linkerd) speaks gRPC natively.</li>
+        <li><strong>Mobile clients</strong> talking to your backend — schema-first, smaller payloads, native iOS/Android codegen.</li>
+        <li><strong>High-throughput data planes:</strong> ad-tech, telemetry pipelines, ML inference servers.</li>
+        <li><strong>Internal platform APIs</strong> where you control both ends and care about throughput and type safety.</li>
+        <li><strong>Polyglot organizations</strong> — same schema generates correct clients in every language a team picks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick gRPC</h2></div>
+    <div class="chapter-body">
+      <p>Pick gRPC for service-to-service inside your platform when you want type safety, streaming, and throughput. Keep REST or GraphQL at the edge for browsers and third parties — usually as an API gateway sitting in front of a gRPC backbone.</p>
+      <p style="margin-top:10px;">Don't pick gRPC for public APIs (gRPC-Web is awkward, schema distribution to outsiders is ops-heavy), file-heavy workloads (large messages strain HTTP/2 streams), or organizations without the appetite for codegen and schema governance.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">← REST</a>
+        <a href="graphql.html">← GraphQL</a>
+        <a href="websockets.html">WebSockets →</a>
+        <a href="sse.html">Server-Sent Events →</a>
+        <a href="webhooks.html">Webhooks →</a>
+        <a href="soap.html">SOAP →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Message Queues · Messaging &amp; Event Streaming Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Producer drops a job, one of N workers picks it up. Background processing, work distribution, spike absorption — the bread and butter of resilient backends." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/message-queues.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Message Queues · Messaging &amp; Event Streaming Deep Dive" />
+<meta property="og:description" content="Producer drops a job, one of N workers picks it up." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/message-queues.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Message Queues · Messaging &amp; Event Streaming Deep Dive" />
+<meta name="twitter:description" content="Producer drops a job, one of N workers picks it up." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Messaging &amp; Event Streaming Deep Dive · 1 of 3</div>
+    <h1>Message Queues — Work Distribution and Spike Absorption</h1>
+    <p class="lede">A queue is the simplest form of asynchronous messaging. A producer drops a job onto the queue and walks away; one of N workers picks it up, does the work, acknowledges. If the worker dies before acking, the broker re-delivers. Add more workers to go faster. The plumbing behind every "send the email later," every image-processing pipeline, every long-running job your web request shouldn't wait for.</p>
+    <div class="tags"><span>RabbitMQ</span><span>SQS</span><span>Workers</span><span>Background Jobs</span><span>Decoupling</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Queue Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Producer:</strong> the code that enqueues a message.</li>
+          <li><strong>Consumer (worker):</strong> the code that dequeues and processes one message at a time.</li>
+          <li><strong>Broker:</strong> the middleware holding messages — RabbitMQ, ActiveMQ, Amazon SQS, Azure Service Bus, Redis (with care).</li>
+          <li><strong>Competing consumers:</strong> N workers share one queue; each message goes to exactly one of them. Add workers to scale throughput.</li>
+          <li><strong>Acknowledgement:</strong> the worker tells the broker "I'm done." Until then, the message is invisible to other workers but not gone — if the worker dies, the broker re-delivers.</li>
+          <li><strong>Visibility timeout / lease:</strong> while a worker is processing, the message is hidden for a window. Set it longer than your slowest job; if the worker hangs, another worker eventually retries.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Get Slow Work Off the Web Request</summary>
+        <div class="drill-body">
+          <p>"Sign up" should return in 100ms. Sending the welcome email, generating the avatar, kicking off the analytics event, and warming the recommendations cache should not block that response. Enqueue and return; workers do the slow stuff. The user gets a fast page; you keep the work.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Spike Absorption</summary>
+        <div class="drill-body">
+          <p>Black Friday traffic is 10× normal for two hours. Your DB and web tier can't auto-scale that fast. A queue is a buffer — requests pile up, workers drain at their normal rate, the system degrades into latency rather than collapsing into errors. You trade "instant" for "alive."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Retries Without Custom Code</summary>
+        <div class="drill-body">
+          <p>Worker died mid-job? Broker re-delivers. Email service was down? Worker raises an exception, doesn't ack, the message comes back. Combined with idempotent handlers (see below), you get free resilience.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Decoupling Producer from Consumer</summary>
+        <div class="drill-body">
+          <p>Producer doesn't know how many workers exist or how long they take. Workers can be deployed and scaled independently. The team that owns the producer can ship without coordinating with the team that owns the worker.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Build It Right</div><h2>The Patterns That Matter</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Idempotent Consumers</summary>
+        <div class="drill-body">
+          <p>Queues guarantee at-least-once delivery. Sometimes the worker finishes the job, then crashes before acking — the message comes back, and a second worker runs it again. Make every handler idempotent: store the job's unique ID and skip if already processed, or design the operation so running it twice is harmless (<code>UPDATE order SET status='shipped' WHERE id=42</code> is naturally idempotent).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Dead-Letter Queues (DLQs)</summary>
+        <div class="drill-body">
+          <p>A message that fails repeatedly — bug in the handler, malformed payload, missing dependency — will block the queue forever if you keep retrying. After N failures, route it to a dead-letter queue for human inspection. Wire alerts on DLQ depth.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Visibility Timeouts</summary>
+        <div class="drill-body">
+          <p>Set the timeout longer than your worst-case job duration plus a margin. Too short, and a slow job triggers a duplicate while it's still running. Too long, and a crashed worker holds messages hostage for ages. Many brokers let workers extend the timeout dynamically as work progresses.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Backoff and Poison-Message Handling</summary>
+        <div class="drill-body">
+          <p>If a job fails because a downstream service is down, retrying immediately doesn't help. Use exponential backoff between retries. After a retry budget, send to DLQ. If 1 message in 10,000 always fails — a malformed customer record from 2009 — let it land in DLQ and don't pretend it's transient.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Use a DB Table as a Queue (Usually)</summary>
+        <div class="drill-body">
+          <p>It's tempting — <code>SELECT FOR UPDATE SKIP LOCKED</code> on a jobs table works, kind of. It's fine at low scale. At higher throughput it bottlenecks the DB, locks become contention hotspots, and you reinvent every queue feature poorly. Use a real broker once you're past "few jobs per second."</p>
+          <p style="margin-top:8px;">The exception: the <strong>outbox pattern</strong>, where an outbox table inside the same DB transaction as a state change <em>feeds</em> a real broker. That's a queue-as-a-table done right.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Brokers</div><h2>The Common Players</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Broker</th><th>Style</th><th>Where It Shines</th></tr></thead>
+        <tbody>
+          <tr><td>RabbitMQ</td><td>AMQP — queues + flexible routing exchanges</td><td>Task queues, work distribution, complex routing rules.</td></tr>
+          <tr><td>Amazon SQS</td><td>Managed FIFO or standard queue</td><td>"Just give me a queue" on AWS. Pairs naturally with Lambda.</td></tr>
+          <tr><td>Azure Service Bus</td><td>Managed queue + topics</td><td>The default on Azure; sessions, transactions, scheduled delivery.</td></tr>
+          <tr><td>Google Cloud Tasks</td><td>HTTP-target task queue</td><td>Async invocations of HTTP endpoints; fits Cloud Run / App Engine.</td></tr>
+          <tr><td>ActiveMQ Artemis</td><td>Self-hosted broker</td><td>Enterprise on-prem; supports multiple protocols.</td></tr>
+          <tr><td>Beanstalkd, Sidekiq, Resque</td><td>Lightweight task queues (often Redis-backed)</td><td>Web app background jobs in Ruby/Python/Node.</td></tr>
+          <tr><td>Redis Streams / Lists</td><td>In-memory, lightweight</td><td>Quick wins alongside an existing Redis. Plan for persistence carefully.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick a Queue</h2></div>
+    <div class="chapter-body">
+      <p>Pick a queue when one producer hands off work to one consumer (or one of N workers competing for it), and you don't need fan-out, replay, or ordering across the whole stream. Background jobs, image processing, email, integrations, retries against external APIs — all classic queue territory.</p>
+      <p style="margin-top:10px;">Pick <strong>Pub/Sub</strong> when one event needs to reach many independent consumers. Pick <strong>event streaming</strong> (Kafka) when you need replay, long retention, and an ordered append-only log as the source of truth.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More on Messaging</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="event-streaming.html">Event Streaming →</a>
+        <a href="pubsub.html">Pub/Sub →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

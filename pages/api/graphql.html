@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GraphQL · API Styles Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="One endpoint, a query language, exactly the fields the client asks for. Built at Facebook to stop mobile clients from chaining REST calls." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/api/graphql.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="GraphQL · API Styles Deep Dive" />
+<meta property="og:description" content="One endpoint, a query language, exactly the fields the client asks for." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/api/graphql.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GraphQL · API Styles Deep Dive" />
+<meta name="twitter:description" content="One endpoint, a query language, exactly the fields the client asks for." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">API Styles Deep Dive · 2 of 7</div>
+    <h1>GraphQL — Ask for Exactly What You Need</h1>
+    <p class="lede">GraphQL is a query language for APIs. The client sends a query describing the exact shape of data it wants; the server returns that shape, no more, no less. One endpoint, a strongly typed schema, deeply nested data in a single round-trip — and a fresh set of problems to manage.</p>
+    <div class="tags"><span>Query Language</span><span>Schema-First</span><span>One Endpoint</span><span>Apollo</span></div>
+    <a class="back" href="../../index.html#ch-api">← Back to APIs &amp; Networking</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What GraphQL Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Origin:</strong> built at Facebook (2012), open-sourced 2015. Born from the pain of mobile clients chaining REST calls to render one screen.</li>
+          <li><strong>One endpoint:</strong> almost always <code>POST /graphql</code>. The body is the query.</li>
+          <li><strong>Strongly-typed schema:</strong> the server publishes a typed contract. Clients introspect it; tools generate type-safe code.</li>
+          <li><strong>Three operation types:</strong> <code>query</code> (read), <code>mutation</code> (write), <code>subscription</code> (live updates, usually over WebSocket).</li>
+          <li><strong>Resolvers:</strong> functions on the server that fetch each field. The schema describes the shape; resolvers do the work.</li>
+          <li><strong>Tooling stars:</strong> Apollo (server &amp; client), GraphiQL (in-browser query explorer), Hasura, Relay, urql, codegen.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What You Buy</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>No Over- or Under-fetching</summary>
+        <div class="drill-body">
+          <p>The mobile screen needs <code>user.name</code>, the user's last 3 orders, and each order's total. In REST: 1 + 1 + 3 round-trips, plus a lot of fields you didn't want. In GraphQL: one round-trip, exactly those fields.</p>
+<pre style="margin-top:8px; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;">query {
+  user(id: 42) {
+    name
+    orders(last: 3) {
+      total
+    }
+  }
+}</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>One Schema, Many Clients</summary>
+        <div class="drill-box drill-body">
+          <p>A typed contract that web, iOS, and Android can all share. Each client asks only for the fields it needs from the same backend. Removes the temptation to ship one BFF endpoint per screen.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Aggregating Many Backends</summary>
+        <div class="drill-body">
+          <p>The GraphQL server can call several REST APIs, a couple of databases, and a search engine, then return one consolidated tree. The client doesn't see the orchestration — and the orchestration logic stays in one place rather than smeared across mobile and web codebases.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Excellent Developer Tooling</summary>
+        <div class="drill-body">
+          <p>Introspection means the schema is queryable. GraphiQL gives you autocomplete and inline docs in the browser. Codegen generates type-safe TypeScript hooks (<code>useGetUserQuery</code>) so the wire shape and the React component's types are guaranteed to match.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Real Problems</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Caching Is Hard</summary>
+        <div class="drill-body">
+          <p>Everything is <code>POST /graphql</code> with a different body. CDN and browser HTTP caches see one URL — they can't help. Solutions: persisted queries (server stores the query, client sends a hash, request becomes cacheable <code>GET</code>), client-side normalized caches (Apollo, Relay, urql), or bolt on Automatic Persisted Queries to recover REST-style edge caching.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The N+1 Problem on the Server</summary>
+        <div class="drill-body">
+          <p>A query for "10 users and their orders" calls the user resolver once, then the order resolver 10 times — naive resolvers turn one query into dozens of database hits. The fix is the <strong>DataLoader</strong> pattern: batch and de-duplicate within a single request. Every serious GraphQL backend uses it; forgetting it is how prod databases fall over.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Easy to Write a Query That Nukes the DB</summary>
+        <div class="drill-body">
+          <p>A client can request deeply nested fields, or 100,000 users at once. Defenses: query depth limits, complexity scoring, persisted-only queries in production (clients can only run pre-registered queries), per-operation rate limits.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>File Uploads, Errors, and HTTP Semantics</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6; margin-top:6px;">
+            <li><strong>Uploads:</strong> not part of the spec. Use <code>graphql-multipart-request-spec</code> or pre-signed URLs to S3 instead.</li>
+            <li><strong>Errors:</strong> GraphQL almost always returns <code>200 OK</code> with errors in the body. HTTP-level monitoring lies; instrument GraphQL errors separately.</li>
+            <li><strong>Status codes &amp; auth:</strong> you give up REST's free use of <code>401</code>, <code>403</code>, <code>429</code>, etc. Auth and rate limits live in resolvers and middleware.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Subscriptions Are Heavy</summary>
+        <div class="drill-body">
+          <p>Real-time GraphQL runs over WebSocket (or SSE via <code>graphql-sse</code>). You inherit all the WebSocket ops complexity — connection lifecycle, sticky sessions, multi-node fan-out via Redis. Often simpler to use SSE or a dedicated pub/sub service for real-time and keep GraphQL synchronous.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">At Scale</div><h2>Federation and Beyond</h2></div>
+    <div class="chapter-body">
+      <p><strong>Apollo Federation</strong> (and the open <em>GraphQL Federation</em> spec) lets multiple backend services own different parts of one unified schema. The gateway stitches sub-graphs together — Users service owns the <code>User</code> type, Orders service owns <code>Order</code> and extends <code>User</code> with an <code>orders</code> field. Clients see one graph; teams own slices.</p>
+      <p style="margin-top:10px;">It's the natural endpoint of "GraphQL as the API layer over many microservices." Comes with operational weight — schema composition, change management, graph governance — that pays off only at scale.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick GraphQL</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>Your client renders nested data from many backends in one shot — mobile apps, complex SPAs, dashboards.</li>
+        <li>You have multiple client types (web, iOS, Android) with different field needs against the same data.</li>
+        <li>You want a strongly-typed contract with first-class introspection and codegen.</li>
+        <li>Aggregating across several internal services is a recurring task that's currently smeared across BFFs.</li>
+      </ul>
+      <p style="margin-top:12px;">Skip GraphQL for: simple public APIs (REST is friendlier to outsiders), file-heavy workloads, anything where CDN caching matters more than client-flexibility, and small teams without the bandwidth to operate DataLoader, persisted queries, and complexity limits properly.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other API Styles</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="rest.html">← REST</a>
+        <a href="grpc.html">gRPC →</a>
+        <a href="websockets.html">WebSockets →</a>
+        <a href="sse.html">Server-Sent Events →</a>
+        <a href="webhooks.html">Webhooks →</a>
+        <a href="soap.html">SOAP →</a>
+        <a href="../../index.html#ch-api">↑ Back to APIs &amp; Networking</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
