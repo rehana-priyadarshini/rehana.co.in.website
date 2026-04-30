@@ -761,40 +761,40 @@
       </div>
 
       <details class="drill" open>
-        <summary>OWASP Top 10 (Common Web Vulnerabilities)</summary>
+        <summary>OWASP Top 10 (Common Web Vulnerabilities) <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Injection</h5><p>SQL injection, command injection. Always use parameterized queries.</p></div>
-            <div class="card teal"><h5>Broken Access Control</h5><p>Users accessing data they shouldn't — #1 most common.</p></div>
-            <div class="card mid"><h5>XSS</h5><p>Cross-site scripting — attacker's JS runs in your page.</p></div>
-            <div class="card accent"><h5>CSRF</h5><p>A malicious site makes the browser perform actions as the logged-in user.</p></div>
-            <div class="card"><h5>Broken Authentication</h5><p>Weak passwords, no MFA, leaky sessions.</p></div>
-            <div class="card teal"><h5>Insecure Deserialization</h5><p>Untrusted data → code execution.</p></div>
-            <div class="card mid"><h5>Vulnerable Dependencies</h5><p>Old libraries with known CVEs.</p></div>
-            <div class="card accent"><h5>Security Misconfiguration</h5><p>Default passwords, verbose errors, open S3 buckets.</p></div>
+            <a class="card" href="pages/security/injection.html" style="text-decoration:none;color:inherit;display:block;"><h5>Injection →</h5><p>SQL injection, command injection. Always use parameterized queries.</p></a>
+            <a class="card teal" href="pages/security/broken-access-control.html" style="text-decoration:none;color:inherit;display:block;"><h5>Broken Access Control →</h5><p>Users accessing data they shouldn't — #1 most common.</p></a>
+            <a class="card mid" href="pages/security/xss.html" style="text-decoration:none;color:inherit;display:block;"><h5>XSS →</h5><p>Cross-site scripting — attacker's JS runs in your page.</p></a>
+            <a class="card accent" href="pages/security/csrf.html" style="text-decoration:none;color:inherit;display:block;"><h5>CSRF →</h5><p>A malicious site makes the browser perform actions as the logged-in user.</p></a>
+            <a class="card" href="pages/security/broken-authentication.html" style="text-decoration:none;color:inherit;display:block;"><h5>Broken Authentication →</h5><p>Weak passwords, no MFA, leaky sessions.</p></a>
+            <a class="card teal" href="pages/security/insecure-deserialization.html" style="text-decoration:none;color:inherit;display:block;"><h5>Insecure Deserialization →</h5><p>Untrusted data → code execution.</p></a>
+            <a class="card mid" href="pages/security/vulnerable-dependencies.html" style="text-decoration:none;color:inherit;display:block;"><h5>Vulnerable Dependencies →</h5><p>Old libraries with known CVEs.</p></a>
+            <a class="card accent" href="pages/security/security-misconfiguration.html" style="text-decoration:none;color:inherit;display:block;"><h5>Security Misconfiguration →</h5><p>Default passwords, verbose errors, open S3 buckets.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Auth Standards</summary>
+        <summary>Auth Standards <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any standard for the deep dive</span></summary>
         <div class="drill-body">
           <table>
             <thead><tr><th>Standard</th><th>Purpose</th></tr></thead>
             <tbody>
-              <tr><td>OAuth 2.0</td><td>Delegated authorization — "let this app read my Google calendar".</td></tr>
-              <tr><td>OpenID Connect (OIDC)</td><td>Authentication layer on top of OAuth — "who am I?".</td></tr>
-              <tr><td>SAML</td><td>Enterprise SSO (older, XML-based).</td></tr>
-              <tr><td>JWT</td><td>Signed token format; commonly carries auth claims.</td></tr>
-              <tr><td>MFA / 2FA</td><td>Second factor (authenticator app, hardware key).</td></tr>
-              <tr><td>Passkeys / WebAuthn</td><td>Modern passwordless authentication.</td></tr>
+              <tr><td><a href="pages/security/oauth.html">OAuth 2.0 →</a></td><td>Delegated authorization — "let this app read my Google calendar".</td></tr>
+              <tr><td><a href="pages/security/oidc.html">OpenID Connect (OIDC) →</a></td><td>Authentication layer on top of OAuth — "who am I?".</td></tr>
+              <tr><td><a href="pages/security/saml.html">SAML →</a></td><td>Enterprise SSO (older, XML-based).</td></tr>
+              <tr><td><a href="pages/security/jwt.html">JWT →</a></td><td>Signed token format; commonly carries auth claims.</td></tr>
+              <tr><td><a href="pages/security/mfa.html">MFA / 2FA →</a></td><td>Second factor (authenticator app, hardware key).</td></tr>
+              <tr><td><a href="pages/security/passkeys.html">Passkeys / WebAuthn →</a></td><td>Modern passwordless authentication.</td></tr>
             </tbody>
           </table>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Secure Development Practices</summary>
+        <summary>Secure Development Practices <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/security/secure-development.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
         <div class="drill-body">
           <ul style="font-size: 14px; line-height: 1.6;">
             <li>Never commit secrets. Use secret managers (AWS Secrets Manager, HashiCorp Vault).</li>

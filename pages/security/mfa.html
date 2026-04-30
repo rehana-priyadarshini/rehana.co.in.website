@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MFA / 2FA · Auth Standards Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="A second factor turns a stolen password into a useless string. SMS, TOTP, push, hardware keys — what each one defends against and how to deploy them." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/mfa.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="MFA / 2FA · Auth Standards Deep Dive" />
+<meta property="og:description" content="A second factor turns a stolen password into a useless string." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/mfa.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="MFA / 2FA · Auth Standards Deep Dive" />
+<meta name="twitter:description" content="A second factor turns a stolen password into a useless string." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Auth Standards Deep Dive · 5 of 6</div>
+    <h1>MFA / 2FA — The Best Single Defense Against Account Takeover</h1>
+    <p class="lede">A password alone is a single point of failure. Multi-factor authentication adds a second factor — something you have or something you are — so a stolen password isn't enough. Microsoft and Google have both publicly reported MFA blocks &gt;99% of automated account takeovers. The factors aren't equal, the failure modes aren't equal, and the bypasses keep evolving.</p>
+    <div class="tags"><span>2FA</span><span>TOTP</span><span>SMS OTP</span><span>Push</span><span>WebAuthn</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>The factor families:</strong> something you know (password, PIN), something you have (phone, hardware key), something you are (fingerprint, face).</li>
+          <li><strong>2FA</strong> typically means password + one other. <strong>MFA</strong> is the general term for two or more factors of distinct types.</li>
+          <li><strong>Phishable vs phishing-resistant.</strong> Most factors can be phished if the attacker tricks the user into entering the code on a fake site. WebAuthn / passkeys can't.</li>
+          <li><strong>Step-up auth:</strong> regular sign-in needs the password; sensitive operations (transfer, password change) require an additional factor at the moment of the action.</li>
+          <li><strong>FIDO Alliance &amp; WebAuthn</strong> set the modern standards. Passkeys are the current consumer-friendly delivery.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Factors</div><h2>What Each One Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>SMS OTP</summary>
+        <div class="drill-body">
+          <p>Server texts a 6-digit code; user types it. Better than nothing — and that's most of what should be said for it.</p>
+          <p style="margin-top:8px;"><strong>Weaknesses:</strong> SIM-swap attacks (attacker convinces the carrier to move the number to their SIM), SS7 routing flaws, and full phishability — the attacker's fake site can ask for the OTP and forward it. NIST has been deprecating SMS as a primary factor since 2017. Still acceptable as a fallback or for low-risk flows.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>TOTP — Authenticator Apps</summary>
+        <div class="drill-body">
+          <p>Time-based One-Time Password (RFC 6238). User scans a QR code; their authenticator app (Google Authenticator, Authy, 1Password, Bitwarden) generates a fresh 6-digit code every 30 seconds. The shared secret never leaves the device or server again.</p>
+          <p style="margin-top:8px;"><strong>Strengths:</strong> no SIM-swap risk, works offline, ubiquitous tooling.</p>
+          <p style="margin-top:8px;"><strong>Weaknesses:</strong> phishable (the attacker asks for the current code in real time), shared-secret-on-server means a server compromise leaks every secret.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Push Notification</summary>
+        <div class="drill-body">
+          <p>The auth server pushes a "approve this login?" prompt to a paired app (Authy, Duo, Microsoft Authenticator). User taps approve. Smooth UX.</p>
+          <p style="margin-top:8px;"><strong>Weaknesses:</strong> "MFA fatigue" attacks — attacker spams approval prompts at 3 a.m. hoping the user taps to make them stop. Modern implementations show context (location, IP, app) and use number-matching ("type these two digits to approve") to defeat fatigue.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hardware Security Keys (WebAuthn)</summary>
+        <div class="drill-body">
+          <p>YubiKey, Google Titan, on-device platform authenticators (Touch ID, Face ID, Windows Hello). The browser asks the device for a signed assertion bound to the origin. The device only signs for the exact domain that registered it — phishing sites get nothing.</p>
+          <p style="margin-top:8px;"><strong>Why it's the gold standard:</strong> phishing-resistant by design. Even if the user gets fooled by a look-alike, the key won't sign for the wrong origin. NIST AAL3, FIDO2.</p>
+          <p style="margin-top:8px;">Backed by the same WebAuthn API that powers passkeys — see the <a href="passkeys.html" style="color:var(--accent);">passkeys deep dive</a>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Biometrics</summary>
+        <div class="drill-body">
+          <p>Used as the local unlock for a stronger underlying factor. Touch ID doesn't transmit your fingerprint over the network — it unlocks a key stored in the secure enclave on your device. The factor is the device + key, gated by the biometric. Strong, when implemented this way.</p>
+          <p style="margin-top:8px;"><strong>Don't:</strong> send raw biometric templates to your server. They can't be rotated; a leak is permanent.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Backup / Recovery Codes</summary>
+        <div class="drill-body">
+          <p>Generated at MFA enrollment, shown once, stored by the user. Single-use. Critical: without them, "I lost my phone" downgrades the user back to email-only verification — and email-only recovery is exactly the path attackers love.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Building It</div><h2>What "Good MFA" Looks Like</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Offer Multiple Factors, Default to Strong</summary>
+        <div class="drill-body">
+          <p>WebAuthn / passkeys as primary, TOTP as fallback, SMS only if absolutely necessary. Let users register multiple factors so losing one doesn't lock them out.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Skip MFA on Recovery</summary>
+        <div class="drill-body">
+          <p>The most common bypass: "I forgot MFA" → "we'll email you a reset link." The recovery flow becomes the weakest factor. Use printed backup codes; require multiple slow signals; notify the user via the <em>old</em> channel and quarantine sensitive actions for a cooldown.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Step Up for Risky Actions</summary>
+        <div class="drill-body">
+          <p>Logging in once a week is one risk model; transferring $10,000 is another. Re-prompt for MFA — or step up to a stronger factor — at sensitive moments. This bounds damage even if a session token is later stolen.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Anti-Fatigue Mitigations</summary>
+        <div class="drill-body">
+          <p>Number-matching, contextual info (IP, location, app), aggressive rate-limiting on push prompts, automatic alerts after N rejected pushes. The goal: make a flood of pushes obvious to the user and ineffective for the attacker.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Encrypt the TOTP Secret at Rest</summary>
+        <div class="drill-body">
+          <p>If you store the TOTP shared secret server-side, encrypt with a per-user envelope key from a KMS. A DB dump shouldn't reveal MFA secrets.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Use a Provider</summary>
+        <div class="drill-body">
+          <p>Auth0, Okta, Stytch, Clerk, Cognito, Firebase Auth, Twilio Verify. They handle factor enrollment, recovery, anti-fatigue, fraud signals. Building all of this in-house is rarely the right call.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>Picking the Mix</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Use case</th><th>Recommended primary factor</th></tr></thead>
+        <tbody>
+          <tr><td>Consumer app, low risk</td><td>TOTP or passkey; SMS as fallback only.</td></tr>
+          <tr><td>Consumer fintech / health</td><td>Passkeys, with TOTP fallback. Avoid SMS as primary.</td></tr>
+          <tr><td>Employee SSO / admin access</td><td>WebAuthn hardware keys (mandatory). No SMS.</td></tr>
+          <tr><td>Developer dashboard, cloud console</td><td>WebAuthn or passkeys; require for all admin roles.</td></tr>
+          <tr><td>Sensitive in-app actions</td><td>Step-up authentication regardless of session state.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Auth Standards</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="oauth.html">← OAuth 2.0</a>
+        <a href="oidc.html">← OpenID Connect</a>
+        <a href="saml.html">← SAML</a>
+        <a href="jwt.html">← JWT</a>
+        <a href="passkeys.html">Passkeys / WebAuthn →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

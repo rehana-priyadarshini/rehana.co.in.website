@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SAML · Auth Standards Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The XML-based enterprise SSO protocol from the early 2000s — still the price of admission for B2B SaaS deals with large customers." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/saml.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="SAML · Auth Standards Deep Dive" />
+<meta property="og:description" content="The XML-based enterprise SSO protocol — still the price of admission for B2B SaaS." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/saml.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="SAML · Auth Standards Deep Dive" />
+<meta name="twitter:description" content="The XML-based enterprise SSO protocol." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Auth Standards Deep Dive · 3 of 6</div>
+    <h1>SAML — Enterprise SSO from the XML Era</h1>
+    <p class="lede">SAML 2.0 is the older, XML-based standard for enterprise single sign-on. It's heavier than OIDC, harder to debug, and full of cryptographic edges where implementations have repeatedly gone wrong — but it's still the price of admission for B2B SaaS deals with large customers running Active Directory Federation Services (ADFS), Ping, or Shibboleth. You don't pick SAML; you support it.</p>
+    <div class="tags"><span>SSO</span><span>XML</span><span>Assertions</span><span>Enterprise</span><span>ADFS</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What SAML Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Origin:</strong> SAML 2.0 ratified in 2005. Predates OAuth/OIDC by years.</li>
+          <li><strong>XML, signed and optionally encrypted.</strong> Assertions are XML documents, signed with XML-DSig.</li>
+          <li><strong>Three roles:</strong> Identity Provider (IdP — Okta, Azure AD, ADFS), Service Provider (SP — your app), and the user.</li>
+          <li><strong>Two flows:</strong> SP-initiated (user clicks login on your app, you redirect to IdP) and IdP-initiated (user clicks your app's tile in the IdP's portal).</li>
+          <li><strong>Bindings:</strong> how messages travel — HTTP-Redirect (URL params for short messages), HTTP-POST (form auto-submit for assertions), HTTP-Artifact (back-channel).</li>
+          <li><strong>Metadata XML</strong> describes endpoints and signing certificates. SP and IdP exchange metadata once at integration time.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Flow</div><h2>SP-Initiated Login</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px; line-height:1.7;">
+        <li>User hits your app's login page; your app generates an <code>AuthnRequest</code> (XML) and redirects them to the IdP.</li>
+        <li>User authenticates at the IdP (password, MFA, however the company set it up).</li>
+        <li>IdP generates a <strong>SAML assertion</strong> — signed XML with the user's identity, attributes, and conditions (audience, validity window).</li>
+        <li>IdP HTTP-POSTs the assertion to your app's <strong>Assertion Consumer Service (ACS)</strong> URL via a hidden form auto-submitted in the browser.</li>
+        <li>Your app verifies the signature, checks <code>Audience</code>, <code>NotOnOrAfter</code>, <code>InResponseTo</code>, then issues its own session.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Goes Wrong</div><h2>The Famous Pitfalls</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>XML Signature Wrapping</summary>
+        <div class="drill-body">
+          <p>The famous SAML attack class. The assertion is signed, but the verifier looks at one part of the document and reads identity from another. Carefully crafted XML can have a valid signature on a benign element and an attacker-controlled identity elsewhere — the parser and the verifier disagree.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> use a vetted SAML library (OneLogin's, ITfoxtec, OpenSAML, SAPI). Don't parse SAML XML by hand. Configure the library to canonicalize, then verify, then read claims — and verify that the identity it reads is from the signed portion.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Missing Audience Check</summary>
+        <div class="drill-body">
+          <p>An assertion intended for one SP can be replayed at another if the receiver doesn't check <code>Audience</code>. Always verify <code>Audience</code> matches your SP entity ID exactly.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Replay Without <code>InResponseTo</code></summary>
+        <div class="drill-body">
+          <p>SP-initiated flows must verify the assertion's <code>InResponseTo</code> matches the original <code>AuthnRequest</code> ID stored in the user's session. Without it, a captured assertion can be replayed at the user's browser to log them in as the original user — or worse, to a different SP.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Lax Clock Skew</summary>
+        <div class="drill-body">
+          <p><code>NotBefore</code> and <code>NotOnOrAfter</code> windows must be honored. Some libraries default to a generous skew (5+ minutes) for "compatibility." Tighten it; an old assertion is a useful tool for an attacker.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>IdP-Initiated Flows Are Inherently Riskier</summary>
+        <div class="drill-body">
+          <p>Without an <code>AuthnRequest</code> the SP started, you can't bind the assertion to a session. Some implementations allow IdP-initiated flows by accepting any unsolicited valid assertion — this opens replay and CSRF-flavored attacks. Disable unless required; if required, generate a session token strictly tied to the assertion's instant.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>SAML vs OIDC</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th></th><th>SAML</th><th>OIDC</th></tr></thead>
+        <tbody>
+          <tr><td>Format</td><td>XML, signed</td><td>JSON, signed</td></tr>
+          <tr><td>Mobile / SPA fit</td><td>Awkward</td><td>Native</td></tr>
+          <tr><td>Tooling</td><td>Heavy, library-required</td><td>Many libraries, simple flows</td></tr>
+          <tr><td>Discovery</td><td>Metadata XML exchange</td><td><code>/.well-known/openid-configuration</code></td></tr>
+          <tr><td>Where you'll meet it</td><td>Big enterprises, ADFS, Shibboleth, education</td><td>Everything new</td></tr>
+          <tr><td>Implementation risk</td><td>High — XML signature pitfalls</td><td>Lower with vetted libraries</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:14px;"><strong>Recommendation for B2B SaaS:</strong> support both. Implement OIDC first (most modern customers); add SAML when an enterprise deal demands it. Use a service like <strong>WorkOS</strong>, <strong>SSOReady</strong>, <strong>Cloudflare Zero Trust</strong>, <strong>Okta SSO Service</strong> to abstract SAML's pain — they translate every customer's IdP into a clean OIDC-style API for your app.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Auth Standards</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="oauth.html">← OAuth 2.0</a>
+        <a href="oidc.html">← OpenID Connect</a>
+        <a href="jwt.html">JWT →</a>
+        <a href="mfa.html">MFA / 2FA →</a>
+        <a href="passkeys.html">Passkeys / WebAuthn →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

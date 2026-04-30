@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Broken Access Control · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The #1 most common web vulnerability — users accessing data or functions they shouldn't. IDOR, missing function-level checks, privilege escalation. The bugs that look like normal features." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/broken-access-control.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Broken Access Control · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="Users accessing data or functions they shouldn't — the #1 most common web vulnerability." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/broken-access-control.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Broken Access Control · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="Users accessing data or functions they shouldn't." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 2 of 8</div>
+    <h1>Broken Access Control — The #1 Web Vulnerability</h1>
+    <p class="lede">OWASP's #1 most common web vulnerability. Users access data or functions they shouldn't — by changing a URL ID, by hitting an admin endpoint that forgot to check, by escalating their role. These aren't crashes or clever exploits; they're missing checks. The code looks fine until you ask "who's allowed to call this?"</p>
+    <div class="tags"><span>IDOR</span><span>Authorization</span><span>RBAC</span><span>ABAC</span><span>Multi-Tenant</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Broken Access Control Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Authentication answers "who are you?"</strong> Access control answers "what are you allowed to do?" Both must be in place; getting one right does not protect the other.</li>
+          <li><strong>Horizontal vs vertical:</strong> horizontal = accessing another user's data at the same privilege level. Vertical = escalating to admin / superuser.</li>
+          <li><strong>The defining symptom:</strong> the API works correctly when you call it normally; it just doesn't check whether <em>you specifically</em> are allowed to call it for <em>this specific resource</em>.</li>
+          <li><strong>Why it tops the list:</strong> there's no library that fixes it. Every endpoint, every resource, every action has to enforce its own check. Any one miss is a vulnerability.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>How It Goes Wrong</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>IDOR — Insecure Direct Object Reference</summary>
+        <div class="drill-body">
+          <p>The bug that ships every quarter. <code>GET /api/orders/12345</code> returns the order if it exists — without checking that <em>your</em> account owns it. Change the number, see someone else's order.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> every resource fetch must include an ownership predicate. <code>WHERE id = :id AND tenant_id = :session.tenant_id</code>. Don't trust the ID alone — bind it to the caller's context.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Missing Function-Level Authorization</summary>
+        <div class="drill-body">
+          <p>The admin UI hides the "Delete User" button for non-admins. The endpoint behind it doesn't check anything. Anyone who knows the URL — or guesses it — can delete users. Hiding in the UI is not access control; the server has to check on every request.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forced Browsing</summary>
+        <div class="drill-body">
+          <p>Endpoints exist that aren't linked from the UI — admin pages, debug routes, internal tools, old APIs left mounted. Attackers find them by wordlists and dictionaries. If they're reachable on the public internet, they need authentication and authorization, even if "no one knows about them."</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Privilege Escalation via Mass Assignment</summary>
+        <div class="drill-body">
+          <p>The user profile form sends <code>{name, email, isAdmin: true}</code>. The framework happily binds <code>isAdmin</code> to the model and saves. Mass assignment lets the user set fields they were never meant to control.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> use explicit DTOs / allowed-field lists. Spring's <code>@JsonView</code>, <code>permit_params</code> in Rails, Pydantic schemas, ASP.NET <code>[Bind]</code>. Never bind directly to your domain entity from request bodies.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Trusting Client-Supplied Role</summary>
+        <div class="drill-body">
+          <p>The mobile app sends <code>X-User-Role: admin</code>. The server believes it. Anything sent by the client is attacker-controlled — roles, permissions, and identity must come from the server's session or token, not from the request body or headers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cross-Tenant Data Leaks</summary>
+        <div class="drill-body">
+          <p>Multi-tenant SaaS where tenant boundaries depend on developers remembering to filter by <code>tenant_id</code> on every query. One forgotten filter = data from another customer in the response. Mitigate with row-level security in the DB, query helpers that always inject the tenant predicate, and integration tests that try to fetch across tenants.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JWT Pitfalls</summary>
+        <div class="drill-body">
+          <p>Trusting an unsigned token (<code>alg: none</code>), accepting any algorithm the token claims, not validating <code>aud</code>/<code>iss</code>/<code>exp</code>, storing roles in the token and never refreshing. Many "broken auth" stories are actually broken access control via JWT misuse.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>How to Get Access Control Right</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Default Deny</summary>
+        <div class="drill-body">
+          <p>The framework should refuse every request that doesn't have an explicit authorization check. Spring Security's <code>permitAll()</code> as the default is a footgun; require <code>authenticated()</code> + an explicit role/policy check. New routes are unreachable until someone declares who can use them.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Centralize the Check</summary>
+        <div class="drill-body">
+          <p>Don't sprinkle <code>if (user.role != ADMIN) return 403</code> through controllers. Use a policy layer — Spring Security's <code>@PreAuthorize</code>, ASP.NET policies, Casbin, OPA/Rego, Oso — that lives in one place and is reviewable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. RBAC vs ABAC</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Role-Based (RBAC):</strong> users have roles; roles have permissions. Simple, clear, fits most apps.</li>
+            <li><strong>Attribute-Based (ABAC):</strong> permissions are computed from attributes — user's department, resource's owner, time of day, environment. Right call when "admin in region X can edit Y but not Z."</li>
+            <li><strong>Relationship-based (ReBAC):</strong> Google Zanzibar's model. Permission depends on graph relationships — "is user a member of the workspace that owns this document?" Tools: Auth0 FGA, SpiceDB, Oso Cloud.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Test Authorization</summary>
+        <div class="drill-body">
+          <p>Most test suites verify the happy path: "Alice can fetch her own order." Add the negative cases: "Alice cannot fetch Bob's order." "A free-tier user cannot call admin endpoints." Run them in CI on every PR. This is the single most effective protection against shipped IDORs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Use Unguessable IDs Where Listing Isn't a Feature</summary>
+        <div class="drill-body">
+          <p>Sequential IDs don't <em>cause</em> IDOR — missing checks do — but UUIDs in URLs make scanning attacks unproductive. Defense in depth, not a substitute for proper authorization.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Audit Logs &amp; Monitoring</summary>
+        <div class="drill-body">
+          <p>Log every authorization denial with user, resource, and reason. Sudden spikes in 403s often mean someone's probing. Alert on patterns — a single user denied across 100 different IDs in a minute is suspicious.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="xss.html">XSS →</a>
+        <a href="csrf.html">CSRF →</a>
+        <a href="broken-authentication.html">Broken Authentication →</a>
+        <a href="insecure-deserialization.html">Insecure Deserialization →</a>
+        <a href="vulnerable-dependencies.html">Vulnerable Dependencies →</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

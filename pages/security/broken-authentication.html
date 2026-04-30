@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Broken Authentication · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Weak passwords, no MFA, leaky sessions, predictable tokens, broken password resets. The slow-motion failures that turn a stolen credential list into account takeover." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/broken-authentication.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Broken Authentication · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="Weak passwords, no MFA, leaky sessions, predictable tokens, broken password resets." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/broken-authentication.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Broken Authentication · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="Weak passwords, no MFA, leaky sessions, predictable tokens." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 5 of 8</div>
+    <h1>Broken Authentication — The Bugs That Become Account Takeover</h1>
+    <p class="lede">Authentication answers "who are you?" Get it wrong and attackers become other users. The category covers everything from accepting weak passwords, to leaking sessions, to broken password-reset flows that any attacker can drive. Most failures aren't dramatic — they're a thousand small defaults that combine into "log in as anyone."</p>
+    <div class="tags"><span>Passwords</span><span>MFA</span><span>Sessions</span><span>Password Reset</span><span>Bcrypt/Argon2</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Counts as Broken Authentication</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Credential storage:</strong> passwords stored in plaintext, hashed with MD5/SHA-1, or hashed without a salt.</li>
+          <li><strong>Credential acceptance:</strong> allowing trivially weak passwords, no rate limiting, no MFA, no detection of credential stuffing.</li>
+          <li><strong>Session management:</strong> session IDs that are guessable, never expire, aren't rotated on login, leak to logs or URLs.</li>
+          <li><strong>Recovery flows:</strong> password reset, email change, MFA reset — usually the weakest link, and the favorite path for full account takeover.</li>
+          <li><strong>Federated mistakes:</strong> implementing OAuth/OIDC by hand and skipping the parts that matter (state, PKCE, audience verification).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Passwords</div><h2>Storing and Checking Them</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Hash With a Modern Algorithm</summary>
+        <div class="drill-body">
+          <p>Use <strong>Argon2id</strong> (preferred), <strong>bcrypt</strong>, or <strong>scrypt</strong>. Never plain SHA-256 or MD5 — they're designed to be fast, which is exactly the wrong property for a password hash. Modern algorithms are deliberately slow and memory-hard so brute force scales poorly.</p>
+          <p style="margin-top:8px;"><strong>Tune work factors</strong> so a single hash takes ~250–500ms on your hardware. Rehash on login if a user's stored work factor is below current.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Salt — Per-User, Always</summary>
+        <div class="drill-body">
+          <p>Every password gets its own random salt. bcrypt and Argon2 do this for you and store the salt in the hash itself. Without a salt, two users with the same password get identical hashes — and rainbow tables become useful again.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Length Over Complexity</summary>
+        <div class="drill-body">
+          <p>Modern guidance (NIST SP 800-63B): minimum 8 characters, allow up to 64+, no forced complexity rules, no periodic rotation. Block known-breached passwords using haveibeenpwned's k-anonymity API instead. Long passwords beat clever passwords, and "must contain a symbol" rules push users toward predictable substitutions.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">MFA</div><h2>The Single Biggest Lift</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Why MFA Is Mandatory in 2026</summary>
+        <div class="drill-body">
+          <p>Stolen passwords are everywhere — billions of them, sortable, free. MFA defeats credential-stuffing categorically because the attacker doesn't have the second factor. Microsoft and Google have publicly reported MFA stops &gt;99% of automated account takeovers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Hierarchy of Factors</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>SMS OTP:</strong> better than nothing. Vulnerable to SIM swapping; phishable.</li>
+            <li><strong>TOTP (Authenticator app):</strong> good. Phishable but no SIM-swap risk.</li>
+            <li><strong>Push notification (Authy, Duo):</strong> easy to use, prone to "MFA fatigue" attacks where the attacker spams pushes hoping the user taps "approve."</li>
+            <li><strong>WebAuthn / FIDO2 / Passkeys:</strong> phishing-resistant. The factor is bound to the origin; an attacker on a look-alike domain can't get the device to sign. The right answer for new builds.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Skip MFA on Recovery</summary>
+        <div class="drill-body">
+          <p>If "I lost my MFA" downgrades you to email-only verification, attackers will go straight there. Recovery codes printed at enrollment and a slow path (hours to days, with notifications) is far safer than a one-click reset.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Sessions</div><h2>What to Do After Login</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Use the Framework's Session Implementation</summary>
+        <div class="drill-body">
+          <p>Spring Session, Express-session with a secure store, ASP.NET cookie auth, Django sessions. Don't roll your own session ID generator — frameworks use cryptographic randomness, store securely server-side, and rotate IDs on privilege change.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cookie Flags</summary>
+        <div class="drill-body">
+          <p><code>HttpOnly</code> (no JS access — limits XSS damage), <code>Secure</code> (TLS only), <code>SameSite=Lax</code> or <code>Strict</code> (CSRF defense), <code>__Host-</code> prefix for production. Set them on every session cookie.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Rotate on Login and Privilege Change</summary>
+        <div class="drill-body">
+          <p>Issue a new session ID after authentication and after role escalation. Otherwise, "session fixation" attacks work — the attacker sets a cookie before login and inherits the authenticated session afterward.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Short Lifetimes, Sliding Refresh</summary>
+        <div class="drill-body">
+          <p>Tokens that live forever are forever-lost when leaked. Use short access tokens (minutes) and longer refresh tokens (days/weeks) that can be revoked server-side. Rotate refresh tokens on use; detect reuse as an attack signal.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JWT Pitfalls Specifically</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li>Reject <code>alg: none</code>. Pin the expected algorithm — don't trust the header.</li>
+            <li>Validate <code>iss</code>, <code>aud</code>, <code>exp</code>, <code>nbf</code>, signature.</li>
+            <li>Don't put sensitive data in JWT payloads — they're base64, not encrypted.</li>
+            <li>Plan for revocation. Without server state, a leaked JWT is valid until <code>exp</code>; keep tokens short and use refresh-token rotation.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Recovery Flows</div><h2>The Most-Targeted Surface</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Reset tokens are credentials.</strong> Cryptographically random, single-use, expire in 15–60 minutes, rate-limited.</li>
+        <li><strong>Don't reveal whether an account exists.</strong> "If a matching account exists, we sent an email." Otherwise the form becomes an account-enumeration tool.</li>
+        <li><strong>Notify on changes.</strong> Email and SMS alerts on password resets, email changes, MFA changes — to the <em>old</em> address as well as the new one.</li>
+        <li><strong>Quarantine on suspicious changes.</strong> Hold transfers/withdrawals for 24–72 hours after recovery. Most fraud uses recovery as the first step.</li>
+        <li><strong>Test your reset flow as an attacker.</strong> Try reusing tokens, expired tokens, racing two requests, requesting tokens for arbitrary emails. Most reset bugs are obvious in five minutes of trying.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses Beyond the Basics</div><h2>The Real Production Posture</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Rate Limiting and Lockouts</summary>
+        <div class="drill-body">
+          <p>Limit login attempts per IP, per username, per device fingerprint. Use exponential backoff and CAPTCHAs after failures. Block credential-stuffing patterns (high attempts across many usernames from one source). Don't lock out users permanently — that's a denial-of-service the attacker can drive.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Detect Anomalies</summary>
+        <div class="drill-body">
+          <p>Login from a new country, a new device, a new ASN. Step up to MFA, send a notification, or quarantine the session. Most takeovers are visible in the access pattern; you have to be looking.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Use a Provider</summary>
+        <div class="drill-body">
+          <p>For most apps, the right answer is <strong>don't write the auth system yourself</strong>. Auth0, Okta, Cognito, Clerk, Firebase Auth, WorkOS, Stytch, Supabase Auth — they handle MFA, social login, password breach checks, account recovery, and audit. They're cheaper and safer than rolling your own.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="broken-access-control.html">← Broken Access Control</a>
+        <a href="xss.html">← XSS</a>
+        <a href="csrf.html">← CSRF</a>
+        <a href="insecure-deserialization.html">Insecure Deserialization →</a>
+        <a href="vulnerable-dependencies.html">Vulnerable Dependencies →</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

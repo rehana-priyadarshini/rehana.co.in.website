@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Injection · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="SQL injection, command injection, LDAP injection — when untrusted input changes the meaning of a query or command. The classic vulnerability that still hits production every year." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/injection.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Injection · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="SQL injection, command injection, LDAP injection — when untrusted input changes the meaning of a query." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/injection.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Injection · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="SQL injection, command injection, LDAP injection." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 1 of 8</div>
+    <h1>Injection — When Input Becomes Code</h1>
+    <p class="lede">Injection happens when untrusted input is concatenated into a query, command, or expression that the system then executes. SQL injection is the famous one, but the family covers OS command injection, LDAP, XPath, NoSQL queries, ORMs misused, and template engines. The fix is a single discipline applied everywhere: <em>data and code never share a string</em>.</p>
+    <div class="tags"><span>SQLi</span><span>Command Injection</span><span>NoSQL</span><span>LDAP</span><span>Template</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Injection Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>The pattern:</strong> the program builds a string ("<code>SELECT * FROM users WHERE name='" + name + "'</code>") and hands it to an interpreter. If <code>name</code> contains the interpreter's syntax, the meaning of the statement changes.</li>
+          <li><strong>Interpreters everywhere:</strong> SQL, shell, eval, regex, XPath, LDAP, Mongo query operators, template engines, expression languages (Spring SpEL, OGNL).</li>
+          <li><strong>Severity:</strong> typically critical. Successful injection often means full database read, write, deletion, or remote code execution.</li>
+          <li><strong>Why it persists:</strong> string concatenation is the most natural thing for a developer to write. Frameworks have to make the safe path easier than the unsafe one.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>The Common Injection Types</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>SQL Injection (SQLi)</summary>
+        <div class="drill-body">
+          <p>The classic. Attacker input <code>' OR '1'='1</code> turns a login query into one that matches every row.</p>
+<pre style="margin-top:8px; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;"><span style="color:#7B8FA1;">// Vulnerable</span>
+String q = "SELECT * FROM users WHERE name='" + name + "'";
+
+<span style="color:#7B8FA1;">// Safe — parameterized</span>
+PreparedStatement ps = c.prepareStatement(
+    "SELECT * FROM users WHERE name = ?");
+ps.setString(1, name);</pre>
+          <p style="margin-top:8px;"><strong>Variants:</strong> classic (error-based or UNION-based), blind (no error output, infer via boolean or timing), second-order (input stored safely but later concatenated into a query).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>OS Command Injection</summary>
+        <div class="drill-body">
+          <p>Calling out to the shell with user input lets attackers chain commands with <code>;</code>, <code>&amp;&amp;</code>, <code>|</code>, or backticks.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> never use shell. Use the <em>argv</em> form of process spawn (<code>execve</code>, <code>subprocess.run([...], shell=False)</code>, <code>ProcessBuilder</code>) so arguments stay arguments. If you must use a shell, escape using purpose-built libraries — and assume someone will eventually trick the escape.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>NoSQL Injection</summary>
+        <div class="drill-body">
+          <p>MongoDB query operators are JSON. If you accept a JSON body and pass it directly into a query, an attacker sends <code>{"$gt": ""}</code> instead of a string and matches any record.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> validate and coerce input shapes. Treat user-supplied JSON as untrusted; don't pass it to a query builder unchecked.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>LDAP, XPath, XML, Header Injection</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>LDAP:</strong> <code>(uid=*)(uid=*</code> bypasses auth filters. Use parameterized LDAP libraries.</li>
+            <li><strong>XPath:</strong> same shape as SQLi but on XML documents. Use parameterized XPath APIs.</li>
+            <li><strong>XML External Entity (XXE):</strong> a different but related class — disable external entity resolution in the XML parser.</li>
+            <li><strong>HTTP header / response splitting:</strong> CRLF in user input breaks out of one header into a second one. Strip or reject newlines on anything that lands in a header.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Template Injection (SSTI)</summary>
+        <div class="drill-body">
+          <p>Server-Side Template Injection: passing user input as a template string instead of as data lets attackers run template-engine expressions — often a path to remote code execution. Affected: Jinja2, Twig, Freemarker, Velocity, Razor when used with user-controlled templates.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> never compile a template from user input. Templates are code; data goes in via the rendering context.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ORM &amp; Query-Builder Pitfalls</summary>
+        <div class="drill-body">
+          <p>ORMs are mostly safe, until someone uses raw queries with string interpolation. <code>db.query(f"SELECT * FROM users WHERE name = '{name}'")</code> in SQLAlchemy or <code>@Query("... WHERE name = '" + name + "'")</code> in Spring Data is just SQLi with extra steps.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> always pass parameters separately (<code>db.query("SELECT ... WHERE name = :name", {"name": name})</code>), and lint for raw-string SQL in CI.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>How to Stop Injection</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Parameterize Everything</summary>
+        <div class="drill-body">
+          <p>Use parameterized queries / prepared statements / bind variables. Every database driver supports this. The interpreter receives the query template and the values separately and never confuses them. This is the single most effective defense ever invented for SQLi.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Validate &amp; Allow-list</summary>
+        <div class="drill-body">
+          <p>Parameterization fixes <em>data</em> being interpreted as code. It doesn't help when the user-supplied value is meant to be code — a sort column name, a table name, an enum. For those, use an allow-list: compare the input against a fixed set of accepted values and reject anything else.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Least-Privilege Database Accounts</summary>
+        <div class="drill-body">
+          <p>If the app's DB user can only <code>SELECT</code> from its own schema, even successful SQLi can't drop the table or read another tenant's data. Production app accounts should never have <code>DROP</code>, <code>CREATE</code>, or cross-schema read.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Avoid Shell Calls Entirely</summary>
+        <div class="drill-body">
+          <p>Use language-native libraries instead of shelling out. If you absolutely must, use the argv form and assume any escaping you write will eventually fail.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Static Analysis &amp; Code Review</summary>
+        <div class="drill-body">
+          <p>Tools like Semgrep, SonarQube, CodeQL, and Snyk Code flag string-concatenated SQL and shell calls. Add them to CI. Most injection bugs are caught by a tool before they reach a human reviewer.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Web Application Firewalls (Defense, Not Cure)</summary>
+        <div class="drill-body">
+          <p>A WAF (Cloudflare, AWS WAF, modsecurity) blocks obvious payloads. Useful as a tripwire and to slow drive-by scanners. Don't rely on it as the primary defense — every WAF has bypasses, and the moment your app trusts the WAF to filter input, your code stops being safe.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="broken-access-control.html">Broken Access Control →</a>
+        <a href="xss.html">XSS →</a>
+        <a href="csrf.html">CSRF →</a>
+        <a href="broken-authentication.html">Broken Authentication →</a>
+        <a href="insecure-deserialization.html">Insecure Deserialization →</a>
+        <a href="vulnerable-dependencies.html">Vulnerable Dependencies →</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

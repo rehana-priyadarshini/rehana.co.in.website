@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XSS · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Cross-Site Scripting — when an attacker's JavaScript runs in your user's browser as if it were yours. Stored, reflected, DOM-based, and how to defeat all three." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/xss.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="XSS · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="Cross-Site Scripting — when an attacker's JavaScript runs in your user's browser as if it were yours." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/xss.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="XSS · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="Cross-Site Scripting — when an attacker's JavaScript runs in your user's browser." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 3 of 8</div>
+    <h1>XSS — Someone Else's JavaScript on Your Page</h1>
+    <p class="lede">Cross-Site Scripting happens when attacker-controlled content is rendered as code instead of as text. The browser executes it inside your origin, with full access to cookies, the DOM, and any API the user is logged into. Famous, fixable, and still everywhere — because every framework that escapes by default has at least one bypass developers reach for when they want raw HTML.</p>
+    <div class="tags"><span>Stored XSS</span><span>Reflected XSS</span><span>DOM XSS</span><span>CSP</span><span>Encoding</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What XSS Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Same-origin model:</strong> JavaScript in your page can read your cookies, your localStorage, and call your authenticated APIs. Anyone who runs JS in your origin <em>is</em> your origin.</li>
+          <li><strong>The pattern:</strong> attacker input ends up rendered as HTML/JS instead of escaped as text. <code>&lt;script&gt;steal()&lt;/script&gt;</code> in a comment field that gets shown back unescaped.</li>
+          <li><strong>Three flavors:</strong> stored (saved on the server, served to all viewers), reflected (in a URL or form, served back in the response), DOM-based (no server involvement, JS reads attacker input from <code>location.hash</code> and writes it into the DOM).</li>
+          <li><strong>Severity:</strong> high. Account takeover, session theft, MFA bypass via UI manipulation, malicious actions performed as the victim.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>The Three Flavors</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Stored XSS</summary>
+        <div class="drill-body">
+          <p>The dangerous one. Attacker posts a comment, a profile bio, a product review containing a script. The server stores it; every subsequent viewer's browser executes it. One injection, many victims, no link to click.</p>
+          <p style="margin-top:8px;"><strong>Targets:</strong> any field that's saved and shown to others — comments, names, bios, support tickets, chat messages, custom fields.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reflected XSS</summary>
+        <div class="drill-body">
+          <p>Input from one request is echoed back in the response. The classic vector is an error page or search result that renders the query: <code>/search?q=&lt;script&gt;...</code>. The attacker emails or links the URL; the victim clicks; the script runs in the victim's session.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>DOM-Based XSS</summary>
+        <div class="drill-body">
+          <p>The server is innocent — the page's own JavaScript reads <code>location.hash</code>, <code>document.referrer</code>, or another attacker-controllable source and writes it into the DOM via <code>innerHTML</code>, <code>document.write</code>, or <code>eval</code>. Server-side defenses don't help; the bug lives in the client.</p>
+          <p style="margin-top:8px;"><strong>Audit for:</strong> sinks like <code>el.innerHTML = userInput</code>, <code>$().html(userInput)</code>, <code>eval()</code>, <code>new Function()</code>, and dangerous React/Angular escapes (<code>dangerouslySetInnerHTML</code>, <code>bypassSecurityTrustHtml</code>).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>How to Stop XSS</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Context-Aware Output Encoding</summary>
+        <div class="drill-body">
+          <p>The single most effective defense. The encoding required depends on <em>where</em> the value lands:</p>
+          <ul style="font-size:14px; line-height:1.6; margin-top:8px;">
+            <li><strong>HTML body:</strong> escape <code>&lt; &gt; &amp; "</code> as entities.</li>
+            <li><strong>HTML attribute:</strong> additionally escape quotes; use quoted attributes always.</li>
+            <li><strong>JavaScript context:</strong> serialize as JSON in a <code>&lt;script type="application/json"&gt;</code> tag and parse from JS — don't interpolate into a JS literal.</li>
+            <li><strong>URL:</strong> percent-encode; validate scheme (no <code>javascript:</code>).</li>
+            <li><strong>CSS:</strong> avoid; if necessary, escape with care.</li>
+          </ul>
+          <p style="margin-top:8px;">Modern frameworks (React, Angular, Vue, Svelte, Razor, Thymeleaf, Django templates) escape by default. Use them. Audit any place you opt out (<code>dangerouslySetInnerHTML</code>, <code>v-html</code>, <code>{!...}</code>).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Content Security Policy (CSP)</summary>
+        <div class="drill-body">
+          <p>A response header that tells the browser which scripts it's allowed to run. A strict CSP turns most XSS attempts into nothing — the browser refuses to execute injected scripts because they don't match an allow-listed source or nonce.</p>
+          <p style="margin-top:8px;"><strong>Modern recipe:</strong> nonce-based CSP — every legitimate inline script gets a per-request nonce; injected scripts have no nonce; the browser refuses them.</p>
+<pre style="margin-top:8px; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;">Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'nonce-aB9c...' 'strict-dynamic';
+  object-src 'none';
+  base-uri 'none';
+  frame-ancestors 'none';
+  report-uri /csp-report;</pre>
+          <p style="margin-top:8px;"><strong>Roll out in report-only mode first.</strong> CSP misconfigurations are the kind of thing that ships fine and breaks the home page on a Tuesday.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Sanitize When You Must Render HTML</summary>
+        <div class="drill-body">
+          <p>If a feature genuinely needs rich text (rich text editors, markdown that allows HTML), use a tested sanitizer — <strong>DOMPurify</strong> in the browser, <strong>OWASP Java HTML Sanitizer</strong>, <strong>bleach</strong> for Python — with a strict allow-list of tags and attributes. Never write your own HTML sanitizer; the edge cases are endless.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Validate URLs Before Rendering as Links</summary>
+        <div class="drill-body">
+          <p><code>&lt;a href="<em>userInput</em>"&gt;</code> is XSS if <code>userInput</code> is <code>javascript:alert(1)</code>. Allow-list <code>http:</code>, <code>https:</code>, <code>mailto:</code>, and reject everything else. Same for <code>src</code> on <code>img</code>, <code>iframe</code>, <code>script</code>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Cookie Hygiene Limits the Damage</summary>
+        <div class="drill-body">
+          <p><code>HttpOnly</code> cookies are invisible to JS — even successful XSS can't steal the session token via <code>document.cookie</code>. <code>Secure</code> ensures TLS-only. <code>SameSite=Lax</code> reduces CSRF (a different bug, but related). These don't prevent XSS; they reduce the blast radius when one slips through.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Trusted Types (Modern Browsers)</summary>
+        <div class="drill-body">
+          <p>A browser feature (Chromium-based) that makes DOM XSS sinks (<code>innerHTML</code>, <code>eval</code>) refuse to accept plain strings — only special "trusted" objects produced by your sanitizer. Catches DOM XSS by construction. Worth enabling on new apps.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Frameworks</div><h2>Where Frameworks Help — and Where They Don't</h2></div>
+    <div class="chapter-body">
+      <p>React, Vue, Angular, Svelte, and modern templating engines escape by default for the HTML body context. That kills the most common stored/reflected XSS. The remaining risks are:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>Explicit escapes — <code>dangerouslySetInnerHTML</code>, <code>v-html</code>, <code>{!...}</code>, raw template helpers. Search the codebase regularly.</li>
+        <li>Attribute and URL contexts where the framework's auto-escape isn't enough — passing user input into <code>href</code> or <code>style</code> needs URL/CSS-aware sanitizing.</li>
+        <li>DOM-based sinks driven by client-side code reading <code>location</code>, <code>postMessage</code>, third-party scripts.</li>
+        <li>Server-rendered HTML strings concatenated outside the framework — emails, PDFs, exports.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="broken-access-control.html">← Broken Access Control</a>
+        <a href="csrf.html">CSRF →</a>
+        <a href="broken-authentication.html">Broken Authentication →</a>
+        <a href="insecure-deserialization.html">Insecure Deserialization →</a>
+        <a href="vulnerable-dependencies.html">Vulnerable Dependencies →</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

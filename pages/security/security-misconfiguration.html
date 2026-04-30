@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Security Misconfiguration · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Default passwords, verbose error pages, open S3 buckets, debug ports on the internet. The bugs that aren't in your code — they're in your settings." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/security-misconfiguration.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Security Misconfiguration · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="Default passwords, verbose error pages, open S3 buckets, debug ports on the internet." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/security-misconfiguration.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Security Misconfiguration · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="Default passwords, verbose error pages, open S3 buckets." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 8 of 8</div>
+    <h1>Security Misconfiguration — The Bugs in Your Settings</h1>
+    <p class="lede">Most production breaches don't start with a clever exploit — they start with a default password, a debug endpoint left exposed, an S3 bucket flagged "Public", or a permissive IAM policy nobody re-reviewed. The code is fine; the configuration isn't. This category is broad on purpose because the failures are everywhere.</p>
+    <div class="tags"><span>Defaults</span><span>S3</span><span>IAM</span><span>Headers</span><span>TLS</span><span>Debug Endpoints</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Counts</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Defaults left on:</strong> default admin passwords, default ports, default sample apps, default credentials in container images.</li>
+          <li><strong>Things exposed that shouldn't be:</strong> debug endpoints, actuator routes (Spring Boot <code>/actuator</code>), Kibana with no auth, MongoDB with no password, Redis on the internet.</li>
+          <li><strong>Cloud resources too open:</strong> S3 buckets public, security groups <code>0.0.0.0/0</code> on port 22, IAM roles with <code>*:*</code>.</li>
+          <li><strong>Missing hardening:</strong> no security headers, weak TLS, verbose stack traces, directory listing on, CORS set to <code>*</code>.</li>
+          <li><strong>The unifying property:</strong> the platform or framework gave you a default that's convenient for development and dangerous in production. Production is everyone's job to harden.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>The Common Misconfigurations</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Default Credentials</summary>
+        <div class="drill-body">
+          <p><code>admin/admin</code> on a Jenkins, an old Tomcat manager, a Grafana, a router. Internet-wide scanners find these in minutes. Set passwords on every administrative interface. Better: disable the default account and create a new one. Better still: integrate with SSO so there's no local password to forget.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloud Storage Left Public</summary>
+        <div class="drill-body">
+          <p>S3 buckets, GCS buckets, Azure blob containers — set "public" on creation, forgotten about. Researchers find tens of thousands of leaked datasets per year this way.</p>
+          <p style="margin-top:8px;"><strong>Defenses:</strong> AWS S3 Block Public Access at the account level (turns it off org-wide), GCP organization policy <code>storage.publicAccessPrevention</code>, Azure equivalent. Use signed URLs / pre-signed downloads where you genuinely need public-feeling access.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Permissive Security Groups / Firewall Rules</summary>
+        <div class="drill-body">
+          <p>SSH (22), RDP (3389), DB ports (3306, 5432, 27017, 6379, 9200) open to <code>0.0.0.0/0</code>. Database engines without auth on those ports get owned within minutes of exposure. Use bastion hosts, SSM Session Manager, or VPN; restrict DB ports to private subnets only.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Over-Permissive IAM</summary>
+        <div class="drill-body">
+          <p><code>"Action": "*", "Resource": "*"</code>. Service accounts with admin rights "because I needed to test something." Production roles inheriting development permissions. Run AWS Access Analyzer, GCP Recommender, or open-source equivalents (Cloudsplaining, Parliament) to find the bloat.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Verbose Errors and Debug Pages</summary>
+        <div class="drill-body">
+          <p>Whitelabel error pages with full stack traces, database error messages echoed to clients, <code>DEBUG=True</code> on Django, Whoops on PHP, Spring Boot's actuator with <code>/heapdump</code> available. All gold for attackers — they reveal versions, paths, internal hostnames, sometimes credentials.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> production builds turn debug off, return generic errors to clients, log full traces server-side only.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CORS Wide Open</summary>
+        <div class="drill-body">
+          <p><code>Access-Control-Allow-Origin: *</code> with <code>Allow-Credentials: true</code> means any site on the internet can make authenticated requests as your users. The combination is forbidden by spec but still misconfigured. Allow-list specific origins; don't reflect the request's <code>Origin</code> header without checking.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Missing Security Headers</summary>
+        <div class="drill-body">
+          <p>HTTPS-only without <code>Strict-Transport-Security</code> means an attacker on the same Wi-Fi can downgrade. Other headers worth setting:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><code>Content-Security-Policy</code> — blocks XSS even if it gets through.</li>
+            <li><code>X-Content-Type-Options: nosniff</code> — stops MIME confusion.</li>
+            <li><code>Referrer-Policy: strict-origin-when-cross-origin</code> — limits leaked URLs.</li>
+            <li><code>Permissions-Policy</code> — turn off browser features you don't use (camera, mic, geolocation).</li>
+            <li><code>X-Frame-Options</code> or CSP <code>frame-ancestors</code> — prevent clickjacking.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Outdated TLS Configurations</summary>
+        <div class="drill-body">
+          <p>TLS 1.0/1.1 enabled, weak ciphers, no HSTS preload. Mozilla's "Modern" config and SSL Labs' tester give you a 5-minute fix. TLS 1.2+ only; prefer TLS 1.3 where supported; ECDHE+AES-GCM ciphers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sample Apps and Test Endpoints</summary>
+        <div class="drill-body">
+          <p><code>/test</code>, <code>/debug</code>, <code>/admin/h2-console</code>, <code>/swagger-ui</code> with full schema, <code>/graphql</code> introspection on in production. None of these are bugs; all are doors. Either remove them, gate them behind auth, or restrict to internal networks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Container and Image Misconfig</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li>Containers running as root.</li>
+            <li>Bind-mounting <code>/var/run/docker.sock</code> into a container (= host root).</li>
+            <li>Privileged containers without need.</li>
+            <li>Images with build secrets baked in (<code>docker history</code> reveals them).</li>
+            <li>K8s pods with <code>hostNetwork: true</code> or <code>hostPath</code> mounts.</li>
+          </ul>
+          <p style="margin-top:8px;"><strong>Tools:</strong> Trivy, kube-bench, kube-hunter, Falco, OPA/Gatekeeper, Kyverno. Wire policies that fail-closed in CI.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>The Working Posture</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Infrastructure as Code, Reviewed</summary>
+        <div class="drill-body">
+          <p>Click-ops creates one-off snowflakes nobody can audit. Terraform / Pulumi / CloudFormation / Bicep with peer review puts every config change through PR review and history. Pair with policy-as-code (OPA, Sentinel, Checkov) to fail builds that violate guardrails.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Hardened Baseline Images and Templates</summary>
+        <div class="drill-body">
+          <p>Don't start from "Ubuntu latest"; start from your org's hardened base. CIS Benchmarks codified for your platform, applied via image build. Distroless or minimal base images shrink the attack surface dramatically.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Secrets in a Manager, Never in Config</summary>
+        <div class="drill-body">
+          <p>AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault, Doppler. Apps fetch at runtime via IRSA / Workload Identity / mTLS. Rotate on a schedule and on every employee offboarding. Git-leaks scanning in CI catches accidental commits before they hit main.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Continuous Configuration Scanning</summary>
+        <div class="drill-body">
+          <p>AWS Security Hub, Prowler, ScoutSuite, Wiz, Lacework, Orca for cloud posture. Trivy / Checkov / Terrascan in CI for IaC. Internal Kubernetes scanning (Falco, kube-bench) at runtime. Score over time; reduce critical findings month over month.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Different Configs by Environment, Same Defaults</summary>
+        <div class="drill-body">
+          <p>Dev should be as close to prod as possible without being prod. Hard-code "production" defaults — TLS, secure cookies, auth required — and override locally for development, not the other way around. Otherwise the day you forget to flip a flag, prod ships with dev settings.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Periodic Audit and Cleanup</summary>
+        <div class="drill-body">
+          <p>Misconfig accumulates. Quarterly review: open security groups, unattached EBS volumes, dormant accounts, stale IAM roles, sample apps that survived an old POC, public S3 buckets. Most breaches start in things nobody owns anymore.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="broken-access-control.html">← Broken Access Control</a>
+        <a href="xss.html">← XSS</a>
+        <a href="csrf.html">← CSRF</a>
+        <a href="broken-authentication.html">← Broken Authentication</a>
+        <a href="insecure-deserialization.html">← Insecure Deserialization</a>
+        <a href="vulnerable-dependencies.html">← Vulnerable Dependencies</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

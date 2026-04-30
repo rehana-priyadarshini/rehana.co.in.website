@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vulnerable Dependencies · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Old libraries with known CVEs, transitive dependencies you didn't know you had, and supply-chain attacks. The 90% of your codebase you didn't write." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/vulnerable-dependencies.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Vulnerable Dependencies · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="Old libraries with known CVEs, transitive dependencies, and supply-chain attacks." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/vulnerable-dependencies.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Vulnerable Dependencies · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="Old libraries with known CVEs, transitive dependencies, supply-chain attacks." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 7 of 8</div>
+    <h1>Vulnerable Dependencies — The 90% You Didn't Write</h1>
+    <p class="lede">Modern apps are mostly someone else's code. Each <code>npm install</code>, <code>pip install</code>, or Maven build pulls in hundreds of libraries with thousands of transitive dependencies. When one of them ships a CVE — or worse, gets compromised by an attacker — your app inherits the problem. Managing this surface is now a core engineering responsibility, not an "ops thing."</p>
+    <div class="tags"><span>CVE</span><span>SBOM</span><span>Dependabot</span><span>Supply Chain</span><span>Log4Shell</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Shape of the Problem</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Direct dependencies:</strong> the libraries you wrote into <code>package.json</code> / <code>pom.xml</code> / <code>requirements.txt</code>. Usually a few dozen.</li>
+          <li><strong>Transitive dependencies:</strong> the libraries those depend on. Usually hundreds to thousands.</li>
+          <li><strong>CVE:</strong> Common Vulnerabilities and Exposures. A unique ID for a publicly disclosed flaw.</li>
+          <li><strong>SBOM (Software Bill of Materials):</strong> a machine-readable list of every component and version in your build. Increasingly mandatory in regulated industries.</li>
+          <li><strong>Reachability:</strong> a CVE only matters if your code actually calls the vulnerable code path. Most modern scanners try to filter on this.</li>
+          <li><strong>Supply-chain attacks:</strong> the dependency itself is malicious — typo-squat packages, compromised maintainers, hijacked accounts. Different threat from "old library has a CVE."</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>The Threats in This Category</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Known CVEs in Old Versions</summary>
+        <div class="drill-body">
+          <p>The classic. <strong>Log4Shell</strong> (CVE-2021-44228, Log4j 2.x) demonstrated this at scale — an unauthenticated RCE in a logging library used by half the Java world. Companies spent weeks locating and patching every instance. Most teams discovered they didn't know what versions they were running.</p>
+          <p style="margin-top:8px;"><strong>The pattern:</strong> a vulnerability is disclosed; attackers start scanning the internet within hours; if your dependency's old, you're a target.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Transitive Surprises</summary>
+        <div class="drill-body">
+          <p>You don't depend on the vulnerable library directly — but a library you do depend on does. <code>npm</code> projects routinely pull 1,000+ packages from a 10-line direct list. Auditing only the top level misses most of the surface.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typo-Squatting and Confusion Attacks</summary>
+        <div class="drill-body">
+          <p>Attacker publishes <code>requets</code> next to <code>requests</code>, <code>colors</code> next to <code>colors</code>, hoping a developer fat-fingers the install. Or — <em>dependency confusion</em> — registers your internal package name on the public registry, and your build pulls the malicious public version because it's "newer." Real attacks; real money lost.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Compromised Maintainers</summary>
+        <div class="drill-body">
+          <p><code>event-stream</code> in 2018, <code>node-ipc</code> in 2022, <code>xz-utils</code> in 2024 — popular packages briefly published malicious versions because an attacker took over a maintainer account or social-engineered their way in. Detection lag was days to years.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Build-Time Code Execution</summary>
+        <div class="drill-body">
+          <p>Many ecosystems run install-time scripts. <code>npm install</code> can execute arbitrary code from any package via <code>postinstall</code>; Python wheels can run setup hooks; Maven plugins are code. Compromise a build dependency and you compromise the developer's laptop and the CI runner.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>The Working Posture</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Lockfiles, Always</summary>
+        <div class="drill-body">
+          <p><code>package-lock.json</code>, <code>yarn.lock</code>, <code>poetry.lock</code>, <code>Pipfile.lock</code>, <code>Cargo.lock</code>, <code>go.sum</code>. Pin exact versions and the integrity hashes. Without a lockfile, "the same build" yesterday and today can install different code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Continuous Vulnerability Scanning</summary>
+        <div class="drill-body">
+          <p>GitHub Dependabot, Snyk, Trivy, OWASP Dependency-Check, Mend, Sonatype, JFrog Xray. Wire into CI; fail builds on critical CVEs; auto-PR for safe minor/patch upgrades. The tool is the easy part; the hard part is treating PRs from it as work, not noise.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Generate and Store SBOMs</summary>
+        <div class="drill-body">
+          <p>Generate a CycloneDX or SPDX SBOM for every release. Store it with the artifact. When a new CVE drops at 2 a.m., grepping SBOMs answers "are we exposed?" in minutes instead of days. Increasingly required by compliance (US Executive Order 14028, EU CRA).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Update Routinely, Not Reactively</summary>
+        <div class="drill-body">
+          <p>The teams that survive CVE drops are the ones already on or near the latest minor versions. Teams pinned to "the version we shipped 18 months ago" face weeks of upgrade work under fire. Renovate-bot or Dependabot's auto-merge for minor/patch is usually safe.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Slim the Tree</summary>
+        <div class="drill-body">
+          <p>Every dependency is a future CVE waiting to be found. Question whether you really need the new package. Prefer well-maintained ones over flashy new ones. Use the standard library when it's adequate. Audit and remove unused dependencies — they're still on the classpath, still attackable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Defend Against Supply-Chain Attacks</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li>Use a private registry / proxy. Cache the public registry and review what flows in.</li>
+            <li>Pin or scope-prefix internal packages so dependency confusion can't occur.</li>
+            <li>Disable install-time scripts where possible (<code>npm config set ignore-scripts true</code>).</li>
+            <li>Run builds in ephemeral, locked-down environments — not on developer laptops.</li>
+            <li>Verify package signatures where the ecosystem supports it (Sigstore, npm provenance, Maven signed jars).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>7. Reachability-Aware Triage</summary>
+        <div class="drill-body">
+          <p>Most CVEs in your tree don't actually affect you — the vulnerable code path isn't called by your app. Modern scanners (Snyk, Endor, Backslash) compute reachability and prioritize the CVEs you actually need to fix today versus the ones that can wait for the next sprint.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When a CVE Drops</div><h2>The Five-Minute Playbook</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px; line-height:1.7;">
+        <li><strong>Find every instance.</strong> Grep SBOMs and lockfiles across all repos and deployed images.</li>
+        <li><strong>Assess reachability.</strong> Is your code path affected? Is there a workaround (config flag, network rule)?</li>
+        <li><strong>Apply the fix.</strong> Upgrade, override the transitive version, or apply the vendor's mitigation.</li>
+        <li><strong>Rebuild and roll out.</strong> Don't just patch repos — patch container images, Lambda layers, anything immutable.</li>
+        <li><strong>Audit logs for prior exploitation.</strong> If the CVE was disclosed weeks ago, attackers were probably already trying.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="broken-access-control.html">← Broken Access Control</a>
+        <a href="xss.html">← XSS</a>
+        <a href="csrf.html">← CSRF</a>
+        <a href="broken-authentication.html">← Broken Authentication</a>
+        <a href="insecure-deserialization.html">← Insecure Deserialization</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

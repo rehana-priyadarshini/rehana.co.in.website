@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OAuth 2.0 · Auth Standards Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Delegated authorization — the protocol behind 'Sign in with Google', 'Connect Stripe', and almost every API token you've ever generated. The flows, the traps, and what to use in 2026." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/oauth.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="OAuth 2.0 · Auth Standards Deep Dive" />
+<meta property="og:description" content="Delegated authorization — the flows, the traps, and what to use in 2026." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/oauth.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="OAuth 2.0 · Auth Standards Deep Dive" />
+<meta name="twitter:description" content="Delegated authorization — the flows, the traps, and what to use." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Auth Standards Deep Dive · 1 of 6</div>
+    <h1>OAuth 2.0 — Delegated Authorization, Done Right</h1>
+    <p class="lede">OAuth 2.0 is the protocol that lets one application act on a user's behalf at another — "let this app read my Google calendar," "let Slack post to my GitHub." It's not authentication ("who are you?") but authorization ("what is this app allowed to do for you?"). Get the flow right and you delegate cleanly; get it wrong and you build a phishing surface.</p>
+    <div class="tags"><span>Authorization Code</span><span>PKCE</span><span>Scopes</span><span>Refresh Tokens</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What OAuth Is — and Isn't</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Authorization, not authentication.</strong> OAuth grants tokens that permit actions. "Logging in with Google" actually uses <strong>OpenID Connect</strong>, which sits on top of OAuth.</li>
+          <li><strong>Four roles:</strong> resource owner (the user), client (the app asking for access), authorization server (issues tokens — Google, Auth0, Okta), resource server (the API the token grants access to).</li>
+          <li><strong>Tokens, not credentials.</strong> The user's password never reaches the client. The client gets a scoped, time-limited access token.</li>
+          <li><strong>Scopes:</strong> what the token is allowed to do. <code>read:calendar</code>, <code>write:posts</code>. Smaller scopes mean smaller blast radius if leaked.</li>
+          <li><strong>OAuth 2.1</strong> is a consolidation of best practices and deprecations. In 2026, build to OAuth 2.1 and treat it as the default.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Flows</div><h2>Which Grant Type to Use</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Authorization Code + PKCE — The Default in 2026</summary>
+        <div class="drill-body">
+          <p>The flow nearly everyone should use, for both web apps and mobile/SPA clients:</p>
+          <ol style="font-size:14px; line-height:1.6; margin-top:6px;">
+            <li>Client redirects user to the auth server's authorize endpoint with a <code>code_challenge</code> (PKCE).</li>
+            <li>User authenticates and consents at the auth server.</li>
+            <li>Auth server redirects back to the client with a short-lived <code>code</code>.</li>
+            <li>Client exchanges <code>code</code> + <code>code_verifier</code> for tokens at the token endpoint.</li>
+          </ol>
+          <p style="margin-top:8px;"><strong>PKCE</strong> (Proof Key for Code Exchange) defends against code-interception attacks. Originally designed for mobile, now mandatory for all clients in OAuth 2.1, including server-side webapps.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Client Credentials</summary>
+        <div class="drill-body">
+          <p>Service-to-service. No user involved. The client authenticates with its own ID and secret (or a private key / mTLS) and receives a token to act on its own behalf. The right grant for backend integrations, scheduled jobs, and machine-to-machine APIs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Device Authorization</summary>
+        <div class="drill-body">
+          <p>For input-constrained devices — TVs, CLI tools, IoT. The device shows a code; the user goes to a URL on a phone or laptop, enters the code, approves. The device polls until approved. How <code>gh auth login</code>, AWS CLI SSO, smart TV Netflix logins all work.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Deprecated Flows — Don't Use</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Implicit Flow:</strong> tokens returned in the URL fragment. Vulnerable to leakage; PKCE removed the need. Removed in OAuth 2.1.</li>
+            <li><strong>Resource Owner Password Credentials:</strong> client collects the user's password and sends it to the auth server. Defeats the entire point of OAuth. Removed.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Pitfalls</div><h2>Where Implementations Go Wrong</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Skipping the <code>state</code> Parameter</summary>
+        <div class="drill-body">
+          <p>The <code>state</code> param prevents CSRF on the redirect back. Generate a random per-request value, store it in a session, verify on callback. Skipping it is how attackers tie an attacker-controlled auth flow to the victim's session.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Lax Redirect URI Validation</summary>
+        <div class="drill-body">
+          <p>The auth server must <em>exactly match</em> the redirect URI against a registered allow-list — no wildcards, no path-prefix matches. Open redirects in your callback URL are how attackers exfiltrate tokens to their own servers.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Storing Tokens in localStorage</summary>
+        <div class="drill-body">
+          <p>localStorage is readable by any JavaScript on your origin — one XSS, every token leaks. Use HttpOnly cookies for browser-stored tokens, paired with a backend that exchanges them for the API. The "BFF (Backend-for-Frontend) pattern" is now the recommended browser architecture.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Treating Access Tokens as Identity</summary>
+        <div class="drill-body">
+          <p>An access token says "this client may act for some user." It does not authoritatively identify the user. For login, use OIDC's ID token, which is signed and includes <code>sub</code>, <code>iss</code>, <code>aud</code>. Mixing the two is a common cause of authentication bugs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Refresh Token Reuse Without Detection</summary>
+        <div class="drill-body">
+          <p>Modern guidance: rotate refresh tokens on every use. Detect reuse (the same refresh token presented twice) as a sign of compromise and revoke the entire token family. Public clients (SPA, mobile) should always rotate; confidential clients can choose.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Over-broad Scopes</summary>
+        <div class="drill-body">
+          <p>Asking for <code>repo</code> when you only need <code>repo:read</code>; asking for <code>https://www.googleapis.com/auth/gmail.modify</code> when <code>gmail.readonly</code> would do. Users notice. So do regulators. Ask for the minimum.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Beyond the Basics</div><h2>Modern Patterns</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>DPoP (Demonstrating Proof of Possession):</strong> binds a token to a key the client holds. Stolen tokens become useless without the key. Increasingly required for high-value APIs.</li>
+        <li><strong>mTLS-bound tokens:</strong> the token is only valid when presented over the same client TLS certificate that requested it. Common in fintech and banking.</li>
+        <li><strong>Pushed Authorization Requests (PAR):</strong> the client posts the auth request server-to-server; the user is redirected with only a reference. Prevents tampering with parameters in the browser.</li>
+        <li><strong>Fine-grained authorization beyond scopes:</strong> OAuth 2.0 Rich Authorization Requests (RAR) carry structured permissions — "transfer up to $500 from account X to account Y once."</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>What to Use</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Public OAuth API for partners:</strong> Authorization Code + PKCE. Always.</li>
+        <li><strong>Service-to-service calls:</strong> Client Credentials with a private-key JWT or mTLS — not a shared secret.</li>
+        <li><strong>SPA login:</strong> Authorization Code + PKCE with a BFF pattern. Don't keep tokens in JS.</li>
+        <li><strong>Mobile login:</strong> Authorization Code + PKCE in a system browser (not an embedded webview).</li>
+        <li><strong>You probably don't want to build the auth server.</strong> Use Auth0, Okta, Cognito, Keycloak, Authentik, Hydra, or your IdP's offering. Implementing OAuth correctly from scratch is a multi-year project.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Auth Standards</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="oidc.html">OpenID Connect →</a>
+        <a href="saml.html">SAML →</a>
+        <a href="jwt.html">JWT →</a>
+        <a href="mfa.html">MFA / 2FA →</a>
+        <a href="passkeys.html">Passkeys / WebAuthn →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JWT · Auth Standards Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="JSON Web Tokens — a signed, base64-encoded format that carries claims. Used everywhere, misused often. The pitfalls and the right way to validate them." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/jwt.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="JWT · Auth Standards Deep Dive" />
+<meta property="og:description" content="JSON Web Tokens — a signed, base64-encoded format that carries claims." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/jwt.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="JWT · Auth Standards Deep Dive" />
+<meta name="twitter:description" content="JSON Web Tokens — a signed, base64-encoded format that carries claims." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Auth Standards Deep Dive · 4 of 6</div>
+    <h1>JWT — Signed Claims, Carry-On Format</h1>
+    <p class="lede">A JSON Web Token is a small string carrying signed claims — "this user is <code>sub=42</code>, valid until <code>exp=...</code>, issued by <code>iss=...</code>". They power most modern auth systems. They're also the format with the longest list of "we did it wrong" stories. The format is fine; the way developers validate it often isn't.</p>
+    <div class="tags"><span>JWS</span><span>Claims</span><span>Bearer</span><span>JWKS</span><span>alg=none</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a JWT Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Three base64url parts:</strong> <code>header.payload.signature</code>. Joined by dots.</li>
+          <li><strong>Header:</strong> the algorithm (<code>RS256</code>, <code>HS256</code>, <code>ES256</code>, ...) and key ID (<code>kid</code>).</li>
+          <li><strong>Payload (claims):</strong> JSON. Standard claims: <code>iss</code> issuer, <code>sub</code> subject, <code>aud</code> audience, <code>exp</code> expiry, <code>nbf</code> not-before, <code>iat</code> issued-at, <code>jti</code> token ID. Plus your custom claims.</li>
+          <li><strong>Signed, not encrypted.</strong> Anyone can read the payload (<code>jwt.io</code>); only the holder of the signing key can produce a valid signature. JWE is the encrypted variant — rarely used.</li>
+          <li><strong>Stateless verification.</strong> Given the public key, any service can verify a JWT locally without calling the issuer.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why Teams Reach for It</div><h2>Where JWTs Earn Their Keep</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Stateless services</strong> behind a load balancer — no session store needed; every node verifies independently.</li>
+        <li><strong>OIDC ID tokens</strong> — the exact use case JWT was designed for.</li>
+        <li><strong>Service-to-service auth</strong> — short-lived JWTs signed with a private key; downstream services verify with the public key.</li>
+        <li><strong>Single-page apps</strong> talking to APIs — though see the storage caveats below.</li>
+        <li><strong>Signed URLs and tickets</strong> — a JWT in a query param to authorize a one-time download or webhook delivery.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Pitfalls</div><h2>The Bugs That Recur</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary><code>alg: none</code> — The Original Disaster</summary>
+        <div class="drill-body">
+          <p>The JWT spec includes <code>"alg": "none"</code> meaning "no signature." Several libraries, in their early days, accepted it — passing an unsigned token through validation as if it were valid. Anyone with a text editor became an admin.</p>
+          <p style="margin-top:8px;"><strong>Defense:</strong> pin the expected algorithm. Don't accept whatever the token's header claims. Use libraries that require an explicit algorithm whitelist.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Algorithm Confusion (RS256 → HS256)</summary>
+        <div class="drill-body">
+          <p>If the verifier accepts whatever <code>alg</code> the token claims, an attacker can take a token signed with RS256 (asymmetric), change <code>alg</code> to HS256 (symmetric), and sign it using the public key as the HMAC secret. Some libraries did this. The fix is the same: pin the algorithm.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Skipping Claim Validation</summary>
+        <div class="drill-body">
+          <p>Verifying the signature is necessary; it's not sufficient. Always validate:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><code>iss</code> matches the expected issuer.</li>
+            <li><code>aud</code> matches your service.</li>
+            <li><code>exp</code> in the future, <code>nbf</code> in the past.</li>
+            <li><code>iat</code> reasonable (not far-future).</li>
+          </ul>
+          <p style="margin-top:6px;">A signed token from <em>another</em> service that hasn't checked these is still an attack vector when accepted by yours.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Putting Sensitive Data in Claims</summary>
+        <div class="drill-body">
+          <p>JWT payloads are <em>signed</em>, not encrypted. Anyone who sees the token can decode the claims. PII, internal IDs, sensitive flags shouldn't be there unless you're using JWE (encrypted JWT).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>No Revocation Story</summary>
+        <div class="drill-body">
+          <p>A compromised JWT is valid until <code>exp</code>. Without server state you can't revoke it. Three mitigations:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li>Keep access tokens short (minutes), refresh tokens server-side and revocable.</li>
+            <li>Maintain a small, fast denylist of revoked <code>jti</code>s for high-value scenarios (logout, password change).</li>
+            <li>Bind tokens to a key the client holds (DPoP, mTLS) so the token alone isn't enough.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Storing JWTs in localStorage</summary>
+        <div class="drill-body">
+          <p>localStorage is XSS-readable. One DOM XSS leaks every token in every session. Prefer HttpOnly cookies for browser-stored tokens, paired with a backend-for-frontend that proxies API calls. Modern guidance is unambiguous on this.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Trusting the <code>kid</code> Without Constraint</summary>
+        <div class="drill-body">
+          <p>The <code>kid</code> header tells the verifier which key to use. Some libraries used it as a path or DB lookup — and attackers smuggled SQLi or path traversal through it. Treat <code>kid</code> as opaque, look it up against a fixed JWKS, never as a path.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Right-Sizing</div><h2>When JWT Isn't the Answer</h2></div>
+    <div class="chapter-body">
+      <p>For browser sessions to your own backend, opaque session IDs in HttpOnly cookies are simpler and easier to revoke than JWTs. JWTs shine when verification needs to happen <em>without</em> calling the issuer — across services, at the edge, or in a federated context.</p>
+      <p style="margin-top:10px;">Don't pick JWT because it's "stateless and cool." Pick it when stateless verification is a real requirement; otherwise stick with sessions and save yourself a category of bugs.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Auth Standards</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="oauth.html">← OAuth 2.0</a>
+        <a href="oidc.html">← OpenID Connect</a>
+        <a href="saml.html">← SAML</a>
+        <a href="mfa.html">MFA / 2FA →</a>
+        <a href="passkeys.html">Passkeys / WebAuthn →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

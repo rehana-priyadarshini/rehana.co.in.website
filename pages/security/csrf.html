@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CSRF · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Cross-Site Request Forgery — a malicious site uses your logged-in browser to perform actions as you. Modern browsers, SameSite cookies, and CSRF tokens shut it down." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/csrf.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="CSRF · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="A malicious site uses your logged-in browser to perform actions as you." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/csrf.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="CSRF · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="A malicious site uses your logged-in browser to perform actions as you." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 4 of 8</div>
+    <h1>CSRF — Your Browser, Their Request</h1>
+    <p class="lede">Cross-Site Request Forgery: a malicious page tricks the user's browser into making a request to your site, where the user is already logged in. The browser cheerfully attaches the session cookie; your server runs the action — transfer money, change email, delete account — as if the user wanted it. The attacker never touched the user's credentials.</p>
+    <div class="tags"><span>SameSite</span><span>CSRF Tokens</span><span>Cookies</span><span>Origin Header</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What CSRF Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>The setup:</strong> the user is logged into <code>your-bank.com</code>. They visit <code>evil.com</code>. <code>evil.com</code> contains a hidden form or image whose URL is <code>your-bank.com/transfer?to=attacker&amp;amount=1000</code>.</li>
+          <li><strong>The browser betrays you:</strong> it sends the cookie for <code>your-bank.com</code> with that request automatically — that's how cookies have always worked.</li>
+          <li><strong>The server can't tell the difference</strong> between a legitimate click on the bank page and a forged click from <code>evil.com</code> — unless it's checking specifically.</li>
+          <li><strong>Affects state-changing actions only:</strong> POST, PUT, DELETE that have side effects. GET requests should never have side effects (and if they do, they're vulnerable to even simpler attacks).</li>
+          <li><strong>Modern era:</strong> SameSite cookies have made CSRF much harder by default, but it's not gone — and several other defenses are still required.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Attack</div><h2>How CSRF Plays Out</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Classic Form Auto-Submit</summary>
+        <div class="drill-body">
+<pre style="margin-top:0; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;">&lt;!-- on evil.com --&gt;
+&lt;form action="https://your-bank.com/transfer"
+      method="POST" id="f"&gt;
+  &lt;input name="to" value="attacker"/&gt;
+  &lt;input name="amount" value="1000"/&gt;
+&lt;/form&gt;
+&lt;script&gt;document.getElementById('f').submit();&lt;/script&gt;</pre>
+          <p style="margin-top:8px;">Victim loads the page; the browser submits the form to the bank with the bank's cookies; transfer goes through. No interaction beyond visiting the malicious page.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>GET-Based CSRF</summary>
+        <div class="drill-body">
+          <p>If <code>GET /unsubscribe?id=42</code> changes state, an attacker can trigger it with <code>&lt;img src="https://your-app/unsubscribe?id=42"&gt;</code>. The image "fails to load" but the request fired with cookies attached. Rule: <strong>GET must be safe</strong> — never have side effects.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JSON CSRF</summary>
+        <div class="drill-body">
+          <p>"We accept JSON, so we're safe." Not always — if the server accepts <code>application/x-www-form-urlencoded</code> too (common Spring/Express defaults), a form post with a payload that looks like JSON works. Lock down content-type expectations and reject non-JSON for JSON endpoints.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>How to Stop CSRF</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. SameSite Cookies</summary>
+        <div class="drill-body">
+          <p>The biggest shift in CSRF defense in years. <code>SameSite=Lax</code> (the modern browser default) means cookies aren't attached to most cross-site requests. <code>SameSite=Strict</code> excludes even top-level navigations. With Lax/Strict, classic CSRF largely fails.</p>
+          <p style="margin-top:8px;"><strong>Caveats:</strong></p>
+          <ul style="font-size:14px; line-height:1.6; margin-top:6px;">
+            <li>SameSite is per-cookie; set it on every session cookie.</li>
+            <li>Older browsers don't enforce it — you still need defense in depth.</li>
+            <li>Some flows (third-party embeds, federated SSO) require <code>SameSite=None</code> + <code>Secure</code>; those need other CSRF defenses.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. CSRF Tokens (Synchronizer Token Pattern)</summary>
+        <div class="drill-body">
+          <p>The server generates a random token per session (or per form), stores it server-side, and embeds it in every form/request as a hidden field or header. The server rejects any state-changing request whose token doesn't match. Cross-site attackers can't read the token (same-origin policy stops them), so they can't forge a valid request.</p>
+          <p style="margin-top:8px;"><strong>Frameworks ship this.</strong> Spring Security <code>CsrfFilter</code>, Django <code>{% csrf_token %}</code>, Rails <code>protect_from_forgery</code>, ASP.NET <code>AntiForgeryToken</code>. Use them; don't roll your own.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Double-Submit Cookie Pattern</summary>
+        <div class="drill-body">
+          <p>For stateless APIs: send a random token in both a cookie and a request header. The server checks they match. Cross-site attackers can read neither, so they can't forge the match. Common with SPA + JWT setups.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Custom Header Requirement</summary>
+        <div class="drill-body">
+          <p>Browsers don't allow cross-origin requests with custom headers (without a CORS preflight that <em>your</em> server controls). Require a header like <code>X-Requested-With: XMLHttpRequest</code> or <code>X-CSRF-Token</code> for state-changing endpoints; reject otherwise. Simple, effective for SPAs and JSON APIs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Verify Origin / Referer</summary>
+        <div class="drill-body">
+          <p>Modern browsers send <code>Origin</code> on POST. Reject requests whose Origin isn't your own site. Belt-and-braces with SameSite cookies; both can be defeated alone, but together they cover real-world cases.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Re-authenticate for Sensitive Actions</summary>
+        <div class="drill-body">
+          <p>Bank transfers, password changes, email changes, billing updates — require the user to re-enter their password or pass an MFA challenge. Even a successful CSRF can't satisfy that.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reality Check</div><h2>What's Different in 2026</h2></div>
+    <div class="chapter-body">
+      <p>Browser defaults have done most of the work for the common case:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>SameSite=Lax</strong> is the default for cookies that don't specify SameSite. Classic CSRF against most sites fails out of the box.</li>
+        <li><strong>Cross-origin requests</strong> trigger CORS preflights; servers control whether to allow them.</li>
+        <li><strong>Bearer tokens stored in localStorage</strong> aren't sent automatically by the browser — they're immune to CSRF, but vulnerable to XSS instead. Pick your tradeoff.</li>
+      </ul>
+      <p style="margin-top:10px;"><strong>The shifted attack surface:</strong> CSRF mostly survives now in cases requiring <code>SameSite=None</code> (third-party embeds, federated login flows), in legacy apps without SameSite set, and in mobile/desktop apps where browser CSRF defenses don't apply. Enable framework CSRF protection and SameSite together — they cover different cases.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="broken-access-control.html">← Broken Access Control</a>
+        <a href="xss.html">← XSS</a>
+        <a href="broken-authentication.html">Broken Authentication →</a>
+        <a href="insecure-deserialization.html">Insecure Deserialization →</a>
+        <a href="vulnerable-dependencies.html">Vulnerable Dependencies →</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Insecure Deserialization · OWASP Top 10 Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Untrusted data turned into objects can become arbitrary code execution. Java native serialization, Python pickle, .NET BinaryFormatter — the foundations of some of the worst RCEs in history." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/insecure-deserialization.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Insecure Deserialization · OWASP Top 10 Deep Dive" />
+<meta property="og:description" content="Untrusted data turned into objects can become arbitrary code execution." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/insecure-deserialization.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Insecure Deserialization · OWASP Top 10 Deep Dive" />
+<meta name="twitter:description" content="Untrusted data turned into objects can become arbitrary code execution." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">OWASP Top 10 Deep Dive · 6 of 8</div>
+    <h1>Insecure Deserialization — Untrusted Data Becomes Code</h1>
+    <p class="lede">Some serialization formats don't just store data — they store object graphs that, when read back, run constructors, setters, and class methods. Hand attacker-controlled bytes to one of those deserializers and you've handed over arbitrary code execution. The category includes Java native serialization, Python <code>pickle</code>, .NET <code>BinaryFormatter</code>, and any "magic-method" format whose deserialization triggers behavior.</p>
+    <div class="tags"><span>RCE</span><span>Pickle</span><span>Java Serialization</span><span>BinaryFormatter</span><span>Gadgets</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What's Actually Going On</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Serialization:</strong> turning an object into bytes. <strong>Deserialization:</strong> turning bytes back into an object.</li>
+          <li><strong>The dangerous formats execute code during deserialization</strong> — they invoke constructors, <code>readObject</code> hooks, setters, <code>__reduce__</code>, and other lifecycle methods. Crafted bytes can chain those into arbitrary calls.</li>
+          <li><strong>Gadget chains:</strong> attackers don't write new code — they assemble sequences of <em>existing</em> classes in your dependencies whose deserialization side effects, in combination, run shell commands. Tools like <code>ysoserial</code> generate them automatically.</li>
+          <li><strong>Severity:</strong> typically critical — full remote code execution as the application user.</li>
+          <li><strong>JSON, Protobuf, Avro, YAML (safe loader):</strong> these are <em>data</em> formats. They don't trigger object methods on parse. They're safe with respect to this category — when used correctly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>Where This Bites by Stack</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Java Native Serialization</summary>
+        <div class="drill-body">
+          <p>The original. <code>ObjectInputStream.readObject()</code> on attacker bytes has been remote code execution since the early 2000s. Famous CVEs in Apache Commons Collections, Spring, JBoss — all gadget-chain attacks via Java's built-in serialization.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> stop using Java native serialization for anything that crosses a trust boundary. Use JSON or Protobuf instead. If you absolutely can't, use <code>ObjectInputFilter</code> (Java 9+) to allow-list classes. Better still — don't.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Python <code>pickle</code></summary>
+        <div class="drill-body">
+          <p>Pickle is RCE by design — its <code>__reduce__</code> protocol exists to let objects describe how to reconstruct themselves, including by calling arbitrary functions.</p>
+          <p style="margin-top:8px;"><strong>Rule:</strong> never <code>pickle.loads</code> anything you didn't produce yourself in a context you control. Use JSON for API payloads, Protobuf for service-to-service, and trust nothing pickled by clients.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>.NET <code>BinaryFormatter</code> and Friends</summary>
+        <div class="drill-body">
+          <p><code>BinaryFormatter</code> is officially deprecated and dangerous. So is <code>NetDataContractSerializer</code>, <code>SoapFormatter</code>, and unrestricted <code>JavaScriptSerializer</code> with type info. Use <code>System.Text.Json</code> or <code>Newtonsoft.Json</code> with <code>TypeNameHandling.None</code>. Microsoft's own guidance is clear: don't use BinaryFormatter for anything other than internal trusted data — and ideally not at all.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>YAML Default Loaders</summary>
+        <div class="drill-body">
+          <p>PyYAML's <code>yaml.load</code> — the default before recent versions — instantiated arbitrary Python objects from tags like <code>!!python/object/apply:os.system</code>. Use <code>yaml.safe_load</code> always. Same lesson in Ruby's <code>YAML.load</code> (use <code>safe_load</code>) and the older Java SnakeYAML defaults.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JSON With Polymorphic Type Info</summary>
+        <div class="drill-body">
+          <p>JSON is data — but libraries that embed type names so they can reconstruct subclasses (Jackson with default typing, Newtonsoft with <code>TypeNameHandling=All</code>, Gson with <code>RuntimeTypeAdapterFactory</code>) re-introduce the problem. Attacker tells the deserializer to instantiate any class on the classpath; gadget chains are back.</p>
+          <p style="margin-top:8px;"><strong>Fix:</strong> never enable open polymorphic typing on data from untrusted sources. If you must deserialize one of several types, use a tagged union with an explicit allow-list.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>PHP <code>unserialize</code></summary>
+        <div class="drill-body">
+          <p>Same family. PHP magic methods (<code>__wakeup</code>, <code>__destruct</code>) trigger on deserialization. Use JSON. Avoid <code>unserialize</code> on anything untrusted.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Defenses</div><h2>How to Stop It</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>1. Use Data Formats, Not Object Formats</summary>
+        <div class="drill-body">
+          <p>JSON, Protobuf, Avro (with explicit schema), MessagePack, FlatBuffers, CBOR. These describe data — strings, numbers, arrays, maps. Deserializing them does not invoke arbitrary methods.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Don't Cross Trust Boundaries With Object Streams</summary>
+        <div class="drill-body">
+          <p>Java native serialization and pickle are fine <em>within</em> a trust boundary — caching your own data, intra-process state. They become RCE when they touch the network, a queue, a cookie, an upload, or the database where untrusted input lives.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. If You Must, Allow-List Classes</summary>
+        <div class="drill-body">
+          <p>Java's <code>ObjectInputFilter</code> rejects classes not on a list. Jackson's <code>PolymorphicTypeValidator</code> does the same. The list should be tiny — ideally only your own DTOs. Anything broader and gadget chains will eventually find a way through.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>4. Sign or HMAC Serialized Blobs</summary>
+        <div class="drill-body">
+          <p>If a blob has to round-trip through an untrusted client (a session cookie, a queue), HMAC it with a server-side key. Reject anything whose signature doesn't verify. This stops attackers from fabricating new payloads — though it doesn't help if the secret leaks or the format itself is unsafe inside a trust boundary.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>5. Keep Dependencies Slim</summary>
+        <div class="drill-body">
+          <p>Gadget chains depend on classes already on your classpath. Every dependency you don't need is one fewer source of gadgets. Audit what's there with <code>mvn dependency:tree</code>, <code>npm ls</code>, <code>pip list</code>; remove what isn't pulling its weight.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>6. Patch Promptly</summary>
+        <div class="drill-body">
+          <p>Most disclosed deserialization CVEs come with new gadgets in popular libraries. Dependabot/Snyk alerts, automated minor-version updates, and a process for evaluating advisories are all part of the defense. Insecure deserialization is "low-frequency, high-severity" — when one lands in your stack, it matters.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>The Quick Rule</h2></div>
+    <div class="chapter-body">
+      <p>Use JSON or Protobuf for anything that crosses a trust boundary. Reach for native object serialization only inside one process you fully control. If a feature seems to require deserializing complex objects from outside, redesign it — that's the bug, not the constraint.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other OWASP Top 10</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="injection.html">← Injection</a>
+        <a href="broken-access-control.html">← Broken Access Control</a>
+        <a href="xss.html">← XSS</a>
+        <a href="csrf.html">← CSRF</a>
+        <a href="broken-authentication.html">← Broken Authentication</a>
+        <a href="vulnerable-dependencies.html">Vulnerable Dependencies →</a>
+        <a href="security-misconfiguration.html">Security Misconfiguration →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

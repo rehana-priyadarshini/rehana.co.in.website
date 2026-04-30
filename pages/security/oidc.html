@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OpenID Connect · Auth Standards Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The authentication layer on top of OAuth 2.0. The standard behind 'Sign in with Google', enterprise SSO, and almost every social-login flow you've ever used." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/oidc.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="OpenID Connect · Auth Standards Deep Dive" />
+<meta property="og:description" content="The authentication layer on top of OAuth 2.0." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/oidc.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="OpenID Connect · Auth Standards Deep Dive" />
+<meta name="twitter:description" content="The authentication layer on top of OAuth 2.0." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Auth Standards Deep Dive · 2 of 6</div>
+    <h1>OpenID Connect — Authentication on Top of OAuth</h1>
+    <p class="lede">OpenID Connect (OIDC) adds an authentication layer on top of OAuth 2.0. OAuth tells you what an app is allowed to do; OIDC tells you who the user is. It's the protocol behind "Sign in with Google", "Sign in with Microsoft", and most modern enterprise SSO. Same flows as OAuth, plus a signed ID token that authoritatively identifies the user.</p>
+    <div class="tags"><span>SSO</span><span>ID Token</span><span>JWKS</span><span>Discovery</span><span>Federation</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What OIDC Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Built on OAuth 2.0.</strong> Same flows (Authorization Code + PKCE), same endpoints, same scopes — plus standardized identity behavior.</li>
+          <li><strong>The <code>openid</code> scope</strong> turns an OAuth flow into an OIDC flow. The auth server then returns an <strong>ID token</strong> (a signed JWT) alongside the access token.</li>
+          <li><strong>ID Token:</strong> a signed JWT with claims like <code>sub</code> (subject — the user ID), <code>iss</code> (issuer), <code>aud</code> (audience — your client ID), <code>exp</code> (expiry), <code>email</code>, <code>name</code>.</li>
+          <li><strong>Discovery:</strong> every OIDC provider exposes <code>/.well-known/openid-configuration</code>. One URL gives you all the endpoints, supported flows, signing keys URI, and capabilities.</li>
+          <li><strong>JWKS:</strong> the <code>jwks_uri</code> in the discovery doc returns the public keys used to sign ID tokens. Your app fetches and caches them; rotation just works.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What OIDC Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Standardized Identity</summary>
+        <div class="drill-body">
+          <p>Before OIDC, every social-login provider invented its own user-info endpoint and claim names. OIDC standardized them — <code>sub</code>, <code>email</code>, <code>name</code>, <code>picture</code>, <code>locale</code> — so the same code works against Google, Microsoft, Okta, Auth0, Keycloak, your enterprise IdP. Plug-and-play federation.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The ID Token Is Authoritative</summary>
+        <div class="drill-body">
+          <p>An OAuth access token says "the bearer can call this API." An OIDC ID token says "the user with this <code>sub</code> just authenticated at this issuer." It's signed; it has an audience; it expires. You verify it locally without calling the auth server again.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Discovery Eliminates Boilerplate</summary>
+        <div class="drill-body">
+          <p>You don't hard-code endpoints. Point your library at <code>https://accounts.example.com</code> and it discovers everything. New IdP onboarding is one config line.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Single Sign-On Across Apps</summary>
+        <div class="drill-body">
+          <p>Once a user has authenticated at the OIDC provider, every other app that trusts the same provider gets seamless login. The basis of modern SSO — within a company, across SaaS, even across organizations via federation.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Flow</div><h2>What Login Looks Like</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px; line-height:1.7;">
+        <li>User clicks "Sign in with Google."</li>
+        <li>Your app redirects to Google's authorize endpoint with <code>scope=openid email profile</code>, a PKCE challenge, and a <code>state</code> param.</li>
+        <li>User authenticates at Google, consents to scopes.</li>
+        <li>Google redirects back to your app's <code>redirect_uri</code> with a <code>code</code> and the original <code>state</code>.</li>
+        <li>Your backend exchanges <code>code</code> + PKCE verifier for tokens at Google's token endpoint.</li>
+        <li>You receive an <strong>ID token</strong> (and an access token, and optionally a refresh token).</li>
+        <li>You verify the ID token: signature against JWKS, <code>iss</code> matches Google, <code>aud</code> matches your client ID, <code>exp</code> in the future, <code>nonce</code> matches the one you sent.</li>
+        <li>You read <code>sub</code> as the user's stable ID, look up or create the user, issue your own session.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>The Mistakes That Recur</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Skipping ID Token Validation</summary>
+        <div class="drill-body">
+          <p>"It came from the redirect, it must be fine." No — verify the signature, the issuer, the audience, and the expiry. An ID token without validation is just a string an attacker can forge.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Treating Access Tokens as Identity</summary>
+        <div class="drill-body">
+          <p>The ID token identifies the user. The access token authorizes API calls. They're different. Don't decode the access token to "see who the user is" — many auth servers issue opaque access tokens, and even when they're JWTs, the claims aren't guaranteed.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Trusting <code>email</code> Without <code>email_verified</code></summary>
+        <div class="drill-body">
+          <p>Some providers let users self-assert email addresses without verification. If you key your account lookup on email and the IdP didn't verify it, attackers can claim other people's accounts. Always check <code>email_verified</code>; prefer <code>sub</code> as the primary key.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ignoring <code>nonce</code></summary>
+        <div class="drill-body">
+          <p>Generate a random <code>nonce</code> per login attempt; store it in the session; verify the ID token's <code>nonce</code> claim matches. This binds the ID token to the originating browser session, defending against replay.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Multi-Tenant Issuer Confusion</summary>
+        <div class="drill-body">
+          <p>If you accept logins from multiple IdPs, you must validate <code>iss</code> against an allow-list and key the user not by <code>sub</code> alone but by <code>(iss, sub)</code>. Otherwise two tenants' users with the same <code>sub</code> collide.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Use OIDC</h2></div>
+    <div class="chapter-body">
+      <p>OIDC is the right answer for almost every modern login flow:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Social login</strong> (Google, Microsoft, Apple, GitHub) — all of them speak OIDC.</li>
+        <li><strong>Enterprise SSO</strong> for B2B SaaS — Okta, Azure AD, Auth0, Keycloak, OneLogin all support OIDC.</li>
+        <li><strong>Internal company SSO</strong> across all your apps — much simpler than SAML for new builds.</li>
+        <li><strong>Federation between organizations</strong> — partner orgs can authenticate users into your app via their own IdP.</li>
+      </ul>
+      <p style="margin-top:10px;">Reach for SAML only when integrating with a partner that mandates it (typically older enterprise IdPs). For new builds, OIDC wins on simplicity, tooling, and JSON-everywhere ergonomics.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Auth Standards</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="oauth.html">← OAuth 2.0</a>
+        <a href="saml.html">SAML →</a>
+        <a href="jwt.html">JWT →</a>
+        <a href="mfa.html">MFA / 2FA →</a>
+        <a href="passkeys.html">Passkeys / WebAuthn →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
