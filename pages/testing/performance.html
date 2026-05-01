@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Performance &amp; Load Testing · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="How fast under one user, how it behaves under thousands, and where it falls over. k6, JMeter, Gatling, Locust — and the metrics that matter." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/performance.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Performance &amp; Load Testing · Test Types Deep Dive" />
+<meta property="og:description" content="How fast under one user, how it behaves under thousands, and where it falls over." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/performance.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Performance &amp; Load Testing · Test Types Deep Dive" />
+<meta name="twitter:description" content="How fast under one user, and how it behaves under thousands." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 5 of 8</div>
+    <h1>Performance &amp; Load Testing — How It Holds Up Under Pressure</h1>
+    <p class="lede">Functional tests prove the system <em>works</em>. Performance tests prove it works <em>fast enough, under enough load, for long enough</em>. They catch the bugs nothing else can: the N+1 query that's fine on dev data, the connection pool that exhausts at 200 RPS, the cache that thrashes under realistic traffic. Most production outages are performance failures of code that passed every other test.</p>
+    <div class="tags"><span>k6</span><span>JMeter</span><span>Gatling</span><span>Locust</span><span>SLO</span><span>p99</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Latency:</strong> how long one request takes. Always look at percentiles, not averages — p50, p95, p99.</li>
+          <li><strong>Throughput:</strong> requests per second the system can sustain.</li>
+          <li><strong>Concurrency:</strong> how many in-flight requests at once.</li>
+          <li><strong>Saturation:</strong> when adding more load stops increasing throughput and starts increasing latency. Past saturation, things break.</li>
+          <li><strong>Apdex / SLO:</strong> what counts as "fast enough" — codified, agreed, alerted on.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Family</div><h2>Five Different Tests, Often Confused</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Load Test</summary>
+        <div class="drill-body">
+          <p>Run the system at <em>expected</em> peak traffic for a sustained window. Verify SLOs hold (p99 latency, error rate). The most common kind. The question it answers: "will Black Friday work?"</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stress Test</summary>
+        <div class="drill-body">
+          <p>Push past expected peak until something breaks. Find the saturation point and the failure mode. The question: "if traffic doubles unexpectedly, do we degrade gracefully or fall over?" Look for: connection pool exhaustion, OOM, cascading timeouts, retry storms.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Spike Test</summary>
+        <div class="drill-body">
+          <p>Idle, then sudden burst, then idle again. Catches autoscaling lag, cold caches, JIT compilation hits, connection-pool ramp-up. The question: "what happens when we go from 100 RPS to 5,000 RPS in 30 seconds?"</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Soak / Endurance Test</summary>
+        <div class="drill-body">
+          <p>Run at moderate load for hours or days. Catches memory leaks, resource leaks (file descriptors, DB connections), gradually-growing heap sizes, log-volume issues. Most leaks don't show up in a 5-minute load test.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Microbenchmarks</summary>
+        <div class="drill-body">
+          <p>One function, isolated, measured precisely. JMH (Java), BenchmarkDotNet (.NET), Rust's <code>criterion</code>, Go's <code>testing.B</code>. Catches algorithmic regressions and micro-optimizations. Different beast from load tests — beware of confusing one with the other.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>The Modern Stack</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>k6 — The Default Today</summary>
+        <div class="drill-body">
+          <p>Grafana's open-source load testing tool. Tests in JavaScript, executed by a Go runtime — fast, scriptable, CI-friendly. First-class Prometheus and OTel output. A modern team starting today usually picks k6.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JMeter</summary>
+        <div class="drill-body">
+          <p>The veteran. Java, GUI-driven (also CLI). Massive plugin ecosystem. Heavy compared to k6 but stable in many enterprise shops. Apache project, free.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Gatling</summary>
+        <div class="drill-body">
+          <p>Scala-based DSL for scenario scripting. Strong reports out of the box. Popular in JVM-heavy environments. Open source and a commercial cloud edition.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Locust</summary>
+        <div class="drill-body">
+          <p>Python-based, async, easy to write user behavior scripts. Distributed mode for high load. Popular when the test team writes Python.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cloud-Hosted Load Generators</summary>
+        <div class="drill-body">
+          <p>Grafana k6 Cloud, BlazeMeter, Loader.io, AWS Distributed Load Testing. Spin up thousands of geographic load generators on demand. The right call when a single laptop can't generate the load you want.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Discipline</div><h2>How to Make Performance Tests Useful</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Define SLOs Before You Test</summary>
+        <div class="drill-body">
+          <p>"p99 &lt; 500ms at 1,000 RPS sustained, error rate &lt; 0.1%" is a target. "It feels slow" isn't. Without an SLO, every test result is just a number.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Look at Percentiles, Not Averages</summary>
+        <div class="drill-body">
+          <p>An average of 100ms can hide a p99 of 5 seconds. Users feel the tail. Most reporting libraries default to averages — change the defaults to p50/p95/p99 (and p99.9 if you have the volume) before reading anything.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Realistic Data and Distribution</summary>
+        <div class="drill-body">
+          <p>Tests against an empty DB lie. Use production-shaped data (anonymized) and production-shaped traffic patterns: 80% reads, 20% writes; 90% small accounts, 10% whales. A perfectly balanced synthetic workload doesn't predict reality.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Test in a Production-Shaped Environment</summary>
+        <div class="drill-body">
+          <p>Tests on a 2-vCPU laptop don't predict 16-vCPU prod behavior. If you can't test in prod-equivalent infra, at least test in something that scales linearly — and document the scaling factor you assumed.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Profile When You Find a Bottleneck</summary>
+        <div class="drill-body">
+          <p>"It's slow at 500 RPS" tells you nothing. Profilers — Java Flight Recorder, dotnet-trace, py-spy, pprof, Linux <code>perf</code> — tell you which function is hot and why. Don't optimize before profiling; you'll be wrong.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Watch the Whole System</summary>
+        <div class="drill-body">
+          <p>The bottleneck is rarely the code under test. It's usually the DB, the connection pool, GC pauses, the network, the upstream you forgot to scale. Instrument everything (Prometheus, OTel) and look at the whole picture during the test.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>In CI: Smoke, Not Marathon</summary>
+        <div class="drill-body">
+          <p>Don't run a 30-minute load test on every PR. Run a small smoke (60-second test against staging) to catch egregious regressions; do full load on a schedule, before releases, or before traffic events.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Mistakes</div><h2>The Honest List</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Coordinated omission.</strong> Many tools record latency only after a successful response — missing the requests that timed out, which are exactly the ones you care about. Use tools that report correctly under load (k6, recent JMeter, properly-configured Gatling).</li>
+        <li><strong>Testing the load generator.</strong> If your generator can't push 1,000 RPS, that's a generator bottleneck, not a system one. Confirm with multiple generators or a hosted service.</li>
+        <li><strong>One-shot tests, no baselines.</strong> A number in isolation tells you nothing. Track results over time; alert on regressions.</li>
+        <li><strong>Optimizing what's already fast.</strong> p99 = 200ms with a 5-second target — leave it alone. Optimize the slow paths first.</li>
+        <li><strong>Forgetting backpressure.</strong> A system that "scales" by buffering 50,000 in-flight requests has just queued up a thundering herd. Test that requests fail fast under saturation, not slowly.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit</a>
+        <a href="integration.html">← Integration</a>
+        <a href="e2e.html">← End-to-End</a>
+        <a href="contract.html">← Contract</a>
+        <a href="smoke.html">Smoke →</a>
+        <a href="regression.html">Regression →</a>
+        <a href="chaos.html">Chaos →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

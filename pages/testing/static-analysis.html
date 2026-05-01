@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Static Analysis · Code Quality Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="SonarQube, Semgrep, CodeQL, Snyk Code — deep code analysis that finds bugs and vulnerabilities by reasoning about flow across functions and files." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/static-analysis.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Static Analysis · Code Quality Tools Deep Dive" />
+<meta property="og:description" content="SonarQube, Semgrep, CodeQL, Snyk Code — deep code analysis." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/static-analysis.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Static Analysis · Code Quality Tools Deep Dive" />
+<meta name="twitter:description" content="SonarQube, Semgrep, CodeQL, Snyk Code." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Code Quality Tools Deep Dive · 3 of 6</div>
+    <h1>Static Analysis — Reasoning About Code Without Running It</h1>
+    <p class="lede">Linters spot patterns line by line; static analysis reasons about flow — what data flows from where to where, what calls what, what might be null on this path. The tools find SQLi, command injection, race conditions, null dereferences, leaked file handles, and entire categories of bugs that no test will catch unless someone first thought to write that test. They're SAST when used for security; "deeper static analysis" otherwise.</p>
+    <div class="tags"><span>SonarQube</span><span>Semgrep</span><span>CodeQL</span><span>Snyk Code</span><span>SAST</span><span>Data Flow</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Sets Static Analysis Apart</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Cross-procedural analysis.</strong> Tracks data <em>across</em> functions and files — "user input from this controller flows into this DB query without sanitization."</li>
+          <li><strong>Two flavors:</strong> security (SAST — Snyk, Semgrep, CodeQL) and quality / maintainability (SonarQube, CodeClimate, Codacy).</li>
+          <li><strong>Pattern-based vs flow-based.</strong> Pattern (Semgrep) — match shapes; fast and customizable. Flow (CodeQL, SonarQube deep) — track data through the program; slower, deeper.</li>
+          <li><strong>Almost always cloud-hosted now.</strong> Real-time analysis lives in CI or as a SaaS dashboard. The output is a list of findings, ranked by severity.</li>
+          <li><strong>Reachability is the new frontier.</strong> Modern tools tell you which findings are <em>actually reachable</em> from external input — most reduce a 500-finding wall to 30 that matter today.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>The Common Players</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Semgrep</summary>
+        <div class="drill-body">
+          <p>Pattern matching with code-aware syntax. You write rules in the language being analyzed: "find every <code>db.query</code> with a string concatenation." Open source, fast, runs in seconds in CI. Free Community Edition for OSS; paid tiers for orgs. Excellent for custom rules unique to your codebase.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>CodeQL</summary>
+        <div class="drill-body">
+          <p>GitHub's deep-flow analyzer. Queries are written in QL, a declarative query language over a code database. Catches subtle data-flow bugs Semgrep can't. Free for open source via GitHub Code Scanning; commercial otherwise. Heavyweight to write custom rules — but the bundled rule set is excellent.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SonarQube / SonarCloud</summary>
+        <div class="drill-body">
+          <p>The veteran. Wide language coverage, dashboards, "quality gates" that can block PR merges. Strongest for code-quality metrics (complexity, duplication, coverage) plus a security ruleset. Self-hosted (SonarQube) or SaaS (SonarCloud).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Snyk Code</summary>
+        <div class="drill-body">
+          <p>SaaS-first SAST with strong reachability analysis. Pairs with Snyk's dependency scanning (SCA), container scanning, and IaC scanning to give one platform across the supply chain. Common in security-led organizations.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Veracode, Checkmarx, Coverity, Fortify</summary>
+        <div class="drill-body">
+          <p>The enterprise SAST tier. Extensive language coverage, compliance reporting, deep flow analysis. Heavier to operate; common in regulated industries.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Language-Specific Deep Analyzers</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Java/Kotlin:</strong> SpotBugs, ErrorProne, IntelliJ inspections.</li>
+            <li><strong>.NET:</strong> Roslyn analyzers, NDepend.</li>
+            <li><strong>C/C++:</strong> Coverity, Cppcheck, clang-tidy.</li>
+            <li><strong>Python:</strong> Bandit (security-focused), mypy + Ruff.</li>
+            <li><strong>Go:</strong> staticcheck, govet, semgrep with Go rules.</li>
+            <li><strong>Rust:</strong> the compiler does most of it; clippy adds the rest.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Discipline</div><h2>How to Make Findings Useful</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Run on Every PR — But Only Show New Findings</summary>
+        <div class="drill-body">
+          <p>The first scan on a 5-year-old codebase produces 5,000 findings. Don't try to fix all of them. Set a baseline; have CI block <em>new</em> findings only. Quality ratchet — you stop adding new bugs, and the backlog gets paid down opportunistically.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Tune for Signal</summary>
+        <div class="drill-body">
+          <p>A scanner that emits 200 false positives per PR will get ignored. Suppress rules that don't apply to your stack; tune severity thresholds; combine with reachability filtering. The goal is a small set of findings developers actually act on.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Custom Rules for Your Code's Sharp Edges</summary>
+        <div class="drill-body">
+          <p>"Never use <code>InternalUserService.findById</code> without first checking org membership." A custom Semgrep or CodeQL rule encodes architectural constraints permanently. Far more durable than wiki documentation.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Treat It as Part of Code Review, Not a Replacement</summary>
+        <div class="drill-body">
+          <p>Static analysis catches mechanical issues. It can't tell you the design is wrong, the caching strategy is overcomplicated, or the abstraction is misnamed. Pair it with human review; don't expect tools to substitute.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Wire to the Issue Tracker</summary>
+        <div class="drill-body">
+          <p>Critical findings should auto-create tickets with severity, file, line, and the rule's reasoning. Findings that live only in the scanner UI get ignored.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Mistakes</div><h2>Where Static Analysis Fails to Help</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"Buy SAST, ignore findings."</strong> The most expensive shelfware in security. Without ownership and triage, the dashboard is theater.</li>
+        <li><strong>Adopting too many tools at once.</strong> Three SAST tools producing overlapping findings creates 3× the triage with not much extra signal. Pick one; layer specific tools where they add unique value.</li>
+        <li><strong>Treating "compliant" as "secure."</strong> Passing the SAST gate isn't the same as being secure — it's not having any of the bugs the tool can spot. Real attackers don't only use the bugs static analysis catches.</li>
+        <li><strong>Slow scans.</strong> A 30-minute scan on every PR doesn't get run. Tune scope (full codebase nightly; PR diffs in CI), use incremental analysis where supported.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Code Quality Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linters.html">← Linters</a>
+        <a href="formatters.html">← Formatters</a>
+        <a href="type-checking.html">Type Checking →</a>
+        <a href="code-review.html">PR / Code Review →</a>
+        <a href="doc-generators.html">Doc Generators →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

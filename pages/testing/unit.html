@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unit Testing · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="One function, one class, one behavior — tested in isolation. Fast, abundant, and the foundation of any pyramid that doesn't melt." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/unit.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Unit Testing · Test Types Deep Dive" />
+<meta property="og:description" content="One function, one class, one behavior — tested in isolation." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/unit.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Unit Testing · Test Types Deep Dive" />
+<meta name="twitter:description" content="One function, one class, one behavior — tested in isolation." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 1 of 8</div>
+    <h1>Unit Testing — Small, Fast, and Lots of Them</h1>
+    <p class="lede">A unit test exercises one piece of code in isolation. It calls a function, asserts the result, and tells you in milliseconds whether the behavior is right. They form the wide base of the test pyramid: thousands run in seconds, fail with pinpoint accuracy, and let you refactor without fear. Done well, they're the cheapest insurance in software.</p>
+    <div class="tags"><span>Pyramid Base</span><span>Fast</span><span>Isolated</span><span>Mocks</span><span>TDD</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Counts as a Unit Test</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>One thing at a time:</strong> a single function, a single class, a single behavior. If it touches a database, the network, or the clock, it's drifted into integration territory.</li>
+          <li><strong>Fast:</strong> milliseconds per test. The whole suite should run in seconds, locally, every time you save.</li>
+          <li><strong>Deterministic:</strong> same inputs, same result, every time. No flakes, no time-of-day dependence.</li>
+          <li><strong>Independent:</strong> tests don't share state. Order doesn't matter. Parallel execution just works.</li>
+          <li><strong>Readable as documentation:</strong> a good test name and body describe the behavior better than a comment ever will.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Shape of a Good Unit Test</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Arrange / Act / Assert</summary>
+        <div class="drill-body">
+          <p>Three sections, in order. Set up inputs and dependencies; call the unit under test once; assert on the result. Mixing them — branching logic, multiple acts, scattered assertions — turns the test into a riddle when it fails.</p>
+<pre style="margin-top:8px; background:#0F2233; color:#E0EAF2; padding:12px 14px; border-radius:8px; font-size:12.5px; overflow-x:auto;">test('discount of 10% on $100 returns $90', () =&gt; {
+  <span style="color:#7B8FA1;">// Arrange</span>
+  const cart = new Cart([{ price: 100 }]);
+
+  <span style="color:#7B8FA1;">// Act</span>
+  const total = cart.totalWithDiscount(0.10);
+
+  <span style="color:#7B8FA1;">// Assert</span>
+  expect(total).toBe(90);
+});</pre>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Test Behavior, Not Implementation</summary>
+        <div class="drill-body">
+          <p>Assert on what the code <em>does</em>, not how. Tests that verify "the method called X then called Y" break on every refactor; tests that verify "given input A, return B" survive any internal rewrite that preserves the contract.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>One Logical Assertion Per Test</summary>
+        <div class="drill-body">
+          <p>You can have multiple <code>expect</code> calls, but they should describe one behavior. A failure should make it obvious what broke. Tests that assert ten unrelated things fail uninformatively — and the cleanup after a failure mid-test is awful.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Name Tests as Behaviors</summary>
+        <div class="drill-body">
+          <p><code>shouldRejectExpiredTokens()</code> &gt; <code>testToken()</code>. Patterns: "given X, when Y, then Z" / "X returns Y when Z" / Ruby's <code>describe ... it</code>. The name is what shows up in CI failure logs; make it tell you what's broken.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Doubles</div><h2>Mocks, Stubs, and Fakes</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Vocabulary</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Stub:</strong> returns canned answers. "When you ask for the user, return this user."</li>
+            <li><strong>Mock:</strong> records calls and lets you assert on them. "Was <code>email.send</code> called once with these args?"</li>
+            <li><strong>Fake:</strong> a working alternative implementation. An in-memory repository instead of Postgres.</li>
+            <li><strong>Spy:</strong> wraps a real object; lets you observe calls without changing behavior.</li>
+            <li><strong>Dummy:</strong> a placeholder argument that's never used.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Prefer Fakes to Mocks</summary>
+        <div class="drill-body">
+          <p>Mock-heavy tests verify implementation details — they couple to call sequences and method names. Fakes (an in-memory repo, an in-memory clock, a fake email sender that stores sent messages) let tests assert on outcomes. They're more work to write once and pay back across hundreds of tests.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Mock What You Don't Own</summary>
+        <div class="drill-body">
+          <p>Mocking a third-party library directly couples your test to that library's exact shape. Mock at <em>your own</em> abstraction — the port / interface you wrote — and let the adapter to the third-party library be tested separately, perhaps with a real instance.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">TDD</div><h2>Test-Driven Development</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Red, Green, Refactor</summary>
+        <div class="drill-body">
+          <p>Write a failing test (<strong>red</strong>). Write the smallest code that passes (<strong>green</strong>). Improve the design without changing behavior (<strong>refactor</strong>). Loop in minutes, not days. Forces you to think about the API before the implementation, and gives you a regression test for every behavior by construction.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>When TDD Works</summary>
+        <div class="drill-body">
+          <p>Logic-heavy code with clear inputs and outputs — pricing rules, parsers, business calculations, algorithms. The cycle is short and the tests stay relevant.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>When It Doesn't</summary>
+        <div class="drill-body">
+          <p>Spike work where you don't yet know the design. UI exploration. Code that's mostly orchestration of slow external services. TDD isn't a cult — use it where it earns its keep, skip it where it doesn't.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Mistakes</div><h2>What Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Tests that re-implement the function.</strong> If the test mirrors the production code, it'll mirror the bug too.</li>
+        <li><strong>Asserting on private state.</strong> Tests that read internals lock the design in cement. Test the public contract.</li>
+        <li><strong>Shared mutable fixtures.</strong> One test's setup leaking into another's run is the #1 cause of "flaky on CI, fine locally."</li>
+        <li><strong>Time, randomness, network.</strong> Inject a clock, seed your RNG, mock the network. Real time and real entropy belong in integration tests, not units.</li>
+        <li><strong>Coverage worship.</strong> 100% coverage with weak assertions tells you nothing. Coverage is a floor, not a ceiling.</li>
+        <li><strong>Slow units.</strong> If a "unit" test takes 200ms, it's hitting something it shouldn't. Find the dependency and inject a fake.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">In Practice</div><h2>What Healthy Looks Like</h2></div>
+    <div class="chapter-body">
+      <p>A mature unit-test suite runs in seconds, asserts on behavior, requires no setup beyond importing, and gives you confidence to delete or rewrite any module knowing the suite will catch regressions. New code has tests as a non-optional part of the PR. Tests that get hard to write are signals about the design itself — usually a missing abstraction or excessive coupling.</p>
+      <p style="margin-top:10px;">Pair unit tests with the rest of the pyramid: <a href="integration.html" style="color:var(--accent);">integration</a> for component interactions, <a href="e2e.html" style="color:var(--accent);">E2E</a> for full-system flows. Unit tests can't catch wiring mistakes; the higher tiers can't run a thousand iterations of edge cases. Each tier earns its keep.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="integration.html">Integration →</a>
+        <a href="e2e.html">End-to-End →</a>
+        <a href="contract.html">Contract →</a>
+        <a href="performance.html">Performance / Load →</a>
+        <a href="smoke.html">Smoke →</a>
+        <a href="regression.html">Regression →</a>
+        <a href="chaos.html">Chaos →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

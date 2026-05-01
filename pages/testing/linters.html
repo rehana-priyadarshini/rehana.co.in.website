@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Linters · Code Quality Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="ESLint, Pylint, RuboCop, Checkstyle — the tools that catch bugs and style mistakes before code review does, and stop them from being arguments." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/linters.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Linters · Code Quality Tools Deep Dive" />
+<meta property="og:description" content="ESLint, Pylint, RuboCop, Checkstyle — catching bugs and style mistakes before code review." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/linters.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Linters · Code Quality Tools Deep Dive" />
+<meta name="twitter:description" content="ESLint, Pylint, RuboCop, Checkstyle." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Code Quality Tools Deep Dive · 1 of 6</div>
+    <h1>Linters — Catching Bugs Before Reviewers Do</h1>
+    <p class="lede">A linter scans source for patterns that are usually mistakes — unused variables, accidental shadowing, missing await, wrong comparison operators, broken regex — and flags them as you type or in CI. It catches a class of bugs in seconds that human review would catch in hours, and ends the never-quite-resolved arguments about style by making the tool the arbiter.</p>
+    <div class="tags"><span>ESLint</span><span>Pylint / Ruff</span><span>RuboCop</span><span>Checkstyle</span><span>golangci-lint</span><span>clippy</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Linter Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Static analysis, light edition.</strong> Reads code without running it; flags suspicious patterns and style violations.</li>
+          <li><strong>Two roles, one tool:</strong> bug detection ("you forgot <code>await</code>") and style enforcement ("two-space indent").</li>
+          <li><strong>Configurable severity:</strong> off / warn / error. Errors fail CI; warnings clutter logs; off means you've disabled a rule and should write down why.</li>
+          <li><strong>Auto-fix:</strong> most modern linters can fix simple violations in place. Run <code>--fix</code> in pre-commit and PRs become diffs about meaning, not whitespace.</li>
+          <li><strong>The rule:</strong> a linter is for things tools should decide. Things humans should decide go in code review.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">By Stack</div><h2>The Default Linter for Each Ecosystem</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Stack</th><th>Linter(s)</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>JavaScript / TypeScript</td><td>ESLint (with typescript-eslint), Biome</td><td>ESLint is the standard. Biome is a faster all-in-one alternative (lint + format).</td></tr>
+          <tr><td>Python</td><td>Ruff, Pylint, Flake8</td><td>Ruff has eaten most of the others — written in Rust, 10–100× faster, configurable.</td></tr>
+          <tr><td>Ruby</td><td>RuboCop</td><td>Style + correctness. Strong defaults; team-tunable.</td></tr>
+          <tr><td>Java</td><td>Checkstyle, SpotBugs, PMD, ErrorProne</td><td>Often used together; each catches different things. ErrorProne integrates with the compiler.</td></tr>
+          <tr><td>Kotlin</td><td>ktlint, detekt</td><td>ktlint for style; detekt for code-smell detection.</td></tr>
+          <tr><td>.NET (C#)</td><td>Roslyn analyzers, StyleCop</td><td>Roslyn analyzers are first-class; the IDE shows them as you type.</td></tr>
+          <tr><td>Go</td><td>golangci-lint (aggregator), staticcheck, govet</td><td>golangci-lint runs many linters in parallel.</td></tr>
+          <tr><td>Rust</td><td>clippy</td><td>Hundreds of high-quality lints; standard equipment.</td></tr>
+          <tr><td>Swift</td><td>SwiftLint</td><td>Standard for Swift codebases.</td></tr>
+          <tr><td>PHP</td><td>PHPStan, Psalm, PHP_CodeSniffer</td><td>PHPStan/Psalm are heavier static analyzers; CodeSniffer for style.</td></tr>
+          <tr><td>SQL</td><td>SQLFluff</td><td>Lints SQL across multiple dialects; auto-formats.</td></tr>
+          <tr><td>Shell</td><td>shellcheck</td><td>Catches the dozen ways shell quoting hurts you.</td></tr>
+          <tr><td>YAML / Markdown</td><td>yamllint, markdownlint</td><td>Don't ship inconsistent docs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Setting Up</div><h2>Working Practices</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Adopt a Recommended Preset</summary>
+        <div class="drill-body">
+          <p>Don't write your own ruleset from scratch. Start from the project's recommended config (<code>eslint:recommended</code>, <code>typescript-eslint/recommended</code>, ESLint's <code>airbnb</code> or <code>standard</code>, Ruff's defaults). Adjust as the team finds rules that don't fit; document each disable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Run Locally and in CI</summary>
+        <div class="drill-body">
+          <p>IDE integration shows lint errors as you type. Pre-commit hooks (Husky / lint-staged / pre-commit) catch them before push. CI runs the same check on PRs. The redundancy is the point: the earliest catch is the cheapest fix.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Auto-Fix in Pre-Commit</summary>
+        <div class="drill-body">
+          <p>For style and trivial fixes, run <code>--fix</code> automatically. Review-time diffs become about logic, not formatting. Pair with a formatter (see <a href="formatters.html" style="color:var(--accent);">formatters</a>) to remove every "missed a space" PR comment forever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Treat Warnings as Errors in CI</summary>
+        <div class="drill-body">
+          <p>"Warning" tier exists for migration periods. Long-term, a tolerated warning is just clutter — and gradually becomes a normal part of the build output, hiding real issues. Either fix the rule or disable it; don't leave it warning forever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Document Disables</summary>
+        <div class="drill-body">
+          <p><code>// eslint-disable-next-line no-explicit-any -- third-party API forces this</code>. The <code>--</code> reason is mandatory in many shops. A disable without a reason is a TODO that never gets done.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Custom Rules for Real Patterns</summary>
+        <div class="drill-body">
+          <p>Some bugs are project-specific: "never call <code>db.query</code> directly outside the repository layer." A custom Semgrep rule, ESLint rule, or PHPStan extension catches it forever. Cheaper than writing it in the style guide and hoping people read it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>Common Failure Modes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Bikeshedding.</strong> Lint configuration debates eat days. Pick a sensible preset; move on; revisit when something demonstrably hurts.</li>
+        <li><strong>Slow lint runs.</strong> Linters that take a minute aren't run by anyone locally. Modern fast linters (Ruff, Biome, golangci-lint with caching) bring this back to seconds.</li>
+        <li><strong>Disabling rules everywhere.</strong> A repo with 800 <code>eslint-disable</code> comments has stopped lint protection. Fix the rule fit, or accept the rule, or actually fix the code.</li>
+        <li><strong>Over-strict rules on legacy code.</strong> Adding a strict ruleset to a 5-year-old codebase produces 50,000 warnings. Use baseline files (golangci-lint baseline, ESLint <code>--quiet</code> + ratchet) to enforce on new code only.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Code Quality Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="formatters.html">Formatters →</a>
+        <a href="static-analysis.html">Static Analysis →</a>
+        <a href="type-checking.html">Type Checking →</a>
+        <a href="code-review.html">PR / Code Review →</a>
+        <a href="doc-generators.html">Doc Generators →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

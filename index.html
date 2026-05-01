@@ -830,23 +830,23 @@
       </div>
 
       <details class="drill" open>
-        <summary>Test Types</summary>
+        <summary>Test Types <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Unit</h5><p>One function/class in isolation. Fast, many.</p></div>
-            <div class="card teal"><h5>Integration</h5><p>Multiple parts together, possibly a real DB.</p></div>
-            <div class="card mid"><h5>End-to-End (E2E)</h5><p>Full system through a real browser or API.</p></div>
-            <div class="card accent"><h5>Contract</h5><p>Verify service producers and consumers agree (Pact).</p></div>
-            <div class="card"><h5>Performance / Load</h5><p>k6, JMeter, Gatling — how it behaves under stress.</p></div>
-            <div class="card teal"><h5>Smoke</h5><p>Minimal "does it start?" tests in production.</p></div>
-            <div class="card mid"><h5>Regression</h5><p>Ensures old bugs stay fixed.</p></div>
-            <div class="card accent"><h5>Chaos</h5><p>Deliberately break things (Netflix Chaos Monkey) to prove resilience.</p></div>
+            <a class="card" href="pages/testing/unit.html" style="text-decoration:none;color:inherit;display:block;"><h5>Unit →</h5><p>One function/class in isolation. Fast, many.</p></a>
+            <a class="card teal" href="pages/testing/integration.html" style="text-decoration:none;color:inherit;display:block;"><h5>Integration →</h5><p>Multiple parts together, possibly a real DB.</p></a>
+            <a class="card mid" href="pages/testing/e2e.html" style="text-decoration:none;color:inherit;display:block;"><h5>End-to-End (E2E) →</h5><p>Full system through a real browser or API.</p></a>
+            <a class="card accent" href="pages/testing/contract.html" style="text-decoration:none;color:inherit;display:block;"><h5>Contract →</h5><p>Verify service producers and consumers agree (Pact).</p></a>
+            <a class="card" href="pages/testing/performance.html" style="text-decoration:none;color:inherit;display:block;"><h5>Performance / Load →</h5><p>k6, JMeter, Gatling — how it behaves under stress.</p></a>
+            <a class="card teal" href="pages/testing/smoke.html" style="text-decoration:none;color:inherit;display:block;"><h5>Smoke →</h5><p>Minimal "does it start?" tests in production.</p></a>
+            <a class="card mid" href="pages/testing/regression.html" style="text-decoration:none;color:inherit;display:block;"><h5>Regression →</h5><p>Ensures old bugs stay fixed.</p></a>
+            <a class="card accent" href="pages/testing/chaos.html" style="text-decoration:none;color:inherit;display:block;"><h5>Chaos →</h5><p>Deliberately break things (Netflix Chaos Monkey) to prove resilience.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Testing Frameworks</summary>
+        <summary>Testing Frameworks <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/testing/frameworks.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
         <div class="drill-body">
           <table>
             <thead><tr><th>Stack</th><th>Unit / Integration</th><th>E2E</th></tr></thead>
@@ -863,15 +863,15 @@
       </details>
 
       <details class="drill">
-        <summary>Code Quality Tools</summary>
+        <summary>Code Quality Tools <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><span class="pill">Lint</span><h5>Linters</h5><p>ESLint, Pylint, RuboCop, Checkstyle — enforce style, catch bugs.</p></div>
-            <div class="card teal"><span class="pill">Format</span><h5>Formatters</h5><p>Prettier, Black, gofmt, Spotless — zero-config consistent style.</p></div>
-            <div class="card mid"><span class="pill">SAST</span><h5>Static Analysis</h5><p>SonarQube, Semgrep, CodeQL — deep bug &amp; security scanning.</p></div>
-            <div class="card accent"><span class="pill">Types</span><h5>Type Checking</h5><p>TypeScript, mypy, Flow — compile-time safety for dynamic languages.</p></div>
-            <div class="card"><span class="pill">Review</span><h5>PR / Code Review</h5><p>GitHub PRs, GitLab MRs, Gerrit — human sanity check.</p></div>
-            <div class="card teal"><span class="pill">Docs</span><h5>Doc Generators</h5><p>Javadoc, JSDoc, Sphinx, Doxygen — API docs from comments.</p></div>
+            <a class="card" href="pages/testing/linters.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Lint</span><h5>Linters →</h5><p>ESLint, Pylint, RuboCop, Checkstyle — enforce style, catch bugs.</p></a>
+            <a class="card teal" href="pages/testing/formatters.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Format</span><h5>Formatters →</h5><p>Prettier, Black, gofmt, Spotless — zero-config consistent style.</p></a>
+            <a class="card mid" href="pages/testing/static-analysis.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">SAST</span><h5>Static Analysis →</h5><p>SonarQube, Semgrep, CodeQL — deep bug &amp; security scanning.</p></a>
+            <a class="card accent" href="pages/testing/type-checking.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Types</span><h5>Type Checking →</h5><p>TypeScript, mypy, Flow — compile-time safety for dynamic languages.</p></a>
+            <a class="card" href="pages/testing/code-review.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Review</span><h5>PR / Code Review →</h5><p>GitHub PRs, GitLab MRs, Gerrit — human sanity check.</p></a>
+            <a class="card teal" href="pages/testing/doc-generators.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Docs</span><h5>Doc Generators →</h5><p>Javadoc, JSDoc, Sphinx, Doxygen — API docs from comments.</p></a>
           </div>
         </div>
       </details>

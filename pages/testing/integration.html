@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Integration Testing · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Multiple components together — your code plus a real DB, a real queue, a real HTTP server. The middle of the pyramid where wiring bugs actually surface." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/integration.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Integration Testing · Test Types Deep Dive" />
+<meta property="og:description" content="Multiple components together — your code plus a real DB, a real queue, a real HTTP server." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/integration.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Integration Testing · Test Types Deep Dive" />
+<meta name="twitter:description" content="Multiple components together — your code plus a real DB, a real queue." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 2 of 8</div>
+    <h1>Integration Testing — When the Wires Have to Match</h1>
+    <p class="lede">Unit tests verify each piece in isolation; integration tests verify the pieces work together. Your code plus a real database. Your service plus a real message broker. Your API plus a real HTTP layer. They're slower than units, fewer in number, and — when designed well — the tests that catch the bugs no mock will ever surface.</p>
+    <div class="tags"><span>Pyramid Middle</span><span>Real Dependencies</span><span>Testcontainers</span><span>DB Tests</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What an Integration Test Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Multiple components, real edges.</strong> The component under test runs against a real database, real HTTP, real queue — not mocks of those things.</li>
+          <li><strong>Scope is bounded.</strong> Not the whole product (that's E2E). One service, its DB, maybe one or two adjacent collaborators.</li>
+          <li><strong>Slower than unit, faster than E2E.</strong> Tens to hundreds of milliseconds each. A suite of a few hundred runs in minutes.</li>
+          <li><strong>The classic targets:</strong> repositories against the DB, HTTP controllers end-to-end through the framework, service-to-service calls, message handlers, migrations.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Matters</div><h2>What Integration Tests Catch That Units Don't</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Wiring and Configuration</summary>
+        <div class="drill-body">
+          <p>The unit test of the controller works. The unit test of the service works. The integration test discovers that the controller wasn't wired to the service in the DI config, or the route was registered with the wrong path, or the JSON serializer drops a field. Most "it broke in staging" bugs are wiring.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>SQL That Lies</summary>
+        <div class="drill-body">
+          <p>Repository code mocked against a fake DB always passes. The same code against a real Postgres reveals: missing index causing slow queries under load, type coercion silently truncating a value, a constraint that fires only on real data, an isolation level that lets a phantom read through.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Migrations That Don't Apply Cleanly</summary>
+        <div class="drill-body">
+          <p>The migration runs against an empty DB in unit tests; against a populated DB it locks a table for 20 minutes or fails on a NULL row. Integration tests run the full migration chain on a real engine, every time.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Framework Behavior</summary>
+        <div class="drill-body">
+          <p>Spring's <code>@Transactional</code> propagation, ASP.NET model binding, Express middleware order, Django authentication backends — these only behave correctly when the full framework runs. Mocking them out in units misses every framework-driven bug.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Building Them</div><h2>The Patterns That Make Integration Tests Bearable</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Real Engines via Testcontainers</summary>
+        <div class="drill-body">
+          <p><strong>Testcontainers</strong> spins up real Postgres, Kafka, Redis, MongoDB, Elasticsearch in Docker for each test run. Tests get production-like behavior; CI gets reproducibility. Available for Java, .NET, Python, Node, Go, Ruby. The current default for serious integration testing.</p>
+          <p style="margin-top:8px;">Alternatives: <strong>embedded engines</strong> (H2 for relational, fakeredis for Redis) are fast but lie about behavior. Use real engines unless startup time is genuinely prohibitive.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Per-Test Isolation</summary>
+        <div class="drill-body">
+          <p>Each test should start from a known state. Three working strategies:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Wrap each test in a transaction</strong> and roll back at the end — fast, works for most ORM tests.</li>
+            <li><strong>Truncate tables</strong> between tests — slower but works when tests need their own transactions.</li>
+            <li><strong>Recreate the DB</strong> per test class with template DBs — clean but heavier.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Test Data Builders</summary>
+        <div class="drill-body">
+          <p>Stop sprinkling raw object construction across tests. A builder DSL — <code>aUser().withRole("admin").withVerifiedEmail().build()</code> — keeps tests readable and resists field churn. Libraries: AutoFixture (.NET), Faker (multiple), FactoryBot (Ruby), factory-boy (Python).</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stub External Services, Don't Mock In-Process</summary>
+        <div class="drill-body">
+          <p>For HTTP services you call (Stripe, SendGrid, your own internal APIs), use <strong>WireMock</strong>, <strong>Mock Service Worker (MSW)</strong>, <strong>Prism</strong>, or the third-party's official sandbox. The HTTP path stays real; the remote response is controllable. Don't mock at the language-binding level — that misses serialization and HTTP-layer bugs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>HTTP-Layer Tests</summary>
+        <div class="drill-body">
+          <p>Test the controller through a real HTTP request, not by calling the controller method directly. Frameworks: <strong>Spring's MockMvc / TestRestTemplate</strong>, <strong>ASP.NET WebApplicationFactory</strong>, <strong>FastAPI's TestClient</strong>, <strong>Supertest</strong>. Catches routing, middleware, content-type, status-code, and serialization bugs in one stroke.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Parallelize Carefully</summary>
+        <div class="drill-body">
+          <p>Integration tests share heavyweight resources — DB connections, container ports. Default to running tests sequentially within a class, parallel across classes with separate DB schemas. Random shared-state failures destroy trust in a suite faster than anything else.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where to Put Them</div><h2>The Test Pyramid in Practice</h2></div>
+    <div class="chapter-body">
+      <p>A healthy ratio for a typical service: <strong>thousands of unit tests, hundreds of integration tests, a dozen E2E tests.</strong> The pyramid shape isn't dogma — it's the only ratio where the suite is fast enough to run on every commit while still catching wiring bugs.</p>
+      <p style="margin-top:10px;"><strong>Common anti-shape:</strong> "ice cream cone" — almost all tests are E2E, with a handful of integrations and units below. Slow, flaky, painful to debug. When you see this, the fix is to push tests <em>down</em> the pyramid: replace E2E with integration where the test only really needs one service.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Mistakes</div><h2>What Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Treating them as units.</strong> If hundreds of "integration tests" each take 5ms because everything's mocked, they're units. Use real engines or admit the layer.</li>
+        <li><strong>Treating them as E2E.</strong> One service plus its DB is integration. Three services across the network with a real Auth0 is E2E. Don't conflate.</li>
+        <li><strong>Tests that share a DB and depend on order.</strong> "Test C only passes after test A creates user X." Catastrophic on parallel runs.</li>
+        <li><strong>Long-running suites that no one runs locally.</strong> Once integration tests take 20 minutes, developers stop running them. Optimize ruthlessly, or split.</li>
+        <li><strong>Real production credentials in test config.</strong> Test environments need their own credentials, and those credentials have to be safe to leak. Don't point the test suite at production "just to be sure."</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit</a>
+        <a href="e2e.html">End-to-End →</a>
+        <a href="contract.html">Contract →</a>
+        <a href="performance.html">Performance / Load →</a>
+        <a href="smoke.html">Smoke →</a>
+        <a href="regression.html">Regression →</a>
+        <a href="chaos.html">Chaos →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Regression Testing · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The discipline of making sure old bugs stay fixed and known behaviors don't silently change. Visual regressions, snapshot tests, and the suite that grows with the codebase." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/regression.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Regression Testing · Test Types Deep Dive" />
+<meta property="og:description" content="Making sure old bugs stay fixed and known behaviors don't silently change." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/regression.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Regression Testing · Test Types Deep Dive" />
+<meta name="twitter:description" content="Making sure old bugs stay fixed." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 7 of 8</div>
+    <h1>Regression Testing — Don't Re-Break What You Fixed</h1>
+    <p class="lede">Regression testing is the practice — not so much a separate kind of test as a discipline — of verifying that <em>previously working behavior still works</em>. Every bug fix becomes a permanent test. Every refactor is checked against the suite. Snapshot tests, visual regressions, golden-file tests are all tools in this category. The goal is simple: don't ship the same bug twice.</p>
+    <div class="tags"><span>Bug Fixes</span><span>Snapshots</span><span>Visual Regression</span><span>Golden Files</span><span>Backstop</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Regression Testing Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>It's a property of the suite, not a separate test type.</strong> Unit, integration, and E2E tests <em>are</em> regression tests when they catch reintroduced bugs.</li>
+          <li><strong>The rule:</strong> every bug gets a test. The bug fix is "make this failing test pass."</li>
+          <li><strong>Snapshot/golden-file tests</strong> are a regression-focused style — capture the current output, fail on any diff. Useful and overused in roughly equal measure.</li>
+          <li><strong>Visual regression</strong> is the same idea for UI: capture a screenshot, fail on pixel diff.</li>
+          <li><strong>The suite grows with the codebase.</strong> A 5-year-old project has thousands of tests, most of them backstops for past bugs. That's healthy.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Discipline</div><h2>Every Bug Becomes a Test</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>The Workflow</summary>
+        <div class="drill-body">
+          <p>Reproduce the bug as a failing test, in the lowest tier where you can. Make the test pass with a code change. Merge both — the test stays in the suite forever, ensuring the bug can't return.</p>
+          <p style="margin-top:8px;"><strong>Why it works:</strong> a bug that escaped to production was, by definition, in a code path no test covered. Adding the test covers that path. The next refactor that would have broken it again now fails in CI instead of in production.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reference the Issue</summary>
+        <div class="drill-body">
+          <p>Name the test or comment it with the bug ID — <code>// Regression for PROD-1234: total miscalculated when discount is exactly 100%</code>. Six months later, when someone wonders why a particular edge case is asserted, the comment answers them in one line.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Push the Test Down the Pyramid</summary>
+        <div class="drill-body">
+          <p>A bug found in production was reported as an E2E failure. The fix and the test should usually live at the lowest tier that can reproduce it — the unit or integration level — not as another slow E2E. Otherwise the suite ages into the "ice cream cone" anti-pattern.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Specific Tools</div><h2>Snapshots, Goldens, and Visual Diff</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Snapshot Tests</summary>
+        <div class="drill-body">
+          <p>The first run records the output. Subsequent runs compare. A diff fails the test until someone reviews and updates the snapshot. Jest popularized this for React component output; supported across many ecosystems.</p>
+          <p style="margin-top:8px;"><strong>The trap:</strong> "the test fails, run <code>--update</code>" becomes muscle memory. Snapshots get blindly accepted, the regression-protection value approaches zero. Use them sparingly — for output that's complex, hard to assert by hand, and rarely changes — and review snapshot diffs in PRs as carefully as code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Golden / Approval Tests</summary>
+        <div class="drill-body">
+          <p>Same idea, more deliberate. The "approved" output lives in a separate file checked into source control. Tools: <strong>Approvaltests.com</strong> (most languages), <strong>insta</strong> (Rust). Used for compiler output, generated reports, query results, anywhere you have a complex correct answer that's expensive to assert by hand.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Visual Regression Testing</summary>
+        <div class="drill-body">
+          <p>Capture a screenshot of a rendered UI; compare with the baseline. Catches CSS breakages, layout shifts, accessibility regressions that no functional test would notice. Tools: <strong>Chromatic</strong>, <strong>Percy</strong>, <strong>Applitools</strong>, <strong>Playwright's built-in screenshot diffing</strong>, <strong>BackstopJS</strong>.</p>
+          <p style="margin-top:8px;"><strong>Caveats:</strong> font-rendering differences across OSes cause spurious fails — run from a fixed environment (a CI container with consistent fonts). Animations, dynamic content, dates need to be masked or frozen.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Property-Based Testing as Regression Insurance</summary>
+        <div class="drill-body">
+          <p>Tools like <strong>QuickCheck</strong>, <strong>Hypothesis</strong>, <strong>fast-check</strong> generate hundreds of inputs and look for failing ones. When they find a counter-example, they minimize it and store it as a regression case. The bug stays in the suite; even if the property is later relaxed, the historical failures still catch attempts to re-introduce them.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Goes Wrong</div><h2>Common Mistakes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"Regression run" as a separate, manual cycle.</strong> If running the regression suite is a quarterly event by a QA team, you're inheriting the failures of decades-old waterfall practice. Regression should run on every PR.</li>
+        <li><strong>Tests that lock down implementation, not behavior.</strong> A regression test that fails on a refactor that didn't change behavior is just friction. Test behavior; let the implementation change.</li>
+        <li><strong>Snapshot tsunami.</strong> Hundreds of snapshots get updated in one PR review nobody reads. The test stops protecting anything. Cap snapshot use; review diffs.</li>
+        <li><strong>No quarantine path for flakes.</strong> A regression suite with a 5% flake rate teaches developers to ignore failures. Investigate and fix; don't disable.</li>
+        <li><strong>Forgetting the old bug after fixing.</strong> If you fix a bug without adding the test, you've learned nothing as a system. Make the test mandatory in the bug-fix definition of done.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">In Practice</div><h2>What Healthy Looks Like</h2></div>
+    <div class="chapter-body">
+      <p>The suite catches regressions before they ship more than half the time. Most bug fixes land with a test. The suite runs on every PR, quickly enough that nobody resents it. Old tests are refreshed when they go stale, deleted when the behavior they protect is no longer relevant — but not before. The suite size grows roughly linearly with the codebase, not exponentially with snapshots.</p>
+      <p style="margin-top:10px;">Pair with the rest: <a href="unit.html" style="color:var(--accent);">unit</a> for the cheapest regressions, <a href="integration.html" style="color:var(--accent);">integration</a> for wiring regressions, <a href="e2e.html" style="color:var(--accent);">E2E</a> for the production-only ones, <a href="smoke.html" style="color:var(--accent);">smoke</a> for the deploy-time ones.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit</a>
+        <a href="integration.html">← Integration</a>
+        <a href="e2e.html">← End-to-End</a>
+        <a href="contract.html">← Contract</a>
+        <a href="performance.html">← Performance / Load</a>
+        <a href="smoke.html">← Smoke</a>
+        <a href="chaos.html">Chaos →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

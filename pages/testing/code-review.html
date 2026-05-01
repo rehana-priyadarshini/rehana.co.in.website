@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PR / Code Review · Code Quality Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitHub PRs, GitLab MRs, Gerrit — the human sanity check before code merges. The practices that make review fast, useful, and not a bottleneck." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/code-review.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="PR / Code Review · Code Quality Tools Deep Dive" />
+<meta property="og:description" content="GitHub PRs, GitLab MRs, Gerrit — the human sanity check before merge." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/code-review.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="PR / Code Review · Code Quality Tools Deep Dive" />
+<meta name="twitter:description" content="GitHub PRs, GitLab MRs, Gerrit — human sanity check before merge." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Code Quality Tools Deep Dive · 5 of 6</div>
+    <h1>Code Review — The Last Sanity Check Before Merge</h1>
+    <p class="lede">A code review is a human reading your change before it lands. It catches bugs the tests didn't think of, keeps designs consistent, spreads knowledge across the team, and gives newcomers the feedback loop they need to get good. Done well, it's the highest-leverage hour anyone spends on code. Done badly, it's where PRs go to die.</p>
+    <div class="tags"><span>GitHub PRs</span><span>GitLab MRs</span><span>Gerrit</span><span>CodeOwners</span><span>Async Review</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Code Review Is For</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Catch bugs the tests missed.</strong> A second set of eyes spots assumptions the author held implicitly.</li>
+          <li><strong>Maintain consistency.</strong> Patterns, naming, architecture stay aligned across the codebase as the team grows.</li>
+          <li><strong>Spread knowledge.</strong> The reviewer learns what's changing; the team's bus factor goes up.</li>
+          <li><strong>Mentor.</strong> Newer engineers learn the codebase's standards faster from review than from documentation.</li>
+          <li><strong>Audit.</strong> In regulated environments, review is the auditable record of who approved what.</li>
+        </ul>
+        <p style="margin-top:8px;"><strong>What it isn't for:</strong> arguing about formatting (the formatter decides), catching style mistakes (the linter does), or ensuring tests exist (CI does). When tools take over the mechanical checks, review becomes about meaning.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>The Common Platforms</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Style</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>GitHub Pull Requests</td><td>Branch-based, batch review</td><td>The default. Reviews entire branch as a single unit.</td></tr>
+          <tr><td>GitLab Merge Requests</td><td>Same idea</td><td>Similar feature set; integrated CI/CD.</td></tr>
+          <tr><td>Gerrit</td><td>Per-commit review</td><td>Each commit is reviewed separately, amend-and-rebase workflow. Common at Google, the LKML, OpenStack.</td></tr>
+          <tr><td>Phabricator (legacy) / Phorge</td><td>Per-diff review</td><td>Stacked diffs, tight pre-commit linting. Phorge is the community fork.</td></tr>
+          <tr><td>Graphite, Reviewable.io, CodeStream</td><td>Stacked / overlay tools</td><td>Add stacked-PR support and richer review UI on top of GitHub/GitLab.</td></tr>
+          <tr><td>Bitbucket, Azure Repos</td><td>Same idea, different UI</td><td>Common where the rest of the toolchain is Atlassian or Azure.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Authoring</div><h2>How to Write a Reviewable PR</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Keep PRs Small</summary>
+        <div class="drill-body">
+          <p>The single biggest determinant of review quality. Studies (and every senior engineer's experience) show review effectiveness drops sharply past ~400 lines. Aim for &lt;200 lines of meaningful diff. Bigger changes get rubber-stamped or sit for days.</p>
+          <p style="margin-top:8px;"><strong>How:</strong> stack PRs (refactor → feature flag → behavior → cleanup), feature-flag work in progress, separate refactors from feature changes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Write a Good Description</summary>
+        <div class="drill-body">
+          <p>Three sections, in order: <em>What</em> changed, <em>why</em>, and <em>how to verify</em>. Link to the issue, the design doc, or the bug. Screenshots for UI. The reviewer should know in 60 seconds whether to dive in or pass.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Self-Review First</summary>
+        <div class="drill-body">
+          <p>Read your own diff before requesting review. Half the embarrassing comments — debug print statements, commented-out code, leftover TODOs — get caught here.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Make CI Green Before Asking</summary>
+        <div class="drill-body">
+          <p>A red CI is a "not ready for review" signal. Reviewers waste time on changes that the tools already say are broken.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reviewing</div><h2>How to Review Effectively</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Read the Description First</summary>
+        <div class="drill-body">
+          <p>Understand the goal before reading the code. Code that looks weird in isolation often makes sense once you know what it's solving — and code that looks fine sometimes solves the wrong problem.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ask, Don't Demand</summary>
+        <div class="drill-body">
+          <p>"Why this approach instead of X?" beats "Use X." The author has context the reviewer doesn't. Asking surfaces it; demanding either steamrolls a good reason or invites a fight.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Distinguish Blocking from Suggestion</summary>
+        <div class="drill-body">
+          <p>Use prefixes: <strong>nit:</strong> (cosmetic, optional), <strong>question:</strong> (curiosity, not blocking), <strong>blocking:</strong> (must fix before merge). The author knows what to act on without guessing.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Be the Style Police</summary>
+        <div class="drill-body">
+          <p>If you find yourself commenting on indentation, quote style, or import order, the linter and formatter aren't doing their jobs. Fix them; reclaim review time for things humans need to think about.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Review Promptly</summary>
+        <div class="drill-body">
+          <p>Reviews older than ~24 hours grow stale; the author has moved on, context is lost, the rebase pile-up makes a small change feel like a saga. Treat review as a same-day commitment when reasonable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Approve Without Perfection</summary>
+        <div class="drill-body">
+          <p>If the change is good and a few minor things are not blocking, approve and leave the comments. "Approve with optional changes" is healthier than holding the PR for cosmetic improvements.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Process</div><h2>What to Wire Up</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>CODEOWNERS</summary>
+        <div class="drill-body">
+          <p>A file in the repo mapping paths to required reviewers. Changes to <code>billing/</code> require a billing-team approval; changes to <code>infra/</code> require infra. Auto-routes review requests; ensures critical paths get qualified eyes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Branch Protection &amp; Required Checks</summary>
+        <div class="drill-body">
+          <p>Block merge to main without: passing CI, at least one approval, no outstanding review-requested-changes. Most accidents happen in branches that bypass the rules.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Conventional Commits / Changelog Generators</summary>
+        <div class="drill-body">
+          <p>If commit messages follow a convention (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>), tools can generate changelogs and bump versions automatically. <strong>Conventional Commits</strong>, <strong>Changesets</strong>, <strong>release-please</strong>.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>AI Review Assistance</summary>
+        <div class="drill-body">
+          <p>By 2026, AI review tools (CodeRabbit, GitHub Copilot Workspace, Cursor's review mode, Sourcegraph Cody) annotate PRs with summaries, surface likely bugs, and explain unfamiliar diffs. They speed up reviewers but don't replace them — final judgment still belongs to humans accountable for the code.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Failure Modes</div><h2>Where Review Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Rubber-stamping.</strong> "LGTM" without reading. Solve with smaller PRs, clearer descriptions, and team norms about taking review seriously.</li>
+        <li><strong>Bottleneck on one senior.</strong> One person reviews everything; they burn out. Distribute via CODEOWNERS and pairing; rotate review ownership.</li>
+        <li><strong>Reviewer-as-gatekeeper.</strong> Aggressive nitpicking, demanding "the way I would have done it." Reviews should improve the change, not impose taste.</li>
+        <li><strong>PRs that sit for days.</strong> The author rebases, context is lost, the team's velocity quietly tanks. Make review a same-day expectation.</li>
+        <li><strong>"Trivial" changes that aren't.</strong> A 5-line config change that takes prod down because nobody scrutinized it. Even small PRs deserve real attention.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Code Quality Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linters.html">← Linters</a>
+        <a href="formatters.html">← Formatters</a>
+        <a href="static-analysis.html">← Static Analysis</a>
+        <a href="type-checking.html">← Type Checking</a>
+        <a href="doc-generators.html">Doc Generators →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

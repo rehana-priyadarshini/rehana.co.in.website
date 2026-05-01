@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Doc Generators · Code Quality Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Javadoc, JSDoc, Sphinx, Doxygen, TypeDoc — generate API references from comments and types so the docs can't drift out of sync with the code." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/doc-generators.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Doc Generators · Code Quality Tools Deep Dive" />
+<meta property="og:description" content="Javadoc, JSDoc, Sphinx, Doxygen, TypeDoc — generate API references from comments and types." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/doc-generators.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Doc Generators · Code Quality Tools Deep Dive" />
+<meta name="twitter:description" content="Generate API references from comments and types." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Code Quality Tools Deep Dive · 6 of 6</div>
+    <h1>Doc Generators — Reference Docs That Stay Honest</h1>
+    <p class="lede">Documentation that lives in a wiki and lies the moment the code changes is worse than no docs. Doc generators read your source — types, comments, signatures — and produce a reference site that's regenerated on every build. Pair with tutorials and how-tos written by humans, and you get docs that scale: the API reference is always current, and the conceptual material gets the love it actually deserves.</p>
+    <div class="tags"><span>Javadoc</span><span>JSDoc</span><span>Sphinx</span><span>TypeDoc</span><span>Docusaurus</span><span>OpenAPI</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Doc Generators Do</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Source-of-truth in code.</strong> The doc generator extracts function signatures, types, and structured comments — and produces an API reference site or a man page.</li>
+          <li><strong>Regenerated on build.</strong> Docs are an artifact; they're rebuilt every time the code is. Drift is impossible by construction for the parts the generator covers.</li>
+          <li><strong>Reference, not tutorial.</strong> Generators are great at "what does <code>foo()</code> take and return." They're poor at "how do I use this system." Pair them with hand-written guides.</li>
+          <li><strong>The Diátaxis model:</strong> docs split into <em>tutorials</em>, <em>how-tos</em>, <em>reference</em>, and <em>explanation</em>. Generators handle reference; humans write the rest.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>By Stack</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Stack</th><th>Generator</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Java</td><td>Javadoc</td><td>Built into the JDK. The original. Output: HTML reference site.</td></tr>
+          <tr><td>Kotlin</td><td>Dokka</td><td>Javadoc for Kotlin; outputs HTML, Markdown, or Javadoc-compatible.</td></tr>
+          <tr><td>.NET</td><td>DocFX, Sandcastle (legacy)</td><td>DocFX builds API + conceptual docs from XML doc comments.</td></tr>
+          <tr><td>JavaScript / TypeScript</td><td>TypeDoc, JSDoc, API Extractor</td><td>TypeDoc is the modern default for TS. JSDoc still common for plain JS.</td></tr>
+          <tr><td>Python</td><td>Sphinx, mkdocs, pdoc</td><td>Sphinx is the heavyweight standard; mkdocs (with mkdocstrings) is friendlier; pdoc is minimalist.</td></tr>
+          <tr><td>Ruby</td><td>YARD, RDoc</td><td>YARD is the standard with rich tag support.</td></tr>
+          <tr><td>Go</td><td><code>go doc</code>, pkg.go.dev</td><td>Built-in. Comments above public symbols are the docs.</td></tr>
+          <tr><td>Rust</td><td>rustdoc</td><td>Standard, runs doctests as part of the test suite.</td></tr>
+          <tr><td>C / C++</td><td>Doxygen</td><td>The veteran. Cross-language; ugly default theme; widely deployed.</td></tr>
+          <tr><td>PHP</td><td>phpDocumentor</td><td>Standard generator from PHPDoc comments.</td></tr>
+          <tr><td>API specs</td><td>OpenAPI / Redoc / Swagger UI</td><td>Generates browsable API docs from an OpenAPI file. The reference for HTTP APIs.</td></tr>
+          <tr><td>gRPC / Protobuf</td><td>protoc-gen-doc, Buf</td><td>Generate from <code>.proto</code> files; integrates with API docs sites.</td></tr>
+          <tr><td>Whole-site</td><td>Docusaurus, MkDocs Material, VitePress, Nextra</td><td>Combine generated reference + handwritten guides into one site.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Authoring</div><h2>Writing Docs the Generator Likes</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Document the Public Surface</summary>
+        <div class="drill-body">
+          <p>Every public function, class, and module gets a doc comment. Internal functions get them when their behavior isn't obvious. Comments on private helpers nobody calls externally just add noise.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>What to Say</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li>What it does — one sentence. Past the generator's auto-extracted signature, that's most of the value.</li>
+            <li>What each parameter is, when not obvious from the type.</li>
+            <li>What it returns, including special cases.</li>
+            <li>What it throws / errors it returns.</li>
+            <li>A short example for non-trivial APIs.</li>
+            <li>Cross-links to related symbols (most generators have a link syntax).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Don't Repeat the Code</summary>
+        <div class="drill-body">
+          <p><code>// returns the user</code> on a function called <code>getUser()</code> is noise. Document the <em>why</em>, the contract, the edge cases, the units, the side effects — not the obvious.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Lean on Types</summary>
+        <div class="drill-body">
+          <p>In typed languages, a strong signature says most of what a parameter description would. Don't restate types in prose; describe what the value <em>means</em> if it isn't obvious.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Examples Run</summary>
+        <div class="drill-body">
+          <p>Rust's doctests, Python's doctest, Go's testable examples — run every code snippet in the docs as part of the test suite. The docs can't drift; if they did, CI breaks.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Bigger Picture</div><h2>Beyond Generated Reference</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Diátaxis Quadrants</summary>
+        <div class="drill-body">
+          <p>The most useful framework for organizing docs:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Tutorials:</strong> "let me learn." Step-by-step, hand-held, beginner-oriented.</li>
+            <li><strong>How-to guides:</strong> "I have a goal." Recipe-style for known problems.</li>
+            <li><strong>Reference:</strong> "what is this?" — generated.</li>
+            <li><strong>Explanation:</strong> "why does this work this way?" Concepts, decisions, architecture.</li>
+          </ul>
+          <p style="margin-top:8px;">Trying to put all four into one document fails every time. Different docs serve different needs.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>ADRs — Architecture Decision Records</summary>
+        <div class="drill-body">
+          <p>Short markdown files in the repo: title, context, decision, consequences. Capture <em>why</em> a choice was made — the constraints, the alternatives considered, the trade-offs accepted. Six months later, someone asks "why isn't this Postgres?" and the answer is committed history, not folklore.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Hosted Docs Sites</summary>
+        <div class="drill-body">
+          <p>Docusaurus, MkDocs Material, VitePress, Nextra, Mintlify — combine generated API reference, hand-written guides, search, versioning, and dark mode into one deployable site. Most companies that publish docs externally use one of these.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>API-Schema-First Docs</summary>
+        <div class="drill-body">
+          <p>For HTTP APIs: write the OpenAPI spec; generate the docs (Redoc, Swagger UI), the SDKs (OpenAPI Generator, openapi-typescript), and the validation. The schema is the source of truth.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Mistakes</div><h2>Where Doc Effort Goes to Waste</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Wikis as the source of truth.</strong> They drift in days; nobody updates them.</li>
+        <li><strong>Auto-generated docs nobody reads.</strong> Reference without examples or "getting started" is a directory of names.</li>
+        <li><strong>Onboarding docs for the language, not the codebase.</strong> Assume readers know the language; explain <em>this codebase</em>'s conventions.</li>
+        <li><strong>Skipping ADRs.</strong> Six months later, "why did we pick X?" has no answer except whoever's still around to remember.</li>
+        <li><strong>Marketing docs as engineering docs.</strong> Sales-pitch landing pages where readers came to learn how to integrate. Separate them.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Code Quality Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linters.html">← Linters</a>
+        <a href="formatters.html">← Formatters</a>
+        <a href="static-analysis.html">← Static Analysis</a>
+        <a href="type-checking.html">← Type Checking</a>
+        <a href="code-review.html">← PR / Code Review</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Testing Frameworks · Testing Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="JUnit, pytest, Jest, xUnit, RSpec, Go testing, Playwright, Cypress, Selenium — the frameworks you'll actually use, organized by stack and purpose." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/frameworks.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Testing Frameworks · Testing Deep Dive" />
+<meta property="og:description" content="JUnit, pytest, Jest, xUnit, RSpec, Go testing, Playwright, Cypress — by stack and purpose." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/frameworks.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Testing Frameworks · Testing Deep Dive" />
+<meta name="twitter:description" content="JUnit, pytest, Jest, xUnit, RSpec, Go testing, Playwright, Cypress." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Testing Deep Dive</div>
+    <h1>Testing Frameworks — The Tools by Stack</h1>
+    <p class="lede">Most languages have one or two dominant testing frameworks plus a handful of supporting libraries: a runner, an assertion style, a mocking library, an integration test layer. Browser E2E has its own modern stack. The choices aren't usually controversial; the goal is knowing what each ecosystem expects so you can pick up any codebase and start writing tests on day one.</p>
+    <div class="tags"><span>JUnit</span><span>pytest</span><span>Jest</span><span>xUnit</span><span>Playwright</span><span>Cypress</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Testing Framework Provides</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Runner:</strong> finds tests, executes them, reports results. Watch mode, parallelization, filtering.</li>
+          <li><strong>Assertion style:</strong> classic <code>assertEquals</code>, fluent (<code>expect(x).to.equal(y)</code>), or behavior-style (<code>x should equal y</code>).</li>
+          <li><strong>Mocking / fakes:</strong> built-in or via a partner library (Mockito, sinon, Moq).</li>
+          <li><strong>Coverage:</strong> usually a separate tool plugged into the runner (JaCoCo, coverage.py, Istanbul/c8, dotnet-coverage).</li>
+          <li><strong>Integration helpers:</strong> framework-specific harnesses for spinning up the application (Spring's MockMvc, ASP.NET WebApplicationFactory, FastAPI's TestClient).</li>
+          <li><strong>E2E:</strong> a separate category — browser drivers (Playwright, Cypress, Selenium) used across all backend stacks.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">By Stack</div><h2>What to Use, Where</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Java &amp; Kotlin</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>JUnit 5:</strong> the default unit/integration runner. Annotations, parameterized tests, parallel execution, extension model.</li>
+            <li><strong>TestNG:</strong> alternative; popular in older codebases.</li>
+            <li><strong>Mockito:</strong> the standard mocking library.</li>
+            <li><strong>AssertJ:</strong> fluent assertions that beat JUnit's defaults.</li>
+            <li><strong>Spring Boot Test / MockMvc / TestRestTemplate:</strong> integration testing with Spring context.</li>
+            <li><strong>Testcontainers:</strong> real Docker DBs/queues in tests. Now standard.</li>
+            <li><strong>Spock</strong> (Groovy): expressive BDD-style; common in Kotlin/Groovy shops.</li>
+            <li><strong>Kotest</strong> for Kotlin: idiomatic Kotlin assertions and runners.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>.NET (C# / F#)</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>xUnit:</strong> the modern default. <code>[Fact]</code> and <code>[Theory]</code>.</li>
+            <li><strong>NUnit, MSTest:</strong> alternatives; still common in older codebases.</li>
+            <li><strong>Moq, NSubstitute, FakeItEasy:</strong> mocking libraries.</li>
+            <li><strong>FluentAssertions:</strong> readable assertions (<code>x.Should().Be(y)</code>).</li>
+            <li><strong>WebApplicationFactory:</strong> ASP.NET Core integration testing in-process.</li>
+            <li><strong>Testcontainers .NET:</strong> the .NET port of the Java original.</li>
+            <li><strong>Verify (Verify.Xunit):</strong> snapshot/approval testing.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Python</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>pytest:</strong> the default. Functions as tests, powerful fixtures, vast plugin ecosystem.</li>
+            <li><strong>unittest:</strong> stdlib; xUnit-style; fine for small projects but rarely chosen for new ones.</li>
+            <li><strong>Hypothesis:</strong> property-based testing — generate inputs, find counterexamples.</li>
+            <li><strong>Mocking:</strong> <code>unittest.mock</code> / pytest-mock.</li>
+            <li><strong>Coverage:</strong> coverage.py + pytest-cov.</li>
+            <li><strong>Frameworks-specific:</strong> Django's test client, FastAPI's TestClient, pytest-django.</li>
+            <li><strong>tox / nox:</strong> matrix testing across versions and environments.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JavaScript / TypeScript</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Vitest:</strong> the modern default for new projects. Fast, ESM-native, Jest-compatible API.</li>
+            <li><strong>Jest:</strong> still dominant in many codebases. Snapshot tests, mocking, parallel by default.</li>
+            <li><strong>Mocha + Chai + Sinon:</strong> the older composable stack; still common.</li>
+            <li><strong>Node's built-in test runner:</strong> stdlib option since Node 18 — surprisingly capable.</li>
+            <li><strong>Testing Library:</strong> the de-facto standard for React/DOM testing (<code>@testing-library/react</code>).</li>
+            <li><strong>MSW (Mock Service Worker):</strong> intercepts fetch/XHR at the network layer for tests.</li>
+            <li><strong>Playwright Component Testing:</strong> rising option for component-level browser tests.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Ruby</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>RSpec:</strong> the dominant choice. <code>describe / it / expect</code> BDD style.</li>
+            <li><strong>Minitest:</strong> stdlib; lighter, beloved in some circles.</li>
+            <li><strong>FactoryBot:</strong> test data builders.</li>
+            <li><strong>Capybara:</strong> high-level browser testing DSL, often paired with Selenium or Cuprite.</li>
+            <li><strong>VCR:</strong> records HTTP interactions for replay in tests.</li>
+            <li><strong>Rails ships its own integration test harness</strong> tightly coupled to ActiveRecord and ActionDispatch.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Go</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>The standard library's <code>testing</code> package</strong> covers most cases. <code>go test ./...</code>, table-driven tests, subtests.</li>
+            <li><strong>testify:</strong> assertions and mocks layered on top. Adds <code>require.Equal</code> and friends.</li>
+            <li><strong>gomock:</strong> code-generated mocks from interfaces. Or write hand-rolled fakes — Go's interfaces make it easy.</li>
+            <li><strong>Benchmarks:</strong> built into <code>testing.B</code>.</li>
+            <li><strong>httptest:</strong> stdlib helpers for in-process HTTP integration tests.</li>
+            <li><strong>Testcontainers Go</strong> for real DB/queue tests.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Rust</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Built-in <code>cargo test</code>:</strong> tests live in <code>#[test]</code> functions or in <code>tests/</code>.</li>
+            <li><strong>proptest, quickcheck:</strong> property-based testing.</li>
+            <li><strong>insta:</strong> snapshot/approval testing.</li>
+            <li><strong>mockall:</strong> mocking via macros.</li>
+            <li><strong>criterion:</strong> serious benchmarking.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>PHP</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>PHPUnit:</strong> the standard.</li>
+            <li><strong>Pest:</strong> modern, expressive testing built on PHPUnit.</li>
+            <li><strong>Mockery, Prophecy:</strong> mocking.</li>
+            <li><strong>Laravel's Test traits</strong> are the standard for Laravel apps.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mobile</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>iOS:</strong> XCTest (built-in), Quick + Nimble for BDD style. UI testing via XCUITest.</li>
+            <li><strong>Android:</strong> JUnit + Mockito for unit tests. Instrumentation tests via Espresso. Compose UI tests for Compose UIs.</li>
+            <li><strong>React Native:</strong> Jest + Testing Library; E2E via Detox or Maestro.</li>
+            <li><strong>Flutter:</strong> built-in test framework + integration_test for E2E.</li>
+            <li><strong>Cross-platform mobile E2E:</strong> Appium, Maestro.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Browser E2E</div><h2>Cross-Stack Tooling</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Style</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Playwright</td><td>Multi-browser, multi-language</td><td>The 2026 default. TS/JS, Python, Java, .NET bindings. Auto-wait, trace viewer.</td></tr>
+          <tr><td>Cypress</td><td>JS/TS, in-browser test runner</td><td>Strong UX, big ecosystem. Best when staying in the JS world.</td></tr>
+          <tr><td>Selenium / WebDriver</td><td>W3C standard, multi-language</td><td>The veteran. Heavier setup; mature; chosen for complex enterprise grids.</td></tr>
+          <tr><td>Puppeteer</td><td>JS/TS, Chromium-only</td><td>Lower-level than Playwright; single-browser focus.</td></tr>
+          <tr><td>WebdriverIO</td><td>JS/TS WebDriver client</td><td>Mobile + desktop + browser via Appium and WebDriver.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking</div><h2>Decision Quick-Reference</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>If your stack has a default, use it.</strong> Going against the grain costs documentation, hiring, and CI integration.</li>
+        <li><strong>Pair the runner with one assertion library and one mocking library.</strong> Inconsistent styles make tests harder to read.</li>
+        <li><strong>Adopt Testcontainers</strong> (or your stack's port) for integration tests against real DBs and queues — the embedded-engine alternatives lie.</li>
+        <li><strong>Pick Playwright</strong> for new browser E2E unless the team has deep Cypress investment.</li>
+        <li><strong>One framework per layer is enough.</strong> Three competing assertion libraries in one repo is a maintainability problem, not flexibility.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>More on Testing</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">Unit →</a>
+        <a href="integration.html">Integration →</a>
+        <a href="e2e.html">End-to-End →</a>
+        <a href="contract.html">Contract →</a>
+        <a href="performance.html">Performance →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

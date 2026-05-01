@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smoke Testing · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="A tiny set of tests that answer one question: 'is the deploy alive?' Run after every deploy, in production. Catches the show-stoppers no other tier can." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/smoke.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Smoke Testing · Test Types Deep Dive" />
+<meta property="og:description" content="A tiny set of tests that answer one question: 'is the deploy alive?'" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/smoke.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Smoke Testing · Test Types Deep Dive" />
+<meta name="twitter:description" content="A tiny set of tests that answer 'is the deploy alive?'" />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 6 of 8</div>
+    <h1>Smoke Testing — "Is It Alive?"</h1>
+    <p class="lede">A smoke test is a tiny, fast set of checks that answers one question: did the deploy land in a usable state? It runs after every release — sometimes in CI before promotion, sometimes against production immediately after. It catches the failures nothing else can: env config, DNS, broken third-party links, missing migrations, the small things that make a release "rolled out but broken."</p>
+    <div class="tags"><span>Post-Deploy</span><span>Production Checks</span><span>Health Endpoints</span><span>Synthetic Monitoring</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Smoke Test Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Tiny:</strong> 5–30 checks, total. Not a regression suite.</li>
+          <li><strong>Fast:</strong> seconds to a couple of minutes. Runs after every deploy without slowing the pipeline.</li>
+          <li><strong>Critical-path only:</strong> can users sign in, see the dashboard, place an order? Not "does the date picker handle Feb 29th?"</li>
+          <li><strong>Runs against production-like environments — including production itself.</strong> Many teams run smoke against prod immediately after the deploy and roll back if it fails.</li>
+          <li><strong>Origin:</strong> the term came from electronics: plug it in; if no smoke, proceed.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It's Different</div><h2>What Smoke Catches That Other Tiers Don't</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Environment Config</summary>
+        <div class="drill-body">
+          <p>The wrong DB URL in prod. A missing env var. An IAM role that lost a permission during the last refactor. None of those show up in unit, integration, or even staging E2E — they're prod-config issues. A smoke test that hits a real endpoint in prod surfaces them in seconds.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Broken Third-Party Connections</summary>
+        <div class="drill-body">
+          <p>Stripe API key rotated and not updated. Auth provider's metadata URL changed. SendGrid TLS certificate expired. Smoke against the real third parties catches them before the support tickets start.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Missing Migrations / Schema Drift</summary>
+        <div class="drill-body">
+          <p>The migration ran in staging but not prod (or ran in prod but failed). The new code expects a column that isn't there. A smoke test that exercises a write path lights this up immediately.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>DNS, Certs, Ingress</summary>
+        <div class="parent drill-body">
+          <p>The cert renewal failed. The new Kubernetes ingress rule has a typo. The domain forwards to the old version. Smoke from outside the cluster — using a real public DNS name — catches the routing failures internal tests miss.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What to Cover</div><h2>The Right Set of Smoke Checks</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Health Endpoints</summary>
+        <div class="drill-body">
+          <p>Every service exposes <code>/health</code> (liveness — am I running?) and <code>/ready</code> (readiness — can I serve traffic? DB connection pool warm? caches hydrated?). Smoke pings both. Health endpoints should actually do something — many teams' health checks return 200 OK while the DB is offline.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Critical User Flow Probes</summary>
+        <div class="drill-body">
+          <p>Sign in as a synthetic user; load the dashboard; create-and-delete a test record; verify the response shape. The 5–10 things a real user does in the first minute of using the product.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>External Dependency Pings</summary>
+        <div class="drill-body">
+          <p>One light call to each major external system: payment gateway, auth provider, email service, search index, queue. Catches "their API key is wrong" without spamming them with traffic.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Version Check</summary>
+        <div class="drill-body">
+          <p>A trivial endpoint that returns the deployed git SHA. The smoke test verifies the deployed version matches the one that was supposed to ship — catches "the deploy succeeded but the rollout is stuck on old pods."</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Run Them</div><h2>The Lifecycle Position</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Post-Deploy in the Pipeline</summary>
+        <div class="parent drill-body">
+          <p>Deploy to environment → run smoke → on failure, auto-rollback or block promotion to the next stage. This is what makes "deploy on every merge to main" survivable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Continuous Synthetic Monitoring</summary>
+        <div class="drill-body">
+          <p>Run the same smoke from outside your infrastructure every minute or two — Pingdom, Datadog Synthetics, New Relic, Checkly, Grafana Synthetic Monitoring. They're smoke tests as ongoing observability. Page an on-call when one fails; you'll know about outages before users do.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pre-Promotion Gate</summary>
+        <div class="drill-body">
+          <p>Before promoting from staging to prod, run smoke against staging. Cheaper than discovering breakage post-prod-deploy.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Building Them Right</div><h2>Working Practices</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Use the same tooling as E2E.</strong> Playwright, k6, Postman/Newman, custom scripts. The skill set transfers; the tests look like skinny E2E.</li>
+        <li><strong>Synthetic accounts, not real ones.</strong> A dedicated test user with predictable data. Never run smoke that mutates real customer data.</li>
+        <li><strong>Idempotent and self-cleaning.</strong> If the test creates something, it cleans up — or runs against a fixture that's expected to exist.</li>
+        <li><strong>Tag costs.</strong> If smoke runs against paid third parties (a real Stripe charge for $0.50), tag those amounts as test transactions or use sandbox endpoints.</li>
+        <li><strong>Alert on flake.</strong> A smoke that occasionally fails is corrosive — people start ignoring it. Quarantine the flake; fix it within a sprint; restore it.</li>
+        <li><strong>Distinguish failure from degradation.</strong> "The system is responding slowly" and "the system is broken" deserve different alerts. Smoke is for the second one; <a href="performance.html" style="color:var(--accent);">performance tests</a> handle the first.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit</a>
+        <a href="integration.html">← Integration</a>
+        <a href="e2e.html">← End-to-End</a>
+        <a href="contract.html">← Contract</a>
+        <a href="performance.html">← Performance / Load</a>
+        <a href="regression.html">Regression →</a>
+        <a href="chaos.html">Chaos →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

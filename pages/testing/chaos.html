@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chaos Engineering · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Deliberately break things in production-like environments to prove the system survives. Netflix Chaos Monkey, Gremlin, LitmusChaos — and how to do it without ending your career." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/chaos.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Chaos Engineering · Test Types Deep Dive" />
+<meta property="og:description" content="Deliberately break things in production-like environments to prove the system survives." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/chaos.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Chaos Engineering · Test Types Deep Dive" />
+<meta name="twitter:description" content="Deliberately break things in production-like environments." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 8 of 8</div>
+    <h1>Chaos Engineering — Break It on Purpose, in Daylight</h1>
+    <p class="lede">Distributed systems fail in ways nobody can predict. Chaos engineering is the practice of deliberately injecting failure — killing a node, partitioning the network, slowing a dependency — to verify the system handles it. The goal isn't destruction; it's confidence. The point of breaking things on Tuesday afternoon is so they don't break themselves on Saturday at 3 a.m.</p>
+    <div class="tags"><span>Resilience</span><span>Failure Injection</span><span>Chaos Monkey</span><span>Game Days</span><span>SRE</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Chaos Engineering Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Origin:</strong> Netflix, mid-2010s. <em>Chaos Monkey</em> randomly killed EC2 instances in production to force engineers to design for failure from day one.</li>
+          <li><strong>The principle:</strong> the only way to know your system tolerates a failure is to cause one and watch.</li>
+          <li><strong>Hypothesis-driven:</strong> "we believe the system handles X. Let's test it." Not "let's break random things and see."</li>
+          <li><strong>Blast radius matters.</strong> Start tiny — one container in dev. Grow only when each step is uneventful. The goal is <em>controlled</em> failure, not the real kind.</li>
+          <li><strong>Game days:</strong> scheduled, team-wide chaos exercises with a known scenario, observers, and a clear "abort" plan.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What to Inject</div><h2>The Common Failure Modes</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Instance Failure</summary>
+        <div class="drill-body">
+          <p>Kill a pod / VM / container. The classic Chaos Monkey behavior. Verifies that orchestration replaces it, in-flight requests don't drop, sticky sessions migrate or recover. The first chaos test most teams run.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Network Failure</summary>
+        <div class="drill-body">
+          <p>Drop packets between two services. Add 200ms of latency. Partition a network into halves. Verifies timeouts, retries, circuit breakers actually kick in — not just that they're configured. Most resilience patterns look fine until the network misbehaves; chaos surfaces the ones that don't work.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Dependency Slowdown</summary>
+        <div class="drill-body">
+          <p>Make the database respond at 5x its normal latency. Make a downstream service take 10 seconds. Find the components without timeouts that exhaust their thread pools, retry storms that take down healthy services, queues that fill up because consumers can't keep up.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Resource Exhaustion</summary>
+        <div class="drill-body">
+          <p>Fill a disk. Eat memory. Pin CPUs. Verifies you alert before runaway and degrade gracefully when the alert fires. The class of failure that quietly accumulates and then becomes everyone's emergency at once.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Region / AZ Failure</summary>
+        <div class="drill-body">
+          <p>Drop one cloud availability zone. The advanced version: drop one region. Tests multi-region failover, cross-AZ replication, RTO/RPO claims. Big deal to set up; one of the few tests that proves a "we're multi-region" claim is real.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Clock Skew &amp; Time Travel</summary>
+        <div class="drill-body">
+          <p>Jump a node's clock ahead by an hour. Verifies token expiry, scheduled jobs, replication lag handling. Subtle bugs hide here.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Bad Inputs / Fault Injection at the Code Layer</summary>
+        <div class="drill-body">
+          <p>At the application layer: throw exceptions on a percentage of calls, return malformed responses, drop messages. Tools: <strong>Toxiproxy</strong>, <strong>Chaos Mesh</strong>, application-level fault-injection libraries. The unit-test of resilience patterns.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tooling</div><h2>The Modern Stack</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Chaos Mesh / LitmusChaos</summary>
+        <div class="drill-body">
+          <p>Kubernetes-native chaos. Define experiments in YAML; the operator injects pod kills, network drops, IO faults, time skew. Both are CNCF projects, open source. The default if you live on Kubernetes.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>AWS Fault Injection Simulator (FIS)</summary>
+        <div class="drill-body">
+          <p>Native AWS service. Run experiments that throttle DynamoDB, kill EC2 instances, partition VPCs. Integrates with stop conditions tied to CloudWatch alarms — automatic abort when blast radius grows.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Gremlin</summary>
+        <div class="drill-body">
+          <p>Commercial chaos platform with broad infra coverage and a polished UI. Common in larger enterprises that want a managed experience and approval workflows.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Toxiproxy</summary>
+        <div class="drill-body">
+          <p>Lightweight TCP proxy for adding latency, dropping connections, slicing bandwidth between two services. Excellent for integration tests and local chaos experiments. Doesn't need cluster privileges.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Steadybit, Harness Chaos, Azure Chaos Studio</summary>
+        <div class="drill-body">
+          <p>Other commercial / cloud-managed chaos platforms. Pick based on where your infrastructure lives and your appetite for managed vs. self-hosted.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">How to Run It Safely</div><h2>The Real Discipline</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Start in a Lower Environment</summary>
+        <div class="drill-body">
+          <p>Dev → staging → canary in prod → broader prod. Don't run your first experiment on Friday afternoon against production. Build the muscle (and the tooling) in environments where breakage is cheap.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Define a Steady State and a Hypothesis</summary>
+        <div class="drill-body">
+          <p>"Under normal load, p99 latency is &lt; 300ms and error rate is &lt; 0.5%. We hypothesize that killing one of three replicas keeps both metrics within bounds for at least 60 seconds." Now you have something to verify; the experiment isn't theater.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Set Stop Conditions</summary>
+        <div class="drill-body">
+          <p>Auto-abort when error rate exceeds X, when latency exceeds Y, when alarm Z fires. The chaos shouldn't outlast the bug it reveals. AWS FIS, Chaos Mesh, and Gremlin all support this.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Communicate</summary>
+        <div class="drill-body">
+          <p>Tell the on-call team. Tell anyone who shares a downstream dependency. Posting in <code>#chaos</code> channel before each experiment prevents "is this real?" panic and respects the time of people who'd otherwise treat it as a real outage.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Game Days</summary>
+        <div class="drill-body">
+          <p>A scheduled session — half a day, a full day — with a coordinator, a known scenario, observers measuring response, and a debrief at the end. Famously practiced at Stripe, Google, AWS, Netflix. Way more learning per hour than reading runbooks.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Capture the Findings</summary>
+        <div class="drill-body">
+          <p>Every weak spot becomes a JIRA ticket: a missing timeout, a too-permissive retry, a unalerted failure mode. Track them as a fix backlog separately from feature work. The whole point is building a list of <em>real</em> resilience improvements.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When You're Ready for Chaos Engineering</h2></div>
+    <div class="chapter-body">
+      <p>You're ready when:</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>You have observability — metrics, logs, traces — to <em>see</em> what happens during the experiment.</li>
+        <li>You have alerting that catches degradation, not just full outages.</li>
+        <li>You have automated rollback or kill-switch on the chaos itself.</li>
+        <li>The team understands "chaos failed" doesn't mean "the chaos tool broke" — it means it found something.</li>
+      </ul>
+      <p style="margin-top:10px;">If you don't have those, fix observability first. Chaos without instrumentation is just an outage.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit</a>
+        <a href="integration.html">← Integration</a>
+        <a href="e2e.html">← End-to-End</a>
+        <a href="contract.html">← Contract</a>
+        <a href="performance.html">← Performance / Load</a>
+        <a href="smoke.html">← Smoke</a>
+        <a href="regression.html">← Regression</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

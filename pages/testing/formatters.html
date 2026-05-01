@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Formatters · Code Quality Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Prettier, Black, gofmt, Spotless — zero-config tools that format every file the same way, end style debates, and make every diff smaller." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/formatters.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Formatters · Code Quality Tools Deep Dive" />
+<meta property="og:description" content="Prettier, Black, gofmt, Spotless — zero-config consistent style." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/formatters.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Formatters · Code Quality Tools Deep Dive" />
+<meta name="twitter:description" content="Prettier, Black, gofmt, Spotless — zero-config consistent style." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Code Quality Tools Deep Dive · 2 of 6</div>
+    <h1>Formatters — Settle the Style Argument Once</h1>
+    <p class="lede">A formatter rewrites code into a canonical layout. Indentation, line breaks, trailing commas, quote style — all decided by the tool, the same way, every time. The team stops arguing about style; PRs stop containing reformatting noise; new contributors save hours of "is this right?" anxiety. The cost is one config decision; the benefit is permanent.</p>
+    <div class="tags"><span>Prettier</span><span>Black</span><span>gofmt</span><span>rustfmt</span><span>Spotless</span><span>Biome</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Formatter Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>One-button reformatter.</strong> Run the tool; the file is rewritten in canonical style. Save in your editor; same thing happens.</li>
+          <li><strong>Opinionated by design.</strong> The whole point is removing decisions. Tools that offer "300 config options" undo their own value — Black, gofmt, rustfmt explicitly minimize knobs.</li>
+          <li><strong>Different from linters.</strong> Linters detect <em>problems</em>; formatters enforce <em>layout</em>. Modern fast tools (Biome, Ruff) do both, but the categories remain useful.</li>
+          <li><strong>Why it matters:</strong> review time spent on style is review time not spent on correctness. Diffs full of whitespace are diffs nobody reads carefully.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">By Stack</div><h2>The Default Formatter, Per Ecosystem</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Stack</th><th>Formatter(s)</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>JavaScript / TypeScript</td><td>Prettier, Biome</td><td>Prettier is the standard. Biome is Rust-based, faster, lint+format combined.</td></tr>
+          <tr><td>Python</td><td>Black, Ruff Format</td><td>Ruff Format is Black-compatible and dramatically faster — increasingly the default.</td></tr>
+          <tr><td>Go</td><td>gofmt (built-in)</td><td>The original opinionated formatter. <code>go fmt</code> is part of the toolchain.</td></tr>
+          <tr><td>Rust</td><td>rustfmt</td><td>Standard, opinionated, included with the toolchain.</td></tr>
+          <tr><td>Java / Kotlin</td><td>Spotless, google-java-format, ktlint, ktfmt</td><td>Spotless is a Gradle plugin orchestrating multiple formatters.</td></tr>
+          <tr><td>.NET (C#)</td><td>dotnet format, CSharpier</td><td>CSharpier is Prettier-style for C#.</td></tr>
+          <tr><td>Ruby</td><td>RuboCop, Rufo, Standard</td><td>RuboCop with auto-correct serves as both linter and formatter for many.</td></tr>
+          <tr><td>Swift</td><td>swift-format, SwiftFormat</td><td>swift-format is Apple's; SwiftFormat is the popular community tool.</td></tr>
+          <tr><td>PHP</td><td>PHP-CS-Fixer, Pint</td><td>Pint is Laravel's wrapper around PHP-CS-Fixer.</td></tr>
+          <tr><td>SQL</td><td>SQLFluff, pgFormatter</td><td>SQLFluff also lints; pgFormatter is Postgres-specific.</td></tr>
+          <tr><td>Markdown / YAML / Terraform</td><td>Prettier (md), yamlfmt, terraform fmt</td><td>Don't ship inconsistent docs and config either.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Working Practices</div><h2>Make It Invisible</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Format on Save</summary>
+        <div class="drill-body">
+          <p>Editor integration is mandatory. VSCode, IntelliJ, Vim, Neovim, Emacs — every modern editor has format-on-save for the major formatters. Files are clean by the time they hit git. Reviewers never see unformatted code.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Pre-Commit Hook + CI Check</summary>
+        <div class="drill-body">
+          <p>For when format-on-save is forgotten. <strong>pre-commit</strong>, <strong>Husky</strong>, <strong>lefthook</strong> reformat in place at commit time. CI runs <code>prettier --check</code> / <code>black --check</code> / <code>gofmt -l</code> as a fail-on-diff. The two together catch every case.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Adopt the Defaults</summary>
+        <div class="drill-body">
+          <p>Don't tweak the formatter. Five-team companies have wasted entire weeks debating <code>singleQuote: true</code> vs <code>false</code>. The point of the tool is "you don't decide." Pick the defaults; move on.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>One Big Reformat Commit</summary>
+        <div class="drill-body">
+          <p>When introducing a formatter to a legacy codebase, do it in <em>one</em> dedicated commit. Add the SHA to <code>.git-blame-ignore-revs</code> so <code>git blame</code> still shows real authors. Don't sprinkle reformatting across feature PRs — it pollutes diffs forever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stay in Sync With Linter Style Rules</summary>
+        <div class="drill-body">
+          <p>If the linter and the formatter disagree, every save toggles back and forth. ESLint + Prettier integrations (<code>eslint-config-prettier</code>) turn off ESLint style rules that conflict with Prettier. Use them.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Mistakes</div><h2>Where Teams Go Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"Optional" formatting.</strong> If only some people format, the format-on-save churn is endless. Make it mandatory in CI.</li>
+        <li><strong>Heavy custom config.</strong> A 200-line <code>.prettierrc</code> turns the formatter into a linter and re-introduces style debates. Resist.</li>
+        <li><strong>Skipping pre-commit.</strong> CI is the last line; pre-commit prevents the round-trip. Configure once per repo, not once per developer.</li>
+        <li><strong>Forgetting <code>.git-blame-ignore-revs</code>.</strong> Reformat commit shows up as "Bob touched every line"; the actual author info is one commit deeper. The ignore file fixes this.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Code Quality Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linters.html">← Linters</a>
+        <a href="static-analysis.html">Static Analysis →</a>
+        <a href="type-checking.html">Type Checking →</a>
+        <a href="code-review.html">PR / Code Review →</a>
+        <a href="doc-generators.html">Doc Generators →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

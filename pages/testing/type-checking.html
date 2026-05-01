@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Type Checking · Code Quality Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="TypeScript, mypy, Sorbet, Flow — compile-time type safety bolted onto dynamic languages, and the cheapest large-scale refactor enabler ever invented." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/type-checking.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Type Checking · Code Quality Tools Deep Dive" />
+<meta property="og:description" content="TypeScript, mypy, Sorbet, Flow — compile-time type safety for dynamic languages." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/type-checking.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Type Checking · Code Quality Tools Deep Dive" />
+<meta name="twitter:description" content="TypeScript, mypy, Sorbet, Flow — compile-time type safety." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Code Quality Tools Deep Dive · 4 of 6</div>
+    <h1>Type Checking — The Refactor Insurance Layer</h1>
+    <p class="lede">Type checkers verify that the values flowing through your program match the types you declared, before the program runs. In dynamic languages, type-checking has been the biggest productivity shift of the last decade — TypeScript reshaped JavaScript, mypy and Sorbet did the same for Python and Ruby. The benefit isn't catching weird bugs; it's making large refactors safe and IDE intelligence usable.</p>
+    <div class="tags"><span>TypeScript</span><span>mypy</span><span>Sorbet</span><span>Pyright</span><span>Static Types</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What Type Checking Does</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Statically-typed languages</strong> (Java, C#, Go, Rust, Kotlin, Swift, F#) have type checking baked into the compiler — you can't ship code that doesn't type-check.</li>
+          <li><strong>Dynamically-typed languages</strong> (JavaScript, Python, Ruby, PHP) optionally bolt on a type checker as a separate tool. The type info is annotations the runtime ignores.</li>
+          <li><strong>Gradual typing:</strong> add types to part of a codebase; untyped code keeps working, but the typed parts are checked. The path most teams take to migrate.</li>
+          <li><strong>Soundness vs pragmatism.</strong> Some checkers (Rust, OCaml, Haskell) are sound — if it type-checks, certain classes of bugs cannot happen. Most gradual checkers (TypeScript, mypy) trade soundness for productivity; they catch most bugs without rejecting valid programs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What Type Checking Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Refactoring at Scale</summary>
+        <div class="drill-body">
+          <p>Rename a property used in 1,000 places. Change a function signature. Move a class. The type checker tells you every call site that no longer compiles. Without it, you're greping for usages and praying. This alone justifies the migration cost in mid-to-large codebases.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>IDE Intelligence That Actually Works</summary>
+        <div class="drill-body">
+          <p>Autocomplete, jump-to-definition, find-all-references, inline docs, parameter hints — all driven by types. In a fully-typed JS codebase, the IDE behaves like a Java IDE in 2010. The productivity uplift is enormous.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Catches a Class of Bugs Cheaply</summary>
+        <div class="drill-body">
+          <p>Null/undefined handling, mismatched arguments, missing fields, typos in property names, accidental implicit coercions. The kind of bug that, in the dynamically-typed world, only surfaces at runtime — usually in the customer's session, not yours.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Self-Documenting</summary>
+        <div class="drill-body">
+          <p>Type signatures describe what a function takes and returns without needing a comment. New contributors can read the API of a module by reading the types. Comments lie; types compile.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>The Common Type Checkers</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>TypeScript (JS/TS)</summary>
+        <div class="drill-body">
+          <p>Microsoft's open-source superset of JavaScript with structural typing and gradual adoption. Effectively the default for new JS projects in 2026 — even teams who write <code>.js</code> usually use TypeScript via JSDoc annotations to get IDE support. Strict mode (<code>strict: true</code>) catches most of what's worth catching.</p>
+          <p style="margin-top:8px;"><strong>Worth knowing:</strong> generics, mapped types, conditional types, discriminated unions, <code>satisfies</code>. The type system is expressive enough to encode real domain constraints.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>mypy &amp; Pyright (Python)</summary>
+        <div class="drill-body">
+          <p>Python type hints went stable in 3.5 (2015) and have grown rapidly. <strong>mypy</strong> is the original checker; <strong>Pyright</strong> (Microsoft, behind Pylance in VSCode) is faster and stricter. Most large Python codebases use Pyright in IDEs and mypy in CI, or just Pyright everywhere now.</p>
+          <p style="margin-top:8px;">PEP 484, 526, 612, 695 added the modern syntax. <code>from __future__ import annotations</code> helps with forward references. Tools like <code>pydantic</code> use the type hints at runtime for validation.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Sorbet &amp; RBS (Ruby)</summary>
+        <div class="drill-body">
+          <p><strong>Sorbet</strong> from Stripe — gradual typing with the strongest large-codebase track record in Ruby. <strong>RBS</strong> is the official Ruby community type system, with <strong>Steep</strong> as the type checker. Less universally adopted than TypeScript or mypy, but powerful when used.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>PHPStan &amp; Psalm (PHP)</summary>
+        <div class="drill-body">
+          <p>Type-checkers that work on PHP's type hints plus inferred types. PHPStan and Psalm both ladder up through "levels" — start at level 1, increase strictness as you fix issues. Standard equipment in serious PHP shops.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Flow (JS) — On the Wane</summary>
+        <div class="drill-body">
+          <p>Facebook's earlier alternative to TypeScript. Mostly displaced; a small number of legacy projects still use it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Already-Static Languages</summary>
+        <div class="drill-body">
+          <p>Java, C#, Go, Rust, Kotlin, Swift — type checking is the compiler. Strictness varies (Rust and Kotlin have nullability in the type system; Java has it via annotations and tools like NullAway, ErrorProne). The disciplines are the same — watch nullability, leverage generics, don't reach for <code>Object</code> / <code>any</code> / <code>interface{}</code> when a real type fits.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Adopting It</div><h2>Migrating an Untyped Codebase</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Strict Mode From the Start</summary>
+        <div class="drill-body">
+          <p>For greenfield projects, turn on strictness from day one. <code>strict: true</code> in TypeScript, <code>--strict</code> in mypy, Pyright's <code>strict</code> mode. Adding strictness later is much harder than living with it from the start.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Gradual Adoption for Legacy</summary>
+        <div class="drill-body">
+          <p>Type the new code. Type the modules under active change. Don't migrate a 100k-line codebase to types in one PR — the diff is unreviewable.</p>
+          <p style="margin-top:8px;">Tools: TypeScript's <code>allowJs</code> + <code>checkJs</code> + JSDoc, mypy's per-module strictness, PHPStan's levels. They all let typed and untyped coexist.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Avoid Escape Hatches</summary>
+        <div class="drill-body">
+          <p><code>any</code> in TypeScript, <code>Any</code> in Python, <code>T.untyped</code> in Sorbet. Useful in tight spots; corrosive when widespread. The first <code>any</code> you write is fine; the hundredth becomes a tradition. Lint rules to flag explicit-any on new code save the codebase.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Typed Boundaries to Untyped Code</summary>
+        <div class="drill-body">
+          <p>When typed code calls untyped libraries, write a thin typed wrapper. The boundary becomes the place to validate; the rest of the codebase trusts types. Validation libraries: <strong>Zod</strong> (TS), <strong>pydantic</strong> (Python), <strong>dry-validation</strong> (Ruby).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Limitations</div><h2>What Type Checking Doesn't Catch</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Logic bugs.</strong> A correctly-typed function can still compute the wrong answer.</li>
+        <li><strong>Boundary violations.</strong> Untyped network responses, untyped user input — types don't stop bad data from entering. Validate at the edge.</li>
+        <li><strong>Side-effect ordering.</strong> Async timing, race conditions, ordering of effects — type systems rarely capture these (Rust's borrow checker is the famous exception).</li>
+        <li><strong>Performance.</strong> Type-correct code can still be slow.</li>
+      </ul>
+      <p style="margin-top:10px;">Types are a layer of cheap defense. They don't replace tests, code review, or judgment. They make the rest of those activities much more productive.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Code Quality Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linters.html">← Linters</a>
+        <a href="formatters.html">← Formatters</a>
+        <a href="static-analysis.html">← Static Analysis</a>
+        <a href="code-review.html">PR / Code Review →</a>
+        <a href="doc-generators.html">Doc Generators →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

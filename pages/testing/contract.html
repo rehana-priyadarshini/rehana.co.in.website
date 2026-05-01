@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contract Testing · Test Types Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Verify that two services agree on the wire format — without standing up the whole environment. Pact, OpenAPI, Protobuf — the antidote to 'works in dev, breaks in prod' integration bugs." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/contract.html" />
+
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Contract Testing · Test Types Deep Dive" />
+<meta property="og:description" content="Verify that two services agree on the wire format — without standing up the whole environment." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/contract.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Contract Testing · Test Types Deep Dive" />
+<meta name="twitter:description" content="Verify that two services agree on the wire format." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Test Types Deep Dive · 4 of 8</div>
+    <h1>Contract Testing — Provers Producers and Consumers Still Agree</h1>
+    <p class="lede">When two services talk to each other, the bug nobody catches is "the producer changed the response shape and the consumer didn't notice." Contract testing makes the wire shape between them an explicit, versioned contract — verified by both sides independently, with no need to spin up the whole environment. The right answer for microservices that need to deploy independently.</p>
+    <div class="tags"><span>Pact</span><span>OpenAPI</span><span>CDC</span><span>Schema</span><span>Microservices</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What a Contract Test Is</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Producer:</strong> the service that publishes the API (or the events).</li>
+          <li><strong>Consumer:</strong> the service that calls it (or subscribes).</li>
+          <li><strong>The contract:</strong> a machine-readable description of what the producer returns and what the consumer expects. JSON schemas, Protobuf messages, Pact files.</li>
+          <li><strong>Two flavors of testing:</strong>
+            <ul>
+              <li><strong>Schema-based:</strong> producer's spec (OpenAPI, Protobuf) is the source; both sides validate against it.</li>
+              <li><strong>Consumer-Driven (CDC):</strong> the consumer writes example interactions; those become the contract the producer must satisfy.</li>
+            </ul>
+          </li>
+          <li><strong>Why it's not just integration testing:</strong> integration tests run the consumer against a real producer. Contract tests verify the agreement <em>without</em> running both sides at once — each can be tested in its own pipeline.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Two Approaches</div><h2>Schema-First vs Consumer-Driven</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Schema-First — OpenAPI, Protobuf, AsyncAPI</summary>
+        <div class="drill-body">
+          <p>The producer publishes a schema (OpenAPI YAML, <code>.proto</code>, AsyncAPI). Both sides validate against it:</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>Producer side:</strong> CI runs every endpoint's response through the schema. A field that drifts off-spec fails the build. Tools: <strong>Schemathesis</strong>, <strong>Dredd</strong>, <strong>Spectral</strong>, <strong>Buf</strong> for Protobuf.</li>
+            <li><strong>Consumer side:</strong> generate a client from the schema (OpenAPI Generator, <code>openapi-typescript</code>, Buf). Compile-time errors when the consumer expects a field the schema doesn't have.</li>
+          </ul>
+          <p style="margin-top:8px;">Best for stable, well-governed APIs — public APIs, partner contracts, gRPC. The schema is the source of truth.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Consumer-Driven Contracts — Pact</summary>
+        <div class="drill-body">
+          <p>The consumer writes example interactions: "when I <code>GET /users/42</code>, I expect a JSON object with <code>name</code> and <code>email</code>." Pact captures these as a contract file. The producer's CI runs against the contract file and verifies its real responses satisfy the consumer's expectations.</p>
+          <p style="margin-top:8px;"><strong>Why CDC:</strong> the consumer's tests describe the parts they actually use. The producer can change anything else freely. Adding a field is fine; removing one a consumer relies on fails the consumer's contract on the producer's CI.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>The Pact Broker</summary>
+        <div class="drill-body">
+          <p>Where contracts and verification results live. <strong>PactFlow</strong> (managed) or self-hosted Pact Broker. Tracks which versions of which consumers verified against which producers — and gates deployments via <code>can-i-deploy</code>: "can consumer v3.4 safely deploy given the producer versions currently in production?"</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Async Contracts</summary>
+        <div class="drill-body">
+          <p>Same idea for events. Pact has message-pact for queue/Kafka contracts. AsyncAPI is the schema-first equivalent of OpenAPI for events. Schema registries (Confluent Schema Registry, Apicurio, Buf Schema Registry) enforce backward/forward compatibility on every produced event.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Wins</div><h2>What Contract Testing Buys You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Test Without the Environment</summary>
+        <div class="drill-body">
+          <p>The consumer's tests run in isolation against a stub satisfying the contract. The producer's CI verifies its responses still match. Neither needs the other running. PR pipelines stay fast; the answer "did I break my consumers?" is computed at PR time.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Independent Deployability</summary>
+        <div class="drill-body">
+          <p>This is what microservices were promised to deliver. With contracts, the producer team can deploy whenever its contract is unbroken; the consumer team can deploy whenever it satisfies its expected response shape. No release trains.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Documentation That Stays Honest</summary>
+        <div class="drill-body">
+          <p>OpenAPI / Protobuf schemas double as documentation. With CI verification, they can't drift out of sync with the code — the build fails before that happens.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Hurts</div><h2>The Real Costs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Pact Has a Learning Curve</summary>
+        <div class="drill-body">
+          <p>Matchers, state setup, broker workflows, can-i-deploy. Teams that adopt Pact without budget for the ramp-up often abandon it within a quarter. Provider-state setup, in particular, requires real engineering investment.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>You Need a Broker</summary>
+        <div class="drill-body">
+          <p>Contracts in source files only work for tiny systems. Past 3-4 services, you need a broker — managed (PactFlow) or self-hosted — and someone owning it. The broker is now part of your platform.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Not a Substitute for Integration Tests</summary>
+        <div class="drill-body">
+          <p>Contracts verify the wire shape. They don't verify the producer's <em>semantics</em> — does it actually compute the right answer? That still needs the producer's own integration tests. Contracts are for <em>compatibility</em>, not correctness.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Public APIs Want OpenAPI, Not Pact</summary>
+        <div class="parent drill-body">
+          <p>For public APIs with unknown consumers, you can't use CDC — there's no consumer test to consume. Use schema-first (OpenAPI / Protobuf), version explicitly, and treat the schema as a public contract.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Decision</div><h2>When to Pick Contract Testing</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Setup</th><th>Approach</th></tr></thead>
+        <tbody>
+          <tr><td>Multiple internal services that need to deploy independently</td><td>Pact (CDC) + a broker.</td></tr>
+          <tr><td>Public REST API with known partners</td><td>OpenAPI + Schemathesis on the producer side.</td></tr>
+          <tr><td>gRPC service mesh inside one company</td><td>Protobuf + Buf breaking-change checks.</td></tr>
+          <tr><td>Event-driven architecture</td><td>Schema registry (Avro/Protobuf) + AsyncAPI; or Pact message-pact.</td></tr>
+          <tr><td>Two services owned by the same team</td><td>Probably overkill — integration tests cover it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Test Types</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit</a>
+        <a href="integration.html">← Integration</a>
+        <a href="e2e.html">← End-to-End</a>
+        <a href="performance.html">Performance / Load →</a>
+        <a href="smoke.html">Smoke →</a>
+        <a href="regression.html">Regression →</a>
+        <a href="chaos.html">Chaos →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
