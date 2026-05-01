@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mercurial &amp; SVN · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Mercurial and Subversion — the version control systems Git eclipsed. Still alive in the wild, still worth understanding when you encounter them." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/legacy-vcs.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Mercurial &amp; SVN · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Mercurial and Subversion — the version control systems Git eclipsed." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/legacy-vcs.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Mercurial &amp; SVN · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Mercurial and Subversion — the version control systems Git eclipsed." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cross-Cutting Tools Deep Dive · 6 of 6</div>
+    <h1>Mercurial &amp; SVN — The Systems Git Eclipsed</h1>
+    <p class="lede">For most of the 2000s, the version-control conversation was three-way: Subversion (centralized, the heir to CVS), Mercurial (distributed, Python, friendly), and Git (distributed, fast, kernel-shaped). Git won. But Mercurial powers Meta's monorepo and a handful of long-lived projects, and SVN still ships in enterprises that never migrated. You'll meet them.</p>
+    <div class="tags"><span>Subversion</span><span>Mercurial</span><span>Centralized</span><span>Distributed</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Subversion (SVN)</div><h2>Centralized, Lock-Friendly, Still Alive</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Centralized model.</strong> One server holds the canonical history. Working copies are sparse — a checkout pulls only the revisions you need. No <code>.git</code>-style full history per machine.</li>
+        <li><strong>Linear, monotonically-increasing revision numbers.</strong> r1234 means the same thing to everyone. Some teams genuinely miss this when they move to Git's hashes.</li>
+        <li><strong>File locking.</strong> Useful for binary assets — only one person edits the Photoshop file at a time. Git has no equivalent.</li>
+        <li><strong>Branching is cheap on the server, expensive in practice.</strong> Branches are server-side copies; merging back across them is the part that drove people to Git.</li>
+        <li><strong>Where you'll find it:</strong> game studios with huge binary asset trees, older enterprise codebases, embedded shops. Apache still maintains it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mercurial (Hg)</div><h2>Distributed, Different Personality</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Same era as Git.</strong> Both 2005, both distributed, both content-addressed. Mercurial chose a more conservative, "safer" UX — fewer footguns, less history rewriting by default.</li>
+        <li><strong>Python codebase</strong> with a clean extension model. Branches are slightly different — named branches and bookmarks behave unlike Git branches.</li>
+        <li><strong>Big-tech holdout.</strong> Meta extends Mercurial heavily for its monorepo (their Sapling client is open source). Mozilla used it for Firefox until migrating to Git in 2023.</li>
+        <li><strong>Bitbucket dropped Hg support in 2020,</strong> which removed the main public host and pushed remaining projects to self-hosting or to Git.</li>
+        <li><strong>Where you'll find it:</strong> Meta-adjacent codebases, scientific computing, a few long-lived OSS projects.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Migration Reality</div><h2>If You Inherit One of These</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>SVN → Git:</strong> <code>git svn</code> can clone history. For long-lived repos, <code>svn2git</code> or <code>reposurgeon</code> handle authors, tags, and branch layout better.</li>
+        <li><strong>Hg → Git:</strong> <code>hg-fast-export</code> or <code>git-remote-hg</code>. Mostly mechanical — the bigger lift is retraining the team.</li>
+        <li><strong>Don't migrate just to migrate.</strong> If the team is happy and the host is supported, the cost-benefit of migration is real but not urgent.</li>
+        <li><strong>Do migrate</strong> when the host is being deprecated, when CI ecosystems no longer support your VCS, or when hiring becomes hard.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cross-Cutting Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="git.html">← Git</a>
+        <a href="github.html">← GitHub</a>
+        <a href="gitlab.html">← GitLab</a>
+        <a href="bitbucket.html">← Bitbucket</a>
+        <a href="azure-devops.html">← Azure DevOps</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

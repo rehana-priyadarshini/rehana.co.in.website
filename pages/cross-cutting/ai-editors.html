@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI-Native Editors · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Cursor, Claude Code, Copilot, Windsurf — AI-native coding tools. Tab completion, chat, agents that read and edit your repo." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/ai-editors.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="AI-Native Editors · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Cursor, Claude Code, Copilot, Windsurf — AI-native coding tools." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/ai-editors.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="AI-Native Editors · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="AI-native coding tools." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">IDEs &amp; Editors Deep Dive · 5 of 5</div>
+    <h1>AI-Native Editors — Pair Programmer in the Loop</h1>
+    <p class="lede">Between 2021 (Copilot) and now, AI assistance moved from a single autocomplete trick to full agents that read your repo, edit files, run tests, and open pull requests. The category is a moving target — products ship monthly, models change quarterly, and the workflow you settle into today will look quaint in a year. The shape, though, is stabilizing.</p>
+    <div class="tags"><span>Copilot</span><span>Cursor</span><span>Claude Code</span><span>Agents</span><span>MCP</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Players</div><h2>What's on the Field</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>GitHub Copilot</summary>
+        <div class="drill-body">
+          <p>The category-creator (2021). Started as inline tab completion in VS Code; now offers Copilot Chat, multi-file edits, agent mode, and Copilot for the GitHub web UI (PR review, code search). Model choice across Claude, GPT, and Gemini. The default for organizations already standardized on GitHub.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cursor</summary>
+        <div class="drill-body">
+          <p>VS Code fork built around AI from the start. Strong reputation for whole-codebase context, multi-file edits, and an agent ("Composer") that plans and applies sweeping changes. Indexes your repo for retrieval and rerank.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Claude Code</summary>
+        <div class="drill-body">
+          <p>Anthropic's terminal-first agent. Runs inside any IDE or in the shell, reads and edits files, runs commands, integrates via the Model Context Protocol (MCP). Designed to be driven from the editor of your choice rather than replace it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Windsurf, Zed AI, JetBrains AI Assistant, Continue</summary>
+        <div class="drill-body">
+          <p><strong>Windsurf</strong> (Codeium's editor) emphasizes a "Cascade" agent and was acquired into the Cognition family. <strong>Zed</strong> bakes AI into a fast native editor. <strong>JetBrains AI Assistant + Junie</strong> brings agents to the IntelliJ platform. <strong>Continue</strong> is an open-source extension that lets you bring your own model into VS Code or JetBrains.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Three Modes</div><h2>How These Tools Help</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Mode</th><th>What it does</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tab completion</strong></td><td>Inline suggestions a few lines at a time.</td><td>Boilerplate, obvious next lines.</td></tr>
+          <tr><td><strong>Chat / inline edit</strong></td><td>Ask in natural language; tool proposes a diff you review.</td><td>Refactors, "explain this," debugging help.</td></tr>
+          <tr><td><strong>Agent</strong></td><td>Tool runs commands, edits multiple files, iterates against tests.</td><td>Multi-file features, migrations, repo-wide chores.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:8px; font-size:13.5px; color: var(--muted);">A useful split: tab completion for typing speed, chat for thinking, agents for tasks you'd otherwise spend a half day on.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Working With Them Well</div><h2>Habits That Help</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Review every diff.</strong> The model is fast; it's also confidently wrong sometimes. Read what landed before committing.</li>
+        <li><strong>Tight loops.</strong> Pair the agent with tests, type checks, and a linter so it gets feedback automatically and corrects itself.</li>
+        <li><strong>Project context files.</strong> <code>CLAUDE.md</code>, <code>.cursorrules</code>, Copilot custom instructions — write down conventions, frameworks, and anti-patterns. The agent stops re-deriving them.</li>
+        <li><strong>MCP servers</strong> let agents reach external tools — your DB, your tracker, your docs. Treat their permissions like API tokens.</li>
+        <li><strong>Don't blindly merge.</strong> Generated code that "passes tests" can still leak resources, miss edge cases, or introduce subtle deprecations.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Caveats</div><h2>The Honest Risks</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Privacy &amp; IP.</strong> Code is sent to a model provider. Most enterprise tiers offer no-retention modes; verify before pointing the tool at proprietary code.</li>
+        <li><strong>Hallucinated APIs.</strong> Plausible-looking calls to functions that don't exist. Your type checker is a load-bearing safety net.</li>
+        <li><strong>License contamination concerns.</strong> Settled in some jurisdictions, evolving in others. Check your legal team's stance for shipped code.</li>
+        <li><strong>Skills atrophy</strong> if you only ever accept output without reading it. Treat these like a strong colleague whose work you still review.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Editors</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="vscode.html">← VS Code</a>
+        <a href="jetbrains.html">← JetBrains</a>
+        <a href="visual-studio.html">← Visual Studio</a>
+        <a href="vim-emacs.html">← Neovim / Emacs</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

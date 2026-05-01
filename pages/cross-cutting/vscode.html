@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VS Code · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="VS Code — the most-used code editor on Earth. Electron-based, extension-driven, and the platform every other AI editor forks." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/vscode.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="VS Code · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="VS Code — the most-used code editor on Earth." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/vscode.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="VS Code · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="VS Code — the most-used code editor on Earth." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">IDEs &amp; Editors Deep Dive · 1 of 5</div>
+    <h1>VS Code — The Editor Everyone Has Open</h1>
+    <p class="lede">Microsoft shipped Visual Studio Code in 2015. Free, cross-platform, extension-driven, built on Electron + Monaco + the Language Server Protocol. Within five years it was the most-used editor on the Stack Overflow Developer Survey, and most AI-native editors today (Cursor, Windsurf, Copilot Chat) are forks or extensions of it. Whatever you write next, this is probably what you'll write it in.</p>
+    <div class="tags"><span>Electron</span><span>LSP</span><span>Extensions</span><span>Remote Dev</span><span>Open Source</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Won</div><h2>The Things VS Code Got Right</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Language Server Protocol.</strong> One protocol, many languages. Pyright, rust-analyzer, gopls, TypeScript — every language gets the same intellisense, go-to-def, refactor experience. LSP is now the industry standard, used by Neovim, JetBrains, Zed, and others.</li>
+        <li><strong>Extensions, not plugins.</strong> A separate process, declarative <code>contributes</code>, sandboxed. The marketplace has tens of thousands.</li>
+        <li><strong>Free and cross-platform.</strong> Same UX on Windows, macOS, Linux. The MIT-licensed core is "Code-OSS"; Microsoft adds branding + telemetry to ship "VS Code".</li>
+        <li><strong>Remote development.</strong> Edit code on a remote SSH host, in a Docker container, in WSL, or in a Codespace as if it were local — the editor runs on your machine, the language server runs over there.</li>
+        <li><strong>Integrated terminal, source control, debugger.</strong> Enough IDE features built in that most users never need a separate one.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Configuration</div><h2>How Power Users Set It Up</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><code>settings.json</code> — every preference. User-scoped, workspace-scoped, or folder-scoped.</li>
+        <li><code>.vscode/launch.json</code> — debugger configurations checked in with the repo.</li>
+        <li><code>.vscode/tasks.json</code> — repo-local commands (build, test, lint) wired to the command palette.</li>
+        <li><code>.vscode/extensions.json</code> — recommended extensions for the project.</li>
+        <li><strong>Settings Sync</strong> — keys, themes, snippets, extensions follow your GitHub login across machines.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Honest Caveats</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Electron.</strong> Memory and startup are not as light as a native editor. Acceptable for most; deal-breaking for terminal purists.</li>
+        <li><strong>Heavy refactors are weaker</strong> than JetBrains. For day-to-day editing, parity. For large-scale rename / extract / move, JetBrains still leads.</li>
+        <li><strong>Telemetry</strong> is on by default in the Microsoft build. <em>VSCodium</em> is a community rebuild without it.</li>
+        <li><strong>Extension supply chain</strong> deserves the same skepticism as any other. Marketplace publishes have been compromised.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Editors</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="jetbrains.html">JetBrains Suite →</a>
+        <a href="visual-studio.html">Visual Studio →</a>
+        <a href="vim-emacs.html">Neovim / Emacs →</a>
+        <a href="ai-editors.html">AI-Native Editors →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

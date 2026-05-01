@@ -898,15 +898,15 @@
       </div>
 
       <details class="drill" open>
-        <summary>Version Control</summary>
+        <summary>Version Control <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Git</h5><p>Distributed version control — the standard.</p></div>
-            <div class="card teal"><h5>GitHub</h5><p>Hosting, PRs, Actions (CI/CD), Copilot.</p></div>
-            <div class="card mid"><h5>GitLab</h5><p>Hosting + built-in CI/CD, often self-hosted.</p></div>
-            <div class="card accent"><h5>Bitbucket</h5><p>Atlassian — integrates with Jira.</p></div>
-            <div class="card"><h5>Azure DevOps</h5><p>Microsoft's full ALM suite.</p></div>
-            <div class="card teal"><h5>Mercurial / SVN</h5><p>Legacy systems still found in older projects.</p></div>
+            <a class="card" href="pages/cross-cutting/git.html" style="text-decoration:none;color:inherit;display:block;"><h5>Git →</h5><p>Distributed version control — the standard.</p></a>
+            <a class="card teal" href="pages/cross-cutting/github.html" style="text-decoration:none;color:inherit;display:block;"><h5>GitHub →</h5><p>Hosting, PRs, Actions (CI/CD), Copilot.</p></a>
+            <a class="card mid" href="pages/cross-cutting/gitlab.html" style="text-decoration:none;color:inherit;display:block;"><h5>GitLab →</h5><p>Hosting + built-in CI/CD, often self-hosted.</p></a>
+            <a class="card accent" href="pages/cross-cutting/bitbucket.html" style="text-decoration:none;color:inherit;display:block;"><h5>Bitbucket →</h5><p>Atlassian — integrates with Jira.</p></a>
+            <a class="card" href="pages/cross-cutting/azure-devops.html" style="text-decoration:none;color:inherit;display:block;"><h5>Azure DevOps →</h5><p>Microsoft's full ALM suite.</p></a>
+            <a class="card teal" href="pages/cross-cutting/legacy-vcs.html" style="text-decoration:none;color:inherit;display:block;"><h5>Mercurial / SVN →</h5><p>Legacy systems still found in older projects.</p></a>
           </div>
           <p style="margin-top: 10px; font-size: 13.5px; color: var(--muted);">
             Key Git concepts: <code>clone</code>, <code>branch</code>, <code>commit</code>, <code>merge</code>, <code>rebase</code>, <code>pull request</code>. Common workflows: <em>GitFlow</em>, <em>trunk-based</em>.
@@ -915,7 +915,7 @@
       </details>
 
       <details class="drill">
-        <summary>Build Tools &amp; Package Managers</summary>
+        <summary>Build Tools &amp; Package Managers <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/cross-cutting/build-tools.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
         <div class="drill-body">
           <table>
             <thead><tr><th>Stack</th><th>Tool</th><th>Purpose</th></tr></thead>
@@ -934,27 +934,27 @@
       </details>
 
       <details class="drill">
-        <summary>IDEs &amp; Editors</summary>
+        <summary>IDEs &amp; Editors <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>VS Code</h5><p>The most popular editor — free, extensible, everywhere.</p></div>
-            <div class="card teal"><h5>JetBrains Suite</h5><p>IntelliJ (Java), PyCharm, WebStorm, Rider, GoLand. Best-in-class refactoring.</p></div>
-            <div class="card mid"><h5>Visual Studio</h5><p>Full IDE for .NET and C++ on Windows.</p></div>
-            <div class="card accent"><h5>Neovim / Emacs</h5><p>Keyboard-driven power tools for enthusiasts.</p></div>
-            <div class="card"><h5>Cursor / Claude Code / Copilot</h5><p>AI-native editors — pair-programmers built in.</p></div>
+            <a class="card" href="pages/cross-cutting/vscode.html" style="text-decoration:none;color:inherit;display:block;"><h5>VS Code →</h5><p>The most popular editor — free, extensible, everywhere.</p></a>
+            <a class="card teal" href="pages/cross-cutting/jetbrains.html" style="text-decoration:none;color:inherit;display:block;"><h5>JetBrains Suite →</h5><p>IntelliJ (Java), PyCharm, WebStorm, Rider, GoLand. Best-in-class refactoring.</p></a>
+            <a class="card mid" href="pages/cross-cutting/visual-studio.html" style="text-decoration:none;color:inherit;display:block;"><h5>Visual Studio →</h5><p>Full IDE for .NET and C++ on Windows.</p></a>
+            <a class="card accent" href="pages/cross-cutting/vim-emacs.html" style="text-decoration:none;color:inherit;display:block;"><h5>Neovim / Emacs →</h5><p>Keyboard-driven power tools for enthusiasts.</p></a>
+            <a class="card" href="pages/cross-cutting/ai-editors.html" style="text-decoration:none;color:inherit;display:block;"><h5>Cursor / Claude Code / Copilot →</h5><p>AI-native editors — pair-programmers built in.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Project &amp; Issue Tracking</summary>
+        <summary>Project &amp; Issue Tracking <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>Jira</h5><p>Enterprise standard for backlogs &amp; sprints.</p></div>
-            <div class="card teal"><h5>Linear</h5><p>Fast, opinionated, developer-favorite.</p></div>
-            <div class="card mid"><h5>GitHub Issues / Projects</h5><p>Tightly integrated with the repo.</p></div>
-            <div class="card accent"><h5>Trello / Asana / ClickUp</h5><p>Lightweight boards for small teams.</p></div>
-            <div class="card"><h5>Confluence / Notion</h5><p>Team wikis and documentation.</p></div>
+            <a class="card" href="pages/cross-cutting/jira.html" style="text-decoration:none;color:inherit;display:block;"><h5>Jira →</h5><p>Enterprise standard for backlogs &amp; sprints.</p></a>
+            <a class="card teal" href="pages/cross-cutting/linear.html" style="text-decoration:none;color:inherit;display:block;"><h5>Linear →</h5><p>Fast, opinionated, developer-favorite.</p></a>
+            <a class="card mid" href="pages/cross-cutting/github-issues.html" style="text-decoration:none;color:inherit;display:block;"><h5>GitHub Issues / Projects →</h5><p>Tightly integrated with the repo.</p></a>
+            <a class="card accent" href="pages/cross-cutting/lightweight-pm.html" style="text-decoration:none;color:inherit;display:block;"><h5>Trello / Asana / ClickUp →</h5><p>Lightweight boards for small teams.</p></a>
+            <a class="card" href="pages/cross-cutting/wikis.html" style="text-decoration:none;color:inherit;display:block;"><h5>Confluence / Notion →</h5><p>Team wikis and documentation.</p></a>
           </div>
         </div>
       </details>

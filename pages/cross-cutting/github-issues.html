@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub Issues &amp; Projects · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitHub Issues and Projects — lightweight tracking tightly coupled to the repo. Markdown, labels, milestones, and a flexible Projects v2 board layer." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/github-issues.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="GitHub Issues &amp; Projects · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="GitHub Issues and Projects — lightweight tracking tightly coupled to the repo." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/github-issues.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GitHub Issues &amp; Projects · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="GitHub Issues and Projects." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Project &amp; Issue Tracking Deep Dive · 3 of 5</div>
+    <h1>GitHub Issues &amp; Projects</h1>
+    <p class="lede">If your code lives on GitHub, the path of least resistance for tracking is right there in the same UI. Issues are markdown-first, conversational, and tightly linked to PRs. Projects (v2) sits on top as a flexible board/table layer that aggregates issues across repos. For open source and small-to-medium teams, this is often all you need.</p>
+    <div class="tags"><span>Markdown</span><span>Labels</span><span>Milestones</span><span>Projects v2</span><span>Discussions</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Issues</div><h2>The Building Block</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>One issue per repo, numbered sequentially.</strong> Reference cross-repo with <code>org/repo#123</code>; same-repo with just <code>#123</code>.</li>
+        <li><strong>Markdown body</strong> with task lists, code, mentions, image drops, and reactions. Comments are threaded.</li>
+        <li><strong>Labels</strong> categorize freely (<code>bug</code>, <code>good first issue</code>, <code>area: api</code>). <strong>Milestones</strong> bundle issues toward a release.</li>
+        <li><strong>Sub-issues</strong> (recent addition) give a real parent/child hierarchy without faking it via task lists.</li>
+        <li><strong>Issue templates</strong> in <code>.github/ISSUE_TEMPLATE/</code> standardize bug reports and feature requests.</li>
+        <li><strong>Auto-close from PRs.</strong> "<code>Closes #123</code>" in a PR description closes the issue when the PR merges.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Projects (v2)</div><h2>The Board Layer</h2></div>
+    <div class="chapter-body">
+      <p>The classic Projects boards were per-repo and limited. Projects v2 (just "Projects" now) is a spreadsheet-meets-board that pulls issues and PRs from anywhere into one view.</p>
+      <ul style="font-size:14px; line-height:1.7; margin-top:8px;">
+        <li><strong>Custom fields</strong> — text, number, single-select, iteration, date.</li>
+        <li><strong>Multiple views</strong> — table, board, roadmap timeline — over the same items.</li>
+        <li><strong>Workflows</strong> auto-add issues, set status on PR merge, archive when done.</li>
+        <li><strong>Insights</strong> charts the field data — burnup-style velocity, status distribution.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Discussions</div><h2>The Forum Sibling</h2></div>
+    <div class="chapter-body">
+      <p>Issues are for actionable work; <strong>Discussions</strong> are for Q&amp;A, ideas, and announcements. Open-source projects use them as a community forum, marking helpful answers and converting issue-shaped requests into Issues only when ready.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Honest Limits</div><h2>When to Outgrow It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Reporting is light.</strong> Insights cover the basics. Cross-org dashboards, capacity planning, and rollups across many initiatives are weak.</li>
+        <li><strong>Workflow customization is shallow.</strong> No custom states per repo, no required field validation, no transition guards.</li>
+        <li><strong>Non-engineers</strong> don't always thrive in a markdown/PR-shaped tracker.</li>
+        <li><strong>Best fit:</strong> open source, small-to-medium teams whose work lives in code. Pair with Linear or Jira for org-wide planning if needed; sync IDs both ways.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Tracking Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="jira.html">← Jira</a>
+        <a href="linear.html">← Linear</a>
+        <a href="lightweight-pm.html">Trello / Asana / ClickUp →</a>
+        <a href="wikis.html">Confluence / Notion →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

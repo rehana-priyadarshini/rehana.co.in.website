@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Confluence &amp; Notion · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Confluence and Notion — team wikis. Where docs, runbooks, design specs, decisions, and meeting notes go to be searchable." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/wikis.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Confluence &amp; Notion · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Confluence and Notion — team wikis." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/wikis.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Confluence &amp; Notion · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Confluence and Notion — team wikis." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Project &amp; Issue Tracking Deep Dive · 5 of 5</div>
+    <h1>Confluence &amp; Notion — Team Wikis</h1>
+    <p class="lede">Tickets are short. Specs, runbooks, post-mortems, architectural decisions, onboarding guides, meeting notes — those need a home with longer-lived structure and full-text search. Confluence and Notion are the two dominant choices, with very different philosophies.</p>
+    <div class="tags"><span>Wikis</span><span>Docs</span><span>Search</span><span>Knowledge Base</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Confluence</div><h2>The Atlassian Wiki</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Spaces &amp; pages.</strong> Each team or project gets a "space" — a folder with its own homepage and permissions. Pages nest hierarchically.</li>
+        <li><strong>Templates</strong> for meeting notes, decision records, project plans, retros — a dropdown away.</li>
+        <li><strong>Jira integration</strong> is the killer feature. Embed live ticket lists, requirement tables, status reports that auto-update.</li>
+        <li><strong>Permissions, audit, governance.</strong> Enterprise-friendly, with proper restrict-by-page and inheritance.</li>
+        <li><strong>Tradeoffs:</strong> dense UI, slower than modern doc tools, an editor that newcomers find clunky.</li>
+        <li><strong>Where it lives:</strong> mid-to-large companies already using Jira. The "knowledge of record" tier.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Notion</div><h2>The Block-Based Workspace</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Everything is a block.</strong> Headings, lists, tables, embeds, callouts — composable, drag-reorderable.</li>
+        <li><strong>Databases.</strong> Tables of pages with custom properties; views as kanban, calendar, gallery, timeline. The reason many teams use Notion as a lightweight tracker too.</li>
+        <li><strong>Pages nest infinitely.</strong> No imposed space/folder model — teams self-organize, for better and worse.</li>
+        <li><strong>Templates and AI</strong> are first-class — Notion AI summarizes, drafts, fills database fields.</li>
+        <li><strong>Tradeoffs:</strong> structure decays without discipline; finding a page in a large workspace can be hard. Granular permissions are improving but historically lighter than Confluence.</li>
+        <li><strong>Where it lives:</strong> startups, small/mid teams, design-and-product organizations. The "everything app" tier.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Honorable Mentions</div><h2>Adjacent Tools</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Google Docs / Drive</strong> — fine for collaborative writing; weak as a structured wiki.</li>
+        <li><strong>SharePoint</strong> — Microsoft's enterprise wiki. Pairs with Teams, OneDrive, and the rest of M365.</li>
+        <li><strong>GitHub Wiki / Markdown in repo</strong> — code-adjacent docs. Great for OSS, less great for cross-team knowledge.</li>
+        <li><strong>Coda, Slite, Slab, BookStack, Obsidian Publish</strong> — niche but loved alternatives.</li>
+        <li><strong>Docs-as-code (MkDocs, Docusaurus, Astro)</strong> — when docs need to ship with the codebase, in version control, reviewable in PRs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking Between Them</div><h2>The Practical Cut</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Already using Jira?</strong> Confluence is almost always the right choice — the integrations save real time.</li>
+        <li><strong>Smaller, design-led, or pre-IPO?</strong> Notion. Faster onboarding, friendlier UX, lighter governance overhead.</li>
+        <li><strong>Regulated industry?</strong> Confluence's permissions, audit logs, and on-prem Data Center option matter.</li>
+        <li><strong>Public-facing docs?</strong> Pick a docs-as-code framework, not a wiki.</li>
+        <li><strong>One pitfall both share:</strong> they grow stale. Schedule pruning, or your "knowledge base" becomes a graveyard with confident wrong answers.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Tracking Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="jira.html">← Jira</a>
+        <a href="linear.html">← Linear</a>
+        <a href="github-issues.html">← GitHub Issues</a>
+        <a href="lightweight-pm.html">← Trello / Asana / ClickUp</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

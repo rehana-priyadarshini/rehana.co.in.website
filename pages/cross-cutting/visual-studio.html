@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Visual Studio · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Visual Studio — Microsoft's flagship Windows IDE for .NET, C++, and game development. The full-fat sibling of VS Code." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/visual-studio.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Visual Studio · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Visual Studio — Microsoft's flagship Windows IDE." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/visual-studio.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Visual Studio · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Visual Studio — Microsoft's flagship Windows IDE." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">IDEs &amp; Editors Deep Dive · 3 of 5</div>
+    <h1>Visual Studio — The Full-Fat Microsoft IDE</h1>
+    <p class="lede">Don't confuse this with VS Code. Visual Studio (since 1997) is the heavyweight Windows IDE — the home for serious .NET, C++, and Windows game development. It has decades of tooling layered on: an industrial debugger, performance profilers, designers, refactoring, deep MSBuild integration, and tight coupling with the Windows SDK.</p>
+    <div class="tags"><span>Windows</span><span>.NET</span><span>C++</span><span>MSBuild</span><span>Debugger</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Editions</div><h2>Which Visual Studio</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Community</strong> — free for individual developers, OSS, and small organizations. Capable enough for almost any solo project.</li>
+        <li><strong>Professional</strong> — for paid commercial use beyond Community's eligibility.</li>
+        <li><strong>Enterprise</strong> — adds advanced profiling, IntelliTrace historical debugging, architecture/dependency tools, code coverage, Live Unit Testing.</li>
+        <li><strong>Visual Studio for Mac</strong> — discontinued in 2024. macOS users now use VS Code or Rider.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What It Does Best</h2><h2>Where Nothing Else Comes Close</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Debugger.</strong> Time-travel-like IntelliTrace, edit-and-continue, parallel stacks, mixed managed/native debugging, memory and CPU profilers all integrated. The bar that other debuggers are measured against.</li>
+        <li><strong>C++ tooling.</strong> Full Windows SDK, MSVC, address sanitizer, native Cmake/Ninja support, kernel debugging integration. Game studios shipping on Windows live here.</li>
+        <li><strong>.NET frameworks.</strong> Designers for WinForms, WPF, MAUI; live XAML hot reload; Entity Framework migrations; Azure publish targets.</li>
+        <li><strong>Test tooling.</strong> Live Unit Testing, code coverage, IntelliTest auto-generation in Enterprise.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Why You Might Not Pick It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Windows-only.</strong> If your team is on Mac/Linux, Rider or VS Code is the path.</li>
+        <li><strong>Heavy install.</strong> Tens of GBs depending on workloads. Use the Visual Studio Installer to keep only what you need.</li>
+        <li><strong>Modern web work</strong> is fine but not its strength — VS Code or WebStorm is usually nicer for JS/TS-heavy projects.</li>
+        <li><strong>Microsoft's investment</strong> in greenfield AI/dev tooling is increasingly happening on the VS Code side. VS keeps shipping and is fully supported, but the buzz lives elsewhere.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Editors</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="vscode.html">← VS Code</a>
+        <a href="jetbrains.html">← JetBrains</a>
+        <a href="vim-emacs.html">Neovim / Emacs →</a>
+        <a href="ai-editors.html">AI-Native Editors →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JetBrains Suite · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="JetBrains IDEs — IntelliJ, PyCharm, WebStorm, Rider, GoLand, RubyMine. Best-in-class refactoring, deep static analysis, paid but worth it for many." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/jetbrains.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="JetBrains Suite · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="JetBrains IDEs — best-in-class refactoring." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/jetbrains.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="JetBrains Suite · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="JetBrains IDEs — best-in-class refactoring." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">IDEs &amp; Editors Deep Dive · 2 of 5</div>
+    <h1>JetBrains Suite — The Refactoring IDE</h1>
+    <p class="lede">JetBrains has been making language-specific IDEs since 2001 — IntelliJ IDEA for Java, then PyCharm, WebStorm, PhpStorm, Rider, GoLand, RubyMine, CLion, DataGrip, RustRover. They share a single platform and a consistent reputation: deep static analysis, the most aggressive refactoring on the market, and an opinionated UX that experienced developers swear by.</p>
+    <div class="tags"><span>IntelliJ Platform</span><span>Refactoring</span><span>Static Analysis</span><span>Paid</span><span>Toolbox</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Lineup</div><h2>Which IDE Maps to Which Stack</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Product</th><th>For</th></tr></thead>
+        <tbody>
+          <tr><td>IntelliJ IDEA</td><td>Java, Kotlin, Scala — JVM in general. Ultimate adds frameworks (Spring, JPA, etc).</td></tr>
+          <tr><td>PyCharm</td><td>Python, with Django/Flask/FastAPI support in Professional.</td></tr>
+          <tr><td>WebStorm</td><td>JavaScript, TypeScript, Node, the modern web frameworks.</td></tr>
+          <tr><td>Rider</td><td>.NET — the cross-platform alternative to Visual Studio.</td></tr>
+          <tr><td>GoLand</td><td>Go.</td></tr>
+          <tr><td>PhpStorm</td><td>PHP and the WordPress / Laravel / Symfony ecosystems.</td></tr>
+          <tr><td>RubyMine</td><td>Ruby and Rails.</td></tr>
+          <tr><td>CLion / RustRover</td><td>C/C++ and Rust.</td></tr>
+          <tr><td>DataGrip</td><td>Database IDE — SQL across many engines.</td></tr>
+          <tr><td>Android Studio</td><td>Google's official Android IDE — built on the IntelliJ Platform.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:8px; font-size:13.5px; color: var(--muted);">The free <strong>Community Edition</strong> covers IntelliJ, PyCharm, and Android Studio at the language level. <strong>Toolbox</strong> manages installs, versions, and project shortcuts.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You Pay For</div><h2>The Reasons to Choose This Over VS Code</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Refactoring depth.</strong> Rename, extract method/variable/interface, move class, change signature, inline, pull up / push down — all aware of usages across the project, including XML configs, templates, SQL, and tests.</li>
+        <li><strong>On-the-fly inspections.</strong> Hundreds of language-specific lints highlight bugs, dead code, performance smells as you type. The "Problems" panel is a TODO list that writes itself.</li>
+        <li><strong>Framework awareness.</strong> Spring beans, Django models, Rails routes, JPA entities — the IDE understands the framework, not just the language. Navigation hops between layers like they're the same file.</li>
+        <li><strong>Database tooling.</strong> Connect to Postgres/MySQL/Mongo/etc, browse schemas, write SQL with completion against actual table columns, generate migrations.</li>
+        <li><strong>Built-in tooling.</strong> HTTP client, REST scratch files, Docker, Kubernetes, profilers, built-in. Less hopping to terminals.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Why It Isn't Universal</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Resource usage.</strong> JVM-based, indexes whole projects. Big monorepos need real RAM. Worth tuning <code>-Xmx</code> in vmoptions.</li>
+        <li><strong>Cost.</strong> Per-seat subscription for the Ultimate tiers and the All Products Pack. Worth it for many; a barrier for some.</li>
+        <li><strong>UX is dense.</strong> The keymap, panels, and scopes take time to learn. People who give it two weeks rarely go back; people who give it two days often quit.</li>
+        <li><strong>Indexing pauses</strong> on first open of a large project can be lengthy. Get used to walking away to refill coffee.</li>
+        <li><strong>AI-native editors</strong> haven't quite landed in JetBrains yet — JetBrains AI Assistant exists, but the cutting edge of agent IDEs is still on the VS Code fork side.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Editors</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="vscode.html">← VS Code</a>
+        <a href="visual-studio.html">Visual Studio →</a>
+        <a href="vim-emacs.html">Neovim / Emacs →</a>
+        <a href="ai-editors.html">AI-Native Editors →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

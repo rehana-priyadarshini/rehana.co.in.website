@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Linear · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Linear — fast, opinionated issue tracking that startups and product teams default to. Cycles, projects, triage, and a UI that loads instantly." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/linear.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Linear · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Linear — fast, opinionated issue tracking." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/linear.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Linear · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Linear — fast, opinionated issue tracking." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Project &amp; Issue Tracking Deep Dive · 2 of 5</div>
+    <h1>Linear — Opinionated, Fast, Loved</h1>
+    <p class="lede">Linear launched in 2019 explicitly as the anti-Jira: opinionated defaults instead of infinite configuration, a keyboard-first UI, and a sync engine that makes the app feel local. It became the reflexive choice for product-led startups and is steadily moving up-market. The tradeoff is real: less flexibility, in exchange for less drift.</p>
+    <div class="tags"><span>Cycles</span><span>Triage</span><span>Keyboard-First</span><span>API-First</span><span>Opinionated</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Concepts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Workspace</td><td>The whole org.</td></tr>
+          <tr><td>Team</td><td>The unit that owns issues, cycles, and a triage queue.</td></tr>
+          <tr><td>Issue</td><td>The atomic unit. Identifier like <code>ENG-1234</code>.</td></tr>
+          <tr><td>Cycle</td><td>Linear's take on a sprint — a recurring time-box.</td></tr>
+          <tr><td>Project</td><td>Cross-team initiative with a target date and a doc.</td></tr>
+          <tr><td>Initiative</td><td>Higher-level container — strategy → projects → issues.</td></tr>
+          <tr><td>Triage</td><td>Inbox for incoming issues from customers, integrations, or other teams.</td></tr>
+          <tr><td>Roadmap</td><td>Timeline view across projects/initiatives.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why Teams Pick It</h2><h2>What's Different</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Speed.</strong> Optimistic UI, local-first sync. Pages render instantly even on flaky Wi-Fi. Once you've used it, every other tracker feels heavy.</li>
+        <li><strong>Keyboard everything.</strong> <code>C</code> create, <code>G I</code> go to issues, <code>A</code> assign. Power users stay on the home row.</li>
+        <li><strong>Strong defaults.</strong> Issue states, priorities, estimate units are fixed. You don't get a "design new field types" rabbit hole.</li>
+        <li><strong>Git integration.</strong> Branch names, PRs, and commits auto-link by issue ID and move the issue along the workflow.</li>
+        <li><strong>API-first.</strong> A clean GraphQL API and webhook system. Automations, scripts, and AI agents are first-class citizens.</li>
+        <li><strong>Built-in docs.</strong> Project documents, free-form. No round trip to Confluence/Notion for lightweight specs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Caveats</div><h2>Where It Pushes Back</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Less configurable.</strong> No custom workflows per team, no custom fields with arbitrary types. For some shops that's a feature; for compliance-heavy or non-software teams, it's a non-starter.</li>
+        <li><strong>Reporting is lighter</strong> than Jira's. Velocity-style charts exist; deeply custom dashboards do not.</li>
+        <li><strong>Best fit:</strong> product-led software teams. Stretches less gracefully into IT ops, support workflows, or anything with rigid governance.</li>
+        <li><strong>Still trending up-market.</strong> Enterprise SSO, audit logs, sub-issues, initiatives all keep landing — but it's a younger product than Jira and won't have every esoteric feature.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Tracking Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="jira.html">← Jira</a>
+        <a href="github-issues.html">GitHub Issues / Projects →</a>
+        <a href="lightweight-pm.html">Trello / Asana / ClickUp →</a>
+        <a href="wikis.html">Confluence / Notion →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

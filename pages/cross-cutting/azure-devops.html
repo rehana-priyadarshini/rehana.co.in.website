@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Azure DevOps · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Azure DevOps — Microsoft's full ALM suite: Repos, Pipelines, Boards, Artifacts, Test Plans. The .NET-shop default before GitHub absorbed the spotlight." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/azure-devops.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Azure DevOps · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Azure DevOps — Microsoft's full ALM suite." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/azure-devops.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Azure DevOps · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Azure DevOps — Microsoft's full ALM suite." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cross-Cutting Tools Deep Dive · 5 of 6</div>
+    <h1>Azure DevOps — Microsoft's Full ALM Suite</h1>
+    <p class="lede">Azure DevOps started life as Team Foundation Server in 2005 and morphed through Visual Studio Online into its current form. It bundles five products under one roof — Repos, Pipelines, Boards, Artifacts, Test Plans — and is the deeply-rooted default in many .NET shops. Microsoft has been clear that long-term investment is shifting to GitHub, but Azure DevOps remains supported and widely used.</p>
+    <div class="tags"><span>Microsoft</span><span>Pipelines</span><span>Boards</span><span>TFVC</span><span>Enterprise</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Five Services</div><h2>What's Inside</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Service</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Repos</td><td>Git hosting (and legacy TFVC centralized VCS).</td></tr>
+          <tr><td>Pipelines</td><td>YAML-based CI/CD. Microsoft-hosted or self-hosted agents. Cross-platform.</td></tr>
+          <tr><td>Boards</td><td>Work items, backlogs, sprints, kanban — Agile, Scrum, or CMMI templates.</td></tr>
+          <tr><td>Artifacts</td><td>Package feeds for NuGet, npm, Maven, Python, universal packages.</td></tr>
+          <tr><td>Test Plans</td><td>Manual test case management — uncommon outside enterprise QA.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:8px; font-size:13.5px; color: var(--muted);">You can use any subset. Many teams use Repos + Pipelines and track work in Jira, or use Boards + Pipelines pointed at a GitHub repo.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Why Pick It</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Native .NET / Windows story.</strong> First-class MSBuild, NuGet feeds, Windows agents, Visual Studio integration.</li>
+        <li><strong>Mature on-prem option.</strong> Azure DevOps Server is the self-hosted edition for regulated and air-gapped environments.</li>
+        <li><strong>Enterprise governance.</strong> Granular permissions, audit logs, AD/Entra integration that maps cleanly to corporate IT.</li>
+        <li><strong>Pipelines are very capable.</strong> YAML pipelines, environments with approvals, deployment groups, variable groups linked to Key Vault.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Direction</div><h2>Azure DevOps vs GitHub</h2></div>
+    <div class="chapter-body">
+      <p>Microsoft owns both. The public guidance is that <em>greenfield</em> projects should default to GitHub (with GitHub Advanced Security and Actions) and that Azure DevOps remains a supported home for existing investments. New feature work happens on GitHub first.</p>
+      <p style="margin-top:10px;">In practice: if you're starting today and don't have a strong reason to pick ADO, pick GitHub. If you already run ADO, there's no urgent reason to migrate — but expect any "what's new" announcement to land on the GitHub side first.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cross-Cutting Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="git.html">← Git</a>
+        <a href="github.html">← GitHub</a>
+        <a href="gitlab.html">← GitLab</a>
+        <a href="bitbucket.html">← Bitbucket</a>
+        <a href="legacy-vcs.html">Mercurial / SVN →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

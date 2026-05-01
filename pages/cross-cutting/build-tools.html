@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build Tools &amp; Package Managers · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Build tools and package managers — Maven, Gradle, npm, pnpm, pip, Poetry, uv, Cargo, CMake, MSBuild. Two jobs: resolve dependencies, produce an artifact." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/build-tools.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Build Tools &amp; Package Managers · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Build tools and package managers — two jobs: resolve dependencies, produce an artifact." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/build-tools.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Build Tools &amp; Package Managers · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Build tools and package managers." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cross-Cutting Tools Deep Dive</div>
+    <h1>Build Tools &amp; Package Managers</h1>
+    <p class="lede">Every project does two things before it can run: pull in third-party code (dependency resolution) and turn source files into a shippable artifact (compilation, bundling, packaging). Some ecosystems split the two; others fuse them. The names change per stack, but the concepts repeat — manifest file, lockfile, dependency graph, build cache, artifact.</p>
+    <div class="tags"><span>Dependencies</span><span>Lockfiles</span><span>Bundlers</span><span>Compilation</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Common Pattern</div><h2>What All of These Tools Do</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Universal Vocabulary</h4>
+        <ul>
+          <li><strong>Manifest</strong> — declarative file listing your direct dependencies and their version ranges (<code>package.json</code>, <code>pom.xml</code>, <code>pyproject.toml</code>, <code>Cargo.toml</code>).</li>
+          <li><strong>Lockfile</strong> — exact resolved versions and hashes for every transitive dep (<code>package-lock.json</code>, <code>poetry.lock</code>, <code>Cargo.lock</code>). Commit this. Without it, "works on my machine" is unavoidable.</li>
+          <li><strong>Resolution</strong> — pick a single version per package that satisfies every constraint. NP-hard in general; tools use SAT solvers or backtracking.</li>
+          <li><strong>Build cache</strong> — outputs are deterministic, so why rebuild what hasn't changed? Local cache plus remote cache speeds CI dramatically.</li>
+          <li><strong>Artifact</strong> — the thing you ship: jar, wheel, npm tarball, container image, native binary.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">By Stack</div><h2>The Players You'll Meet</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Java &amp; JVM — Maven, Gradle</summary>
+        <div class="drill-body">
+          <p><strong>Maven</strong> is XML-based, opinionated, predictable. <code>pom.xml</code> declares dependencies; the lifecycle (<code>compile</code>, <code>test</code>, <code>package</code>, <code>install</code>) is fixed. Boring, in the good sense.</p>
+          <p style="margin-top:6px;"><strong>Gradle</strong> is Groovy/Kotlin DSL, faster (incremental builds, build cache, daemon), more flexible. The flexibility cuts both ways — Gradle scripts can become a maintenance burden if you let them.</p>
+          <p style="margin-top:6px;">Repos: Maven Central is canonical. Verify checksums; the supply chain has been attacked.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JavaScript / TypeScript — npm, pnpm, Yarn + Vite, Webpack, esbuild</summary>
+        <div class="drill-body">
+          <p>Two layers: <em>install</em> the deps and <em>bundle</em> the browser code.</p>
+          <ul style="font-size:14px; line-height:1.6;">
+            <li><strong>npm</strong> is the default. <strong>pnpm</strong> uses a content-addressed store and symlinks — fast, disk-efficient, strict about phantom dependencies. <strong>Yarn</strong> (Berry) pioneered Plug'n'Play and zero-installs.</li>
+            <li><strong>Vite</strong> is the modern dev server (esbuild for dev, Rollup for prod). <strong>Webpack</strong> still rules many existing apps. <strong>esbuild</strong> and <strong>Turbopack</strong> are the speed-first alternatives.</li>
+            <li><strong>node_modules</strong> can be enormous because resolution allows multiple versions of the same package — feature, not bug.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>.NET — dotnet CLI, NuGet, MSBuild</summary>
+        <div class="drill-body">
+          <p>One unified CLI: <code>dotnet restore / build / test / publish / pack</code>. <strong>NuGet</strong> is the package manager (and registry, nuget.org). <strong>MSBuild</strong> is the underlying build engine — XML-based <code>.csproj</code> files driving compilation. SDK-style projects are now the norm and are pleasantly terse.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Python — pip, Poetry, uv, pipenv</summary>
+        <div class="drill-body">
+          <p><strong>pip</strong> + <code>requirements.txt</code> is the lowest common denominator; no real lockfile, no environment management. <strong>Poetry</strong> introduced <code>pyproject.toml</code>-based projects with a real lockfile. <strong>uv</strong> (Astral, Rust-based) is the new fast option — orders of magnitude faster than pip and increasingly the default in new projects. <strong>pipenv</strong> still exists but momentum has moved on.</p>
+          <p style="margin-top:6px;">Virtual environments isolate per-project deps; without one you fight system Python forever.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>C / C++ — CMake, Make, Bazel, Conan, vcpkg</summary>
+        <div class="drill-body">
+          <p>The hardest ecosystem. <strong>Make</strong> is unix-classic, brittle, still everywhere. <strong>CMake</strong> generates Make/Ninja/MSBuild files — the cross-platform default for modern C++. <strong>Bazel</strong> (Google) does monorepo-scale hermetic builds. Package management is the long-suffering part — <strong>Conan</strong> and <strong>vcpkg</strong> finally make it tolerable.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Go &amp; Rust — Built In</summary>
+        <div class="drill-body">
+          <p><strong>Go modules</strong> + <code>go build</code> produce a single static binary. No external package manager needed.</p>
+          <p style="margin-top:6px;"><strong>Cargo</strong> is the bar for what a build tool should feel like: <code>cargo build / test / publish</code>, hermetic dependency resolution, integrated docs, all-in-one.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Mobile — Gradle (Android), CocoaPods / SPM (iOS)</summary>
+        <div class="drill-body">
+          <p>Android uses <strong>Gradle</strong> with the Android Gradle Plugin. iOS used <strong>CocoaPods</strong> for years; <strong>Swift Package Manager (SPM)</strong> is now the official Apple direction and ships with Xcode.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Polyglot Build Systems — Bazel, Buck2, Pants, Nx, Turborepo</summary>
+        <div class="drill-body">
+          <p>For monorepos that span languages, dedicated meta-build systems pay off: parallel builds, hermetic outputs, remote caching, only-rebuild-what-changed. <strong>Bazel</strong> and <strong>Buck2</strong> are language-agnostic and rigorous; <strong>Nx</strong> and <strong>Turborepo</strong> sit on top of npm/pnpm for JS-heavy monorepos.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where Builds Break</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Lockfile churn.</strong> Re-running install rewriting unrelated entries makes review hell. Pin tooling versions; only commit lockfile changes that match an intentional dep change.</li>
+        <li><strong>Supply-chain attacks.</strong> Typosquats, hijacked maintainer accounts, malicious post-install scripts. Pin versions or hashes, run dependency review (<code>pip-audit</code>, <code>npm audit</code>, <code>cargo audit</code>, GitHub Advanced Security), and disable post-install for untrusted packages where you can.</li>
+        <li><strong>Caches that hide bugs.</strong> A green CI on a cached build can pass while a clean build would fail. Periodically rebuild from scratch.</li>
+        <li><strong>Floating versions in production.</strong> <code>^</code>, <code>~</code>, <code>latest</code> — fine for libraries' manifests, never for the lockfile that ships.</li>
+        <li><strong>Reproducibility.</strong> Two devs, same lockfile, different output? Suspect: native builds (compiler version), timestamps embedded in artifacts, network-fetched resources at build time.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cross-Cutting Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="git.html">Git →</a>
+        <a href="vscode.html">VS Code →</a>
+        <a href="jetbrains.html">JetBrains →</a>
+        <a href="jira.html">Jira →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

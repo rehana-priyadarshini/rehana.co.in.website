@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jira · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Jira — Atlassian's issue tracker. The enterprise standard for backlogs, sprints, and roadmaps. Powerful, configurable, occasionally exhausting." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/jira.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Jira · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Jira — Atlassian's issue tracker." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/jira.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Jira · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Jira — Atlassian's issue tracker." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Project &amp; Issue Tracking Deep Dive · 1 of 5</div>
+    <h1>Jira — The Enterprise Tracker</h1>
+    <p class="lede">Jira launched in 2002 as a bug tracker. Twenty-plus years and many acquisitions later, it's the reigning standard for software work-tracking in mid-sized and large organizations. Loved or loathed depending on how it's been configured locally — Jira's biggest feature and biggest weakness are the same thing: you can configure almost anything.</p>
+    <div class="tags"><span>Atlassian</span><span>Scrum</span><span>Kanban</span><span>JQL</span><span>Workflows</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Concepts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Project</td><td>A container for issues with its own settings, board, and permissions.</td></tr>
+          <tr><td>Issue</td><td>A unit of work — Story, Task, Bug, Epic, Sub-task, or a custom type.</td></tr>
+          <tr><td>Epic</td><td>Big-picture work that contains many stories.</td></tr>
+          <tr><td>Sprint</td><td>A timebox of selected issues. Scrum boards organize around it.</td></tr>
+          <tr><td>Workflow</td><td>The state machine an issue moves through (To Do → In Progress → Done, plus your variants).</td></tr>
+          <tr><td>JQL</td><td>Jira Query Language — SQL-like filter syntax. Once learned, indispensable.</td></tr>
+          <tr><td>Component / Label</td><td>Lightweight categorization beyond project boundaries.</td></tr>
+          <tr><td>Confluence link</td><td>Inline embedding of pages, designs, decisions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Earns Its Keep</div><h2>What Jira Does Well</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Configurable workflows.</strong> Custom statuses, transitions, validators, post-functions — match a regulated process exactly.</li>
+        <li><strong>JQL.</strong> Filter, save, share. Build dashboards from queries. Power users live in JQL.</li>
+        <li><strong>Reports.</strong> Burndowns, velocity, cumulative flow, control charts — out-of-the-box for Scrum/Kanban.</li>
+        <li><strong>Integration density.</strong> Bitbucket, GitHub, GitLab, Slack, Confluence, Jenkins — the ecosystem is enormous.</li>
+        <li><strong>Hierarchies.</strong> Initiative → Epic → Story → Sub-task — handy when leadership and individual contributors need different altitudes of the same plan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why People Complain</div><h2>The Honest Pain Points</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Configuration drift.</strong> Five years in, every project has its own custom fields, screens, and workflows. Reporting across them becomes an archaeology project.</li>
+        <li><strong>Performance.</strong> Big instances feel slow. Issue links and JQL queries timing out is not unusual.</li>
+        <li><strong>UI density.</strong> Modern UI is friendlier than it was, but the surface area is huge — newcomers get lost.</li>
+        <li><strong>Notification noise.</strong> Without curated filters and notification schemes, your inbox becomes unusable.</li>
+        <li><strong>Cost at scale.</strong> Per-seat pricing across Jira, Confluence, Bitbucket, and Atlassian's apps adds up.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Tracking Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="linear.html">Linear →</a>
+        <a href="github-issues.html">GitHub Issues / Projects →</a>
+        <a href="lightweight-pm.html">Trello / Asana / ClickUp →</a>
+        <a href="wikis.html">Confluence / Notion →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

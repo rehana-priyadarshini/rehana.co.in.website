@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitHub — the de facto home of open source. Pull requests, Actions, Issues, Codespaces, Copilot, and the social layer on top of Git." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/github.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="GitHub · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="GitHub — the de facto home of open source." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/github.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GitHub · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="GitHub — the de facto home of open source." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cross-Cutting Tools Deep Dive · 2 of 6</div>
+    <h1>GitHub — Where Code Lives in Public</h1>
+    <p class="lede">Founded 2008, acquired by Microsoft in 2018. GitHub turned Git from a developer tool into a social platform: a profile, a follower graph, a pull-request inbox, and a CI runner. Most open source lives here. Most companies use it for private code too.</p>
+    <div class="tags"><span>Pull Requests</span><span>Actions</span><span>Issues</span><span>Copilot</span><span>Codespaces</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's in the Box</div><h2>The Surface Area</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Repositories</strong> — public or private Git hosts with a web UI for browsing, searching, and editing.</li>
+          <li><strong>Pull requests</strong> — the proposal-review-merge unit of work. Comments, suggested changes, required reviewers, status checks.</li>
+          <li><strong>Issues &amp; Projects</strong> — bug tracking, discussion threads, kanban-style boards tightly linked to PRs.</li>
+          <li><strong>Actions</strong> — built-in CI/CD. YAML workflows triggered by events; runners hosted by GitHub or self-hosted.</li>
+          <li><strong>Packages, Container Registry, Pages, Releases</strong> — adjacent product surfaces for shipping artifacts and docs.</li>
+          <li><strong>Codespaces</strong> — cloud dev environments backed by VS Code. <strong>Copilot</strong> — AI pair programmer.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The PR Workflow</div><h2>How Work Lands</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">Branch</div><div class="arrow">→</div>
+        <div class="step">Push</div><div class="arrow">→</div>
+        <div class="step">Open PR</div><div class="arrow">→</div>
+        <div class="step">CI checks</div><div class="arrow">→</div>
+        <div class="step">Review</div><div class="arrow">→</div>
+        <div class="step">Merge / squash / rebase</div>
+      </div>
+      <p style="margin-top:10px; font-size:14px;">Branch protection rules enforce required reviews, passing checks, and signed commits before merge. <em>Merge queue</em> serializes merges so each PR is tested against the exact state of <code>main</code> it will land on — no more "green PR breaks main" surprises.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Actions</div><h2>CI/CD Built In</h2></div>
+    <div class="chapter-body">
+      <p>Workflows live in <code>.github/workflows/*.yml</code>. They react to events (<code>push</code>, <code>pull_request</code>, <code>schedule</code>, <code>workflow_dispatch</code>, ...) and run jobs on Linux, Windows, or macOS runners. The marketplace has thousands of pre-built actions — checkout, setup-node, deploy-to-cloud — that you compose like Lego.</p>
+      <ul style="font-size:14px; line-height:1.7; margin-top:8px;">
+        <li><strong>Reusable workflows</strong> let you DRY up shared CI logic across repos.</li>
+        <li><strong>OIDC tokens</strong> let runners authenticate to AWS/GCP/Azure without long-lived secrets.</li>
+        <li><strong>Self-hosted runners</strong> for heavy jobs, GPU work, or on-prem network access — but you own the security.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Vendor lock-in is real.</strong> Actions, Issues, Projects, Packages — all proprietary formats. Migrating off is doable but costs weeks.</li>
+        <li><strong>Issues are lightweight by design.</strong> Teams that need rich workflows often pair GitHub with Linear or Jira and just sync IDs.</li>
+        <li><strong>Action supply chain.</strong> Pin third-party actions to a SHA, not <code>@v1</code>. A compromised action runs with your secrets.</li>
+        <li><strong>Public forks see your secrets … almost.</strong> By default, secrets aren't passed to PRs from forks. Read the docs before changing that.</li>
+        <li><strong>Costs scale with minutes and storage.</strong> Self-hosted runners or Linux-only matrices cut bills fast.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cross-Cutting Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="git.html">← Git</a>
+        <a href="gitlab.html">GitLab →</a>
+        <a href="bitbucket.html">Bitbucket →</a>
+        <a href="azure-devops.html">Azure DevOps →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

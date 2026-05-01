@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Neovim &amp; Emacs · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Neovim and Emacs — keyboard-driven editors with cult followings. Modal editing, infinite extensibility, and the modern LSP/Tree-sitter era." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/vim-emacs.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Neovim &amp; Emacs · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Neovim and Emacs — keyboard-driven editors with cult followings." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/vim-emacs.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Neovim &amp; Emacs · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Neovim and Emacs — keyboard-driven editors with cult followings." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">IDEs &amp; Editors Deep Dive · 4 of 5</div>
+    <h1>Neovim &amp; Emacs — Keyboard-Driven Power Tools</h1>
+    <p class="lede">Vim's lineage goes back to <em>vi</em> (1976). Emacs older still (mid-70s). They've outlived every "modern editor" launched since, because they're not editors so much as editing platforms — minimal cores wrapped around aggressive extensibility. Today, with LSP and Tree-sitter, both can match a mainstream IDE's intellisense without the Electron weight.</p>
+    <div class="tags"><span>Modal</span><span>Lua / Elisp</span><span>LSP</span><span>Tree-sitter</span><span>Terminal-Native</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Vim &amp; Neovim</div><h2>Modal Editing</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Modal.</strong> Normal mode for navigation and commands, insert mode for typing, visual mode for selection. Most keys do something different in each mode — a steep curve, then a deeply efficient muscle memory.</li>
+        <li><strong>Verb-noun grammar.</strong> <code>d3w</code> = delete three words. <code>ci"</code> = change inside quotes. <code>yap</code> = yank a paragraph. Operators and motions compose.</li>
+        <li><strong>Vim</strong> is the original; <strong>Neovim</strong> is the 2014 fork that modernized the codebase, embedded a Lua runtime, and added a real RPC API for plugins and external tooling.</li>
+        <li><strong>LazyVim, LunarVim, AstroNvim, NvChad</strong> — pre-baked Neovim distributions that give you LSP + completion + Tree-sitter + fuzzy finder out of the box, so you don't spend a weekend writing config.</li>
+        <li><strong>Where it shines:</strong> remote servers, low-latency editing, anyone who lives on the keyboard, anyone editing over SSH or in tmux.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Emacs</div><h2>The Editor That Wants to Be an OS</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Lisp interpreter with an editor stapled on.</strong> Every keypress runs an Emacs Lisp function — and you can redefine any of them on the fly.</li>
+        <li><strong>Modal-by-extension.</strong> Default keys are chord-heavy (<code>C-x C-s</code> to save). <strong>Evil mode</strong> brings Vim keybindings to people who want both worlds.</li>
+        <li><strong>Org-mode</strong> is genuinely famous outside the Emacs world — outlines, agendas, literate programming, tables, exporters, all in plain text.</li>
+        <li><strong>Distributions:</strong> Doom Emacs (Vim-flavored, fast startup), Spacemacs (mnemonic <code>SPC</code> leader). Fresh "vanilla" Emacs has improved dramatically with built-in LSP (Eglot) and Tree-sitter.</li>
+        <li><strong>Where it shines:</strong> long, deep working sessions; people who want one tool for editing, mail, calendar, RSS, and shell.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Modern Era</div><h2>Why They're Still Relevant</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>LSP standardized intellisense.</strong> Both Neovim and Emacs are first-class LSP clients now — same gopls/rust-analyzer/pyright as VS Code uses, no plugin hell.</li>
+        <li><strong>Tree-sitter</strong> gives both editors structural parsing for accurate syntax highlighting, motions, and code-aware navigation.</li>
+        <li><strong>Terminal-native</strong> means low memory, instant startup, and trivial use over SSH and tmux. No "open a 400 MB Electron app to read one config file."</li>
+        <li><strong>Honorable mentions.</strong> <strong>Helix</strong> is a Rust modal editor with batteries included. <strong>Zed</strong> is a fast native editor from the Atom team. <strong>Sublime Text</strong> remains the lightweight cross-platform reference editor for many.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Honest Caveats</div><h2>Why Not Everyone Goes There</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Onboarding.</strong> Productivity dips for weeks before it climbs. People with deadlines reasonably bail.</li>
+        <li><strong>Configuration as a hobby.</strong> A real risk — you can spend more time tuning the editor than using it. Pick a distribution and resist tweaking for the first month.</li>
+        <li><strong>Visual debugging</strong> exists (DAP, dap.nvim, dape) but isn't as polished as JetBrains/VS Code.</li>
+        <li><strong>Pair programming and screen sharing</strong> with non-Vim/Emacs colleagues can be friction.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Editors</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="vscode.html">← VS Code</a>
+        <a href="jetbrains.html">← JetBrains</a>
+        <a href="visual-studio.html">← Visual Studio</a>
+        <a href="ai-editors.html">AI-Native Editors →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

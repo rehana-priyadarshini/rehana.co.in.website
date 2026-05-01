@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Git · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Git — the distributed version control system that runs the industry. Snapshots, branches, the index, and the workflows that grew up around them." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/git.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Git · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="Git — the distributed version control system that runs the industry." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/git.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Git · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="Git — the distributed version control system that runs the industry." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cross-Cutting Tools Deep Dive · 1 of 6</div>
+    <h1>Git — Distributed Version Control</h1>
+    <p class="lede">Linus Torvalds wrote Git in 2005 to host the Linux kernel after the BitKeeper fallout. Twenty years later it is the version control system. Subversion still ships in places, Mercurial has loyalists, but for almost every new project the question isn't <em>which VCS</em> — it's <em>which Git host</em>.</p>
+    <div class="tags"><span>Distributed</span><span>Snapshots</span><span>Branches</span><span>SHA-1</span><span>DAG</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mental Model</div><h2>What Git Actually Stores</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Snapshots, not diffs.</strong> Every commit is a full snapshot of the working tree, hashed and stored as an object. Git computes diffs on demand.</li>
+          <li><strong>Content-addressed objects.</strong> Blobs (file contents), trees (directories), commits (snapshot + parent + author + message), tags. Identified by SHA-1 of their content.</li>
+          <li><strong>Branches are pointers.</strong> A branch is a 40-character file pointing at one commit. Cheap to make, cheap to throw away.</li>
+          <li><strong>Three areas:</strong> working tree (your files), index/staging (what the next commit will contain), repository (the committed history under <code>.git/</code>).</li>
+          <li><strong>Distributed.</strong> Every clone is a full repository with full history. There is no privileged server in the protocol — only by convention.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Commands That Matter</div><h2>What You'll Run Daily</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>git clone</code></td><td>Copy a remote repository, full history included.</td></tr>
+          <tr><td><code>git status</code> / <code>diff</code></td><td>What's changed, what's staged.</td></tr>
+          <tr><td><code>git add</code> / <code>commit</code></td><td>Stage files, then snapshot them with a message.</td></tr>
+          <tr><td><code>git switch</code> / <code>checkout</code></td><td>Move between branches.</td></tr>
+          <tr><td><code>git pull</code> / <code>fetch</code> / <code>push</code></td><td>Sync with a remote. <code>fetch</code> is read-only; <code>pull</code> is fetch + merge.</td></tr>
+          <tr><td><code>git merge</code> vs <code>rebase</code></td><td>Both integrate work. Merge preserves history; rebase rewrites it onto a new base.</td></tr>
+          <tr><td><code>git log</code> / <code>blame</code> / <code>bisect</code></td><td>Read history, find who changed a line, binary-search a regression.</td></tr>
+          <tr><td><code>git stash</code></td><td>Set aside uncommitted work to switch contexts.</td></tr>
+          <tr><td><code>git reflog</code></td><td>Your safety net — every HEAD movement is logged for ~90 days, even after "destructive" commands.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Workflows</div><h2>How Teams Actually Use It</h2></div>
+    <div class="chapter-body">
+      <details class="drill" open>
+        <summary>Trunk-Based Development</summary>
+        <div class="drill-body">
+          <p>Everyone commits to a single long-lived branch (<code>main</code>) at least daily. Short-lived feature branches that merge within a day or two. Releases are tags or release branches cut from trunk. This is what most modern high-velocity teams do — it forces small PRs, fast review, and feature flags for unfinished work. CI keeps trunk green.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>GitFlow</summary>
+        <div class="drill-body">
+          <p>Long-lived <code>develop</code> and <code>main</code>, plus feature, release, and hotfix branches. Designed for shipping versioned software with parallel maintenance. Heavy for SaaS where you ship continuously; still useful for libraries, mobile apps with app-store cycles, and embedded firmware.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>GitHub Flow / Pull Request Workflow</summary>
+        <div class="drill-body">
+          <p>Branch off <code>main</code>, push, open a pull request, get review, merge. The "default" workflow on GitHub/GitLab/Bitbucket. Pairs naturally with trunk-based development when branches are short-lived.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forking Workflow</summary>
+        <div class="drill-body">
+          <p>Each contributor has their own copy of the repo (a <em>fork</em>) and submits PRs upstream. The standard for open-source — the maintainer doesn't have to grant write access to every drive-by contributor.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Sharp Edges</div><h2>Where People Get Hurt</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Force push to a shared branch.</strong> <code>git push --force</code> rewrites the remote — anyone who'd pulled the old commits has to recover. Use <code>--force-with-lease</code>, and never force-push <code>main</code>.</li>
+        <li><strong>Rebasing public history.</strong> Rebase your local feature branch all you want; rebasing something others have based work on creates two divergent histories.</li>
+        <li><strong>Merge conflicts in generated files.</strong> Lockfiles, snapshots, generated bundles — set a merge driver or regenerate after merge instead of hand-resolving.</li>
+        <li><strong>Committed secrets.</strong> Once a credential is in history, it's effectively public. Rotate the secret, then rewrite history with <code>git filter-repo</code> if needed. Pre-commit hooks (gitleaks, trufflehog) catch them earlier.</li>
+        <li><strong>Large binaries.</strong> Git is optimized for text. Binaries bloat the repo forever. Use Git LFS for assets, or keep them out of the repo entirely.</li>
+        <li><strong>Detached HEAD.</strong> Not actually scary — you're just on a commit, not a branch. Make a branch (<code>git switch -c</code>) before committing if you want the work to be findable.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cross-Cutting Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="github.html">GitHub →</a>
+        <a href="gitlab.html">GitLab →</a>
+        <a href="bitbucket.html">Bitbucket →</a>
+        <a href="azure-devops.html">Azure DevOps →</a>
+        <a href="legacy-vcs.html">Mercurial / SVN →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

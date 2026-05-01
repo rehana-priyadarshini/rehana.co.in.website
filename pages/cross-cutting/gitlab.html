@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitLab · Cross-Cutting Tools Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitLab — the all-in-one DevOps platform: Git hosting, CI/CD, registries, security scans. Cloud or self-hosted." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/cross-cutting/gitlab.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="GitLab · Cross-Cutting Tools Deep Dive" />
+<meta property="og:description" content="GitLab — the all-in-one DevOps platform." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/cross-cutting/gitlab.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GitLab · Cross-Cutting Tools Deep Dive" />
+<meta name="twitter:description" content="GitLab — the all-in-one DevOps platform." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Cross-Cutting Tools Deep Dive · 3 of 6</div>
+    <h1>GitLab — DevOps in One Box</h1>
+    <p class="lede">GitLab pitches itself as a single application for the whole DevOps lifecycle: Git host, CI/CD, container registry, security scanning, package registry, issue tracking. The big differentiator is self-hosting — you can run the whole thing on your own infrastructure, which makes it the default choice for regulated industries and air-gapped environments.</p>
+    <div class="tags"><span>Self-Hosted</span><span>CI/CD</span><span>Merge Requests</span><span>Runners</span><span>DevSecOps</span></div>
+    <a class="back" href="../../index.html#ch-cross">← Back to Cross-Cutting Tools</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Fits</div><h2>Why Pick GitLab Over GitHub</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Self-managed by default.</strong> The Community Edition is open source; you can run it on your own VMs or Kubernetes. Banks, defense, government — anywhere data residency matters.</li>
+        <li><strong>CI/CD is first-class, not bolted on.</strong> <code>.gitlab-ci.yml</code> has been there since the start, with concepts like stages, jobs, and pipelines that map cleanly to most build/test/deploy flows.</li>
+        <li><strong>Built-in DevSecOps.</strong> SAST, DAST, container scanning, dependency scanning, secret detection — all included on the right tier, all surfaced in the merge request UI.</li>
+        <li><strong>One product, one bill.</strong> Auto DevOps, Pages, Wiki, Registry — all in the same UI under the same login.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Concepts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>Group / Subgroup</td><td>Org structure; settings, runners, and tokens cascade down.</td></tr>
+          <tr><td>Project</td><td>A repo plus its issues, MRs, pipelines, registry.</td></tr>
+          <tr><td>Merge Request (MR)</td><td>GitLab's term for a pull request.</td></tr>
+          <tr><td>Pipeline</td><td>A run of <code>.gitlab-ci.yml</code> made of stages of jobs.</td></tr>
+          <tr><td>Runner</td><td>The agent that executes jobs. Shared, group, or project-scoped; SaaS or self-hosted.</td></tr>
+          <tr><td>Environment</td><td>Named target (staging, prod) with deployment history and rollback.</td></tr>
+          <tr><td>Review App</td><td>Ephemeral environment spun up per MR for visual review.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Self-hosting has a tail.</strong> The "omnibus" install is easy; the upgrades, backups, runner fleet, and storage growth are not.</li>
+        <li><strong>Tier gating.</strong> Premium and Ultimate features (security dashboards, compliance, advanced approvals) are paywalled — read the comparison table before you build a plan around them.</li>
+        <li><strong>UI is dense.</strong> The everything-in-one-place strength is also a learning curve.</li>
+        <li><strong>Smaller marketplace</strong> than GitHub Actions — you'll write more pipeline code yourself.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Cross-Cutting Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="git.html">← Git</a>
+        <a href="github.html">← GitHub</a>
+        <a href="bitbucket.html">Bitbucket →</a>
+        <a href="azure-devops.html">Azure DevOps →</a>
+        <a href="../../index.html#ch-cross">↑ Back to Cross-Cutting Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
