@@ -81,9 +81,12 @@
   .tile {
     display: block; padding: 16px 18px; border-radius: 10px; background: var(--cream);
     border: 1px solid var(--line); text-decoration: none; color: var(--ink);
-    transition: all 0.15s ease; border-left: 5px solid var(--primary);
+    transition: all 0.15s ease; border-left: 5px solid #C94B89;
   }
-  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(45, 27, 78, 0.12); border-left-color: var(--accent); }
+  .tile.second { border-left-color: var(--second); }
+  .tile.mid { border-left-color: var(--mid); }
+  .tile.accent { border-left-color: var(--accent); }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(45, 27, 78, 0.12); border-left-color: var(--deep); border-left-width: 7px; padding-left: 16px; }
   .tile .num { font-size: 11px; font-weight: 700; letter-spacing: 3px; color: var(--second); }
   .tile .t  { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--deep); margin: 4px 0 4px; }
   .tile .d  { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
@@ -252,25 +255,25 @@
     <div class="map-sub">Twenty domains where software runs the show. Click a tile to drill down.</div>
 
     <a class="tile" href="#d-finance"><div class="num">01</div><div class="t">Finance / FinTech</div><div class="d">Banking, payments, trading, wealth, insurance.</div></a>
-    <a class="tile" href="#d-health"><div class="num">02</div><div class="t">Healthcare</div><div class="d">EHR, telemedicine, medical devices, pharma.</div></a>
-    <a class="tile" href="#d-erp"><div class="num">03</div><div class="t">ERP</div><div class="d">SAP, Oracle, Dynamics — the corporate spine.</div></a>
-    <a class="tile" href="#d-crm"><div class="num">04</div><div class="t">CRM &amp; MarTech</div><div class="d">Sales, marketing, customer journeys.</div></a>
+    <a class="tile second" href="#d-health"><div class="num">02</div><div class="t">Healthcare</div><div class="d">EHR, telemedicine, medical devices, pharma.</div></a>
+    <a class="tile mid" href="#d-erp"><div class="num">03</div><div class="t">ERP</div><div class="d">SAP, Oracle, Dynamics — the corporate spine.</div></a>
+    <a class="tile accent" href="#d-crm"><div class="num">04</div><div class="t">CRM &amp; MarTech</div><div class="d">Sales, marketing, customer journeys.</div></a>
     <a class="tile" href="#d-ecom"><div class="num">05</div><div class="t">E-commerce / Retail</div><div class="d">Storefronts, POS, omnichannel.</div></a>
-    <a class="tile" href="#d-industrial"><div class="num">06</div><div class="t">Industrial Automation</div><div class="d">PLCs, SCADA, Industry 4.0, IIoT.</div></a>
-    <a class="tile" href="#d-security"><div class="num">07</div><div class="t">Cybersecurity</div><div class="d">SOC, SIEM, IAM, threat intel.</div></a>
-    <a class="tile" href="#d-telecom"><div class="num">08</div><div class="t">Telecom</div><div class="d">5G, OSS/BSS, billing, network ops.</div></a>
+    <a class="tile second" href="#d-industrial"><div class="num">06</div><div class="t">Industrial Automation</div><div class="d">PLCs, SCADA, Industry 4.0, IIoT.</div></a>
+    <a class="tile mid" href="#d-security"><div class="num">07</div><div class="t">Cybersecurity</div><div class="d">SOC, SIEM, IAM, threat intel.</div></a>
+    <a class="tile accent" href="#d-telecom"><div class="num">08</div><div class="t">Telecom</div><div class="d">5G, OSS/BSS, billing, network ops.</div></a>
     <a class="tile" href="#d-gaming"><div class="num">09</div><div class="t">Gaming</div><div class="d">Engines, multiplayer, monetization.</div></a>
-    <a class="tile" href="#d-media"><div class="num">10</div><div class="t">Media / Streaming</div><div class="d">OTT, CDN, DRM, CMS, adtech.</div></a>
-    <a class="tile" href="#d-edu"><div class="num">11</div><div class="t">EdTech</div><div class="d">LMS, content delivery, assessments.</div></a>
-    <a class="tile" href="#d-gov"><div class="num">12</div><div class="t">Government / GovTech</div><div class="d">Citizen services, identity, compliance.</div></a>
+    <a class="tile second" href="#d-media"><div class="num">10</div><div class="t">Media / Streaming</div><div class="d">OTT, CDN, DRM, CMS, adtech.</div></a>
+    <a class="tile mid" href="#d-edu"><div class="num">11</div><div class="t">EdTech</div><div class="d">LMS, content delivery, assessments.</div></a>
+    <a class="tile accent" href="#d-gov"><div class="num">12</div><div class="t">Government / GovTech</div><div class="d">Citizen services, identity, compliance.</div></a>
     <a class="tile" href="#d-logistics"><div class="num">13</div><div class="t">Logistics / SCM</div><div class="d">WMS, TMS, tracking, last-mile.</div></a>
-    <a class="tile" href="#d-travel"><div class="num">14</div><div class="t">Travel &amp; Hospitality</div><div class="d">GDS, PMS, bookings, loyalty.</div></a>
-    <a class="tile" href="#d-energy"><div class="num">15</div><div class="t">Energy / Utilities</div><div class="d">Smart grid, metering, renewables.</div></a>
-    <a class="tile" href="#d-real"><div class="num">16</div><div class="t">Real Estate / PropTech</div><div class="d">Listings, CRE, smart buildings.</div></a>
+    <a class="tile second" href="#d-travel"><div class="num">14</div><div class="t">Travel &amp; Hospitality</div><div class="d">GDS, PMS, bookings, loyalty.</div></a>
+    <a class="tile mid" href="#d-energy"><div class="num">15</div><div class="t">Energy / Utilities</div><div class="d">Smart grid, metering, renewables.</div></a>
+    <a class="tile accent" href="#d-real"><div class="num">16</div><div class="t">Real Estate / PropTech</div><div class="d">Listings, CRE, smart buildings.</div></a>
     <a class="tile" href="#d-agri"><div class="num">17</div><div class="t">Agriculture / AgriTech</div><div class="d">Precision farming, supply traceability.</div></a>
-    <a class="tile" href="#d-auto"><div class="num">18</div><div class="t">Automotive</div><div class="d">Infotainment, ADAS, connected car.</div></a>
-    <a class="tile" href="#d-aero"><div class="num">19</div><div class="t">Aerospace / Defense</div><div class="d">Avionics, mission systems, safety.</div></a>
-    <a class="tile" href="#d-legal"><div class="num">20</div><div class="t">LegalTech</div><div class="d">Contract mgmt, e-discovery, compliance.</div></a>
+    <a class="tile second" href="#d-auto"><div class="num">18</div><div class="t">Automotive</div><div class="d">Infotainment, ADAS, connected car.</div></a>
+    <a class="tile mid" href="#d-aero"><div class="num">19</div><div class="t">Aerospace / Defense</div><div class="d">Avionics, mission systems, safety.</div></a>
+    <a class="tile accent" href="#d-legal"><div class="num">20</div><div class="t">LegalTech</div><div class="d">Contract mgmt, e-discovery, compliance.</div></a>
     <a class="tile" href="#d-blockchain"><div class="num">21</div><div class="t">Blockchain / Web3</div><div class="d">Crypto, smart contracts, DeFi, NFTs.</div></a>
   </div>
 

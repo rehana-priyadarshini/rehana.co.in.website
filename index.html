@@ -80,7 +80,10 @@
     border: 1px solid var(--line); text-decoration: none; color: var(--ink);
     transition: all 0.15s ease; border-left: 5px solid var(--blue);
   }
-  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10, 42, 67, 0.12); border-left-color: var(--accent); }
+  .tile.teal { border-left-color: var(--teal); }
+  .tile.mid { border-left-color: var(--mid); }
+  .tile.accent { border-left-color: var(--accent); }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10, 42, 67, 0.12); border-left-color: #6B4E9B; border-left-width: 7px; padding-left: 16px; }
   .tile .num { font-size: 11px; font-weight: 700; letter-spacing: 3px; color: var(--teal); }
   .tile .t  { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--deep); margin: 4px 0 4px; }
   .tile .d  { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
@@ -244,21 +247,21 @@
     <div class="map-sub">Click any tile to jump into that topic. Use <em>Back to Map</em> at the top of each section to return.</div>
 
     <a class="tile" href="#ch-foundations"><div class="num">01</div><div class="t">Foundations</div><div class="d">What programming is, core concepts, CS basics.</div></a>
-    <a class="tile" href="#ch-client"><div class="num">02</div><div class="t">Client Side</div><div class="d">Web, mobile, desktop — everything the user touches.</div></a>
-    <a class="tile" href="#ch-server"><div class="num">03</div><div class="t">Server Side</div><div class="d">Languages, frameworks, backend logic.</div></a>
-    <a class="tile" href="#ch-db"><div class="num">04</div><div class="t">Database Side</div><div class="d">SQL, NoSQL, search, vector, warehouses.</div></a>
+    <a class="tile teal" href="#ch-client"><div class="num">02</div><div class="t">Client Side</div><div class="d">Web, mobile, desktop — everything the user touches.</div></a>
+    <a class="tile mid" href="#ch-server"><div class="num">03</div><div class="t">Server Side</div><div class="d">Languages, frameworks, backend logic.</div></a>
+    <a class="tile accent" href="#ch-db"><div class="num">04</div><div class="t">Database Side</div><div class="d">SQL, NoSQL, search, vector, warehouses.</div></a>
     <a class="tile" href="#ch-api"><div class="num">05</div><div class="t">APIs &amp; Networking</div><div class="d">HTTP, REST, GraphQL, sockets, protocols.</div></a>
-    <a class="tile" href="#ch-arch"><div class="num">06</div><div class="t">Architecture &amp; Patterns</div><div class="d">Monolith, microservices, event-driven, SOLID.</div></a>
-    <a class="tile" href="#ch-security"><div class="num">07</div><div class="t">Security</div><div class="d">AuthN/Z, OWASP, encryption, secure coding.</div></a>
-    <a class="tile" href="#ch-testing"><div class="num">08</div><div class="t">Testing &amp; Quality</div><div class="d">Unit, integration, E2E, TDD, linters.</div></a>
+    <a class="tile teal" href="#ch-arch"><div class="num">06</div><div class="t">Architecture &amp; Patterns</div><div class="d">Monolith, microservices, event-driven, SOLID.</div></a>
+    <a class="tile mid" href="#ch-security"><div class="num">07</div><div class="t">Security</div><div class="d">AuthN/Z, OWASP, encryption, secure coding.</div></a>
+    <a class="tile accent" href="#ch-testing"><div class="num">08</div><div class="t">Testing &amp; Quality</div><div class="d">Unit, integration, E2E, TDD, linters.</div></a>
     <a class="tile" href="#ch-cross"><div class="num">09</div><div class="t">Cross-Cutting Tools</div><div class="d">Git, build tools, package managers, IDEs.</div></a>
-    <a class="tile" href="#ch-devops"><div class="num">10</div><div class="t">DevOps &amp; CI/CD</div><div class="d">Pipelines, containers, IaC, Kubernetes.</div></a>
-    <a class="tile" href="#ch-method"><div class="num">11</div><div class="t">Methodologies</div><div class="d">Agile, Scrum, Kanban, SDLC.</div></a>
-    <a class="tile" href="#ch-cloud"><div class="num">12</div><div class="t">Cloud Computing</div><div class="d">IaaS, PaaS, SaaS, serverless, providers.</div></a>
+    <a class="tile teal" href="#ch-devops"><div class="num">10</div><div class="t">DevOps &amp; CI/CD</div><div class="d">Pipelines, containers, IaC, Kubernetes.</div></a>
+    <a class="tile mid" href="#ch-method"><div class="num">11</div><div class="t">Methodologies</div><div class="d">Agile, Scrum, Kanban, SDLC.</div></a>
+    <a class="tile accent" href="#ch-cloud"><div class="num">12</div><div class="t">Cloud Computing</div><div class="d">IaaS, PaaS, SaaS, serverless, providers.</div></a>
     <a class="tile" href="#ch-observe"><div class="num">13</div><div class="t">Observability &amp; Perf</div><div class="d">Logs, metrics, traces, scaling, caching.</div></a>
-    <a class="tile" href="#ch-ai"><div class="num">14</div><div class="t">AI Landscape</div><div class="d">Models, frameworks, agents, MLOps.</div></a>
-    <a class="tile" href="#ch-soft"><div class="num">15</div><div class="t">Soft Skills &amp; Ecosystem</div><div class="d">Communication, open source, licenses, docs.</div></a>
-    <a class="tile" href="pages/domains.html" style="border-left-color:var(--accent);"><div class="num">16</div><div class="t">Industry Domains →</div><div class="d">Where software runs the show — finance, healthcare, ERP, gaming, and 17 more.</div></a>
+    <a class="tile teal" href="#ch-ai"><div class="num">14</div><div class="t">AI Landscape</div><div class="d">Models, frameworks, agents, MLOps.</div></a>
+    <a class="tile mid" href="#ch-soft"><div class="num">15</div><div class="t">Soft Skills &amp; Ecosystem</div><div class="d">Communication, open source, licenses, docs.</div></a>
+    <a class="tile accent" href="pages/domains.html"><div class="num">16</div><div class="t">Industry Domains →</div><div class="d">Where software runs the show — finance, healthcare, ERP, gaming, and 17 more.</div></a>
   </div>
 
   <!-- 01 FOUNDATIONS -->
