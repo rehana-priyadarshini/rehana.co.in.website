@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Helm · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Helm — the package manager for Kubernetes. Charts bundle templated manifests, values customize per environment, and releases are versioned." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/helm.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Helm · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Helm — the package manager for Kubernetes." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/helm.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Helm · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Helm — the package manager for Kubernetes." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 11 of 18</div>
+    <h1>Helm — apt-get for Kubernetes</h1>
+    <p class="lede">A <em>chart</em> is a folder of templated YAML; <em>values</em> parameterize it per environment; a <em>release</em> tracks one install of a chart in a namespace. Helm is how almost every off-the-shelf Kubernetes app ships — Postgres, Prometheus, ingress controllers, you name it.</p>
+    <div class="tags"><span>Charts</span><span>values.yaml</span><span>Templates</span><span>Releases</span><span>Hooks</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>What's in a Chart</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Chart.yaml</strong> — name, version, app version, dependencies.</li>
+          <li><strong>values.yaml</strong> — default config; users override per environment.</li>
+          <li><strong>templates/</strong> — Go-template'd YAML rendered with values.</li>
+          <li><strong>_helpers.tpl</strong> — named template snippets (labels, fullname).</li>
+          <li><strong>Subcharts</strong> — depend on other charts (e.g., bundle Postgres with your app).</li>
+          <li><strong>Releases</strong> — Helm tracks history per release; <code>helm rollback</code> goes back to revision N.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Lifecycle</div><h2>Install → Upgrade → Rollback</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">helm pull / repo add</div><div class="arrow">→</div>
+        <div class="step">values.yaml override</div><div class="arrow">→</div>
+        <div class="step">helm template (render)</div><div class="arrow">→</div>
+        <div class="step">helm install / upgrade</div><div class="arrow">→</div>
+        <div class="step">Release stored in cluster</div><div class="arrow">→</div>
+        <div class="step">helm rollback if needed</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Helm vs Kustomize</div><h2>Templating vs Patching</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Helm</strong> templates strings — flexible but you can produce arbitrary YAML, valid or not, until rendered.</li>
+        <li><strong>Kustomize</strong> overlays patch real K8s YAML — strongly typed, no Go template syntax. Built into <code>kubectl</code>.</li>
+        <li><strong>Common pattern</strong>: ship apps as Helm charts; pin/override per cluster with Kustomize <code>helmCharts:</code>, or use Argo's chart + values pattern.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Go templates inside YAML</strong> are awful to debug — invisible whitespace bugs, mis-indented blocks.</li>
+        <li><strong>Charts you don't control</strong> can lag K8s API deprecations; pin versions and watch upstream.</li>
+        <li><strong>Secrets management</strong> isn't built in — pair with SOPS, Sealed Secrets, or External Secrets.</li>
+        <li><strong>Helm 2's Tiller is dead</strong>; if you ever see Tiller in a doc, the doc is from 2018.</li>
+        <li><strong>Chart versions vs app versions</strong> confuse newcomers — bump both intentionally.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="simple-orchestration.html">← ECS / Swarm / Nomad</a>
+        <a href="service-mesh.html">Service Mesh →</a>
+        <a href="terraform.html">Terraform →</a>
+        <a href="cloudformation.html">CloudFormation →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

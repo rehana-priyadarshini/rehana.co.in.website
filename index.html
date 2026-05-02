@@ -982,51 +982,51 @@
       </div>
 
       <details class="drill" open>
-        <summary>CI/CD Platforms</summary>
+        <summary>CI/CD Platforms <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><h5>GitHub Actions</h5><p>YAML workflows, huge marketplace.</p></div>
-            <div class="card teal"><h5>GitLab CI</h5><p>Built into GitLab; mature and full-featured.</p></div>
-            <div class="card mid"><h5>Jenkins</h5><p>Battle-tested, plugin-rich, self-hosted.</p></div>
-            <div class="card accent"><h5>CircleCI / Travis / TeamCity</h5><p>Other long-standing CI services.</p></div>
-            <div class="card"><h5>Azure Pipelines</h5><p>Microsoft's offering — works for any language.</p></div>
-            <div class="card teal"><h5>ArgoCD / Flux</h5><p>GitOps — deploy to Kubernetes from Git.</p></div>
+            <a class="card" href="pages/devops/github-actions.html" style="text-decoration:none;color:inherit;display:block;"><h5>GitHub Actions →</h5><p>YAML workflows, huge marketplace.</p></a>
+            <a class="card teal" href="pages/devops/gitlab-ci.html" style="text-decoration:none;color:inherit;display:block;"><h5>GitLab CI →</h5><p>Built into GitLab; mature and full-featured.</p></a>
+            <a class="card mid" href="pages/devops/jenkins.html" style="text-decoration:none;color:inherit;display:block;"><h5>Jenkins →</h5><p>Battle-tested, plugin-rich, self-hosted.</p></a>
+            <a class="card accent" href="pages/devops/circleci.html" style="text-decoration:none;color:inherit;display:block;"><h5>CircleCI / Travis / TeamCity →</h5><p>Other long-standing CI services.</p></a>
+            <a class="card" href="pages/devops/azure-pipelines.html" style="text-decoration:none;color:inherit;display:block;"><h5>Azure Pipelines →</h5><p>Microsoft's offering — works for any language.</p></a>
+            <a class="card teal" href="pages/devops/gitops.html" style="text-decoration:none;color:inherit;display:block;"><h5>ArgoCD / Flux →</h5><p>GitOps — deploy to Kubernetes from Git.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Containers &amp; Orchestration</summary>
+        <summary>Containers &amp; Orchestration <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
-            <div class="card"><span class="pill">Build</span><h5>Docker / Podman</h5><p>Package your app + runtime into a portable image.</p></div>
-            <div class="card teal"><span class="pill">Run many</span><h5>Kubernetes (K8s)</h5><p>Orchestrates containers across clusters — the de-facto standard.</p></div>
-            <div class="card mid"><span class="pill">Managed</span><h5>EKS / AKS / GKE</h5><p>Managed K8s from AWS / Azure / Google.</p></div>
-            <div class="card accent"><span class="pill">Simple</span><h5>ECS / Docker Swarm / Nomad</h5><p>Simpler alternatives to Kubernetes.</p></div>
-            <div class="card"><span class="pill">Packaging</span><h5>Helm</h5><p>Package manager for Kubernetes apps.</p></div>
-            <div class="card teal"><span class="pill">Mesh</span><h5>Service Mesh</h5><p>Istio, Linkerd — traffic, security, observability between services.</p></div>
+            <a class="card" href="pages/devops/docker.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Build</span><h5>Docker / Podman →</h5><p>Package your app + runtime into a portable image.</p></a>
+            <a class="card teal" href="pages/devops/kubernetes.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Run many</span><h5>Kubernetes (K8s) →</h5><p>Orchestrates containers across clusters — the de-facto standard.</p></a>
+            <a class="card mid" href="pages/devops/managed-k8s.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Managed</span><h5>EKS / AKS / GKE →</h5><p>Managed K8s from AWS / Azure / Google.</p></a>
+            <a class="card accent" href="pages/devops/simple-orchestration.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Simple</span><h5>ECS / Docker Swarm / Nomad →</h5><p>Simpler alternatives to Kubernetes.</p></a>
+            <a class="card" href="pages/devops/helm.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Packaging</span><h5>Helm →</h5><p>Package manager for Kubernetes apps.</p></a>
+            <a class="card teal" href="pages/devops/service-mesh.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Mesh</span><h5>Service Mesh →</h5><p>Istio, Linkerd — traffic, security, observability between services.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Infrastructure as Code (IaC)</summary>
+        <summary>Infrastructure as Code (IaC) <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any row for the deep dive</span></summary>
         <div class="drill-body">
           <table>
             <thead><tr><th>Tool</th><th>Strength</th></tr></thead>
             <tbody>
-              <tr><td>Terraform / OpenTofu</td><td>Cloud-agnostic, declarative — describe infra in HCL.</td></tr>
-              <tr><td>AWS CloudFormation</td><td>Native to AWS; very deep integration.</td></tr>
-              <tr><td>Pulumi</td><td>IaC using real programming languages (TS, Python, Go).</td></tr>
-              <tr><td>Ansible</td><td>Configuration management — agentless, YAML playbooks.</td></tr>
-              <tr><td>Chef / Puppet</td><td>Older configuration management stalwarts.</td></tr>
+              <tr><td><a href="pages/devops/terraform.html" style="color:var(--accent);text-decoration:none;">Terraform / OpenTofu →</a></td><td>Cloud-agnostic, declarative — describe infra in HCL.</td></tr>
+              <tr><td><a href="pages/devops/cloudformation.html" style="color:var(--accent);text-decoration:none;">AWS CloudFormation →</a></td><td>Native to AWS; very deep integration.</td></tr>
+              <tr><td><a href="pages/devops/pulumi.html" style="color:var(--accent);text-decoration:none;">Pulumi →</a></td><td>IaC using real programming languages (TS, Python, Go).</td></tr>
+              <tr><td><a href="pages/devops/ansible.html" style="color:var(--accent);text-decoration:none;">Ansible →</a></td><td>Configuration management — agentless, YAML playbooks.</td></tr>
+              <tr><td><a href="pages/devops/chef-puppet.html" style="color:var(--accent);text-decoration:none;">Chef / Puppet →</a></td><td>Older configuration management stalwarts.</td></tr>
             </tbody>
           </table>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Deployment Strategies</summary>
+        <summary>Deployment Strategies <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/devops/deployment-strategies.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
         <div class="drill-body">
           <ul style="font-size: 14px; line-height: 1.6;">
             <li><strong>Rolling:</strong> replace instances a few at a time.</li>

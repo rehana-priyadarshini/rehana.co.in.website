@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pulumi · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Pulumi — IaC in real programming languages. TypeScript, Python, Go, .NET, Java. Loops, classes, tests, npm packages — applied to infrastructure." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/pulumi.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Pulumi · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="IaC in real programming languages." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/pulumi.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Pulumi · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="IaC in real programming languages." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 15 of 18</div>
+    <h1>Pulumi — Infrastructure in Real Code</h1>
+    <p class="lede">Founded 2017. Pulumi keeps Terraform's provider model and state-driven engine but ditches HCL: define infra in TypeScript, Python, Go, .NET, or Java. Get loops, classes, tests, package managers, IDE refactoring — the full software-engineering toolbox, applied to clouds.</p>
+    <div class="tags"><span>TypeScript</span><span>Python</span><span>Go</span><span>State backend</span><span>Stacks</span><span>Components</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Project</strong> — a folder with code that constructs cloud resources.</li>
+          <li><strong>Stack</strong> — a deployable instance of the project (dev, staging, prod), each with its own state and config.</li>
+          <li><strong>Resources</strong> — instantiated as language objects (<code>new aws.s3.Bucket("data", {...})</code>).</li>
+          <li><strong>Outputs &amp; Inputs</strong> — promise-like values that thread through the resource graph.</li>
+          <li><strong>Component resources</strong> — reusable abstractions (e.g., "a hardened RDS").</li>
+          <li><strong>State backend</strong> — Pulumi Cloud (default), or self-host on S3/Azure Blob/etc.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why Real Code</div><h2>The Win</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Loops &amp; conditionals</strong> are just <code>for</code> and <code>if</code> — no HCL <code>for_each</code> gymnastics.</li>
+        <li><strong>Type-safe APIs</strong> — full IntelliSense on every resource and property.</li>
+        <li><strong>Unit tests</strong> with your normal test framework; mock providers for fast loops.</li>
+        <li><strong>Package and share</strong> abstractions on npm/PyPI — no module registry to learn.</li>
+        <li><strong>Secrets</strong> are first class — encrypted in state, decrypted only when needed.</li>
+        <li><strong>Crosswalk libraries</strong> ("awsx", "eks") wrap common patterns at higher abstraction.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Smaller community</strong> than Terraform — fewer Stack Overflow answers, fewer ready modules.</li>
+        <li><strong>Pulumi Cloud pricing</strong> can sneak up; self-hosted backends are an option but more ops.</li>
+        <li><strong>Code = power = footgun.</strong> "Just write a loop" can also "just delete prod." Code review matters more, not less.</li>
+        <li><strong>Output values are promises</strong> — chain with <code>.apply()</code>; can confuse newcomers.</li>
+        <li><strong>Cross-team standardization</strong> needs discipline — every language allows different idioms.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="cloudformation.html">← CloudFormation</a>
+        <a href="ansible.html">Ansible →</a>
+        <a href="chef-puppet.html">Chef / Puppet →</a>
+        <a href="deployment-strategies.html">Deployment Strategies →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

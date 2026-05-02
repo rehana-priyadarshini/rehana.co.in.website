@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ECS / Docker Swarm / Nomad · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="When you don't need Kubernetes — ECS, Docker Swarm, and HashiCorp Nomad. Simpler orchestrators that get you running with a fraction of the surface area." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/simple-orchestration.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="ECS / Docker Swarm / Nomad · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Simpler alternatives to Kubernetes." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/simple-orchestration.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="ECS / Docker Swarm / Nomad · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Simpler alternatives to Kubernetes." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 10 of 18</div>
+    <h1>ECS · Docker Swarm · Nomad — When K8s Is Overkill</h1>
+    <p class="lede">Not everything needs Kubernetes. ECS gives you AWS-native container scheduling with no control plane to operate. Swarm is "just docker, scaled out." Nomad does containers + VMs + raw binaries with a single binary and a learning curve measured in hours, not weeks.</p>
+    <div class="tags"><span>ECS</span><span>Fargate</span><span>Swarm</span><span>Nomad</span><span>Cloud Run</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Side-By-Side</div><h2>Pick by Constraints</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Best for</th><th>Notable</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AWS ECS</strong></td><td>AWS-only shops; "just run my containers."</td><td>Tasks, Services, Capacity Providers. <em>Fargate</em> = no servers. Great IAM-per-task. No K8s API to learn.</td></tr>
+          <tr><td><strong>Docker Swarm</strong></td><td>Tiny clusters, homelabs, edge.</td><td>Built into Docker engine. <code>docker stack deploy</code> from a Compose file. In maintenance mode but still works.</td></tr>
+          <tr><td><strong>HashiCorp Nomad</strong></td><td>Mixed workloads (containers + JVM + raw binaries) and multi-region.</td><td>Single binary. Pluggable task drivers. Often paired with Consul (service discovery) and Vault (secrets).</td></tr>
+          <tr><td><strong>Cloud Run / App Runner / Container Apps</strong></td><td>Stateless HTTP services that scale to zero.</td><td>Not really orchestrators — but for many workloads they replace one.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why Not K8s</div><h2>The Case for Less</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Fewer moving parts.</strong> ECS has ~3 concepts. K8s has 30. Both can run a web app.</li>
+        <li><strong>Faster onboarding.</strong> A new engineer can be productive in ECS or Nomad in a day.</li>
+        <li><strong>Less platform team.</strong> Managed orchestrators (ECS, Cloud Run) don't need addon CVEs tracked weekly.</li>
+        <li><strong>Cheaper at low scale.</strong> No idle control plane fees; Fargate-style billing means you pay for actual usage.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What You Give Up</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Smaller ecosystem.</strong> No ArgoCD-equivalent UX, no Helm-equivalent package manager, fewer operators.</li>
+        <li><strong>Vendor lock-in</strong> for ECS — manifests don't move to GCP.</li>
+        <li><strong>Swarm is on life support.</strong> Don't pick it for new greenfield work.</li>
+        <li><strong>Nomad's user base is small</strong> — you'll find fewer Stack Overflow answers and fewer hires who know it.</li>
+        <li><strong>Outgrowth risk.</strong> If you'll need a service mesh, multi-cluster, complex CRD-driven platforms — start on K8s.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="managed-k8s.html">← EKS / AKS / GKE</a>
+        <a href="helm.html">Helm →</a>
+        <a href="service-mesh.html">Service Mesh →</a>
+        <a href="terraform.html">Terraform →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

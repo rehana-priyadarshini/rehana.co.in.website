@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub Actions · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitHub Actions — YAML workflows triggered by repo events, with a marketplace of thousands of pre-built actions and free runners for public repos." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/github-actions.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="GitHub Actions · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="GitHub Actions — YAML workflows with a huge marketplace." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/github-actions.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GitHub Actions · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="GitHub Actions — YAML workflows with a huge marketplace." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 1 of 18</div>
+    <h1>GitHub Actions — CI/CD Where Your Code Already Lives</h1>
+    <p class="lede">Launched in 2019, Actions turned every GitHub repo into a programmable build farm. Workflows live as YAML in <code>.github/workflows/</code>, react to repo events, and pull from a marketplace of thousands of community-built steps. For most teams already on GitHub, it's the path of least resistance to CI/CD.</p>
+    <div class="tags"><span>YAML</span><span>Marketplace</span><span>Matrix builds</span><span>OIDC</span><span>Self-hosted</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>How a Workflow Runs</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Workflow</strong> — a YAML file in <code>.github/workflows/</code>; one or more <em>jobs</em>.</li>
+          <li><strong>Event</strong> — what triggers it: <code>push</code>, <code>pull_request</code>, <code>schedule</code>, <code>workflow_dispatch</code>, <code>release</code>, <code>issues</code>, …</li>
+          <li><strong>Job</strong> — runs on a <em>runner</em> (Linux, Windows, macOS); jobs run in parallel by default, with <code>needs:</code> to chain them.</li>
+          <li><strong>Step</strong> — either a shell command or a reusable <em>action</em> (<code>uses: actions/checkout@v4</code>).</li>
+          <li><strong>Matrix</strong> — fan out a job across versions/OSes (Node 18/20/22 × Ubuntu/macOS).</li>
+          <li><strong>Artifact / cache</strong> — pass build outputs between jobs; cache deps across runs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trigger to Deploy</div><h2>The Pipeline Flow</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">Push / PR</div><div class="arrow">→</div>
+        <div class="step">Runner provisioned</div><div class="arrow">→</div>
+        <div class="step">Checkout + setup</div><div class="arrow">→</div>
+        <div class="step">Build &amp; test</div><div class="arrow">→</div>
+        <div class="step">Upload artifact</div><div class="arrow">→</div>
+        <div class="step">Deploy job (OIDC → cloud)</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Power Features</div><h2>Beyond the Basics</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Reusable workflows</strong> (<code>workflow_call</code>) — share pipelines across many repos without copy-paste.</li>
+        <li><strong>Composite actions</strong> — bundle several steps into one reusable unit.</li>
+        <li><strong>OIDC federation</strong> — runners assume cloud roles short-lived; no long-lived AWS/GCP/Azure secrets in repo.</li>
+        <li><strong>Environments</strong> — gate deploys with required reviewers, wait timers, and per-env secrets.</li>
+        <li><strong>Concurrency groups</strong> — cancel superseded PR runs, or serialize prod deploys.</li>
+        <li><strong>Self-hosted runners</strong> — for GPUs, on-prem VPC access, or custom hardware. ARC (Actions Runner Controller) runs them on Kubernetes.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Supply-chain risk.</strong> Pin third-party actions to a SHA, not <code>@v1</code>. Compromised actions run with your secrets.</li>
+        <li><strong>YAML fatigue.</strong> Big workflows get unwieldy fast; reach for reusable workflows before they sprawl.</li>
+        <li><strong>Cost.</strong> macOS minutes are 10× Linux. Self-hosted runners bring big savings for heavy use.</li>
+        <li><strong>Forks &amp; secrets.</strong> By default secrets aren't passed to PRs from forks — for good reason. Don't override without thought.</li>
+        <li><strong>Vendor lock-in.</strong> Workflows don't port cleanly to Jenkins or GitLab — moving off is a real project.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="gitlab-ci.html">GitLab CI →</a>
+        <a href="jenkins.html">Jenkins →</a>
+        <a href="azure-pipelines.html">Azure Pipelines →</a>
+        <a href="gitops.html">ArgoCD / Flux →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

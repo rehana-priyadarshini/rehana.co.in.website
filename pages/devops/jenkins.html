@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jenkins · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Jenkins — the original open-source CI server. Plugin-rich, infinitely extensible, and still running build farms the world over." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/jenkins.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Jenkins · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Jenkins — battle-tested, plugin-rich, self-hosted CI." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/jenkins.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Jenkins · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Jenkins — battle-tested, plugin-rich, self-hosted CI." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 3 of 18</div>
+    <h1>Jenkins — The Veteran Build Server</h1>
+    <p class="lede">Forked from Hudson in 2011 (older if you count Hudson). Jenkins predates the SaaS-CI era and survives because it can build anything, anywhere, on any hardware — with 1,800+ plugins to glue to whatever weird tool your shop needs. Run it once and you'll keep running it.</p>
+    <div class="tags"><span>Plugins</span><span>Pipelines as code</span><span>Groovy DSL</span><span>Self-hosted</span><span>Distributed builds</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Controller</strong> — the Jenkins server (web UI, scheduler, config). Single point of failure unless you cluster it.</li>
+          <li><strong>Agents</strong> — workers that actually run jobs; can be VMs, Docker, Kubernetes pods (via the K8s plugin).</li>
+          <li><strong>Pipeline</strong> — a <code>Jenkinsfile</code> in the repo, written in Groovy DSL (declarative or scripted).</li>
+          <li><strong>Stages &amp; steps</strong> — declarative pipelines have named stages with <code>steps {}</code> inside.</li>
+          <li><strong>Shared libraries</strong> — Groovy libraries loaded across pipelines for DRY.</li>
+          <li><strong>Plugins</strong> — Git, GitHub, Slack, Kubernetes, Blue Ocean (newer UI), and 1,800 more.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Endures</div><h2>The Strengths</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>You own everything.</strong> No SaaS minute caps, no egress charges, no third-party reading your code.</li>
+        <li><strong>Plugin coverage</strong> for everything from VMware to mainframes to embedded toolchains.</li>
+        <li><strong>Distributed builds</strong> across heterogeneous agents — Linux x86, Windows, ARM, macOS — out of the box.</li>
+        <li><strong>Pipeline as code</strong> via <code>Jenkinsfile</code>, lives next to the source.</li>
+        <li><strong>Active LTS line</strong> with security backports.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Operational burden.</strong> Patching the controller, plugin upgrades, agent fleet, JVM tuning — somebody owns it.</li>
+        <li><strong>Plugin sprawl is a security risk.</strong> Each plugin is code with controller-level access; CVEs are constant.</li>
+        <li><strong>Groovy is a learning curve.</strong> Especially scripted pipelines and shared libraries.</li>
+        <li><strong>UX is dated.</strong> Blue Ocean helps, but Jenkins still feels like 2012 next to Actions or Buildkite.</li>
+        <li><strong>Single-controller bottleneck.</strong> Running thousands of pipelines per day usually means JCasC + many controllers (Jenkins X / CloudBees CI).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="gitlab-ci.html">← GitLab CI</a>
+        <a href="circleci.html">CircleCI / Travis →</a>
+        <a href="azure-pipelines.html">Azure Pipelines →</a>
+        <a href="gitops.html">ArgoCD / Flux →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ansible · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Ansible — agentless configuration management. Push YAML playbooks over SSH (or WinRM) to bring a fleet of machines to a known state." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/ansible.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Ansible · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Agentless configuration management over SSH." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/ansible.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Ansible · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Agentless configuration management over SSH." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 16 of 18</div>
+    <h1>Ansible — Agentless Configuration as YAML</h1>
+    <p class="lede">Created in 2012, acquired by Red Hat in 2015. Ansible's killer feature is "no agents" — it just SSH'es into your hosts and runs Python modules. Playbooks are YAML. Inventory is a file or dynamic plugin. The bar to start is famously low; the ceiling is enterprise-wide automation via AAP/Tower.</p>
+    <div class="tags"><span>Agentless</span><span>YAML playbooks</span><span>Inventory</span><span>Roles</span><span>Galaxy</span><span>AAP</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Inventory</strong> — list of hosts (static INI/YAML or dynamic from cloud APIs).</li>
+          <li><strong>Module</strong> — a unit of work (<code>apt</code>, <code>file</code>, <code>service</code>, <code>copy</code>) executed on the target.</li>
+          <li><strong>Task</strong> — invocation of a module with parameters; should be idempotent.</li>
+          <li><strong>Playbook</strong> — YAML file mapping plays (host group → tasks).</li>
+          <li><strong>Roles</strong> — reusable, structured bundles of tasks/templates/handlers.</li>
+          <li><strong>Collections</strong> — distribution unit on Ansible Galaxy; modules + roles + plugins.</li>
+          <li><strong>Vault</strong> — encrypt secrets at rest within the repo.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When It Shines</div><h2>The Sweet Spot</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Configuring VMs and bare metal</strong> — exactly what it was built for.</li>
+        <li><strong>Network device automation</strong> via Ansible network modules (Cisco, Arista, Juniper).</li>
+        <li><strong>One-off ops tasks</strong> — patch this fleet, restart these services, rotate that key.</li>
+        <li><strong>Hybrid environments</strong> where Terraform provisions and Ansible configures.</li>
+        <li><strong>Air-gapped / regulated</strong> — agentless means nothing extra to certify on hosts.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Slow at scale.</strong> SSH-fanout and Python on every target add up; <em>Mitogen</em> helps.</li>
+        <li><strong>YAML + Jinja2</strong> templates blur into a pseudo-language; complex playbooks get hard to reason about.</li>
+        <li><strong>Idempotence is on you.</strong> <code>shell</code> and <code>command</code> modules don't make tasks idempotent for free.</li>
+        <li><strong>Containers/K8s</strong> usually have better-fit tools (Helm/Kustomize) — using Ansible there is uphill.</li>
+        <li><strong>Module signing &amp; supply chain</strong> matter; pin collection versions.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="pulumi.html">← Pulumi</a>
+        <a href="chef-puppet.html">Chef / Puppet →</a>
+        <a href="deployment-strategies.html">Deployment Strategies →</a>
+        <a href="terraform.html">Terraform →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

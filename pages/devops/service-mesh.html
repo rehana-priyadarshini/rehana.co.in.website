@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Service Mesh · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Service meshes — Istio, Linkerd, Cilium — add mTLS, traffic policy, retries, and observability to service-to-service traffic without app code changes." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/service-mesh.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Service Mesh · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="mTLS, traffic policy, retries, observability — without app code." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/service-mesh.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Service Mesh · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="mTLS, traffic policy, retries, observability — without app code." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 12 of 18</div>
+    <h1>Service Mesh — Networking as a Platform Concern</h1>
+    <p class="lede">A service mesh intercepts pod-to-pod traffic — historically with a sidecar proxy, increasingly with eBPF — to enforce mTLS, route by header, retry on failure, shed load, and emit golden-signal metrics. Apps stay simple; the mesh handles the rest.</p>
+    <div class="tags"><span>Istio</span><span>Linkerd</span><span>Cilium</span><span>Envoy</span><span>mTLS</span><span>L7 routing</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What It Does</div><h2>The Three Capabilities</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Security</strong> — automatic mTLS between services, identity-based authz policies (workload X may call workload Y).</li>
+          <li><strong>Traffic management</strong> — header-based routing, weighted splits (canary), retries, timeouts, circuit breakers, fault injection.</li>
+          <li><strong>Observability</strong> — uniform request metrics (latency, error rate, RPS) and distributed-trace headers, all without app instrumentation.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Players</div><h2>Pick by Operational Cost</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Mesh</th><th>Approach</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Istio</strong></td><td>Envoy sidecars (or Ambient mode without sidecars)</td><td>Most features; biggest footprint; Ambient mode dropped per-pod sidecars in 2024.</td></tr>
+          <tr><td><strong>Linkerd</strong></td><td>Tiny Rust micro-proxy sidecar</td><td>Simpler, lighter, faster to learn; smaller feature surface.</td></tr>
+          <tr><td><strong>Cilium Service Mesh</strong></td><td>eBPF in the kernel — no sidecar at all</td><td>Lower overhead, fewer pods, but ties you to Cilium CNI.</td></tr>
+          <tr><td><strong>Consul Connect</strong></td><td>Envoy sidecars driven by Consul service catalog</td><td>Strong outside K8s — VMs, multi-DC.</td></tr>
+          <tr><td><strong>AWS App Mesh / GCP Anthos</strong></td><td>Cloud-managed Envoy</td><td>Less independent operation, more vendor surface.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Don't Adopt Reflexively</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Cost is real.</strong> Sidecars double pod count, add latency, and burn CPU/memory. Ambient/eBPF modes help but bring their own complexity.</li>
+        <li><strong>Debugging gets harder.</strong> A 503 might come from your app, the sidecar, the destination's sidecar, or a policy.</li>
+        <li><strong>Upgrades are scary</strong> — mesh CRDs evolve; Envoy/Istio rev quickly.</li>
+        <li><strong>Often unneeded.</strong> If you have <20 services, a couple of NetworkPolicies and OpenTelemetry SDKs cover most of the win.</li>
+        <li><strong>Gateway API</strong> is now the standard for north-south traffic; some mesh features are migrating there.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="helm.html">← Helm</a>
+        <a href="terraform.html">Terraform →</a>
+        <a href="cloudformation.html">CloudFormation →</a>
+        <a href="pulumi.html">Pulumi →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

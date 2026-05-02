@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Azure Pipelines · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Azure Pipelines — Microsoft's CI/CD service. Works with any language, any platform, any cloud. Part of Azure DevOps but usable standalone." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/azure-pipelines.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Azure Pipelines · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Microsoft's CI/CD — any language, any platform, any cloud." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/azure-pipelines.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Azure Pipelines · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Microsoft's CI/CD — any language, any platform, any cloud." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 5 of 18</div>
+    <h1>Azure Pipelines — Microsoft's Universal CI/CD</h1>
+    <p class="lede">Part of the Azure DevOps suite (formerly VSTS, formerly TFS). Despite the brand, it works with GitHub, Bitbucket, and any cloud — not just Azure. Common in enterprise .NET shops and any team already inside the Microsoft ecosystem.</p>
+    <div class="tags"><span>YAML</span><span>Classic UI</span><span>Multi-stage</span><span>Approvals</span><span>Microsoft-hosted agents</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>Pipelines, Stages, Jobs</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Pipeline</strong> — defined in <code>azure-pipelines.yml</code> (or via the legacy classic visual editor).</li>
+          <li><strong>Stages → Jobs → Steps</strong> — same nesting model as most modern CIs.</li>
+          <li><strong>Agents</strong> — Microsoft-hosted (Linux/Windows/macOS) or self-hosted via the agent service.</li>
+          <li><strong>Tasks</strong> — pre-built steps from the marketplace; equivalent to Actions' actions.</li>
+          <li><strong>Environments &amp; approvals</strong> — first-class gates for prod deploys, with audit trail.</li>
+          <li><strong>Service connections</strong> — store cloud creds (Azure, AWS, GCP, Docker registries) once, reuse everywhere.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Strengths</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>.NET first-class.</strong> NuGet, MSBuild, signing, ClickOnce, IIS deploys — all work without fighting.</li>
+        <li><strong>Enterprise plumbing</strong> — AAD/Entra SSO, audit logs, policy controls, compliance reports.</li>
+        <li><strong>Cross-cloud deploy</strong> — built-in tasks for AWS, GCP, K8s — not just Azure.</li>
+        <li><strong>Free tier</strong> generous for OSS and small teams.</li>
+        <li><strong>Good for hybrid</strong> — Microsoft-hosted agents for fast jobs, self-hosted for on-prem network access.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Microsoft is steering customers to GitHub Actions.</strong> Azure Pipelines is in maintenance mode for new features.</li>
+        <li><strong>Two-config drift.</strong> Classic pipelines created in the UI can't easily be exported to YAML.</li>
+        <li><strong>Smaller marketplace</strong> than Actions; some tasks are stale.</li>
+        <li><strong>Documentation</strong> spans Azure DevOps + GitHub Actions overlap — easy to land on the wrong page.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="circleci.html">← CircleCI / Travis</a>
+        <a href="gitops.html">ArgoCD / Flux →</a>
+        <a href="docker.html">Docker / Podman →</a>
+        <a href="kubernetes.html">Kubernetes →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

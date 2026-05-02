@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EKS / AKS / GKE · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Managed Kubernetes from AWS, Azure, and Google. The cloud runs the control plane; you bring the workloads. Different opinions on every detail — pick deliberately." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/managed-k8s.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="EKS / AKS / GKE · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Managed Kubernetes from the three big clouds." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/managed-k8s.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="EKS / AKS / GKE · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Managed Kubernetes from the three big clouds." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 9 of 18</div>
+    <h1>EKS · AKS · GKE — Kubernetes the Cloud Runs for You</h1>
+    <p class="lede">Same Kubernetes API, different operational opinions. The cloud handles the control plane (etcd, API server, scheduler) and patches it; you bring the worker nodes (or use a serverless mode) and the workloads. Pick by where the rest of your data lives.</p>
+    <div class="tags"><span>EKS</span><span>AKS</span><span>GKE</span><span>Fargate</span><span>Autopilot</span><span>k3s</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Side-By-Side</div><h2>The Three Big Ones</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Service</th><th>Strengths</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>GKE</strong> (Google)</td><td>Most polished K8s experience. <em>Autopilot</em> mode hides nodes entirely. Aggressive feature releases since K8s came from Google.</td><td>GCP regional footprint smaller than AWS.</td></tr>
+          <tr><td><strong>EKS</strong> (AWS)</td><td>Tightest integration with the broader AWS surface (IAM, ALB, EBS, VPC). <em>Fargate</em> for serverless pods.</td><td>Most assembly required. IAM-for-pods (IRSA / Pod Identity), CNI, ALB controller — all bring-your-own.</td></tr>
+          <tr><td><strong>AKS</strong> (Azure)</td><td>Free control plane on the standard tier. Strong AAD/Entra integration. Decent Windows-node support.</td><td>Some addons lag GKE/EKS; networking models (Azure CNI vs kubenet vs Cilium) are confusing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Serverless Modes</div><h2>Pods Without Nodes</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>GKE Autopilot</strong> — Google manages nodes; you pay per pod resource request. No node-level tuning, no DaemonSets, hardened defaults.</li>
+        <li><strong>EKS Fargate</strong> — schedule pods onto invisible micro-VMs. Slower cold starts, no DaemonSets, but no node patching.</li>
+        <li><strong>AKS virtual-node</strong> via ACI — bursty workloads land on Azure Container Instances.</li>
+      </ul>
+      <p style="font-size:14px;">All three are great for "just run my pods" workloads; less great when you need GPUs, host-level access, or persistent local disks.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Lighter Distributions</div><h2>K8s Without the Cloud</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>k3s / k0s</strong> — single-binary K8s for edge, IoT, and small VMs.</li>
+        <li><strong>kind / minikube</strong> — local clusters for dev and CI.</li>
+        <li><strong>OpenShift</strong> (Red Hat) — opinionated K8s distribution with built-in CI/CD, registry, RBAC, and a developer-friendly UI.</li>
+        <li><strong>Rancher</strong> — multi-cluster management UI, often paired with RKE2.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Control-plane cost</strong> — EKS and GKE charge ~$72/mo per cluster; small environments add up.</li>
+        <li><strong>Cluster upgrades</strong> are still your job. K8s ships a minor every ~4 months; upstream support is one year.</li>
+        <li><strong>Networking egress</strong> charges bite when chatty pods cross AZs. Watch your topology hints.</li>
+        <li><strong>"Managed" doesn't mean autopilot</strong> — addons (CNI, ingress, autoscaler, secrets) are still your responsibility on EKS and AKS.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="kubernetes.html">← Kubernetes</a>
+        <a href="simple-orchestration.html">ECS / Swarm / Nomad →</a>
+        <a href="helm.html">Helm →</a>
+        <a href="service-mesh.html">Service Mesh →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

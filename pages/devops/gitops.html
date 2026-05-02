@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ArgoCD / Flux (GitOps) · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitOps with ArgoCD and Flux — the cluster pulls desired state from Git rather than CI pushing changes. Audit trail, drift detection, instant rollback." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/gitops.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="ArgoCD / Flux (GitOps) · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="GitOps — the cluster pulls from Git, no push needed." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/gitops.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="ArgoCD / Flux (GitOps) · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="GitOps — the cluster pulls from Git, no push needed." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 6 of 18</div>
+    <h1>ArgoCD &amp; Flux — GitOps for Kubernetes</h1>
+    <p class="lede">GitOps inverts the deploy model: instead of CI pushing <code>kubectl apply</code> at the cluster, an in-cluster agent watches a Git repo and reconciles the live state to match. Rollbacks become <code>git revert</code>. Drift is visible. Auditing is automatic. ArgoCD and Flux are the two CNCF reference implementations.</p>
+    <div class="tags"><span>Pull-based</span><span>Reconciliation</span><span>Manifests in Git</span><span>Helm</span><span>Kustomize</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Idea</div><h2>Pull, Don't Push</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Desired state in Git</strong> — Kubernetes YAML / Helm values / Kustomize overlays committed to a repo.</li>
+          <li><strong>Agent in the cluster</strong> — ArgoCD or Flux controller polls Git (or webhook), diffs against live state, applies changes.</li>
+          <li><strong>Reconciliation loop</strong> — runs continuously, so manual changes (drift) get reverted or flagged.</li>
+          <li><strong>Sync waves &amp; hooks</strong> — order resources, run pre/post-sync jobs (DB migrations).</li>
+          <li><strong>App of apps</strong> — one repo defines many apps; great for fleet management.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">ArgoCD vs Flux</div><h2>Two Flavors</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Aspect</th><th>ArgoCD</th><th>Flux</th></tr></thead>
+        <tbody>
+          <tr><td>UX</td><td>Polished web UI showing live diff and topology</td><td>CLI-first; UI via third parties (Weave GitOps, Capacitor)</td></tr>
+          <tr><td>Model</td><td><code>Application</code> CRD; per-app sync config</td><td>Modular: <code>GitRepository</code>, <code>Kustomization</code>, <code>HelmRelease</code> CRDs</td></tr>
+          <tr><td>Multi-cluster</td><td>Single ArgoCD managing many clusters; ApplicationSets</td><td>One Flux per cluster; pull is naturally distributed</td></tr>
+          <tr><td>Best for</td><td>Teams that want a dashboard and self-service</td><td>Teams that prefer composable controllers and cluster-local autonomy</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why GitOps</div><h2>The Wins</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Audit trail is free</strong> — every change is a commit by a known author.</li>
+        <li><strong>Rollback is <code>git revert</code></strong> — no special pipeline path.</li>
+        <li><strong>No CI credentials in the cluster.</strong> The cluster reads Git; CI doesn't need <code>kubeconfig</code>.</li>
+        <li><strong>Drift detection</strong> — see (and optionally auto-correct) hand-edits.</li>
+        <li><strong>Disaster recovery</strong> — bootstrap a fresh cluster by pointing the agent at the Git repo.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Secrets in Git need encryption</strong> — Sealed Secrets, SOPS, External Secrets Operator. Plain YAML won't do.</li>
+        <li><strong>Image updates need a bridge</strong> — ArgoCD Image Updater or Flux's image automation; otherwise CI still has to commit a tag bump.</li>
+        <li><strong>Two-system mental model.</strong> Engineers used to "CI deploys" can be confused that the cluster "pulls itself."</li>
+        <li><strong>Repo-per-env vs mono-repo vs branch-per-env</strong> — there's no consensus pattern; pick early.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="azure-pipelines.html">← Azure Pipelines</a>
+        <a href="docker.html">Docker / Podman →</a>
+        <a href="kubernetes.html">Kubernetes →</a>
+        <a href="helm.html">Helm →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

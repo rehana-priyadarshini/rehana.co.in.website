@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AWS CloudFormation · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="CloudFormation — AWS-native IaC. Deep service integration, stacks managed by AWS itself, and the foundation under CDK and SAM." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/cloudformation.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="AWS CloudFormation · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="AWS-native IaC, foundation of CDK and SAM." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/cloudformation.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="AWS CloudFormation · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="AWS-native IaC, foundation of CDK and SAM." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 14 of 18</div>
+    <h1>CloudFormation — AWS's Own IaC</h1>
+    <p class="lede">Released in 2011 — the original cloud-native IaC. You write a YAML/JSON template, AWS provisions and tracks resources as a <em>stack</em>. State lives in the AWS service itself, not on your laptop. CDK and SAM both compile down to CloudFormation under the hood.</p>
+    <div class="tags"><span>Stacks</span><span>Templates</span><span>Change Sets</span><span>StackSets</span><span>CDK</span><span>SAM</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Template</strong> — YAML or JSON describing <em>Resources</em>, <em>Parameters</em>, <em>Outputs</em>, <em>Mappings</em>, <em>Conditions</em>.</li>
+          <li><strong>Stack</strong> — a deployed instance of a template. AWS tracks state and dependencies.</li>
+          <li><strong>Change Set</strong> — preview of the diff before <code>execute</code>.</li>
+          <li><strong>StackSets</strong> — deploy the same template across many accounts/regions.</li>
+          <li><strong>Drift detection</strong> — compare live state to template; flag manual changes.</li>
+          <li><strong>Custom Resources</strong> — Lambda-backed resources for what CFN doesn't natively support.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">CDK &amp; SAM</div><h2>Higher-Level on Top</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>AWS CDK</strong> — write infra in TypeScript / Python / Go / Java / .NET; <code>cdk synth</code> emits CloudFormation. Loops, classes, npm packages — real code.</li>
+        <li><strong>AWS SAM</strong> — opinionated CloudFormation transform for serverless apps (Lambda + API Gateway + DynamoDB).</li>
+        <li><strong>Construct Hub</strong> — community L3 constructs (high-level patterns) for CDK.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Use It</div><h2>Strengths</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>State managed for you.</strong> No S3+lock backend, no lost-state-file horror story.</li>
+        <li><strong>Native AWS guarantees.</strong> Rollbacks happen automatically on failure; transactional resource creation.</li>
+        <li><strong>Service Catalog</strong> — package CFN templates as governed self-service for devs.</li>
+        <li><strong>Day-1 support</strong> for new AWS resources is usually fast (now via CloudFormation Registry).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>AWS only.</strong> No Cloudflare, no GitHub, no SaaS integrations.</li>
+        <li><strong>Slow.</strong> Stack updates can take many minutes; nested stacks slower still.</li>
+        <li><strong>Awful failure UX.</strong> Stuck rollbacks ("UPDATE_ROLLBACK_FAILED") are a rite of passage.</li>
+        <li><strong>YAML is verbose.</strong> CDK is the answer most teams reach for.</li>
+        <li><strong>Cross-stack references</strong> get gnarly; many teams use SSM Parameter Store as a softer coupling.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="terraform.html">← Terraform / OpenTofu</a>
+        <a href="pulumi.html">Pulumi →</a>
+        <a href="ansible.html">Ansible →</a>
+        <a href="chef-puppet.html">Chef / Puppet →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

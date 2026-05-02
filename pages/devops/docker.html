@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Docker / Podman · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Docker and Podman — package an app + its runtime into an immutable image, run it anywhere a container engine exists. The substrate of modern deployment." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/docker.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Docker / Podman · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Containers — package once, run anywhere." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/docker.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Docker / Podman · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Containers — package once, run anywhere." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 7 of 18</div>
+    <h1>Docker &amp; Podman — The Container Substrate</h1>
+    <p class="lede">Released 2013, Docker made Linux containers usable. A <em>Dockerfile</em> describes how to build an image; the engine runs the image as an isolated process tree with its own filesystem and network namespace. Podman is the daemonless, rootless alternative — same image format, same CLI, no privileged background daemon.</p>
+    <div class="tags"><span>OCI image</span><span>Dockerfile</span><span>Layers</span><span>Compose</span><span>Rootless</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>What's Actually a Container</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Image</strong> — immutable, layered filesystem + metadata, conforming to the <em>OCI</em> spec.</li>
+          <li><strong>Container</strong> — a running instance of an image; a process tree isolated by Linux <em>namespaces</em> + <em>cgroups</em>.</li>
+          <li><strong>Dockerfile</strong> — recipe of layers (<code>FROM</code>, <code>RUN</code>, <code>COPY</code>, <code>CMD</code>); each line caches independently.</li>
+          <li><strong>Registry</strong> — image storage (Docker Hub, GHCR, ECR, GCR, ACR).</li>
+          <li><strong>Compose</strong> — define multi-container apps in <code>compose.yml</code>; great for local dev.</li>
+          <li><strong>BuildKit / Buildx</strong> — modern builder: parallel layers, multi-arch (amd64+arm64), secret/SSH mounts.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Build Lifecycle</div><h2>From Source to Running Process</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">Dockerfile</div><div class="arrow">→</div>
+        <div class="step">docker build</div><div class="arrow">→</div>
+        <div class="step">Image (layered)</div><div class="arrow">→</div>
+        <div class="step">docker push → registry</div><div class="arrow">→</div>
+        <div class="step">docker pull on host</div><div class="arrow">→</div>
+        <div class="step">docker run (namespaces + cgroups)</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Hard-Won Habits</div><h2>Production-Grade Images</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Multi-stage builds</strong> — compile in a fat builder image, copy artifacts into a slim runtime (Alpine, distroless, scratch).</li>
+        <li><strong>Order layers by churn</strong> — copy <code>package.json</code> and install deps <em>before</em> copying source, so dep layers cache.</li>
+        <li><strong>Pin base images by digest</strong>, not <code>latest</code>. Reproducibility + security.</li>
+        <li><strong>Run as non-root</strong> (<code>USER 10001</code>); drop capabilities; readonly rootfs where possible.</li>
+        <li><strong>Scan images</strong> — Trivy, Grype, Snyk in CI; fail builds on critical CVEs.</li>
+        <li><strong>Sign images</strong> — Cosign / Sigstore; verify on deploy.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Docker vs Podman</div><h2>Why People Switched</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Daemonless.</strong> Podman runs containers as regular processes — no root daemon to exploit or crash.</li>
+        <li><strong>Rootless</strong> by default, even on the build path.</li>
+        <li><strong>Drop-in CLI</strong> (<code>alias docker=podman</code>); supports Docker Compose via <code>podman-compose</code> or systemd quadlets.</li>
+        <li><strong>Docker Desktop licensing</strong> change in 2021 nudged many enterprises toward Podman, Rancher Desktop, or OrbStack.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="gitops.html">← ArgoCD / Flux</a>
+        <a href="kubernetes.html">Kubernetes →</a>
+        <a href="managed-k8s.html">EKS / AKS / GKE →</a>
+        <a href="simple-orchestration.html">ECS / Swarm / Nomad →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

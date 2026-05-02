@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CircleCI / Travis / TeamCity · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="CircleCI, Travis CI, and TeamCity — the long-standing third-party CI services that pre-dated GitHub Actions and still power many shops." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/circleci.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="CircleCI / Travis / TeamCity · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="The long-standing CI services that defined the modern era." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/circleci.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="CircleCI / Travis / TeamCity · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="The long-standing CI services that defined the modern era." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 4 of 18</div>
+    <h1>CircleCI · Travis · TeamCity — The Specialists</h1>
+    <p class="lede">Before Actions ate the world, these were how teams did CI. Each carved out a niche: CircleCI for fast cloud builds, Travis for open-source-friendly GitHub integration, TeamCity for the JetBrains-shop enterprise. They still ship great products, especially where Actions falls short.</p>
+    <div class="tags"><span>Orbs</span><span>YAML</span><span>Kotlin DSL</span><span>Buildkite</span><span>Drone</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Side-By-Side</div><h2>Who Uses What</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Sweet spot</th><th>Notable</th></tr></thead>
+        <tbody>
+          <tr><td>CircleCI</td><td>Fast container-based builds, polished UX</td><td><strong>Orbs</strong> (reusable config), Docker-layer caching, parallelism splitting</td></tr>
+          <tr><td>Travis CI</td><td>Original OSS CI on GitHub</td><td>Lost much momentum after pricing changes; still used in legacy OSS projects</td></tr>
+          <tr><td>TeamCity</td><td>JetBrains/.NET shops, on-prem enterprise</td><td>Kotlin DSL config, deep IntelliJ integration, build chains</td></tr>
+          <tr><td>Buildkite</td><td>Hybrid: control plane SaaS, agents on your hardware</td><td>Popular at scale where you need fast/large self-hosted runners but a SaaS UI</td></tr>
+          <tr><td>Drone CI</td><td>Lightweight, container-native, self-hosted</td><td>Now part of Harness; still loved for simplicity</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Strengths</div><h2>Why Pick One Over Actions/GitLab</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Speed.</strong> CircleCI's caching + parallelism often beats Actions for big test suites.</li>
+        <li><strong>Test splitting.</strong> CircleCI splits tests across containers by historical timing automatically.</li>
+        <li><strong>Hybrid control.</strong> Buildkite's "agents on your iron, control on theirs" model is unique and beloved.</li>
+        <li><strong>Polished UX.</strong> TeamCity's build-failure analytics and dependency graphs put the GitHub UI to shame for big enterprise pipelines.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Smaller ecosystems</strong> than Actions/GitLab — fewer pre-built integrations.</li>
+        <li><strong>Two SaaS bills.</strong> If you're already paying GitHub, paying CircleCI on top needs a justification.</li>
+        <li><strong>Travis's pricing change</strong> in 2020 burned a lot of OSS goodwill — most projects migrated off.</li>
+        <li><strong>TeamCity</strong> requires JetBrains licensing for non-tiny teams; on-prem ops are non-trivial.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="jenkins.html">← Jenkins</a>
+        <a href="azure-pipelines.html">Azure Pipelines →</a>
+        <a href="gitops.html">ArgoCD / Flux →</a>
+        <a href="docker.html">Docker / Podman →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

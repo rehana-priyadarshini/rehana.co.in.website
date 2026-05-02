@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deployment Strategies · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Rolling, blue/green, canary, and feature-flag deployments — what each gives you, what each costs, and when to reach for which." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/deployment-strategies.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Deployment Strategies · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Rolling, blue/green, canary, and feature flags." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/deployment-strategies.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Deployment Strategies · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Rolling, blue/green, canary, and feature flags." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 18 of 18</div>
+    <h1>Deployment Strategies — Shipping Without Downtime</h1>
+    <p class="lede">"Push the big red button and pray" was retired around 2010. Modern teams pick a strategy that matches the blast radius they can tolerate: rolling for routine work, blue/green when you need an instant rollback, canary when you're nervous, feature flags when the code path itself is risky.</p>
+    <div class="tags"><span>Rolling</span><span>Blue/Green</span><span>Canary</span><span>Feature flags</span><span>Progressive delivery</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Four Patterns</div><h2>Side-By-Side</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Strategy</th><th>How it works</th><th>Rollback time</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Rolling</strong></td><td>Replace old instances with new ones, a few at a time.</td><td>Slow (re-roll old)</td><td>Cheap — no extra capacity needed.</td></tr>
+          <tr><td><strong>Blue / Green</strong></td><td>Spin up a full copy (green), test, flip the load balancer.</td><td>Instant — flip back to blue.</td><td>2× capacity during cutover.</td></tr>
+          <tr><td><strong>Canary</strong></td><td>Send 1–5% of traffic to new version; expand if golden signals stay healthy.</td><td>Fast — pull traffic back.</td><td>Modest — extra capacity for the canary tier.</td></tr>
+          <tr><td><strong>Feature flag</strong></td><td>Ship code dark; toggle the new path on for a cohort.</td><td>Instant — flip the flag.</td><td>Cheap, but adds dead-code paths and observability burden.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When to Pick Which</div><h2>Heuristics</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Routine, backwards-compatible release</strong> → rolling. K8s Deployment does this by default.</li>
+        <li><strong>Schema or contract change you can't gradually roll back</strong> → blue/green, with the old env held for some bake time.</li>
+        <li><strong>High-traffic service, real risk of regression</strong> → canary, gated on SLO metrics. Argo Rollouts and Flagger automate this on K8s.</li>
+        <li><strong>Risky logic change, not a deploy risk</strong> → feature flag (LaunchDarkly, Statsig, Unleash, OpenFeature). Decouple "deploy" from "release."</li>
+        <li><strong>Mobile</strong> → staged rollout in App Store / Play Console + remote config.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Hidden Pitfalls</div><h2>Things That Bite</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Schema migrations don't blue/green.</strong> Make schema changes additive: add columns first, dual-write, drop later — over multiple deploys.</li>
+        <li><strong>Sticky sessions break canary</strong> — users who land on v2 may need to stay there. Header- or cohort-based routing.</li>
+        <li><strong>Cache poisoning</strong> — long TTL caches can serve old responses long after rollback.</li>
+        <li><strong>Feature-flag sprawl</strong> — every new flag is forever debt. Track expiry; clean up.</li>
+        <li><strong>Observability is the floor.</strong> Without SLO-driven dashboards and alerts, "canary success" is just guessing.</li>
+        <li><strong>Auto-rollback on errors</strong> matters more than fancy strategy — define your guardrails (error rate, p99 latency) and wire them.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="chef-puppet.html">← Chef / Puppet</a>
+        <a href="github-actions.html">GitHub Actions →</a>
+        <a href="kubernetes.html">Kubernetes →</a>
+        <a href="gitops.html">ArgoCD / Flux →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kubernetes · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Kubernetes — the de facto orchestrator. Declarative API, controller loops, and a vast ecosystem. Powerful and complex in equal measure." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/kubernetes.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Kubernetes · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Kubernetes — the de facto container orchestrator." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/kubernetes.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Kubernetes · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Kubernetes — the de facto container orchestrator." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 8 of 18</div>
+    <h1>Kubernetes — The Container Operating System</h1>
+    <p class="lede">Born at Google as Borg, open-sourced in 2014, blessed by the CNCF. Kubernetes turned a fleet of machines into one big computer — you declare desired state, and controllers reconcile reality to match. It's the standard. It's also probably overkill for your three-service app.</p>
+    <div class="tags"><span>Pods</span><span>Deployments</span><span>Services</span><span>Ingress</span><span>Operators</span><span>CRDs</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Pod</strong> — the unit of scheduling: one or more containers sharing network and storage.</li>
+          <li><strong>Deployment</strong> — declares "I want N replicas of this pod template," handles rolling updates.</li>
+          <li><strong>Service</strong> — stable virtual IP/DNS in front of a set of pods.</li>
+          <li><strong>Ingress / Gateway API</strong> — HTTP routing into the cluster (host + path → service).</li>
+          <li><strong>ConfigMap / Secret</strong> — non-code config and credentials, mounted as files or env vars.</li>
+          <li><strong>Namespace</strong> — soft tenancy boundary; RBAC and quotas attach here.</li>
+          <li><strong>StatefulSet, Job, CronJob, DaemonSet</strong> — workloads with different identity/scheduling semantics.</li>
+          <li><strong>CRDs &amp; operators</strong> — extend the API; encode app-specific automation as controllers.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Control Plane</div><h2>How a Spec Becomes a Running Pod</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">kubectl apply YAML</div><div class="arrow">→</div>
+        <div class="step">API server (etcd)</div><div class="arrow">→</div>
+        <div class="step">Controller writes desired pods</div><div class="arrow">→</div>
+        <div class="step">Scheduler picks a node</div><div class="arrow">→</div>
+        <div class="step">kubelet starts container</div><div class="arrow">→</div>
+        <div class="step">CNI wires network, kube-proxy adds Service IP</div>
+      </div>
+      <p style="margin-top:10px; font-size:14px;">Every component is a control loop watching the API. There's no central orchestrator; each controller owns one resource type and reconciles it.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Won</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Declarative + idempotent.</strong> Apply the same YAML twice; second time is a no-op.</li>
+        <li><strong>Self-healing.</strong> Pod dies → Deployment makes another. Node dies → workloads reschedule.</li>
+        <li><strong>Portable.</strong> Same manifests run on EKS, AKS, GKE, on-prem k3s, your laptop in kind.</li>
+        <li><strong>Extensible.</strong> Custom resources + operators turn the cluster into a substrate for almost any platform.</li>
+        <li><strong>Massive ecosystem</strong> — Helm, Kustomize, ArgoCD, Istio, cert-manager, Prometheus, you name it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>The Honest Costs</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Steep learning curve.</strong> 30+ resource kinds before you've shipped a "hello world."</li>
+        <li><strong>YAML sprawl.</strong> One service can be 6+ files; reach for Helm or Kustomize early.</li>
+        <li><strong>Networking rabbit hole</strong> — CNI, Services, Ingress, NetworkPolicy, Service Mesh — debugging spans many layers.</li>
+        <li><strong>Cluster ops are real work.</strong> Upgrades, etcd backups, node lifecycle, addon CVEs. Use a managed offering unless you have a platform team.</li>
+        <li><strong>Cost.</strong> Idle control planes, over-provisioned requests, and 100 sidecars eat a lot of money.</li>
+        <li><strong>Often overkill.</strong> For a few small services, ECS / Cloud Run / Fly / Render is faster to operate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="docker.html">← Docker / Podman</a>
+        <a href="managed-k8s.html">EKS / AKS / GKE →</a>
+        <a href="helm.html">Helm →</a>
+        <a href="service-mesh.html">Service Mesh →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

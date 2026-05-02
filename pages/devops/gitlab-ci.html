@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitLab CI · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="GitLab CI — pipelines defined in .gitlab-ci.yml, deeply integrated with the GitLab platform from registry to environments to security scans." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/gitlab-ci.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="GitLab CI · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="GitLab CI — built-in CI/CD with deep platform integration." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/gitlab-ci.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GitLab CI · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="GitLab CI — built-in CI/CD with deep platform integration." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 2 of 18</div>
+    <h1>GitLab CI — One Platform, End to End</h1>
+    <p class="lede">GitLab shipped CI in 2015 and made it the centerpiece of the product. Pipelines, container registry, environments, security scans, and the issue tracker share one UI and one auth model. Popular with teams that want a single self-hosted DevOps platform — and with companies who can't put code on third-party SaaS.</p>
+    <div class="tags"><span>.gitlab-ci.yml</span><span>Stages</span><span>Auto DevOps</span><span>Self-hosted runners</span><span>SAST/DAST</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>How a Pipeline Runs</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Pipeline</strong> — defined in <code>.gitlab-ci.yml</code> at repo root.</li>
+          <li><strong>Stages</strong> — ordered groups (<em>build → test → deploy</em>); jobs in a stage run in parallel.</li>
+          <li><strong>Jobs</strong> — picked up by <em>runners</em> (shared SaaS, group, or self-hosted via the <code>gitlab-runner</code> agent).</li>
+          <li><strong>Rules / only / except</strong> — gate jobs by branch, tag, file changes, MR target.</li>
+          <li><strong>Environments</strong> — first-class concept: track which commit is on staging vs prod, with one-click rollback.</li>
+          <li><strong>Includes &amp; templates</strong> — <code>include:</code> from other repos or built-in templates (Auto DevOps, language-specific).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">All-In-One</div><h2>Why Teams Pick GitLab CI</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Container registry built in.</strong> No need for Docker Hub or ECR; <code>$CI_REGISTRY_IMAGE</code> is just there.</li>
+        <li><strong>Security scans included.</strong> SAST, DAST, dependency scanning, license compliance — flip on, get JSON in the MR view.</li>
+        <li><strong>Review apps</strong> — spin up an ephemeral env per MR for designers/PMs to click through.</li>
+        <li><strong>Self-hosted is first class</strong> — many regulated/on-prem teams adopt GitLab specifically because the SaaS path is optional.</li>
+        <li><strong>Auto DevOps</strong> — opinionated default pipeline that builds, tests, scans and deploys to Kubernetes with zero config.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Smaller marketplace</strong> than Actions — you'll write more shell yourself.</li>
+        <li><strong>Self-hosted ops cost.</strong> The runner agent, registry, and database don't run themselves.</li>
+        <li><strong>Tier gating.</strong> Many shiny features (compliance, advanced security) are locked behind Premium/Ultimate.</li>
+        <li><strong>YAML can sprawl</strong> for multi-service monorepos — <code>parent-child</code> pipelines and <code>include:</code> help, but learning curve is real.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="github-actions.html">← GitHub Actions</a>
+        <a href="jenkins.html">Jenkins →</a>
+        <a href="circleci.html">CircleCI / Travis →</a>
+        <a href="azure-pipelines.html">Azure Pipelines →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

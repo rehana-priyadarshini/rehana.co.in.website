@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chef / Puppet · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Chef and Puppet — the agent-based config management stalwarts that defined enterprise IaC before YAML and HCL took over." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/chef-puppet.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Chef / Puppet · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="The agent-based config management veterans." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/chef-puppet.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Chef / Puppet · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="The agent-based config management veterans." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 17 of 18</div>
+    <h1>Chef &amp; Puppet — The Old Guard of Config Management</h1>
+    <p class="lede">Puppet (2005) and Chef (2009) defined the IaC era a decade before "DevOps" was a hashtag. Both run agents on every node that pull from a central server and reconcile the host to a declared model. Less fashionable now, but still running massive enterprise fleets.</p>
+    <div class="tags"><span>Agent-based</span><span>Pull model</span><span>Ruby DSL</span><span>Manifests</span><span>Recipes</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Side-By-Side</div><h2>Two Distinct Flavors</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Aspect</th><th>Puppet</th><th>Chef</th></tr></thead>
+        <tbody>
+          <tr><td>Language</td><td>Declarative DSL (Puppet code)</td><td>Ruby DSL (recipes); imperative-ish</td></tr>
+          <tr><td>Server</td><td>Puppetserver (compiles catalogs)</td><td>Chef Infra Server (stores cookbooks)</td></tr>
+          <tr><td>Agent</td><td>Puppet agent on each node</td><td>chef-client on each node</td></tr>
+          <tr><td>Model</td><td>Declares desired state; agent compiles + applies</td><td>Runs an ordered convergence</td></tr>
+          <tr><td>Best fit</td><td>Large fleets needing strong type system &amp; reporting</td><td>Teams comfortable in Ruby; complex bespoke logic</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why They Endure</div><h2>Strengths</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Continuous reconciliation.</strong> Agents run every ~30 minutes — drift heals automatically.</li>
+        <li><strong>Mature reporting</strong> on what's compliant vs out-of-band edited.</li>
+        <li><strong>Cross-OS</strong> — Linux, Windows, AIX, Solaris — common in heterogeneous estates.</li>
+        <li><strong>Battle-tested</strong> on tens of thousands of nodes; banks and telcos still bet the farm here.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Agents on every host</strong> mean more ops surface than Ansible's SSH model.</li>
+        <li><strong>Steep learning curve</strong> — Puppet's resource graph is its own mental model; Chef cookbooks need Ruby fluency.</li>
+        <li><strong>Containers and immutable infra</strong> ate much of their use case — bake the image once, throw it away.</li>
+        <li><strong>Licensing shifts.</strong> Chef went to a commercial-only Chef Workstation; community drove Cinc as a binary-compatible OSS rebuild.</li>
+        <li><strong>Hiring.</strong> Newer engineers gravitate to Ansible/Terraform; the talent pool is shrinking.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="ansible.html">← Ansible</a>
+        <a href="deployment-strategies.html">Deployment Strategies →</a>
+        <a href="terraform.html">Terraform →</a>
+        <a href="kubernetes.html">Kubernetes →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>

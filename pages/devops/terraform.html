@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Terraform / OpenTofu · DevOps & CI/CD Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Terraform and the OpenTofu fork — declarative HCL for any cloud or SaaS, with a state file as the source of truth." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/terraform.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Terraform / OpenTofu · DevOps & CI/CD Deep Dive" />
+<meta property="og:description" content="Cloud-agnostic, declarative infrastructure as code." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/terraform.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Terraform / OpenTofu · DevOps & CI/CD Deep Dive" />
+<meta name="twitter:description" content="Cloud-agnostic, declarative infrastructure as code." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps & CI/CD Deep Dive · 13 of 18</div>
+    <h1>Terraform &amp; OpenTofu — Declarative Infra Across Clouds</h1>
+    <p class="lede">HashiCorp open-sourced Terraform in 2014; in 2023 the BSL relicense triggered a Linux Foundation fork called <strong>OpenTofu</strong>. Same HCL language, same provider model, mostly drop-in. Both let you write infrastructure as code once and apply it across AWS, Azure, GCP, Cloudflare, GitHub, Datadog — anything with a provider.</p>
+    <div class="tags"><span>HCL</span><span>Providers</span><span>State</span><span>Modules</span><span>Plan/Apply</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps & CI/CD</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>HCL</strong> — HashiCorp Configuration Language; declarative, JSON-equivalent.</li>
+          <li><strong>Providers</strong> — plugins that map HCL resources to API calls (<code>aws</code>, <code>azurerm</code>, <code>google</code>, <code>cloudflare</code>, ...).</li>
+          <li><strong>Resources &amp; data sources</strong> — what you create vs what you read.</li>
+          <li><strong>Modules</strong> — reusable groups of resources, parameterized by variables.</li>
+          <li><strong>State</strong> — JSON file mapping resources to real cloud IDs. Stored remotely (S3+lock, TFC, GCS).</li>
+          <li><strong>Plan / Apply</strong> — preview the diff, then execute. Plans are auditable in PRs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Workflow</div><h2>Init → Plan → Apply</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">terraform init</div><div class="arrow">→</div>
+        <div class="step">edit .tf files</div><div class="arrow">→</div>
+        <div class="step">terraform plan</div><div class="arrow">→</div>
+        <div class="step">PR review</div><div class="arrow">→</div>
+        <div class="step">terraform apply</div><div class="arrow">→</div>
+        <div class="step">state updated</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">State</div><h2>The Foundation Everyone Forgets About</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>State is the source of truth</strong> for "what does TF think exists." Lose it, you face import hell.</li>
+        <li><strong>Always remote</strong> — S3 + DynamoDB lock, GCS, TFC, Terraform-compatible backends like Spacelift / env0.</li>
+        <li><strong>Locking</strong> prevents two engineers <code>apply</code>-ing at once.</li>
+        <li><strong>Workspaces</strong> let one config target multiple environments — but most teams prefer separate state files per env.</li>
+        <li><strong>Drift</strong> happens when someone clicks in the console; <code>terraform plan</code> surfaces it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>HCL isn't a real language.</strong> Loops and conditionals exist but get awkward. Use modules to compose.</li>
+        <li><strong>Provider quirks.</strong> Some resources are eventually consistent; some apply <em>can</em> recreate things you don't want recreated. Always read the plan.</li>
+        <li><strong>Blast radius.</strong> One <code>apply</code> can delete a database. Use <code>prevent_destroy</code>, <code>plan -out</code>, and PR-gated CI.</li>
+        <li><strong>Licensing pivot.</strong> Terraform 1.6+ is BSL; OpenTofu remains MPL. Pick deliberately and watch provider compatibility.</li>
+        <li><strong>Secrets sprawl</strong> — never <code>terraform apply</code> with creds in shell history; use OIDC + assume-role.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other DevOps & CI/CD Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="service-mesh.html">← Service Mesh</a>
+        <a href="cloudformation.html">CloudFormation →</a>
+        <a href="pulumi.html">Pulumi →</a>
+        <a href="ansible.html">Ansible →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps & CI/CD</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+</body>
+</html>
