@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Estimation & Planning · Methodologies & SDLC Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Story points, planning poker, velocity, user stories, #NoEstimates — how teams forecast software work, and where each technique breaks down." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/methodologies/estimation.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Estimation & Planning · Methodologies & SDLC Deep Dive" />
+<meta property="og:description" content="Story points, planning poker, velocity, #NoEstimates." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/methodologies/estimation.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Estimation & Planning · Methodologies & SDLC Deep Dive" />
+<meta name="twitter:description" content="Story points, planning poker, velocity, #NoEstimates." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Methodologies & SDLC Deep Dive · 10 of 10</div>
+    <h1>Estimation &amp; Planning — Forecasting in a Fog</h1>
+    <p class="lede">Software estimation is famously hard because every task is a little novel. Teams reach for story points, planning poker, t-shirt sizes, or just throughput math — each works for a while, each fails differently. The healthy question isn't "how do we estimate perfectly?" but "what decision is the estimate informing?"</p>
+    <div class="tags"><span>Story points</span><span>Planning Poker</span><span>Velocity</span><span>User stories</span><span>#NoEstimates</span><span>Monte Carlo</span></div>
+    <a class="back" href="../../index.html#ch-method">← Back to Methodologies & SDLC</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">User Stories</div><h2>The Unit of Conversation</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>The classic template</h4>
+        <p style="font-size:15px; margin:6px 0;"><em>"As a &lt;role&gt;, I want &lt;goal&gt;, so that &lt;benefit&gt;."</em></p>
+        <p style="font-size:14px;">A user story is a placeholder for a conversation, not a spec. The "so that" clause is the most-skipped and most-valuable part — it forces clarity on <em>why</em>.</p>
+      </div>
+      <p style="font-size:14px; margin-top:10px;"><strong>INVEST</strong> heuristic: stories should be Independent, Negotiable, Valuable, Estimable, Small, Testable.</p>
+      <p style="font-size:14px;"><strong>Acceptance criteria</strong> live alongside (often "Given / When / Then" — Gherkin format).</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Estimation Techniques</div><h2>Pick the Tool to the Question</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Technique</th><th>Best for</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Story points</strong> (Fibonacci 1, 2, 3, 5, 8, 13)</td><td>Relative effort within one team</td><td>Cross-team comparison; treating as time.</td></tr>
+          <tr><td><strong>T-shirt sizes</strong> (XS / S / M / L / XL)</td><td>Coarse early-roadmap sizing</td><td>Becomes a sneaky points scale.</td></tr>
+          <tr><td><strong>Hours / days</strong></td><td>Tasks ≤ 1 day; ops work; contractors</td><td>False precision; padding wars.</td></tr>
+          <tr><td><strong>#NoEstimates</strong> (count items)</td><td>Once item sizes are similar</td><td>Requires real story splitting discipline.</td></tr>
+          <tr><td><strong>Monte Carlo</strong> on cycle time</td><td>Forecasting "when will N items be done?"</td><td>Needs ≥ 11 historical data points.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Planning Poker</div><h2>The Estimation Ritual</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">PO reads story</div><div class="arrow">→</div>
+        <div class="step">Q&amp;A</div><div class="arrow">→</div>
+        <div class="step">Everyone reveals card</div><div class="arrow">→</div>
+        <div class="step">Highest &amp; lowest explain</div><div class="arrow">→</div>
+        <div class="step">Re-estimate</div>
+      </div>
+      <p style="margin-top:10px; font-size:14px;">The point isn't the number — it's the conversation that surfaces hidden complexity. If a senior says 3 and a newer dev says 13, you've found a gap in shared understanding before the work starts.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Velocity</div><h2>Useful Signal, Terrible Target</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Definition</strong> — story points completed per sprint, averaged over a few sprints.</li>
+        <li><strong>Use it for</strong> — capacity planning, longer-range forecasting, rough sprint loading.</li>
+        <li><strong>Don't use it for</strong> — comparing teams, performance reviews, KPI dashboards.</li>
+        <li><strong>Goodhart's Law</strong>: "When a measure becomes a target, it ceases to be a good measure." Velocity-as-KPI = points inflation.</li>
+        <li><strong>Range, not single number.</strong> Forecast "5–8 sprints" with confidence bands, not "exactly 6."</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Cone of Uncertainty</div><h2>Why Early Estimates Are Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li>At project start, an estimate has roughly <strong>4× spread</strong> in either direction (0.25× to 4× actual).</li>
+        <li>By detailed design, the spread shrinks to about <strong>1.25×</strong>.</li>
+        <li>Early "estimates" are guesses with extra steps. Use ranges; re-estimate as you learn.</li>
+        <li><strong>The Three-Point Estimate</strong>: best-case, most-likely, worst-case → use a weighted average for forecasts.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Estimates as commitments</strong> — the original sin. They're forecasts; treat them so.</li>
+        <li><strong>Estimating to look busy</strong> — story-point grooming sessions that produce no decisions are pure waste.</li>
+        <li><strong>Big stories.</strong> If a story is &gt; 13 points or larger than half a sprint, split it before estimating.</li>
+        <li><strong>Ignoring throughput.</strong> Historical data beats new estimates — once you have it, lean on it.</li>
+        <li><strong>Roadmaps as Gantt charts.</strong> Now-Next-Later beats month-by-month for products with real uncertainty.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Methodologies</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="scrum-ceremonies.html">← Scrum Ceremonies</a>
+        <a href="scrum.html">Scrum →</a>
+        <a href="kanban.html">Kanban →</a>
+        <a href="agile.html">Agile →</a>
+        <a href="../../index.html#ch-method">↑ Back to Methodologies & SDLC</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

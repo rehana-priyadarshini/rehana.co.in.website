@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scrum Roles & Ceremonies · Methodologies & SDLC Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The roles, events, and artifacts of Scrum in detail — what each is for, what time-boxes apply, and the failure modes to watch for." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/methodologies/scrum-ceremonies.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Scrum Roles & Ceremonies · Methodologies & SDLC Deep Dive" />
+<meta property="og:description" content="Roles, events, and artifacts of Scrum in detail." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/methodologies/scrum-ceremonies.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Scrum Roles & Ceremonies · Methodologies & SDLC Deep Dive" />
+<meta name="twitter:description" content="Roles, events, and artifacts of Scrum in detail." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Methodologies & SDLC Deep Dive · 9 of 10</div>
+    <h1>Scrum Roles &amp; Ceremonies — In Detail</h1>
+    <p class="lede">The Scrum Guide is famously short — under 14 pages. But each role and event has a specific purpose, a time-box, and a few failure modes that recur in every team. This is the working reference: what each thing is for, who attends, and how it goes wrong.</p>
+    <div class="tags"><span>Roles</span><span>Events</span><span>Time-boxes</span><span>Definition of Done</span></div>
+    <a class="back" href="../../index.html#ch-method">← Back to Methodologies & SDLC</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Roles</div><h2>Three Accountabilities</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Role</th><th>Owns</th><th>Common pitfall</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Product Owner</strong></td><td>Product backlog, ordering, value maximization</td><td>Treated as a backlog secretary, not a decision-maker.</td></tr>
+          <tr><td><strong>Scrum Master</strong></td><td>Effectiveness of the team and Scrum adoption</td><td>Acts as a project manager or status-reporter.</td></tr>
+          <tr><td><strong>Developers</strong></td><td>Creating the increment and the Definition of Done</td><td>Externalize commitment ("the PO promised it") instead of owning it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Events</div><h2>Five Time-Boxed Meetings</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Event</th><th>Time-box (2-week sprint)</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><strong>The Sprint</strong></td><td>2 weeks</td><td>The container for everything else. A mini-project with a goal.</td></tr>
+          <tr><td><strong>Sprint Planning</strong></td><td>≤ 4 hours</td><td>Pick the Sprint Goal; pick backlog items; build the plan.</td></tr>
+          <tr><td><strong>Daily Scrum</strong></td><td>15 minutes</td><td>Devs synchronize on progress toward the Sprint Goal &amp; adjust.</td></tr>
+          <tr><td><strong>Sprint Review</strong></td><td>≤ 2 hours</td><td>Demo the increment; collect stakeholder feedback; adapt the backlog.</td></tr>
+          <tr><td><strong>Retrospective</strong></td><td>≤ 1.5 hours</td><td>Inspect how the team works; commit to one or two improvements.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px; font-size:14px;">Time-boxes are <em>maximums</em>, not targets. A 5-minute Daily Scrum that achieves the sync is fine.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Artifacts &amp; Commitments</div><h2>Three Things You Track</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Artifact</th><th>Commitment</th><th>What it answers</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Product Backlog</strong></td><td>Product Goal</td><td>What is this product trying to become?</td></tr>
+          <tr><td><strong>Sprint Backlog</strong></td><td>Sprint Goal</td><td>What are we trying to achieve this sprint?</td></tr>
+          <tr><td><strong>Increment</strong></td><td>Definition of Done</td><td>What does "finished" look like?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Definition of Done</div><h2>The Hidden Lever</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Code merged to main</strong> and reviewed.</li>
+        <li><strong>Tests written and passing</strong> at the agreed coverage level.</li>
+        <li><strong>Deployed to staging</strong> (or behind a flag in prod).</li>
+        <li><strong>Docs updated</strong> — runbook, API spec, changelog.</li>
+        <li><strong>Telemetry</strong> in place — logs, metrics, alerts.</li>
+        <li><strong>Accepted by the PO</strong> against the acceptance criteria.</li>
+      </ul>
+      <p style="font-size:14px;">DoD is the team's quality contract with themselves. Loose DoD = "done-ish" = inflated velocity that hides real work.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Methodologies</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="devops.html">← DevOps</a>
+        <a href="estimation.html">Estimation & Planning →</a>
+        <a href="scrum.html">Scrum →</a>
+        <a href="kanban.html">Kanban →</a>
+        <a href="../../index.html#ch-method">↑ Back to Methodologies & SDLC</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

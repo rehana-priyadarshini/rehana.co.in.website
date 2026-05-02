@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DevOps (as Methodology) · Methodologies & SDLC Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="DevOps as a methodology — culture, automation, lean flow, measurement, sharing. The CALMS model and the DORA metrics that prove it works." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/methodologies/devops.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="DevOps (as Methodology) · Methodologies & SDLC Deep Dive" />
+<meta property="og:description" content="DevOps as culture, not just tooling — CALMS and DORA." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/methodologies/devops.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="DevOps (as Methodology) · Methodologies & SDLC Deep Dive" />
+<meta name="twitter:description" content="DevOps as culture, not just tooling — CALMS and DORA." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Methodologies & SDLC Deep Dive · 8 of 10</div>
+    <h1>DevOps — Culture First, Tools Second</h1>
+    <p class="lede">Coined at the 2009 Velocity conference talk "10 Deploys Per Day at Flickr." DevOps tears down the wall between developers (who want change) and operations (who want stability) by making both sides own the whole lifecycle — and proving the case with data. Chapter 10 covers the tools; this is the methodology side.</p>
+    <div class="tags"><span>CALMS</span><span>DORA metrics</span><span>Shared ownership</span><span>You build it, you run it</span><span>Blameless</span></div>
+    <a class="back" href="../../index.html#ch-method">← Back to Methodologies & SDLC</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">CALMS</div><h2>The Five Pillars</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Culture</strong> — shared ownership, blameless post-mortems, devs and ops on the same on-call rotation.</li>
+        <li><strong>Automation</strong> — CI/CD, IaC, automated testing — reduce toil, eliminate manual handoffs.</li>
+        <li><strong>Lean</strong> — small batch sizes, continuous flow, work-in-progress limits.</li>
+        <li><strong>Measurement</strong> — track what matters; see <em>DORA</em> below.</li>
+        <li><strong>Sharing</strong> — internal docs, blog posts, conference talks; learning travels.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">DORA Metrics</div><h2>The Four Numbers That Predict Performance</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Metric</th><th>What it measures</th><th>Elite target</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Deployment Frequency</strong></td><td>How often you ship to prod</td><td>On demand (multiple per day)</td></tr>
+          <tr><td><strong>Lead Time for Changes</strong></td><td>Commit → prod time</td><td>&lt; 1 hour</td></tr>
+          <tr><td><strong>Change Failure Rate</strong></td><td>% of deploys causing incidents</td><td>0–15%</td></tr>
+          <tr><td><strong>Mean Time to Restore (MTTR)</strong></td><td>How fast you recover from incidents</td><td>&lt; 1 hour</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px; font-size:14px;">From the multi-year <em>Accelerate</em> research (Forsgren, Humble, Kim). The two top metrics measure throughput; the two bottom measure stability. High performers do well on both — they're not in tension.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Practices</div><h2>What Teams Actually Adopt</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Trunk-based development</strong> — small, frequent merges over long-lived branches.</li>
+        <li><strong>Continuous Delivery</strong> — every green build is deployable; deployment is a business decision, not a technical one.</li>
+        <li><strong>Feature flags</strong> — decouple deploy from release; ship dark, turn on per cohort.</li>
+        <li><strong>Infrastructure as Code</strong> — environments are reproducible; no "snowflake" servers.</li>
+        <li><strong>Blameless post-mortems</strong> — focus on the system, not the individual; assume good intent.</li>
+        <li><strong>"You build it, you run it"</strong> — devs carry pagers for what they ship.</li>
+        <li><strong>Game days / chaos engineering</strong> — practice failure on purpose.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"DevOps team" is a smell.</strong> A separate team called "DevOps" recreates the wall it was meant to remove.</li>
+        <li><strong>Tools without culture</strong> = expensive theater. Buying a CI/CD platform doesn't change behavior.</li>
+        <li><strong>On-call burden</strong> needs to be deliberate — clear runbooks, tested alerts, sustainable rotation.</li>
+        <li><strong>Platform engineering</strong> is the modern compromise: a platform team builds an internal developer platform; product teams own delivery on top.</li>
+        <li><strong>SRE</strong> (Google's variant) emphasizes error budgets and toil reduction; complementary, not opposed.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Methodologies</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="scaled-agile.html">← SAFe / LeSS</a>
+        <a href="scrum-ceremonies.html">Scrum Ceremonies →</a>
+        <a href="estimation.html">Estimation & Planning →</a>
+        <a href="lean.html">Lean →</a>
+        <a href="../../index.html#ch-method">↑ Back to Methodologies & SDLC</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lean Software Development · Methodologies & SDLC Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Lean — eliminate waste, amplify learning, decide late, deliver fast, build quality in. Software adapted from Toyota's production system." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/methodologies/lean.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Lean Software Development · Methodologies & SDLC Deep Dive" />
+<meta property="og:description" content="Lean — eliminate waste, build quality in, optimize the whole." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/methodologies/lean.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Lean Software Development · Methodologies & SDLC Deep Dive" />
+<meta name="twitter:description" content="Lean — eliminate waste, build quality in, optimize the whole." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Methodologies & SDLC Deep Dive · 6 of 10</div>
+    <h1>Lean — Eliminate Waste, Optimize the Whole</h1>
+    <p class="lede">The Poppendiecks adapted Toyota's <em>Lean Manufacturing</em> to software in 2003. Where Scrum says "iterate," Lean asks "what's getting in the way of value reaching the user?" — and tells you to remove it. Lean Startup's "Build–Measure–Learn" loop is the same DNA pointed at product discovery.</p>
+    <div class="tags"><span>Waste</span><span>Pull</span><span>Build quality in</span><span>Defer commitment</span><span>Lean Startup</span></div>
+    <a class="back" href="../../index.html#ch-method">← Back to Methodologies & SDLC</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Seven Principles</div><h2>The Poppendieck Set</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Eliminate waste</strong> — anything not creating value for the customer.</li>
+        <li><strong>Build quality in</strong> — automated tests, code review, refactoring; not "test it at the end."</li>
+        <li><strong>Create knowledge</strong> — documentation, learning loops, dual-track discovery.</li>
+        <li><strong>Defer commitment</strong> — make irreversible decisions as late as responsibly possible.</li>
+        <li><strong>Deliver fast</strong> — short cycle times surface mistakes before they compound.</li>
+        <li><strong>Respect people</strong> — empower the team that actually does the work.</li>
+        <li><strong>Optimize the whole</strong> — don't local-optimize one team's metric while hurting the system.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Seven Wastes (in software)</div><h2>What to Cut</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Waste</th><th>What it looks like</th></tr></thead>
+        <tbody>
+          <tr><td>Partially done work</td><td>Code that's written but not merged / shipped / used.</td></tr>
+          <tr><td>Extra features</td><td>"Just in case" code; the YAGNI smell.</td></tr>
+          <tr><td>Relearning</td><td>Solving the same problem twice because nothing was written down.</td></tr>
+          <tr><td>Handoffs</td><td>Tickets bouncing between specialists / teams / approvals.</td></tr>
+          <tr><td>Task switching</td><td>Multiple in-flight items per person.</td></tr>
+          <tr><td>Delays</td><td>Waiting for review / build / deploy / answer.</td></tr>
+          <tr><td>Defects</td><td>Bugs that escape and require rework.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Lean Startup</div><h2>Same DNA, Different Domain</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Minimum Viable Product (MVP)</strong> — smallest thing you can ship to learn.</li>
+        <li><strong>Build–Measure–Learn loop</strong> — turn ideas into product, into data, back into ideas.</li>
+        <li><strong>Validated learning</strong> — distinguish "users say nice things" from "users actually pay/return/share."</li>
+        <li><strong>Pivot vs persevere</strong> — the explicit decision after each cycle.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"Eliminate waste" can mean cutting muscle.</strong> Some "waste" — onboarding, training, slack — is investment.</li>
+        <li><strong>Lean is a culture, not a checklist.</strong> Hard to retrofit onto a target-driven org.</li>
+        <li><strong>Defer commitment</strong> doesn't mean "never decide" — late deciders still need to decide.</li>
+        <li><strong>"MVP" gets stretched</strong> into "first release" — a real MVP can be a landing page or a Wizard-of-Oz mock.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Methodologies</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="xp.html">← XP</a>
+        <a href="scaled-agile.html">SAFe / LeSS →</a>
+        <a href="devops.html">DevOps →</a>
+        <a href="kanban.html">Kanban →</a>
+        <a href="../../index.html#ch-method">↑ Back to Methodologies & SDLC</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

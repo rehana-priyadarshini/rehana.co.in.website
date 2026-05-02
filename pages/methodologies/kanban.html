@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kanban · Methodologies & SDLC Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Kanban — visualize the flow, limit work-in-progress, manage flow, make policies explicit. No sprints, no roles — just the board and the rules." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/methodologies/kanban.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Kanban · Methodologies & SDLC Deep Dive" />
+<meta property="og:description" content="Kanban — visualize, limit WIP, manage flow." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/methodologies/kanban.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Kanban · Methodologies & SDLC Deep Dive" />
+<meta name="twitter:description" content="Kanban — visualize, limit WIP, manage flow." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Methodologies & SDLC Deep Dive · 4 of 10</div>
+    <h1>Kanban — Continuous Flow on a Board</h1>
+    <p class="lede">Borrowed from Toyota's just-in-time manufacturing system; adapted to knowledge work by David Anderson around 2007. No sprints, no Scrum Master, no story points required — just visualize the flow, cap how much is in progress at once, and watch where work piles up.</p>
+    <div class="tags"><span>Board</span><span>WIP limits</span><span>Flow</span><span>Pull system</span><span>Lead time</span></div>
+    <a class="back" href="../../index.html#ch-method">← Back to Methodologies & SDLC</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Six Practices</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Visualize the workflow</strong> — columns for each state (To Do, In Progress, Review, Done).</li>
+          <li><strong>Limit WIP</strong> — a hard cap per column; if it's full, finish work before pulling new.</li>
+          <li><strong>Manage flow</strong> — measure lead time and cycle time; smooth out where things stall.</li>
+          <li><strong>Make policies explicit</strong> — what does "done" mean for each column? Who pulls?</li>
+          <li><strong>Implement feedback loops</strong> — replenishment meetings, service-delivery reviews.</li>
+          <li><strong>Improve collaboratively</strong> — evolve the system experimentally.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why WIP Limits</div><h2>The Single Most Important Rule</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Less context-switching</strong> — humans aren't good at parallel work.</li>
+        <li><strong>Faster feedback</strong> — items finish sooner, reach users sooner.</li>
+        <li><strong>Bottlenecks become visible</strong> — when "Review" is full and stays full, you see the problem.</li>
+        <li><strong>Encourages swarming</strong> — when WIP is capped, the next free dev helps unblock, doesn't start something new.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Metrics That Matter</div><h2>Flow Numbers</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Metric</th><th>What it tells you</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Lead time</strong></td><td>From request to delivery — what users actually feel.</td></tr>
+          <tr><td><strong>Cycle time</strong></td><td>From "started work" to "done" — team capacity signal.</td></tr>
+          <tr><td><strong>Throughput</strong></td><td>Items completed per week — capacity over time.</td></tr>
+          <tr><td><strong>Cumulative Flow Diagram</strong></td><td>Stacked area chart that exposes growing queues.</td></tr>
+          <tr><td><strong>Aging WIP</strong></td><td>How long has each in-progress item been sitting?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Scrum vs Kanban</div><h2>When to Pick Which</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Predictable product features</strong> with stable team and roadmap → Scrum's rhythm helps.</li>
+        <li><strong>Mixed work, interrupts, support tickets</strong>, ops/SRE, design — Kanban beats Scrum.</li>
+        <li><strong>Variable item sizes</strong> — Kanban tolerates them; Scrum forces them into sprints awkwardly.</li>
+        <li><strong>Hybrid ("Scrumban")</strong> is common — Scrum cadence, Kanban WIP limits.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"Just a Trello board" ≠ Kanban.</strong> Without WIP limits and explicit policies, it's just visualization.</li>
+        <li><strong>No built-in cadence</strong> — teams need to add review/retro rituals or improvement stalls.</li>
+        <li><strong>Hard to forecast</strong> for stakeholders used to "what will be done by Q3?"; use Monte Carlo on cycle-time distribution.</li>
+        <li><strong>WIP-limit fights</strong> — managers push to start more; the team has to defend the cap.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Methodologies</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="scrum.html">← Scrum</a>
+        <a href="xp.html">XP →</a>
+        <a href="lean.html">Lean →</a>
+        <a href="devops.html">DevOps →</a>
+        <a href="../../index.html#ch-method">↑ Back to Methodologies & SDLC</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>
