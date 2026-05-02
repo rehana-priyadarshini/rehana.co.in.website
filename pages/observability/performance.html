@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Performance & Scalability · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Vertical and horizontal scaling, caching layers, profiling, load testing, rate limiting, backpressure — the toolbox for systems under load." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/performance.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Performance & Scalability · Observability & Performance Deep Dive" />
+<meta property="og:description" content="Scaling, caching, profiling, load testing, backpressure." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/performance.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Performance & Scalability · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="Scaling, caching, profiling, load testing, backpressure." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 7 of 7</div>
+    <h1>Performance &amp; Scalability — The Toolbox for Load</h1>
+    <p class="lede">Slow systems lose users; broken-under-load systems lose customers. The fundamentals haven't changed: measure first, scale the right axis, cache as close to the user as possible, profile before you optimize, and protect your back-end with rate limits and backpressure when traffic spikes.</p>
+    <div class="tags"><span>Vertical / Horizontal</span><span>Caching</span><span>Profiling</span><span>Load testing</span><span>Rate limiting</span><span>Backpressure</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Scaling</div><h2>Vertical vs Horizontal</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Axis</th><th>How</th><th>When it fits</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Vertical (scale up)</strong></td><td>Bigger box — more CPU, RAM, faster disk</td><td>Stateful systems (DBs); single-process workloads; quick wins.</td></tr>
+          <tr><td><strong>Horizontal (scale out)</strong></td><td>More boxes behind a load balancer</td><td>Stateless services; web tiers; queue workers. Needs idempotency.</td></tr>
+          <tr><td><strong>Read replicas</strong></td><td>Scale reads only; writes to primary</td><td>Read-heavy DB workloads; analytics queries.</td></tr>
+          <tr><td><strong>Sharding</strong></td><td>Partition data across nodes by a key</td><td>Datasets that outgrow a single primary; high write throughput.</td></tr>
+          <tr><td><strong>Auto-scaling</strong></td><td>Add/remove instances on metrics (CPU, queue depth, RPS)</td><td>Spiky workloads; cost-sensitive cloud deployments.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Caching</div><h2>Closer Is Cheaper</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">Browser cache</div><div class="arrow">→</div>
+        <div class="step">CDN edge</div><div class="arrow">→</div>
+        <div class="step">Reverse proxy</div><div class="arrow">→</div>
+        <div class="step">App-level cache (Redis / Memcached)</div><div class="arrow">→</div>
+        <div class="step">Database cache</div><div class="arrow">→</div>
+        <div class="step">Origin DB</div>
+      </div>
+      <ul style="font-size:14px; line-height:1.7; margin-top:10px;">
+        <li><strong>Cache-aside</strong> (lazy load) — most common; check cache, miss → load DB → fill cache.</li>
+        <li><strong>Write-through</strong> — write hits cache and DB synchronously; consistency at write cost.</li>
+        <li><strong>Write-behind</strong> — write hits cache, async to DB; fast but risk on crash.</li>
+        <li><strong>TTLs</strong> — short for personalized data; long for catalogs; never <code>0</code>.</li>
+        <li><strong>Cache invalidation</strong> — the hard part. Tag-based or event-driven beats hoping TTL is fast enough.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Profiling</div><h2>Find Hot Spots Before Optimizing</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>CPU profilers</strong> — Linux perf, async-profiler (JVM), py-spy, Go pprof, .NET dotnet-trace.</li>
+        <li><strong>Memory profilers</strong> — heap dumps + analyzers; track allocations not just usage.</li>
+        <li><strong>SQL profiling</strong> — <code>EXPLAIN</code>, slow-query logs, pg_stat_statements.</li>
+        <li><strong>Continuous profiling</strong> — Pyroscope, Parca, Datadog/Granulate run profilers always-on; tie samples to traces.</li>
+        <li><strong>Flame graphs</strong> — vertical = stack depth, horizontal = sample share. Wide bars = where to look.</li>
+        <li><strong>"Make it work, make it right, make it fast."</strong> Profile first; intuition lies.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Load Testing</div><h2>Find the Cliff Before Users Do</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Strength</th></tr></thead>
+        <tbody>
+          <tr><td><strong>k6</strong></td><td>JS scripts, Grafana-friendly, dev-ergonomic.</td></tr>
+          <tr><td><strong>JMeter</strong></td><td>GUI, plugin-rich, mature; XML-heavy.</td></tr>
+          <tr><td><strong>Gatling</strong></td><td>Scala/Java DSL; great reports.</td></tr>
+          <tr><td><strong>Locust</strong></td><td>Python; distributed; readable scenarios.</td></tr>
+          <tr><td><strong>Artillery / Vegeta / wrk</strong></td><td>Lightweight CLIs for quick HTTP load.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px; margin-top:10px;">Run <strong>load tests</strong> (sustained), <strong>stress tests</strong> (find the breakpoint), <strong>soak tests</strong> (memory leaks under hours of traffic), and <strong>spike tests</strong> (sudden 10×). Test against prod-like data, not empty DBs.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Protect the Backend</div><h2>Rate Limiting, Backpressure, Circuit Breakers</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Rate limiting</strong> — cap requests per client / IP / API key. Token bucket and leaky bucket are the classics.</li>
+        <li><strong>Backpressure</strong> — when a downstream is slow, slow down the upstream too; bounded queues, not infinite.</li>
+        <li><strong>Circuit breakers</strong> — stop calling a failing dependency for a cooling period; recover progressively.</li>
+        <li><strong>Bulkheads</strong> — partition resources so one bad dependency can't drown the whole process (separate thread pools / clients).</li>
+        <li><strong>Timeouts everywhere.</strong> No timeout = waiting forever on a hung peer.</li>
+        <li><strong>Retries with jitter.</strong> Naive retries cause synchronized thundering herds.</li>
+        <li><strong>Load shedding.</strong> Drop low-priority traffic to keep critical paths alive.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>Things That Bite</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>p99, not average.</strong> Averages hide the slow tail; p99 latency is what your worst users feel.</li>
+        <li><strong>The N+1 query.</strong> One outer + N inner DB calls per request — the most common silent killer.</li>
+        <li><strong>Synchronous fan-out.</strong> 10 services in series = sum of 10 latencies. Parallelize what you can.</li>
+        <li><strong>Cache stampedes.</strong> A hot key expiring → 1000 concurrent reloads. Use single-flight / probabilistic early refresh.</li>
+        <li><strong>Premature horizontal scaling.</strong> A 4× bigger box is often cheaper and simpler than a fleet of small ones.</li>
+        <li><strong>Optimizing without measurement.</strong> "I have a hunch" is how you spend a week speeding up code that runs once a day.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="error-tracking.html">← Error Tracking</a>
+        <a href="logging.html">Logging →</a>
+        <a href="metrics.html">Metrics →</a>
+        <a href="tracing.html">Tracing →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

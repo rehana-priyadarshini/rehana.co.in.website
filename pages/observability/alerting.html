@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PagerDuty / Opsgenie · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="On-call and incident response — PagerDuty, Opsgenie, incident.io, Rootly. Routing, escalation, runbooks, and learning from every page." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/alerting.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="PagerDuty / Opsgenie · Observability & Performance Deep Dive" />
+<meta property="og:description" content="On-call routing, escalation, and incident response." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/alerting.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="PagerDuty / Opsgenie · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="On-call routing, escalation, and incident response." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 5 of 7</div>
+    <h1>On-Call &amp; Incident Response — PagerDuty, Opsgenie &amp; Friends</h1>
+    <p class="lede">Alerts without routing are noise. Routing without escalation is a single-point-of-failure pager. PagerDuty (2009) put on-call on the map; Opsgenie (now Atlassian) and newer entrants like incident.io and Rootly compete on developer ergonomics, slick Slack integration, and the chat-driven incident playbook.</p>
+    <div class="tags"><span>On-call rotation</span><span>Escalation</span><span>Runbooks</span><span>Severity levels</span><span>Postmortems</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>What These Tools Actually Do</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Schedule</strong> — who's on-call when (primary, secondary, holiday rotations).</li>
+          <li><strong>Service</strong> — a logical owner; alerts route here, then to the schedule.</li>
+          <li><strong>Escalation policy</strong> — primary unresponsive after N minutes → secondary → manager.</li>
+          <li><strong>Routing rules</strong> — match alerts to the right service by labels/tags.</li>
+          <li><strong>Severity levels</strong> — SEV1 (full outage), SEV2 (major degradation), SEV3 (minor).</li>
+          <li><strong>Acknowledgement &amp; resolution</strong> — explicit lifecycle to prevent dropped pages.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Players</div><h2>Side-By-Side</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Strength</th><th>Notable</th></tr></thead>
+        <tbody>
+          <tr><td><strong>PagerDuty</strong></td><td>The category creator; mature, event-routing rich</td><td>AIOps add-ons for noise reduction; pricier per-user.</td></tr>
+          <tr><td><strong>Opsgenie</strong></td><td>Tight Atlassian integration (Jira, Statuspage)</td><td>Strong if you're already in the Atlassian stack.</td></tr>
+          <tr><td><strong>incident.io / Rootly / FireHydrant</strong></td><td>Slack-native incident command</td><td>"Declare incident" Slack slash command; auto-create channel, ticket, status page.</td></tr>
+          <tr><td><strong>VictorOps / Splunk On-Call</strong></td><td>Splunk-integrated ops</td><td>Best when you're already a Splunk shop.</td></tr>
+          <tr><td><strong>Better Stack / Grafana OnCall</strong></td><td>OSS-friendly, simpler pricing</td><td>Grafana OnCall is the OSS option that pairs with the rest of the Grafana stack.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Good Alerting</div><h2>The Healthy Habits</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Alert on symptoms, not causes.</strong> Page on "users can't log in," not "Redis CPU is 90%."</li>
+        <li><strong>Tie alerts to SLOs.</strong> Multi-window, multi-burn-rate alerts beat threshold-of-the-week.</li>
+        <li><strong>Every alert links to a runbook.</strong> No runbook, no alert.</li>
+        <li><strong>Tune ruthlessly.</strong> Each false page is a tax on attention and trust. Track signal-to-noise.</li>
+        <li><strong>One pager, one owner.</strong> "Everyone is on-call" → no one is.</li>
+        <li><strong>Sustainable rotation.</strong> Compensate, follow-the-sun where possible, no solo on-call for SEV1 services.</li>
+        <li><strong>Blameless postmortems.</strong> Focus on the system, not the human; track action items to completion.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Alert fatigue</strong> kills response. People silence pagers in their sleep — literally.</li>
+        <li><strong>Hero culture.</strong> One person who knows everything = ticking bomb. Cross-train.</li>
+        <li><strong>Stale runbooks.</strong> Runbooks that lie are worse than no runbooks; review on a cadence.</li>
+        <li><strong>Postmortems without action.</strong> If nobody owns the action items, you'll have the same incident again.</li>
+        <li><strong>SEV inflation.</strong> If everything's a SEV1, nothing is.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="apm-platforms.html">← APM Platforms</a>
+        <a href="error-tracking.html">Error Tracking →</a>
+        <a href="performance.html">Performance & Scalability →</a>
+        <a href="metrics.html">Metrics →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

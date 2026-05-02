@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Datadog / New Relic / Honeycomb · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Commercial observability platforms — Datadog, New Relic, Honeycomb, Splunk, Dynatrace. Logs, metrics, traces, RUM, synthetics — unified, billed by ingest." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/apm-platforms.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Datadog / New Relic / Honeycomb · Observability & Performance Deep Dive" />
+<meta property="og:description" content="Commercial all-in-one observability platforms." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/apm-platforms.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Datadog / New Relic / Honeycomb · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="Commercial all-in-one observability platforms." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 4 of 7</div>
+    <h1>APM Platforms — The Commercial All-In-Ones</h1>
+    <p class="lede">Running Prometheus + Loki + Tempo + Alertmanager + Grafana + on-call rotation isn't free — somebody owns it. Commercial platforms collapse the three pillars (and a few extras: RUM, synthetics, SIEM) into one product with one bill. The bill is famously eye-watering, but for many teams it's still cheaper than a platform engineer.</p>
+    <div class="tags"><span>Datadog</span><span>New Relic</span><span>Honeycomb</span><span>Splunk</span><span>Dynatrace</span><span>Sumo Logic</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Side-By-Side</div><h2>Pick by Strength</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Platform</th><th>Strongest at</th><th>Notable</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Datadog</strong></td><td>Breadth — logs, metrics, APM, RUM, security, CI visibility</td><td>700+ integrations; the obvious pick if you want one bill. Pricing complexity is itself a feature.</td></tr>
+          <tr><td><strong>New Relic</strong></td><td>Per-user pricing model; full-stack visibility</td><td>Repriced in 2020 to ingest + per-user — generous free tier.</td></tr>
+          <tr><td><strong>Honeycomb</strong></td><td>High-cardinality querying; SLO &amp; BubbleUp workflows</td><td>Built around traces; Charity Majors's "events, not metrics" philosophy.</td></tr>
+          <tr><td><strong>Splunk</strong></td><td>Logs at extreme scale; enterprise + security (SIEM)</td><td>Acquired by Cisco 2024. Famously expensive but extremely powerful search.</td></tr>
+          <tr><td><strong>Dynatrace</strong></td><td>Auto-instrumentation; AI root-cause</td><td>OneAgent installs and discovers everything; opinionated &amp; enterprise-priced.</td></tr>
+          <tr><td><strong>Sumo Logic / Elastic Cloud / Logz.io</strong></td><td>Hosted log search</td><td>Often paired with self-hosted metrics.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You Get</div><h2>Beyond the Three Pillars</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>RUM</strong> (Real User Monitoring) — what real browsers/apps experience: TTFB, LCP, JS errors.</li>
+        <li><strong>Synthetics</strong> — scripted probes from many regions; "is the login page up from Tokyo?"</li>
+        <li><strong>Profiling</strong> — continuous CPU/memory profiling tied to traces.</li>
+        <li><strong>Service Map</strong> — auto-discovered topology of who calls whom.</li>
+        <li><strong>SLO management</strong> — error budgets, burn-rate alerts, multi-window calculations.</li>
+        <li><strong>Notebooks</strong> — investigations as shareable docs with embedded queries.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Pricing is ingest-heavy.</strong> A chatty service can 10× your bill overnight. Sample, drop, and watch budgets.</li>
+        <li><strong>Vendor lock-in.</strong> Vendor-proprietary agents and query languages mean migrations are painful. OTel reduces this — emit OTLP, route anywhere.</li>
+        <li><strong>"Custom metrics" tax.</strong> Most vendors charge per unique metric/series; cardinality control still matters.</li>
+        <li><strong>Outage blast radius.</strong> If your monitoring vendor goes down during your incident, you're flying blind.</li>
+        <li><strong>Data residency &amp; compliance.</strong> Logs may contain PII; pick a region/setup that matches your regulator.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="tracing.html">← Tracing</a>
+        <a href="alerting.html">Alerting →</a>
+        <a href="error-tracking.html">Error Tracking →</a>
+        <a href="performance.html">Performance & Scalability →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

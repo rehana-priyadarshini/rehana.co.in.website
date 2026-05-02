@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jaeger / Zipkin / OpenTelemetry · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Distributed tracing — follow one request across many services. Jaeger and Zipkin pioneered the UIs; OpenTelemetry is the emerging standard for instrumentation." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/tracing.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Jaeger / Zipkin / OpenTelemetry · Observability & Performance Deep Dive" />
+<meta property="og:description" content="Distributed tracing — follow one request across services." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/tracing.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Jaeger / Zipkin / OpenTelemetry · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="Distributed tracing — follow one request across services." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 3 of 7</div>
+    <h1>Distributed Tracing — Following One Request Across Many Services</h1>
+    <p class="lede">In a microservice mesh, "the API is slow" is a useless statement. Tracing follows a single request as it threads through twenty services — gateway, auth, business logic, three databases, two external APIs — and shows you exactly which span ate the budget. Jaeger and Zipkin built the visualizations; <strong>OpenTelemetry</strong> is now the standard for the instrumentation underneath.</p>
+    <div class="tags"><span>Spans</span><span>Trace IDs</span><span>OpenTelemetry</span><span>W3C Trace Context</span><span>Sampling</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Trace</strong> — the full lifecycle of one request, end to end.</li>
+          <li><strong>Span</strong> — one unit of work within a trace (an HTTP call, a DB query). Has start, duration, attributes.</li>
+          <li><strong>Trace context</strong> — IDs propagated via headers (<code>traceparent</code> per W3C spec) across services.</li>
+          <li><strong>Parent / child spans</strong> — form a tree showing causality.</li>
+          <li><strong>Attributes / events</strong> — structured key-values and log lines attached to spans.</li>
+          <li><strong>Sampling</strong> — head-based (decide upfront) or tail-based (decide after seeing the trace).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Players</div><h2>OTel, Jaeger, Zipkin</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>What it is</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>OpenTelemetry (OTel)</strong></td><td>CNCF standard for SDKs + collector + protocol (OTLP)</td><td>Merger of OpenCensus + OpenTracing. The de facto answer for new instrumentation.</td></tr>
+          <tr><td><strong>Jaeger</strong></td><td>Tracing backend &amp; UI (CNCF graduated)</td><td>Born at Uber; works great with OTel collector.</td></tr>
+          <tr><td><strong>Zipkin</strong></td><td>Original distributed-tracing system</td><td>Twitter's contribution; still widely used; simpler than Jaeger.</td></tr>
+          <tr><td><strong>Tempo</strong></td><td>Grafana's tracing backend</td><td>Cheap object-storage backed; pairs with Loki + Mimir.</td></tr>
+          <tr><td><strong>Commercial</strong></td><td>Datadog APM, Honeycomb, Lightstep, New Relic</td><td>Strong on tail-sampling, query &amp; high-cardinality analysis.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You Find</div><h2>Where Traces Pay Off</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>The N+1 query.</strong> 200 little DB calls inside one request, instantly visible.</li>
+        <li><strong>Hidden synchronous fan-out.</strong> A page that calls 12 services in series instead of in parallel.</li>
+        <li><strong>The retry storm.</strong> Service A times out → retries 3× → upstream sees 4× load.</li>
+        <li><strong>The wrong slow step.</strong> "Database is slow" is often "DNS resolution within the gateway is slow."</li>
+        <li><strong>Cross-team handoffs</strong> — whose service actually owns the latency this quarter.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Volume is huge.</strong> 100% sampling is rarely affordable; 1% head sampling misses rare slow paths. Tail-sampling is the answer at scale.</li>
+        <li><strong>Context propagation must be everywhere.</strong> One service that drops the headers blinds the trace.</li>
+        <li><strong>Async work</strong> (queues, batch jobs) needs explicit span linking; default instrumentation doesn't always do it.</li>
+        <li><strong>OTel is a moving target.</strong> Stable for traces; logs &amp; metrics SDKs still maturing per language.</li>
+        <li><strong>Don't double-pay.</strong> If you have OTel + a vendor SDK + a service mesh emitting spans, you'll pay for the same trace three times.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="metrics.html">← Metrics</a>
+        <a href="apm-platforms.html">APM Platforms →</a>
+        <a href="alerting.html">Alerting →</a>
+        <a href="error-tracking.html">Error Tracking →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

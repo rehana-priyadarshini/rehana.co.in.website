@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ELK / OpenSearch / Loki · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Log aggregation with ELK, OpenSearch, and Grafana Loki — collect, index, and search the text trail of every running service." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/logging.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="ELK / OpenSearch / Loki · Observability & Performance Deep Dive" />
+<meta property="og:description" content="Log aggregation: collect, index, and search log streams." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/logging.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="ELK / OpenSearch / Loki · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="Log aggregation: collect, index, and search log streams." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 1 of 7</div>
+    <h1>Log Aggregation — ELK, OpenSearch &amp; Loki</h1>
+    <p class="lede">Logs are the text trail every service leaves behind. Aggregating them into one searchable place is the floor of observability — without it you SSH into ten boxes during an incident. The Elastic Stack popularized the pattern; OpenSearch is the AWS-led OSS fork; Loki took a different path with index-the-labels, scan-the-logs.</p>
+    <div class="tags"><span>Elastic</span><span>OpenSearch</span><span>Loki</span><span>Fluent Bit</span><span>Vector</span><span>Structured logs</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Pipeline</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">App emits log</div><div class="arrow">→</div>
+        <div class="step">Agent (Fluent Bit / Filebeat / Vector)</div><div class="arrow">→</div>
+        <div class="step">Buffer (Kafka / Redis)</div><div class="arrow">→</div>
+        <div class="step">Indexer (Elastic / OpenSearch / Loki)</div><div class="arrow">→</div>
+        <div class="step">Query UI (Kibana / OpenSearch Dashboards / Grafana)</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Side-By-Side</div><h2>The Three Stacks</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Stack</th><th>Strength</th><th>Watch out for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ELK</strong> (Elasticsearch + Logstash + Kibana)</td><td>Mature, full-text search at scale, rich aggregations, alerts, ML add-ons.</td><td>License pivot to ELv2/SSPL in 2021; cluster ops are real work.</td></tr>
+          <tr><td><strong>OpenSearch</strong></td><td>Apache 2.0 OSS fork led by AWS; managed offering on AWS; mostly drop-in for ELK.</td><td>Versions diverging slowly from Elastic; some plugins differ.</td></tr>
+          <tr><td><strong>Grafana Loki</strong></td><td>Indexes only labels (cheap); stores chunks in S3-class object storage. Tight Grafana integration.</td><td>No full-text index — slow for needle-in-haystack searches without good labels.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Hard-Won Habits</div><h2>What Separates "Logs" from "Useful Logs"</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Structured (JSON) logs.</strong> Lines like <code>{"ts":..., "level":"error", "trace_id":...}</code> beat free-text every time.</li>
+        <li><strong>Correlation IDs / trace IDs</strong> on every log line — you'll thank yourself when you need to follow a request.</li>
+        <li><strong>Sampling at high volume.</strong> Sample successful requests, keep all errors.</li>
+        <li><strong>Sensitive-data filters</strong> at the agent — never log raw tokens, PII, full payloads.</li>
+        <li><strong>Retention tiers.</strong> 7 days hot, 30 days warm, 90 days cold/object-store. Costs balloon if everything is hot.</li>
+        <li><strong>Don't log inside hot loops.</strong> A stray <code>log.info</code> in a 100k req/s path can dominate your bill.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Logs are expensive.</strong> Index, store, and (in many platforms) ingest are all metered.</li>
+        <li><strong>Search-everything</strong> sounds great until your bill or cluster crashes.</li>
+        <li><strong>Self-hosting Elasticsearch</strong> at scale is a full-time platform-team responsibility.</li>
+        <li><strong>"Just log it" is not observability.</strong> Pair with metrics + traces; don't make logs do all three.</li>
+        <li><strong>Audit logs are different.</strong> Compliance retention &amp; tamper-evidence belong on a separate path.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="metrics.html">Metrics →</a>
+        <a href="tracing.html">Tracing →</a>
+        <a href="apm-platforms.html">APM Platforms →</a>
+        <a href="error-tracking.html">Error Tracking →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sentry / Rollbar · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Error tracking — Sentry, Rollbar, Bugsnag, Raygun. Capture exceptions with stack traces, breadcrumbs, release tags, and user context." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/error-tracking.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Sentry / Rollbar · Observability & Performance Deep Dive" />
+<meta property="og:description" content="Crash and exception tracking with rich context." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/error-tracking.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Sentry / Rollbar · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="Crash and exception tracking with rich context." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 6 of 7</div>
+    <h1>Error Tracking — Sentry, Rollbar &amp; Friends</h1>
+    <p class="lede">Logs tell you something happened; error trackers tell you the same exception happened 1,432 times across two browser versions, started after release 4.7.1, affects users in three countries, and here's the exact stack frame. Sentry pioneered the category in 2008 — most teams now think of error tracking as a separate, mandatory layer alongside logs and metrics.</p>
+    <div class="tags"><span>Sentry</span><span>Rollbar</span><span>Bugsnag</span><span>Source maps</span><span>Release tracking</span><span>Breadcrumbs</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>What Makes It More Than "Just Logs"</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Event</strong> — one captured exception or message; deduped into <em>issues</em>.</li>
+          <li><strong>Issue</strong> — a fingerprint of "the same error" — count, first seen, last seen, affected users.</li>
+          <li><strong>Stack trace</strong> — symbolicated, with source code context lines, locals where possible.</li>
+          <li><strong>Breadcrumbs</strong> — last N actions (clicks, navigations, network calls) leading up to the error.</li>
+          <li><strong>Release tag</strong> — tie errors to the deployment that introduced them.</li>
+          <li><strong>User &amp; session context</strong> — who hit it, on what browser, on what device.</li>
+          <li><strong>Source maps</strong> — for minified JS, map back to original TS/JSX.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Players</div><h2>Side-By-Side</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Strength</th><th>Notable</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sentry</strong></td><td>Most popular; SDKs for everything; Tracing &amp; Replay add-ons</td><td>BSL-licensed self-host option (free for 1 user). Session Replay competes with FullStory.</td></tr>
+          <tr><td><strong>Rollbar</strong></td><td>Workflow features &amp; routing</td><td>Strong RQL query language; auto-grouping rules.</td></tr>
+          <tr><td><strong>Bugsnag</strong> (SmartBear)</td><td>Stability scores tied to releases</td><td>Crash-free user % is the headline metric.</td></tr>
+          <tr><td><strong>Raygun</strong></td><td>APM + crash reporting + RUM combined</td><td>Smaller player but full stack.</td></tr>
+          <tr><td><strong>Honeybadger / Airbrake</strong></td><td>Lightweight, indie-friendly pricing</td><td>Common in Rails / Django shops.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Workflow</div><h2>From Error to Fix</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">Exception thrown</div><div class="arrow">→</div>
+        <div class="step">SDK captures stack + context</div><div class="arrow">→</div>
+        <div class="step">Send to backend</div><div class="arrow">→</div>
+        <div class="step">Group into issue</div><div class="arrow">→</div>
+        <div class="step">Alert (Slack / email)</div><div class="arrow">→</div>
+        <div class="step">Triage / assign / fix</div><div class="arrow">→</div>
+        <div class="step">Resolve in next release</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>PII leakage.</strong> Stack frames + locals may capture passwords, tokens, full request bodies. Configure scrubbing.</li>
+        <li><strong>Issue volume.</strong> A noisy frontend page can blow your event quota. Use sample rates and inbound filters.</li>
+        <li><strong>Bad grouping.</strong> Same error showing up as 50 "issues" because the stack trace has dynamic parts. Use fingerprint rules.</li>
+        <li><strong>Alert routing.</strong> A new release dumping 10k events should rate-limit, not page everyone.</li>
+        <li><strong>Source maps in prod.</strong> Upload them privately; never serve to users — gives away your source.</li>
+        <li><strong>Old issues</strong> never get fixed. Auto-resolve on inactivity or use SLAs (e.g., "high-impact issues open &gt; 30d → escalate").</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="alerting.html">← Alerting</a>
+        <a href="performance.html">Performance & Scalability →</a>
+        <a href="logging.html">Logging →</a>
+        <a href="apm-platforms.html">APM Platforms →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

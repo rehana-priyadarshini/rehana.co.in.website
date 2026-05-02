@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prometheus + Grafana · Observability & Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Prometheus and Grafana — the open-source default for time-series metrics and dashboards. Pull-based scraping, PromQL, and a vast exporter ecosystem." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/metrics.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Prometheus + Grafana · Observability & Performance Deep Dive" />
+<meta property="og:description" content="Time-series metrics and dashboards." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/metrics.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Prometheus + Grafana · Observability & Performance Deep Dive" />
+<meta name="twitter:description" content="Time-series metrics and dashboards." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability & Performance Deep Dive · 2 of 7</div>
+    <h1>Prometheus &amp; Grafana — The Open-Source Default</h1>
+    <p class="lede">Prometheus came out of SoundCloud in 2012, was donated to the CNCF, and is now the gravitational center of OSS metrics. It scrapes HTTP endpoints on an interval, stores time-series in a local TSDB, and exposes them via PromQL. Grafana is the dashboard UI everyone bolts on top.</p>
+    <div class="tags"><span>PromQL</span><span>Pull-based</span><span>Exporters</span><span>Alertmanager</span><span>Thanos / Mimir / Cortex</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability & Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>The Building Blocks</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Time series</strong> — one metric + a set of labels over time (e.g., <code>http_requests_total{method="GET",status="200"}</code>).</li>
+          <li><strong>Scrape</strong> — Prometheus pulls <code>/metrics</code> from each target on an interval (default 15–60s).</li>
+          <li><strong>Exporter</strong> — adapter that exposes third-party stats as Prom-format metrics (node_exporter, postgres_exporter, blackbox_exporter, etc.).</li>
+          <li><strong>PromQL</strong> — query language: <code>rate()</code>, <code>histogram_quantile()</code>, <code>sum by()</code>.</li>
+          <li><strong>Alertmanager</strong> — separate component that routes Prometheus alerts to Slack / PagerDuty / email.</li>
+          <li><strong>Long-term storage</strong> — Thanos, Mimir, Cortex, or VictoriaMetrics for HA + multi-year retention.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Four Metric Types</div><h2>Pick the Right One</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Type</th><th>Use for</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Counter</strong></td><td>Monotonic counts (only goes up)</td><td><code>http_requests_total</code></td></tr>
+          <tr><td><strong>Gauge</strong></td><td>Things that go up and down</td><td><code>queue_depth</code>, <code>memory_bytes</code></td></tr>
+          <tr><td><strong>Histogram</strong></td><td>Distributions (esp. latency)</td><td><code>http_request_duration_seconds</code></td></tr>
+          <tr><td><strong>Summary</strong></td><td>Pre-computed quantiles (rare)</td><td>p50/p99 calculated client-side</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px;">Prefer histograms for latency — they aggregate; summaries don't.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">RED &amp; USE</div><h2>What to Actually Measure</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>RED</strong> for request-driven services: <em>Rate</em> (req/s), <em>Errors</em> (% failing), <em>Duration</em> (latency p50/p99).</li>
+        <li><strong>USE</strong> for resources: <em>Utilization</em>, <em>Saturation</em>, <em>Errors</em>.</li>
+        <li><strong>The Four Golden Signals</strong> (Google SRE) — latency, traffic, errors, saturation.</li>
+        <li><strong>SLI → SLO → alerts.</strong> Don't alert on raw CPU; alert on what users experience.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What to Watch Out For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Cardinality explosion.</strong> Each unique label combination = a new series. <code>user_id</code> as a label = millions of series = OOM.</li>
+        <li><strong>Single-node by default.</strong> One Prom = single point of failure. HA pairs or remote-write to Thanos/Mimir.</li>
+        <li><strong>Pull model</strong> needs network reachability — short-lived jobs need the Pushgateway (use sparingly).</li>
+        <li><strong>Dashboard sprawl.</strong> 200 dashboards nobody owns. Curate ruthlessly.</li>
+        <li><strong>Alert noise.</strong> If you ignore alerts, you have too many. Tune to actionable only.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Observability Tools</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="logging.html">← Logging</a>
+        <a href="tracing.html">Tracing →</a>
+        <a href="apm-platforms.html">APM Platforms →</a>
+        <a href="alerting.html">Alerting →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability & Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>
