@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Problem Decomposition · Soft Skills & Ecosystem Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Break big problems into independently shippable pieces — vertical slicing, walking skeletons, story splitting, and the art of the small step." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/soft/problem-decomposition.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Problem Decomposition · Soft Skills & Ecosystem Deep Dive" />
+<meta property="og:description" content="Vertical slicing, walking skeletons, the art of the small step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/soft/problem-decomposition.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Problem Decomposition · Soft Skills & Ecosystem Deep Dive" />
+<meta name="twitter:description" content="Vertical slicing, walking skeletons, the art of the small step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Soft Skills & Ecosystem Deep Dive · 3 of 12</div>
+    <h1>Problem Decomposition — Make the Elephant Edible</h1>
+    <p class="lede">"Build a customer portal" is not a task. "Add a /health endpoint that returns 200" is. The skill is splitting the first into the second — and the next, and the next — without losing sight of the goal. Done well, every step ships value, exposes assumptions early, and gives the team somewhere to roll back to.</p>
+    <div class="tags"><span>Vertical slicing</span><span>Walking skeleton</span><span>Story splitting</span><span>YAGNI</span><span>MVP</span></div>
+    <a class="back" href="../../index.html#ch-soft">← Back to Soft Skills & Ecosystem</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Vertical Slicing</div><h2>Thin Through the Whole Stack</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A <strong>horizontal</strong> split builds the database, then the API, then the UI — nothing works until the last week. A <strong>vertical</strong> slice picks one tiny user journey and builds it through every layer. The first slice is ugly; the second is faster; by the fifth you have a working product spine.</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Walking skeleton</strong> — end-to-end version with one trivial feature wired through every layer including deploy. Now every later slice is just adding muscle.</li>
+        <li><strong>Tracer bullets</strong> (Pragmatic Programmer) — same idea: shoot one round through, see what you hit, adjust.</li>
+        <li><strong>Steel thread</strong> — same again, different name; teams use whichever metaphor sticks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Story Splitting</div><h2>Patterns That Actually Work</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Pattern</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Workflow steps</strong></td><td>Sign up → verify email → onboarding → first action — split per step.</td></tr>
+          <tr><td><strong>Happy path first</strong></td><td>Ship the working case; defer error/edge handling to later stories.</td></tr>
+          <tr><td><strong>Data variations</strong></td><td>One currency now, multi-currency next; one country, then ten.</td></tr>
+          <tr><td><strong>CRUD by operation</strong></td><td>Create + Read this sprint; Update + Delete next.</td></tr>
+          <tr><td><strong>Manual → automated</strong></td><td>Wizard-of-Oz the back-end first; automate once the demand is proven.</td></tr>
+          <tr><td><strong>Investigation spike</strong></td><td>Time-boxed research story when the unknown is the blocker.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Heuristics</div><h2>How to Tell If It's Small Enough</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"Could one person finish it in two days?"</strong> If not, split again.</li>
+        <li><strong>"Does it change observable behavior?"</strong> If no, it's a refactor disguised as a feature.</li>
+        <li><strong>"Could we ship it tomorrow if we had to?"</strong> Forces honesty about hidden dependencies.</li>
+        <li><strong>"Is it independently testable?"</strong> If not, you'll never trust it landed.</li>
+        <li><strong>INVEST</strong> heuristic — Independent, Negotiable, Valuable, Estimable, Small, Testable.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>What Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Premature decomposition.</strong> Splitting before you understand the shape of the problem produces nonsensical pieces.</li>
+        <li><strong>Slices that aren't really vertical.</strong> "Just the API" is a horizontal slice in disguise — nobody can use it.</li>
+        <li><strong>Big-bang refactors.</strong> Stop the world to refactor for two months = high risk. Refactor in slices, behind flags.</li>
+        <li><strong>Lost forest for trees.</strong> A roadmap of 200 tiny tickets with no narrative loses people. Keep an outcome-level summary.</li>
+        <li><strong>YAGNI gone wrong.</strong> "We'll add it later" sometimes means "we'll never add it" — for cross-cutting concerns (auth, audit), build for the second use case from day one.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Soft Skills</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="collaboration.html">← Collaboration</a>
+        <a href="time-focus.html">Time & Focus →</a>
+        <a href="learning-to-learn.html">Learning to Learn →</a>
+        <a href="debugging-mindset.html">Debugging Mindset →</a>
+        <a href="../../index.html#ch-soft">↑ Back to Soft Skills & Ecosystem</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

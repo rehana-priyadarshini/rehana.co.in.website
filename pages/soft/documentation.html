@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documentation & Writing · Soft Skills & Ecosystem Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="READMEs, ADRs, runbooks, postmortems, API docs — the writing artifacts that keep teams productive long after the people who built it have moved on." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/soft/documentation.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Documentation & Writing · Soft Skills & Ecosystem Deep Dive" />
+<meta property="og:description" content="READMEs, ADRs, runbooks, postmortems, API docs." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/soft/documentation.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Documentation & Writing · Soft Skills & Ecosystem Deep Dive" />
+<meta name="twitter:description" content="READMEs, ADRs, runbooks, postmortems, API docs." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Soft Skills & Ecosystem Deep Dive · 8 of 12</div>
+    <h1>Documentation &amp; Writing — The Long Memory</h1>
+    <p class="lede">Code tells you what; docs tell you why. Six months from now you won't remember why the retry budget was 3 and not 5. The next on-call won't know which dashboard to check. The README that takes you 30 minutes to write will be opened 500 times. Documentation is the team's long-term memory.</p>
+    <div class="tags"><span>README</span><span>ADR</span><span>Runbook</span><span>Postmortem</span><span>OpenAPI</span><span>Diátaxis</span></div>
+    <a class="back" href="../../index.html#ch-soft">← Back to Soft Skills & Ecosystem</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Four Doc Types</div><h2>Diátaxis</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Type</th><th>Audience need</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tutorial</strong></td><td>Learning by doing</td><td>"Build your first chart in 10 minutes"</td></tr>
+          <tr><td><strong>How-to guide</strong></td><td>Solve a specific problem</td><td>"How to deploy to staging"</td></tr>
+          <tr><td><strong>Reference</strong></td><td>Look up a fact</td><td>API docs, config schema</td></tr>
+          <tr><td><strong>Explanation</strong></td><td>Understand the why</td><td>"How our cache invalidation works"</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14px; margin-top:10px;">Mixing types is the #1 doc smell — a tutorial that becomes a reference midway loses both audiences.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Working Set</div><h2>What Every Repo Should Have</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>README</strong> — what the project is, how to run it locally, how to contribute, where the docs live. Top of repo, kept current.</li>
+        <li><strong>ADRs</strong> (Architecture Decision Records) — short notes on <em>why</em> a design choice was made. Status, context, decision, consequences. <code>/docs/adr/0001-use-postgres.md</code>.</li>
+        <li><strong>Runbooks</strong> — step-by-step ops procedures. "What to do when alert X fires." Linked from every alert.</li>
+        <li><strong>Postmortems</strong> — blameless incident write-ups. What happened, why, what we're changing.</li>
+        <li><strong>API docs</strong> — OpenAPI/Swagger for REST, schema introspection for GraphQL, generated where possible.</li>
+        <li><strong>CHANGELOG</strong> — human-readable per-release notes. <em>Keep a Changelog</em> format is the standard.</li>
+        <li><strong>CONTRIBUTING / CODE_OF_CONDUCT</strong> — for any repo accepting outside PRs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Habits</div><h2>How Docs Stay Alive</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Docs in the repo, not the wiki.</strong> Markdown next to code travels with branches and survives org changes.</li>
+        <li><strong>Update in the same PR</strong> as the code change. Otherwise it never happens.</li>
+        <li><strong>Review docs.</strong> Doc PRs get reviewed like code; same standards.</li>
+        <li><strong>Write the README first</strong> for new projects (README-driven development) — surfaces the user experience early.</li>
+        <li><strong>Diagrams as code</strong> — Mermaid, PlantUML, ExcaliDraw — version-controlled, not screenshots.</li>
+        <li><strong>Owner per doc.</strong> Unowned docs rot.</li>
+        <li><strong>Doc days / freshness audits.</strong> Quarterly sweep to delete obsolete pages.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Postmortems</div><h2>The High-Value Genre</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Blameless</strong> — focus on the system, not the human. Assume good intent.</li>
+        <li><strong>Timeline</strong> — what happened in chronological order, with timestamps.</li>
+        <li><strong>Impact</strong> — quantified: users affected, revenue lost, SLO burn.</li>
+        <li><strong>Root cause(s)</strong> — Five Whys; surface symptom is rarely the cause.</li>
+        <li><strong>Action items</strong> — owner + date for each. Track to completion.</li>
+        <li><strong>What went well</strong> — celebrate the good response too. People learn from both.</li>
+        <li><strong>Share widely.</strong> Post in #incidents or company-wide; learning travels only if it's read.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Pitfalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Docs that lie.</strong> Worse than no docs. Stale instructions waste hours and erode trust.</li>
+        <li><strong>Wall of text.</strong> Lead with the headline; nest detail.</li>
+        <li><strong>Auto-generated everything.</strong> Generated reference is fine; generated explanation is gibberish.</li>
+        <li><strong>Lost in the wiki.</strong> If search doesn't find it in 10 seconds, it doesn't exist.</li>
+        <li><strong>Doc-as-process.</strong> A 40-page onboarding doc nobody reads ≠ onboarding.</li>
+        <li><strong>Comments as docs.</strong> Inline comments age fast; high-level explanation belongs in repo docs, not in code.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Soft Skills & Ecosystem Topics</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="open-source-licensing.html">← Open Source & Licensing</a>
+        <a href="community-sites.html">Community Sites →</a>
+        <a href="online-learning.html">Online Learning →</a>
+        <a href="communication.html">Communication →</a>
+        <a href="../../index.html#ch-soft">↑ Back to Soft Skills & Ecosystem</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Open Source & Licensing · Soft Skills & Ecosystem Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="The license families you'll meet — MIT, Apache 2.0, GPL, AGPL, BSL, SSPL — what each means for shipping commercial software, and how to comply." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/soft/open-source-licensing.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Open Source & Licensing · Soft Skills & Ecosystem Deep Dive" />
+<meta property="og:description" content="MIT, Apache, GPL, AGPL, BSL — what each license actually means." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/soft/open-source-licensing.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Open Source & Licensing · Soft Skills & Ecosystem Deep Dive" />
+<meta name="twitter:description" content="MIT, Apache, GPL, AGPL, BSL — what each license actually means." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Soft Skills & Ecosystem Deep Dive · 7 of 12</div>
+    <h1>Open Source &amp; Licensing — Read Before You <code>npm install</code></h1>
+    <p class="lede">Almost every modern app stands on a tower of open-source libraries. The license attached to each one is a contract: what you're allowed to do with it, what you must give back, and what you must disclose. Most are friendly; a few will reshape your business model. This is not legal advice — but knowing the families avoids surprises.</p>
+    <div class="tags"><span>MIT</span><span>Apache 2.0</span><span>GPL / AGPL</span><span>BSL / SSPL</span><span>SBOM</span><span>OSI</span></div>
+    <a class="back" href="../../index.html#ch-soft">← Back to Soft Skills & Ecosystem</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Families</div><h2>What Each License Actually Means</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>License</th><th>Family</th><th>Practical meaning</th></tr></thead>
+        <tbody>
+          <tr><td><strong>MIT</strong></td><td>Permissive</td><td>Use, modify, ship — keep the copyright notice. Almost no obligations.</td></tr>
+          <tr><td><strong>BSD (2-/3-clause)</strong></td><td>Permissive</td><td>Like MIT; 3-clause adds "no endorsement" clause.</td></tr>
+          <tr><td><strong>Apache 2.0</strong></td><td>Permissive + patent grant</td><td>Same as MIT plus an explicit patent license. Required by some corporate legal teams.</td></tr>
+          <tr><td><strong>ISC</strong></td><td>Permissive</td><td>Functionally equivalent to MIT.</td></tr>
+          <tr><td><strong>LGPL</strong></td><td>Weak copyleft</td><td>Linking is OK; if you modify the LGPL'd code itself, those changes go back.</td></tr>
+          <tr><td><strong>MPL 2.0</strong></td><td>File-level copyleft</td><td>Changes to MPL-licensed files must be open-sourced; surrounding code stays yours.</td></tr>
+          <tr><td><strong>GPL v2 / v3</strong></td><td>Strong copyleft</td><td>If you distribute software incorporating it, the whole thing must be GPL too.</td></tr>
+          <tr><td><strong>AGPL v3</strong></td><td>Network copyleft</td><td>Even running it as a network service triggers the obligation. SaaS-killer for most companies.</td></tr>
+          <tr><td><strong>BSL / SSPL</strong></td><td>Source-available, not OSI-approved</td><td>Free for most uses; restricted for cloud-vendor competitors. Used by Elastic, MongoDB, HashiCorp, Sentry.</td></tr>
+          <tr><td><strong>Creative Commons</strong></td><td>Content licenses</td><td>For docs, images, datasets — not source code.</td></tr>
+          <tr><td><strong>Unlicense / CC0 / WTFPL</strong></td><td>Public-domain dedication</td><td>"Do whatever." Some corporate legal teams won't accept these — they prefer explicit grants.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Compliance</div><h2>What You Actually Need to Do</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Bundle the LICENSE file.</strong> All permissive licenses require the original notice ship with binaries. <code>NOTICES</code> file in your release.</li>
+        <li><strong>Generate an SBOM.</strong> Software Bill of Materials — list every dep + version + license. <code>cyclonedx</code>, <code>syft</code>, or your build tool.</li>
+        <li><strong>Scan in CI.</strong> FOSSA, Snyk, Dependency-Track, license-checker — fail builds on disallowed licenses.</li>
+        <li><strong>Maintain an allowlist.</strong> Define what your shop accepts (typically MIT/BSD/Apache/ISC; LGPL with caveats; case-by-case for copyleft).</li>
+        <li><strong>Preserve attribution</strong> in About screens for distributed apps (mobile, desktop, browser extensions).</li>
+        <li><strong>Re-licensing &amp; CLAs.</strong> If you accept community PRs, decide upfront whether you require a CLA or DCO.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The 2020s Plot</div><h2>The Re-licensing Wave</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A growing list of OSS projects have pivoted from permissive licenses to source-available ones (BSL, SSPL, ELv2) — Elastic in 2021, MongoDB earlier, HashiCorp's Terraform in 2023, Sentry, Akka. The trigger is usually "AWS / GCP is selling our software as a managed service without contributing back." Each pivot has triggered an OSS fork (OpenSearch, OpenTofu, Valkey).</p>
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>If you depend on it</strong>, know the license you adopted vs the current one.</li>
+        <li><strong>If you build a product around it</strong>, watch for the fork — the OSS branch may diverge in features.</li>
+        <li><strong>"Source-available" ≠ open source</strong> by OSI definition. Don't conflate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Pitfalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>"It's on GitHub, so it's free."</strong> No — check the LICENSE file. No license = all rights reserved.</li>
+        <li><strong>Transitive licenses.</strong> Your direct dep is MIT; its dep is GPL; you may still inherit obligations.</li>
+        <li><strong>Static vs dynamic linking</strong> matters for LGPL — get legal review for distributed binaries.</li>
+        <li><strong>"Free for non-commercial."</strong> That's not OSS; treat it as proprietary with a license fee.</li>
+        <li><strong>Forks may not match upstream license.</strong> Verify the fork's license, not just the original's.</li>
+        <li><strong>Get legal involved early</strong> for any non-permissive choice in a commercial product.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Soft Skills & Ecosystem Topics</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="debugging-mindset.html">← Debugging Mindset</a>
+        <a href="documentation.html">Documentation →</a>
+        <a href="community-sites.html">Community Sites →</a>
+        <a href="portfolio.html">Portfolio →</a>
+        <a href="../../index.html#ch-soft">↑ Back to Soft Skills & Ecosystem</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

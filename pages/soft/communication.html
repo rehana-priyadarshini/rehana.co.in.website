@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Communication · Soft Skills & Ecosystem Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Communication is the highest-leverage developer skill: writing PRs, design docs, incident updates, and explaining tradeoffs to non-technical stakeholders." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/soft/communication.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Communication · Soft Skills & Ecosystem Deep Dive" />
+<meta property="og:description" content="Writing well is the developer superpower." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/soft/communication.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Communication · Soft Skills & Ecosystem Deep Dive" />
+<meta name="twitter:description" content="Writing well is the developer superpower." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Soft Skills & Ecosystem Deep Dive · 1 of 12</div>
+    <h1>Communication — The Multiplier</h1>
+    <p class="lede">Senior engineers don't out-code juniors by 10× — they out-explain them. A clear PR description saves three reviewers an hour each. A clean design doc kills bad ideas before sprint-three. An honest incident update buys trust no dashboard can. Writing is the highest-leverage skill in this profession; speaking is a close second.</p>
+    <div class="tags"><span>PR descriptions</span><span>Design docs</span><span>BLUF</span><span>Async-first</span><span>Stakeholder framing</span></div>
+    <a class="back" href="../../index.html#ch-soft">← Back to Soft Skills & Ecosystem</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Patterns</div><h2>Formats Worth Mastering</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Format</th><th>Purpose</th><th>What good looks like</th></tr></thead>
+        <tbody>
+          <tr><td><strong>PR description</strong></td><td>Tell the reviewer why this change exists</td><td>One paragraph: what, why, how to test. Link the issue.</td></tr>
+          <tr><td><strong>Design doc</strong></td><td>Align before code; capture the why</td><td>Context → goals → non-goals → options → decision → risks.</td></tr>
+          <tr><td><strong>ADR</strong> (Architecture Decision Record)</td><td>Pin a decision to a moment in time</td><td>Status, context, decision, consequences. One page max.</td></tr>
+          <tr><td><strong>Incident update</strong></td><td>Tell stakeholders what's known &amp; what's next</td><td>Impact, what we know, what we're doing, next update time. Repeat at the cadence you promised.</td></tr>
+          <tr><td><strong>Status update</strong></td><td>Async progress without a meeting</td><td>What shipped, what's blocked, what I need. Headlines only.</td></tr>
+          <tr><td><strong>Slack message</strong></td><td>Get a fast answer</td><td>Lead with the question, not the prelude. Add context below.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Principles</div><h2>How to Write So People Read</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>BLUF — Bottom Line Up Front.</strong> The most important sentence is the first one. Don't bury the headline.</li>
+        <li><strong>One idea per paragraph.</strong> If a paragraph won't summarize in a sentence, split it.</li>
+        <li><strong>Concrete &gt; abstract.</strong> "p99 spiked to 4.2s" beats "performance degraded."</li>
+        <li><strong>Show, don't tell.</strong> Numbers, screenshots, code samples. Then explain.</li>
+        <li><strong>Pre-empt the questions.</strong> Read your draft as the busiest skeptic on the team.</li>
+        <li><strong>Cut every word you can.</strong> If it doesn't change the meaning, delete it.</li>
+        <li><strong>Match the audience.</strong> CFOs don't want pod restart counts; SREs don't want revenue narrative.</li>
+        <li><strong>Permanence beats velocity.</strong> A doc you write once is read 50 times. Spend the time.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Speaking</div><h2>Meetings, Demos, Pushback</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Steel-man before you push back.</strong> Show you understood the other position before you disagree.</li>
+        <li><strong>Disagree privately, support publicly.</strong> Once a decision is made, the team needs alignment, not litigation.</li>
+        <li><strong>Demo, don't recite.</strong> A 90-second working flow beats 10 slides about it.</li>
+        <li><strong>"I don't know — I'll find out by EOD."</strong> Better than guessing.</li>
+        <li><strong>End every meeting with owners and dates.</strong> If nobody owns it by Friday, it didn't happen.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Pitfalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Wall-of-text PRs.</strong> If the description is longer than the diff, split the PR.</li>
+        <li><strong>Status theater.</strong> Updates with no decisions, blockers, or asks waste reader time.</li>
+        <li><strong>Hedging.</strong> "I think maybe we could possibly..." → say it or don't.</li>
+        <li><strong>Acronym soup.</strong> Spell things out the first time; remember new joiners.</li>
+        <li><strong>"I'll just hop on a call."</strong> Two paragraphs of writing often beats a 30-min meeting and is searchable forever.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Soft Skills</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="collaboration.html">Collaboration →</a>
+        <a href="problem-decomposition.html">Problem Decomposition →</a>
+        <a href="documentation.html">Documentation →</a>
+        <a href="learning-to-learn.html">Learning to Learn →</a>
+        <a href="../../index.html#ch-soft">↑ Back to Soft Skills & Ecosystem</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

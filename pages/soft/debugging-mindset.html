@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Debugging Mindset · Soft Skills & Ecosystem Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Forming hypotheses, isolating variables, reading carefully — the disciplined thinking that separates 'I tried things' from 'I found the cause.'" />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/soft/debugging-mindset.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Debugging Mindset · Soft Skills & Ecosystem Deep Dive" />
+<meta property="og:description" content="Hypothesis-first debugging — fast, calm, methodical." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/soft/debugging-mindset.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Debugging Mindset · Soft Skills & Ecosystem Deep Dive" />
+<meta name="twitter:description" content="Hypothesis-first debugging — fast, calm, methodical." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Soft Skills & Ecosystem Deep Dive · 6 of 12</div>
+    <h1>Debugging Mindset — The Quiet Superpower</h1>
+    <p class="lede">Brilliant debuggers aren't faster typists; they're disciplined thinkers. They form hypotheses, change one variable at a time, read the actual error, and trust evidence over intuition. The bug doesn't care about your deadline — calm, methodical investigation always beats panicked guessing.</p>
+    <div class="tags"><span>Hypothesis-first</span><span>Bisection</span><span>Read the error</span><span>Rubber duck</span><span>Reproduce</span></div>
+    <a class="back" href="../../index.html#ch-soft">← Back to Soft Skills & Ecosystem</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Loop</div><h2>How a Senior Debugs</h2></div>
+    <div class="chapter-body">
+      <div class="flow">
+        <div class="step">Reproduce reliably</div><div class="arrow">→</div>
+        <div class="step">Read the actual error</div><div class="arrow">→</div>
+        <div class="step">Form a hypothesis</div><div class="arrow">→</div>
+        <div class="step">Test one variable</div><div class="arrow">→</div>
+        <div class="step">Confirm or revise</div><div class="arrow">→</div>
+        <div class="step">Fix → root-cause note</div>
+      </div>
+      <p style="font-size:14px; margin-top:10px;">Skipping any step is how you waste an afternoon. Especially the first one.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Techniques</div><h2>The Working Toolkit</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Reproduce minimally.</strong> Smallest input that triggers the bug. Half the bugs solve themselves once you reproduce them in isolation.</li>
+        <li><strong>Bisection.</strong> "When did this break?" → <code>git bisect</code>. "Which input causes it?" → binary-search the data.</li>
+        <li><strong>Read the actual error.</strong> The first stack frame and the last line are usually the answer. People skip-read and miss it.</li>
+        <li><strong>Print is fine.</strong> A well-placed log line beats an hour with a debugger you barely know.</li>
+        <li><strong>Debugger when state is the problem.</strong> Step through; inspect; conditional breakpoints.</li>
+        <li><strong>Diff against working.</strong> What's different between the broken case and the last known good?</li>
+        <li><strong>Rubber duck.</strong> Explaining out loud surfaces the assumption you didn't know you were making.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Failure Modes</div><h2>Why Debugging Stalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Changing two things at once.</strong> Now you don't know which fix worked.</li>
+        <li><strong>Believing it must be the framework.</strong> 99% of the time, it's your code.</li>
+        <li><strong>Trusting the comment.</strong> Comments lie. The code is the truth.</li>
+        <li><strong>Assuming the logs are right.</strong> Sometimes the logger itself is broken.</li>
+        <li><strong>Heisenbugs.</strong> Bugs that disappear when observed — usually a race or timing issue. Add logging, don't remove it.</li>
+        <li><strong>Confirmation bias.</strong> You stop looking when you've found <em>a</em> cause; not <em>the</em> cause.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">After the Fix</div><h2>Compound the Lesson</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Write the failing test first.</strong> Then make it pass with the fix. Now it can't regress.</li>
+        <li><strong>Note the root cause</strong> in the PR or commit message — future you will thank current you.</li>
+        <li><strong>Ask "what made this hard to find?"</strong> Better logs, better tests, better assertions next time.</li>
+        <li><strong>Look for siblings.</strong> The same bug pattern often hides elsewhere in the codebase.</li>
+        <li><strong>Five Whys</strong> on serious incidents — the surface symptom is rarely the cause.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Pitfalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px; line-height:1.7;">
+        <li><strong>Sunk-cost debugging.</strong> If you've spent two days, sometimes the right move is to revert and start clean.</li>
+        <li><strong>Asking too late.</strong> A 20-minute "what am I missing?" with a colleague beats a 4-hour solo descent.</li>
+        <li><strong>"Works on my machine" theatre.</strong> Reproduce in the broken environment, not yours.</li>
+        <li><strong>Tired debugging.</strong> After 90 minutes of staring, sleep on it. Mornings find bugs evenings can't.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Soft Skills</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="learning-to-learn.html">← Learning to Learn</a>
+        <a href="open-source-licensing.html">Open Source & Licensing →</a>
+        <a href="documentation.html">Documentation →</a>
+        <a href="problem-decomposition.html">Problem Decomposition →</a>
+        <a href="../../index.html#ch-soft">↑ Back to Soft Skills & Ecosystem</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>
