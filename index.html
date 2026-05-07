@@ -237,6 +237,7 @@
   <a href="#ch-observe">Observability</a>
   <a href="#ch-ai">AI</a>
   <a href="#ch-soft">Soft Skills</a>
+  <a href="#ch-tracks">Learning Tracks</a>
   <a href="pages/domains.html">Industry Domains →</a>
 </nav>
 
@@ -262,7 +263,8 @@
     <a class="tile" href="#ch-observe"><div class="num">13</div><div class="t">Observability &amp; Perf</div><div class="d">Logs, metrics, traces, scaling, caching.</div></a>
     <a class="tile teal" href="#ch-ai"><div class="num">14</div><div class="t">AI Landscape</div><div class="d">Models, frameworks, agents, MLOps.</div></a>
     <a class="tile mid" href="#ch-soft"><div class="num">15</div><div class="t">Soft Skills &amp; Ecosystem</div><div class="d">Communication, open source, licenses, docs.</div></a>
-    <a class="tile accent" href="pages/domains.html"><div class="num">16</div><div class="t">Industry Domains →</div><div class="d">Where software runs the show — finance, healthcare, ERP, gaming, and 17 more.</div></a>
+    <a class="tile" href="#ch-tracks"><div class="num">16</div><div class="t">Learning Tracks</div><div class="d">Hands-on, multi-module projects that exercise the whole stack.</div></a>
+    <a class="tile accent" href="pages/domains.html"><div class="num">17</div><div class="t">Industry Domains →</div><div class="d">Where software runs the show — finance, healthcare, ERP, gaming, and 17 more.</div></a>
   </div>
 
   <!-- 01 FOUNDATIONS -->
@@ -542,9 +544,9 @@
       </div>
 
       <details class="drill" open>
-        <summary>SQL vs NoSQL</summary>
+        <summary>SQL vs NoSQL &amp; Schema Design</summary>
         <div class="drill-body">
-          <div class="two-col">
+          <div class="grid">
             <a class="card" href="pages/database/sql.html" style="text-decoration:none;color:inherit;display:block;"><h5>SQL (Relational) →</h5>
               <p><strong>Strict schema, ACID, joins.</strong> Best for money, orders, anything with invariants.</p>
               <p style="margin-top:6px;">Examples: PostgreSQL, MySQL, SQL Server, Oracle, SQLite.</p>
@@ -552,6 +554,10 @@
             <a class="card teal" href="pages/database/nosql.html" style="text-decoration:none;color:inherit;display:block;"><h5>NoSQL →</h5>
               <p><strong>Flexible schemas, horizontal scale.</strong> Great for unstructured or massive data.</p>
               <p style="margin-top:6px;">Families: document, key-value, column, graph.</p>
+            </a>
+            <a class="card mid" href="pages/database/schema.html" style="text-decoration:none;color:inherit;display:block;"><h5>Schema Design →</h5>
+              <p><strong>Keys, normalization, indexes, constraints, migrations.</strong> Get the shape right and most other problems shrink.</p>
+              <p style="margin-top:6px;">Worked example: a URL shortener schema.</p>
             </a>
           </div>
         </div>
@@ -712,6 +718,9 @@
             <a class="card teal" href="pages/architecture/layered.html" style="text-decoration:none;color:inherit;display:block;"><h5>Layered / N-tier →</h5><p>Presentation → Application → Domain → Data. The classic.</p></a>
             <a class="card mid" href="pages/architecture/hexagonal.html" style="text-decoration:none;color:inherit;display:block;"><h5>Hexagonal / Clean →</h5><p>Domain core, adapters on the edges. Swap DB or UI without touching logic.</p></a>
             <a class="card accent" href="pages/architecture/cqrs.html" style="text-decoration:none;color:inherit;display:block;"><h5>CQRS + Event Sourcing →</h5><p>Separate read/write models; store events, not state.</p></a>
+            <a class="card" href="pages/architecture/queues.html" style="text-decoration:none;color:inherit;display:block;"><h5>Message Queues →</h5><p>Decouple producers from consumers. Retries, DLQs, idempotency, the outbox pattern.</p></a>
+            <a class="card teal" href="pages/architecture/scalability.html" style="text-decoration:none;color:inherit;display:block;"><h5>Scalability →</h5><p>Vertical vs horizontal, statelessness, caching, sharding, backpressure, autoscaling.</p></a>
+            <a class="card mid" href="pages/architecture/reliability.html" style="text-decoration:none;color:inherit;display:block;"><h5>Reliability →</h5><p>Redundancy, retries, circuit breakers, blast radius, runbooks, postmortems.</p></a>
           </div>
         </div>
       </details>
@@ -765,6 +774,19 @@
       </div>
 
       <details class="drill" open>
+        <summary>AuthN, AuthZ &amp; OWASP Top 10 <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— start here, then click any card for the deep dive</span></summary>
+        <div class="drill-body" style="margin-bottom:14px;">
+          <div class="grid">
+            <a class="card" href="pages/security/authentication.html" style="text-decoration:none;color:inherit;display:block;"><h5>Authentication →</h5><p>Passwords, hashing, MFA, sessions vs tokens, the full login lifecycle.</p></a>
+            <a class="card teal" href="pages/security/authorization.html" style="text-decoration:none;color:inherit;display:block;"><h5>Authorization →</h5><p>RBAC / ABAC / ReBAC, ownership checks, policy engines, common pitfalls.</p></a>
+            <a class="card mid" href="pages/security/owasp.html" style="text-decoration:none;color:inherit;display:block;"><h5>OWASP Top 10 →</h5><p>The ten classes of web vulnerability you'll actually see — and how to keep them out.</p></a>
+            <a class="card accent" href="pages/security/secrets.html" style="text-decoration:none;color:inherit;display:block;"><h5>Secrets Management →</h5><p>Vaults, rotation, short-lived credentials, OIDC for CI, leak detection &amp; response.</p></a>
+            <a class="card" href="pages/security/threat-modeling.html" style="text-decoration:none;color:inherit;display:block;"><h5>Threat Modeling →</h5><p>STRIDE, attack trees, four questions — find security bugs on the whiteboard.</p></a>
+          </div>
+        </div>
+      </details>
+
+      <details class="drill">
         <summary>OWASP Top 10 (Common Web Vulnerabilities) <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
@@ -845,6 +867,7 @@
             <a class="card teal" href="pages/testing/smoke.html" style="text-decoration:none;color:inherit;display:block;"><h5>Smoke →</h5><p>Minimal "does it start?" tests in production.</p></a>
             <a class="card mid" href="pages/testing/regression.html" style="text-decoration:none;color:inherit;display:block;"><h5>Regression →</h5><p>Ensures old bugs stay fixed.</p></a>
             <a class="card accent" href="pages/testing/chaos.html" style="text-decoration:none;color:inherit;display:block;"><h5>Chaos →</h5><p>Deliberately break things (Netflix Chaos Monkey) to prove resilience.</p></a>
+            <a class="card" href="pages/testing/tdd.html" style="text-decoration:none;color:inherit;display:block;"><h5>TDD →</h5><p>Red-green-refactor — design discipline that leaves a regression suite as a side effect.</p></a>
           </div>
         </div>
       </details>
@@ -986,6 +1009,14 @@
       </div>
 
       <details class="drill" open>
+        <summary>CI/CD Overview <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/devops/cicd.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
+        <div class="drill-body">
+          <p style="font-size:14px;">From commit to production — pipeline anatomy, branching models, build-once / deploy-many, secrets and supply-chain hygiene, and a worked URL-shortener pipeline.</p>
+          <p style="font-size:13.5px;color:var(--muted);">Then pick a platform below.</p>
+        </div>
+      </details>
+
+      <details class="drill">
         <summary>CI/CD Platforms <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
         <div class="drill-body">
           <div class="grid">
@@ -1000,9 +1031,10 @@
       </details>
 
       <details class="drill">
-        <summary>Containers &amp; Orchestration <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card for the deep dive</span></summary>
+        <summary>Containers &amp; Orchestration <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/devops/containers.html" style="color:var(--accent);text-decoration:none;">read the overview deep dive →</a> · click any card below for specifics</span></summary>
         <div class="drill-body">
           <div class="grid">
+            <a class="card" href="pages/devops/containers.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Overview</span><h5>Containers →</h5><p>Images, layers, registries, hygiene, and where containers actually run in production.</p></a>
             <a class="card" href="pages/devops/docker.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Build</span><h5>Docker / Podman →</h5><p>Package your app + runtime into a portable image.</p></a>
             <a class="card teal" href="pages/devops/kubernetes.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Run many</span><h5>Kubernetes (K8s) →</h5><p>Orchestrates containers across clusters — the de-facto standard.</p></a>
             <a class="card mid" href="pages/devops/managed-k8s.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Managed</span><h5>EKS / AKS / GKE →</h5><p>Managed K8s from AWS / Azure / Google.</p></a>
@@ -1205,17 +1237,18 @@
             <a class="card accent" href="pages/observability/apm-platforms.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">All-in-one</span><h5>Datadog / New Relic / Honeycomb →</h5><p>Commercial platforms unifying the three pillars.</p></a>
             <a class="card" href="pages/observability/alerting.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Alerts</span><h5>PagerDuty / Opsgenie →</h5><p>Wake the right person when things break.</p></a>
             <a class="card teal" href="pages/observability/error-tracking.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">Errors</span><h5>Sentry / Rollbar →</h5><p>Crash &amp; exception tracking for apps.</p></a>
+            <a class="card mid" href="pages/observability/slos.html" style="text-decoration:none;color:inherit;display:block;"><span class="pill">SLOs</span><h5>SLIs, SLOs &amp; Error Budgets →</h5><p>Reliability as a number you can engineer toward.</p></a>
           </div>
         </div>
       </details>
 
       <details class="drill">
-        <summary>Performance &amp; Scalability <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/observability/performance.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a></span></summary>
+        <summary>Performance &amp; Scalability <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— <a href="pages/observability/performance.html" style="color:var(--accent);text-decoration:none;">read the deep dive →</a> · <a href="pages/observability/caching.html" style="color:var(--accent);text-decoration:none;">caching deep dive →</a></span></summary>
         <div class="drill-body">
           <ul style="font-size: 14px; line-height: 1.6;">
             <li><strong>Vertical scaling:</strong> bigger box — simple, limited.</li>
             <li><strong>Horizontal scaling:</strong> more boxes — needs stateless design.</li>
-            <li><strong>Caching layers:</strong> CDN → reverse proxy → app cache → DB.</li>
+            <li><strong><a href="pages/observability/caching.html" style="color:var(--accent);text-decoration:none;">Caching layers →</a></strong> CDN → reverse proxy → app cache → DB.</li>
             <li><strong>Profiling:</strong> find hot spots (CPU, memory, SQL) before optimizing.</li>
             <li><strong>Load testing:</strong> k6, JMeter, Gatling — simulate real traffic.</li>
             <li><strong>Rate limiting &amp; backpressure</strong> protect services from overload.</li>
@@ -1362,6 +1395,38 @@
             <a class="card teal" href="pages/soft/online-learning.html" style="text-decoration:none;color:inherit;display:block;"><h5>Learning →</h5><p>freeCodeCamp, Coursera, Pluralsight, Frontend Masters.</p></a>
             <a class="card mid" href="pages/soft/portfolio.html" style="text-decoration:none;color:inherit;display:block;"><h5>Portfolio →</h5><p>GitHub profile, personal site, blog posts — show the work.</p></a>
             <a class="card accent" href="pages/soft/interview-prep.html" style="text-decoration:none;color:inherit;display:block;"><h5>Interview Prep →</h5><p>LeetCode, HackerRank, System Design Primer.</p></a>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter" id="ch-tracks">
+    <div class="chapter-head">
+      <div><div class="eyebrow">Chapter 16</div><h2>Learning Tracks</h2></div>
+      <a class="back-link" href="#hub">↑ Back to Map</a>
+    </div>
+    <div class="chapter-body">
+      <p class="lede-p">The deep dives explain <em>what</em> things are. The tracks make you <em>build</em> something with them. Each track is a multi-module project that exercises a wide slice of the stack — pick one, ship it, learn by doing.</p>
+
+      <div class="basics">
+        <h4>How a track works</h4>
+        <ul>
+          <li><strong>One project, many modules.</strong> Each module ends in something running.</li>
+          <li><strong>Concrete acceptance criteria</strong> for every step — you'll know when you're done.</li>
+          <li><strong>Cross-linked back to the deep dives</strong> whenever you need theory to back up the practice.</li>
+          <li><strong>Portfolio-worthy</strong> by the end — a real, deployed, observable, secure service.</li>
+        </ul>
+      </div>
+
+      <details class="drill" open>
+        <summary>Available Tracks <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">— click any card to start the track</span></summary>
+        <div class="drill-body">
+          <div class="grid">
+            <a class="card" href="pages/tracks/url-shortener.html" style="text-decoration:none;color:inherit;display:block;"><h5>URL Shortener →</h5><p>11 modules from empty repo to deployed, monitored, secure service. Touches API design, databases, caching, auth, observability, CI/CD, security, and reliability.</p></a>
+            <a class="card teal" style="text-decoration:none;color:inherit;display:block;opacity:0.7;cursor:default;"><h5>Webhook Delivery Service</h5><p style="font-size:12px;color:var(--muted);">Coming soon — async-heavy track with retries, DLQs, and reliability focus.</p></a>
+            <a class="card mid" style="text-decoration:none;color:inherit;display:block;opacity:0.7;cursor:default;"><h5>Feature-Flag Service</h5><p style="font-size:12px;color:var(--muted);">Coming soon — rule evaluation, SDK design, real-time config distribution.</p></a>
+            <a class="card accent" style="text-decoration:none;color:inherit;display:block;opacity:0.7;cursor:default;"><h5>Image Upload &amp; Thumbnails</h5><p style="font-size:12px;color:var(--muted);">Coming soon — blob storage, async media pipelines, CDN integration.</p></a>
           </div>
         </div>
       </details>

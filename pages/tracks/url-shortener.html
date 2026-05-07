@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>URL Shortener Track · Learning Tracks</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="A hands-on, eleven-module learning track that walks you from an empty repo to a deployed, monitored, secure URL shortener — touching every major area of modern software engineering." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="URL Shortener Track · Learning Tracks" />
+<meta property="og:description" content="Build a production-grade URL shortener, one module at a time." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="URL Shortener Track · Learning Tracks" />
+<meta name="twitter:description" content="Build a production-grade URL shortener, one module at a time." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+  .module-grid a { display: block; padding: 12px 14px; border-radius: 10px; background: var(--cream); border: 1px solid var(--line); border-left: 5px solid var(--blue); text-decoration: none; color: var(--ink); font-size: 13.5px; transition: all 0.15s ease; }
+  .module-grid a:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10,42,67,0.12); }
+  .module-grid .num { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--teal); }
+  .module-grid .t { font-family: Georgia, serif; font-weight: 700; color: var(--deep); margin: 4px 0 2px; font-size: 15px; }
+  .acc { background: #F5F9FC; border-left: 4px solid var(--ok); padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  .acc h5 { margin: 0 0 6px; color: var(--deep); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .acc ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.6; }
+  .deep-links { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .deep-links a { color: var(--accent); text-decoration: none; }
+  .deep-links a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Learning Track · 1 of 1</div>
+    <h1>Build a Production-Grade URL Shortener</h1>
+    <p class="lede">Eleven modules that take you from an empty Git repo to a deployed, observable, secure service — used as a vehicle to practice every major area covered in the deep dives. Each module is a small, shippable increment with concrete acceptance criteria. Finish the track and you'll have a portfolio-worthy project and working knowledge across the stack.</p>
+    <div class="tags"><span>Backend</span><span>API design</span><span>Databases</span><span>Caching</span><span>Auth</span><span>CI/CD</span><span>Observability</span><span>Security</span></div>
+    <a class="back" href="../../index.html#ch-tracks">← Back to Learning Tracks</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">How to Use This Track</div><h2>Learning by Shipping</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Ground rules</h4>
+        <ul>
+          <li><strong>Build it small, build it real.</strong> Each module ends with something running — not just notes.</li>
+          <li><strong>Pick a stack and stick with it.</strong> Node/TypeScript + Postgres + Redis is recommended; Python/FastAPI or Go are equally fine.</li>
+          <li><strong>Commit often.</strong> Use trunk-based development with short-lived branches. Squash before merge.</li>
+          <li><strong>Don't skip the boring modules.</strong> Testing, observability, and CI/CD are where most learners give up — and where most growth happens.</li>
+          <li><strong>When stuck, read the linked deep dive.</strong> Each module points back to the relevant chapters of the tour.</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:18px;">The eleven modules</h4>
+      <div class="module-grid">
+        <a href="#m1"><div class="num">MODULE 01</div><div class="t">Foundations &amp; Setup</div><div>Repo, stack, design doc.</div></a>
+        <a href="#m2"><div class="num">MODULE 02</div><div class="t">Core API &amp; Data</div><div>REST endpoints, schema, ID strategy.</div></a>
+        <a href="#m3"><div class="num">MODULE 03</div><div class="t">Testing Discipline</div><div>Unit, integration, TDD.</div></a>
+        <a href="#m4"><div class="num">MODULE 04</div><div class="t">Caching &amp; Performance</div><div>Redis, load tests, p95.</div></a>
+        <a href="#m5"><div class="num">MODULE 05</div><div class="t">Auth &amp; Rate Limiting</div><div>Users, JWT, ownership.</div></a>
+        <a href="#m6"><div class="num">MODULE 06</div><div class="t">Analytics &amp; Jobs</div><div>Click events, queues.</div></a>
+        <a href="#m7"><div class="num">MODULE 07</div><div class="t">Observability</div><div>Logs, metrics, traces, SLOs.</div></a>
+        <a href="#m8"><div class="num">MODULE 08</div><div class="t">Containers &amp; CI/CD</div><div>Docker, GitHub Actions, deploy.</div></a>
+        <a href="#m9"><div class="num">MODULE 09</div><div class="t">Security Hardening</div><div>Open redirect, SSRF, secrets.</div></a>
+        <a href="#m10"><div class="num">MODULE 10</div><div class="t">Scaling &amp; Reliability</div><div>Replicas, chaos, runbooks.</div></a>
+        <a href="#m11"><div class="num">MODULE 11</div><div class="t">Capstone &amp; Review</div><div>Self-review, README, demo.</div></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 1 -->
+  <section class="chapter" id="m1">
+    <div class="chapter-head"><div class="eyebrow">Module 01 · ~2–3 hrs</div><h2>Foundations &amp; Project Setup</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Every good system starts with a one-page design doc and a repo that's pleasant to work in. Don't skip this — bad foundations compound.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Create a Git repo. Configure <code>.editorconfig</code>, <code>.gitignore</code>, and a linter/formatter (ESLint+Prettier, Ruff+Black, etc.).</li>
+        <li>Pick a stack and scaffold a "hello world" HTTP server.</li>
+        <li>Adopt <strong>trunk-based development</strong>: protect <code>main</code>, require PRs, use short-lived branches.</li>
+        <li>Write a <strong>1-page design doc</strong>: problem, goals, non-goals, sketch of the API, what success looks like.</li>
+        <li>Add a basic <code>README.md</code>: what it is, how to run it locally.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>git clone</code> + one command starts the server.</li>
+          <li>Linter runs clean. Pre-commit hook (or PR check) blocks lint failures.</li>
+          <li>Design doc is committed under <code>/docs</code> and links from the README.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../methodologies/agile.html">Agile</a> · <a href="../soft/documentation.html">Documentation &amp; Writing</a> · <a href="../soft/problem-decomposition.html">Problem Decomposition</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 2 -->
+  <section class="chapter" id="m2">
+    <div class="chapter-head"><div class="eyebrow">Module 02 · ~4–6 hrs</div><h2>Core API &amp; Data Modeling</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The smallest interesting slice: shorten a URL, redirect to it, delete it. Get the contract right before you add anything else.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Design endpoints: <code>POST /shorten</code>, <code>GET /:code</code> (302 redirect), <code>DELETE /:code</code>.</li>
+        <li>Pick an <strong>ID strategy</strong>: random base62, hash-then-truncate, or counter+encode. Discuss collision &amp; guessability tradeoffs in your design doc.</li>
+        <li>Model schema in Postgres: <code>links(id, code, target_url, created_at, owner_id)</code>. Write a migration.</li>
+        <li>Validate input: URL format, max length, scheme allow-list (<code>http</code>/<code>https</code> only).</li>
+        <li>Return proper HTTP status codes (201 on create, 404 on miss, 410 on deleted).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>curl -X POST</code> with a URL returns a short code.</li>
+          <li>Hitting <code>/:code</code> redirects (302) to the original.</li>
+          <li>Bad input is rejected with a clear 4xx error and a useful message.</li>
+          <li>Migrations run forward and back cleanly.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../api/rest.html">REST API design</a> · <a href="../database/sql.html">Relational databases</a> · <a href="../database/schema.html">Schema design</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 3 -->
+  <section class="chapter" id="m3">
+    <div class="chapter-head"><div class="eyebrow">Module 03 · ~3–5 hrs</div><h2>Testing Discipline</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">If your code isn't tested, future-you will be afraid to change it. Build the habit now while the codebase is small.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Unit tests</strong> for the encoder: round-trips, edge cases, collisions.</li>
+        <li><strong>Integration tests</strong> for the API: spin up Postgres in a test container, exercise full request/response.</li>
+        <li>Practice <strong>TDD</strong> on one new feature (e.g., custom alias / vanity codes): red → green → refactor.</li>
+        <li>Add a coverage threshold to CI (start at 70%, raise as you go).</li>
+        <li>Write one <strong>contract test</strong> that pins the public API shape.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>npm test</code> (or equivalent) runs in under 30s for the unit suite.</li>
+          <li>Integration tests are isolated — they don't share state across runs.</li>
+          <li>You can describe the testing pyramid and where each test sits on it.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../testing/unit.html">Unit testing</a> · <a href="../testing/integration.html">Integration testing</a> · <a href="../testing/tdd.html">TDD</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 4 -->
+  <section class="chapter" id="m4">
+    <div class="chapter-head"><div class="eyebrow">Module 04 · ~3–4 hrs</div><h2>Caching &amp; Performance</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Reads dominate a shortener — most requests are repeat hits to popular links. Caching is the right hammer.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Add Redis. Cache-aside on reads: check Redis, fall back to Postgres, populate.</li>
+        <li>Choose a sensible TTL. Invalidate on update/delete.</li>
+        <li>Benchmark <strong>before vs after</strong> with <code>k6</code> or <code>Locust</code> — measure p50, p95, p99.</li>
+        <li>Discuss in your design doc: <em>cache stampede</em>, <em>thundering herd</em>, <em>negative caching</em> (404s).</li>
+        <li>Add a small in-process LRU in front of Redis for the hottest keys (optional).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>p95 redirect latency under 20ms on a warm cache (local).</li>
+          <li>Killing Redis degrades performance but the service still serves traffic.</li>
+          <li>Load test report committed to <code>/docs/perf</code>.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/caching.html">Caching</a> · <a href="../testing/performance.html">Performance engineering</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 5 -->
+  <section class="chapter" id="m5">
+    <div class="chapter-head"><div class="eyebrow">Module 05 · ~5–7 hrs</div><h2>Authentication &amp; Authorization</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Anonymous shorteners get abused fast. Add accounts, ownership, and basic rate limits.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Implement signup/login. Hash passwords with <strong>bcrypt</strong> or <strong>argon2</strong> — never plain or MD5/SHA1.</li>
+        <li>Issue JWTs (or signed sessions). Add an <code>Authorization: Bearer</code> middleware.</li>
+        <li>Per-user link ownership: only the owner can delete or update.</li>
+        <li>Per-API-key <strong>rate limiting</strong> (token bucket via Redis).</li>
+        <li>Add an admin role for moderation actions.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Unauthenticated <code>POST /shorten</code> is rejected (or capped to a strict anon quota).</li>
+          <li>User A cannot delete user B's links — verified by an integration test.</li>
+          <li>Hitting the rate limit returns a 429 with a <code>Retry-After</code> header.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/authentication.html">Authentication</a> · <a href="../security/authorization.html">Authorization</a> · <a href="../security/owasp.html">OWASP Top 10</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 6 -->
+  <section class="chapter" id="m6">
+    <div class="chapter-head"><div class="eyebrow">Module 06 · ~4–6 hrs</div><h2>Analytics &amp; Background Jobs</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Don't block the redirect to write analytics. Push the work off the request path.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>On every redirect, enqueue a click event (BullMQ / Celery / SQS).</li>
+        <li>A worker consumes events, writes to a <code>clicks</code> table (or aggregates into rollups).</li>
+        <li>Expose <code>GET /stats/:code</code> — total clicks, by-day, top referrers/UAs.</li>
+        <li>Handle worker failures: retries with exponential backoff, dead-letter queue.</li>
+        <li>Discuss in design doc: <em>at-least-once</em> vs <em>exactly-once</em>, idempotency.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Redirect latency is unaffected by analytics (verified with load test).</li>
+          <li>Killing the worker doesn't lose events — they queue and drain on restart.</li>
+          <li>Stats endpoint returns coherent numbers under load.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/event-driven.html">Event-driven patterns</a> · <a href="../architecture/queues.html">Message queues</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 7 -->
+  <section class="chapter" id="m7">
+    <div class="chapter-head"><div class="eyebrow">Module 07 · ~5–7 hrs</div><h2>Observability</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">You can't fix what you can't see. Instrument the service before you scale it.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Structured logs</strong> (JSON) with correlation/trace IDs threaded through every request.</li>
+        <li><strong>Metrics</strong> via Prometheus: request rate, error rate, latency histograms, queue depth, cache hit ratio.</li>
+        <li><strong>Distributed tracing</strong> with OpenTelemetry — instrument HTTP, DB, Redis, and queue spans.</li>
+        <li>Build one Grafana dashboard with the four golden signals (latency, traffic, errors, saturation).</li>
+        <li>Define <strong>SLIs/SLOs</strong>: e.g., 99.9% of redirects under 50ms over 30 days. Compute the error budget.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>You can answer "what was p95 redirect latency at 14:32 UTC?" from your dashboard.</li>
+          <li>One trace shows the full path: HTTP → cache → DB → queue.</li>
+          <li>SLO doc committed to the repo with a clear error budget policy.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/logging.html">Logging</a> · <a href="../observability/metrics.html">Metrics</a> · <a href="../observability/tracing.html">Tracing</a> · <a href="../observability/slos.html">SLOs</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 8 -->
+  <section class="chapter" id="m8">
+    <div class="chapter-head"><div class="eyebrow">Module 08 · ~4–6 hrs</div><h2>Containerization &amp; CI/CD</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">"It works on my machine" is a smell. Make build, test, and deploy boring and automatic.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Write a multi-stage <strong>Dockerfile</strong>. Keep the runtime image small and rootless.</li>
+        <li><code>docker-compose.yml</code> for local dev (app + Postgres + Redis + worker).</li>
+        <li>GitHub Actions pipeline: <em>lint → typecheck → test → build image → push → deploy preview</em>.</li>
+        <li>Deploy to a real host: Fly.io, Render, Railway, a small VM, or Kubernetes if you're feeling brave.</li>
+        <li>Set up <strong>blue/green</strong> or rolling deploys with health checks and automatic rollback.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Every PR gets a preview URL automatically.</li>
+          <li>Merging to <code>main</code> deploys to production with zero downtime.</li>
+          <li>A bad deploy auto-rolls back and pages no one (because the health check caught it).</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../devops/cicd.html">CI/CD</a> · <a href="../devops/containers.html">Containers</a> · <a href="../devops/deployment-strategies.html">Deployment strategies</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 9 -->
+  <section class="chapter" id="m9">
+    <div class="chapter-head"><div class="eyebrow">Module 09 · ~4–5 hrs</div><h2>Security Hardening</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">A shortener is a surprisingly juicy attack surface. Threat-model it before someone else does.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Prevent <strong>open redirect</strong> abuse: scheme allow-list, deny-list of known-bad domains, optional URL preview page.</li>
+        <li>Prevent <strong>SSRF</strong> if you fetch the target (e.g., for previews/title): block private IPs, metadata endpoints, file scheme.</li>
+        <li>Add <strong>security headers</strong>: HSTS, CSP, X-Content-Type-Options, Referrer-Policy.</li>
+        <li>Move secrets to a manager (Vault, AWS Secrets Manager, Doppler, or GitHub Actions secrets) — never commit <code>.env</code>.</li>
+        <li>Enable dependency scanning (Dependabot, Snyk) and a SAST tool (CodeQL, Semgrep).</li>
+        <li>Write a 1-page <strong>threat model</strong>: assets, actors, attack vectors, mitigations.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>An automated test confirms <code>javascript:</code>, <code>file:</code>, and private-IP targets are rejected.</li>
+          <li><code>curl -I</code> on the public URL shows expected security headers.</li>
+          <li>Threat model committed and linked from the README.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/owasp.html">OWASP Top 10</a> · <a href="../security/secrets.html">Secrets management</a> · <a href="../security/threat-modeling.html">Threat modeling</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 10 -->
+  <section class="chapter" id="m10">
+    <div class="chapter-head"><div class="eyebrow">Module 10 · ~5–7 hrs</div><h2>Scaling &amp; Reliability</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Now make it survive failure. The interesting questions aren't "how fast?" but "how does it degrade?"</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Add a Postgres <strong>read replica</strong>. Route reads to the replica, writes to the primary.</li>
+        <li>Run two app instances behind a load balancer. Make sure sessions/state are externalized.</li>
+        <li><strong>Chaos drills</strong>: kill Redis, kill a replica, partition the network. Observe and document the blast radius.</li>
+        <li>Write a <strong>runbook</strong> for the top three on-call scenarios (DB down, queue backed up, cache cold).</li>
+        <li>Write a <strong>postmortem</strong> for one of your chaos drills using a blameless template.</li>
+        <li>Discuss in your design doc: where consistency matters and where eventual is fine.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Killing one app instance causes zero failed requests (load balancer drains it).</li>
+          <li>Redis outage → cache misses but service stays up; alarm fires within 1 minute.</li>
+          <li>Runbook + postmortem committed under <code>/docs/ops</code>.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/scalability.html">Scalability</a> · <a href="../architecture/reliability.html">Reliability</a> · <a href="../soft/documentation.html">Postmortems &amp; runbooks</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 11 -->
+  <section class="chapter" id="m11">
+    <div class="chapter-head"><div class="eyebrow">Module 11 · ~3–4 hrs</div><h2>Capstone &amp; Review</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The work isn't done until someone else can understand it. Polish, document, demo.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Run a self <strong>code review</strong> with fresh eyes. Look for dead code, weak names, missing tests, leaky abstractions.</li>
+        <li>Run a self <strong>security review</strong> against your threat model. Patch anything you find.</li>
+        <li>Polish the <strong>README</strong>: what it is, why, architecture diagram, how to run, how to contribute, license.</li>
+        <li>Add an <strong>ADR log</strong> (<code>/docs/adr</code>) with the 5–10 biggest decisions you made and why.</li>
+        <li>Record a <strong>5-minute demo</strong> walking through the architecture, a feature, and the dashboards.</li>
+        <li>Open-source it. Pick a license intentionally.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>A friend can clone the repo, follow the README, and have it running in under 10 minutes.</li>
+          <li>The architecture diagram matches what's actually deployed.</li>
+          <li>Demo is recorded and linked from the README.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../soft/communication.html">Communication</a> · <a href="../soft/documentation.html">Documentation &amp; Writing</a> · <a href="../soft/portfolio.html">Portfolio</a> · <a href="../soft/open-source-licensing.html">Open source &amp; licensing</a></div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">After the Track</div><h2>Where to Go Next</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Stretch goals</strong> on the same project: custom domains, link expiration, QR codes, fraud/abuse detection, an admin dashboard, a CLI client, a mobile app.</li>
+        <li><strong>Branch into systems design.</strong> Read <em>Designing Data-Intensive Applications</em> by Kleppmann; sketch how you'd scale your shortener to 100B links.</li>
+        <li><strong>Try a harder track.</strong> Webhook delivery service, feature-flag service, or a real-time collaborative tool — each pushes one dimension (async, distribution, real-time) much harder.</li>
+        <li><strong>Write about it.</strong> One blog post per module is a great forcing function for understanding.</li>
+      </ul>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../../index.html#ch-tracks">↑ Back to Learning Tracks</a>
+        <a href="../../index.html">↑ Back to Map</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

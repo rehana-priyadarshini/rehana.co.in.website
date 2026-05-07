@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scalability · Architecture Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Scalability — how a system grows under load. Vertical vs horizontal, statelessness, sharding, replicas, caching, queues, and the bottlenecks that always move." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/scalability.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Scalability · Architecture Deep Dive" />
+<meta property="og:description" content="How systems grow under load — and where they break." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/scalability.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Scalability · Architecture Deep Dive" />
+<meta name="twitter:description" content="How systems grow under load — and where they break." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architecture Deep Dive</div>
+    <h1>Scalability — Growing Under Load</h1>
+    <p class="lede">Scalability is the property of doing more without things breaking — or breaking gracefully when they finally do. Get the basics right (statelessness, the right caching layer, a database that can keep up) and most apps scale further than their builders expect.</p>
+    <div class="tags"><span>Vertical</span><span>Horizontal</span><span>Sharding</span><span>Replicas</span><span>Backpressure</span><span>Bottlenecks</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Vertical scaling (scale up):</strong> bigger machine. Simple, limited by what the cloud rents.</li>
+          <li><strong>Horizontal scaling (scale out):</strong> more machines. Effectively unlimited; requires statelessness.</li>
+          <li><strong>Throughput:</strong> requests per second the system can sustain.</li>
+          <li><strong>Latency:</strong> time per request. Often inversely related to throughput once you're saturated.</li>
+          <li><strong>Bottleneck:</strong> the resource saturated first — CPU, memory, disk, network, DB, downstream API.</li>
+          <li><strong>Headroom:</strong> the gap between current load and capacity. Run at 50% so you can absorb spikes.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Vertical vs Horizontal</div><h2>Two Axes, Different Costs</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th></th><th>Vertical</th><th>Horizontal</th></tr></thead>
+        <tbody>
+          <tr><td>How</td><td>Bigger CPU/RAM/SSD</td><td>More instances behind a load balancer</td></tr>
+          <tr><td>Code changes</td><td>None</td><td>Stateless app, externalized session, distributed cache</td></tr>
+          <tr><td>Ceiling</td><td>What the cloud sells</td><td>Effectively unlimited (within reason)</td></tr>
+          <tr><td>Failure mode</td><td>One big machine fails</td><td>Many small failures, easier to absorb</td></tr>
+          <tr><td>Cost curve</td><td>Linear, then exponential</td><td>Roughly linear with operations overhead</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Default approach: scale vertically until it's awkward, scale horizontally for headroom and resilience. "Scale horizontally first" is fashionable advice that's wrong for most apps.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Statelessness</div><h2>The Property That Unlocks Horizontal Scale</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>No in-process session state.</strong> Move sessions to Redis, the DB, or signed cookies/JWTs.</li>
+        <li><strong>No local files needed for correctness.</strong> Push uploads/downloads to object storage (S3 et al).</li>
+        <li><strong>No sticky load balancing required.</strong> Any instance can serve any request.</li>
+        <li><strong>Idempotent operations</strong> for retries — important when scale means clients give up and retry.</li>
+        <li><strong>12-factor</strong> is largely about achieving this — config from env, processes are disposable, port-binding, dependency declarations.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">A stateless app scales by adding instances. A stateful app scales by suffering.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Database</div><h2>Where Scale Actually Hurts</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">App tier scaling is the easy part. The database is where most apps run into a real ceiling.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Read replicas.</strong> Route reads to followers, writes to the primary. Watch for replication lag.</li>
+        <li><strong>Connection pooling.</strong> PgBouncer / RDS Proxy. App-tier pools alone don't scale to hundreds of instances.</li>
+        <li><strong>Indexes &amp; query plans.</strong> A missing index can be the difference between 10 and 10,000 RPS. <code>EXPLAIN</code> before scaling out.</li>
+        <li><strong>Materialized views &amp; rollups.</strong> Pre-compute expensive aggregates; refresh on a schedule or on writes.</li>
+        <li><strong>Partitioning.</strong> Split a huge table by range/list/hash. Native to most modern databases.</li>
+        <li><strong>Sharding.</strong> Multiple independent databases keyed by tenant/user. Powerful and operationally heavy — only when you must.</li>
+        <li><strong>Mixed stores.</strong> OLTP for writes, OLAP / warehouse for analytics; search engine for full-text. The right tool for the right query.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Caching &amp; Async</div><h2>Take Work Off the Hot Path</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong><a href="../observability/caching.html">Caching</a></strong> at the edge (CDN), at the app (Redis), and inside processes (LRU). Multiple layers compound.</li>
+        <li><strong><a href="queues.html">Queues</a></strong> for any work that doesn't have to happen during the request — email, analytics, search indexing, notifications.</li>
+        <li><strong>Read-after-write</strong> patterns: write to DB, return 202 Accepted, let async workers do the rest.</li>
+        <li><strong>Pre-compute, don't compute on read.</strong> Counts, leaderboards, feeds — compute on write or in batch.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Backpressure</div><h2>What to Do When You Can't Keep Up</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Saturation is inevitable. The question is what happens next.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Rate limit at the edge.</strong> Reject early; don't accept work you can't do.</li>
+        <li><strong>Concurrency caps</strong> per service to keep tail latency bounded.</li>
+        <li><strong>Bounded queues.</strong> Unbounded queues hide problems and cause memory blowups.</li>
+        <li><strong>Load shedding.</strong> When health crosses a threshold, drop low-priority traffic before high-priority falls over.</li>
+        <li><strong>Circuit breakers.</strong> Stop hammering a struggling downstream — fast-fail until it recovers.</li>
+        <li><strong>Bulkheads.</strong> Isolate resource pools so one tenant or feature can't starve the others.</li>
+        <li><strong>Retries with backoff &amp; jitter.</strong> Naive retries amplify load — that's how outages turn into incidents.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Auto-scaling</div><h2>Right-Sizing Without Watching Dashboards</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Horizontal Pod Autoscaler (HPA)</strong> on Kubernetes — scale on CPU, RPS, queue depth, custom metrics.</li>
+        <li><strong>Cloud-native equivalents:</strong> AWS Auto Scaling, GCP Managed Instance Groups, Azure VMSS.</li>
+        <li><strong>Scale up fast, scale down slowly.</strong> Cold-starts are expensive; spurious shrinking re-creates the problem.</li>
+        <li><strong>Predictive / scheduled scaling</strong> for known patterns (Monday morning login storm, batch windows).</li>
+        <li><strong>Watch the queue, not the CPU.</strong> Queue length leads CPU by minutes — better autoscale signal.</li>
+        <li><strong>Quotas matter.</strong> Cloud limits, DB connection caps, API rate limits — hit any one and "infinite" scaling stops.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Capacity Testing</div><h2>Know Your Numbers Before Black Friday</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Load test</strong> with realistic traffic shapes — k6, Locust, Gatling. Steady state and spikes.</li>
+        <li><strong>Identify the first bottleneck</strong> at increasing load. Fix it. Repeat. The bottleneck always moves.</li>
+        <li><strong>Saturation tests:</strong> push past breaking point. <em>How</em> the system fails matters as much as <em>when</em>.</li>
+        <li><strong>Soak tests:</strong> run at 70% load for hours. Memory leaks, slow disk fills, log rotation issues — they only show up over time.</li>
+        <li><strong>Game-day exercises.</strong> Schedule a "Black Friday rehearsal" against a prod-shaped environment.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>Scaling the URL Shortener</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Rough capacity walk for 10× and 100× growth.</p>
+      <table>
+        <thead><tr><th>Stage</th><th>Bottleneck</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>1× — small VM, single Postgres</td><td>None</td><td>Ship it.</td></tr>
+          <tr><td>10× reads</td><td>Postgres CPU on resolves</td><td>Add Redis cache (cache-aside, jittered TTL). Now &gt; 95% of reads never hit Postgres.</td></tr>
+          <tr><td>100× reads</td><td>App-tier CPU on TLS &amp; framework</td><td>Run multiple stateless instances behind a load balancer; sessions in Redis; CDN caches 302s for popular codes.</td></tr>
+          <tr><td>10× writes (link creation bursts)</td><td>Postgres write IOPS, DLQ filling</td><td>Tune indexes; partition <code>clicks</code> by month; offload analytics to a queue + worker fleet.</td></tr>
+          <tr><td>Multi-region</td><td>Cross-region DB latency</td><td>Read replicas in each region; route reads locally; writes go to primary region. Accept eventual consistency for stats.</td></tr>
+          <tr><td>1000× clicks</td><td>Single Postgres for clicks</td><td>Sample writes (don't store every click); aggregate in a stream processor (Kafka + Flink) into rollup tables; warm tier in OLAP store.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Notice: each step adds <em>one</em> piece of complexity to remove <em>one</em> bottleneck. Don't ship multi-region sharded analytics on day one.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Premature distribution.</strong> Microservices and sharding before they're needed. The complexity bills before the scale arrives.</li>
+        <li><strong>Hot keys.</strong> One celebrity's data, one viral link — normal sharding falls flat. Plan a hot-key strategy.</li>
+        <li><strong>N+1 in disguise.</strong> ORMs, GraphQL, REST sub-resources — single biggest unforced scaling error.</li>
+        <li><strong>Synchronous fan-out.</strong> One request triggers ten downstream calls in series. Latency adds up; failures multiply.</li>
+        <li><strong>Retries amplifying outages.</strong> A struggling service gets hammered into the ground by clients trying harder.</li>
+        <li><strong>Unbounded everything.</strong> Lists, queues, caches, log retention. Always pick a limit; revisit as you grow.</li>
+        <li><strong>Confusing performance with scalability.</strong> Fast for one user is not the same as fast for a million.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="reliability.html">Reliability →</a>
+        <a href="../observability/caching.html">Caching →</a>
+        <a href="queues.html">Message Queues →</a>
+        <a href="microservices.html">Microservices →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

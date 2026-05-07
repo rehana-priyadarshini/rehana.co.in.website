@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CI/CD · DevOps Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Continuous Integration and Continuous Delivery — the pipeline from a developer's commit to running production code, automated and boring on purpose." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/cicd.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="CI/CD · DevOps Deep Dive" />
+<meta property="og:description" content="From commit to production — automated and boring on purpose." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/cicd.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="CI/CD · DevOps Deep Dive" />
+<meta name="twitter:description" content="From commit to production — automated and boring on purpose." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps Deep Dive</div>
+    <h1>CI/CD — From Commit to Production</h1>
+    <p class="lede">Continuous Integration merges everyone's changes into one branch, frequently, with tests proving they didn't break anything. Continuous Delivery takes the result and ships it. Done well, the path from a developer's keystroke to running production code is automated, observable, and unremarkable.</p>
+    <div class="tags"><span>CI</span><span>CD</span><span>Pipelines</span><span>Trunk-based</span><span>Artifacts</span><span>Deploys</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>Three Letters That Get Confused</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>The vocabulary</h4>
+        <ul>
+          <li><strong>CI — Continuous Integration:</strong> every commit is merged to mainline frequently, with automated build + test on each merge.</li>
+          <li><strong>CD — Continuous Delivery:</strong> every passing build produces a release artifact you <em>could</em> deploy with the push of a button.</li>
+          <li><strong>CD — Continuous Deployment:</strong> every passing build is deployed automatically. Same acronym, one extra step.</li>
+          <li><strong>Pipeline:</strong> the ordered sequence of stages a change goes through (lint → test → build → deploy).</li>
+          <li><strong>Artifact:</strong> the immutable thing the build produces — a JAR, a container image, a static bundle.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why</div><h2>What CI/CD Is Actually For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Smaller batches.</strong> Ten 50-line changes are easier to review and revert than one 500-line change.</li>
+        <li><strong>Fast feedback.</strong> A test failure on your branch beats a test failure in QA two weeks later.</li>
+        <li><strong>Repeatable releases.</strong> The 47th deploy is as boring as the first. Boring is the goal.</li>
+        <li><strong>Auditability.</strong> Every artifact in production traces back to a commit, a build, a set of tests.</li>
+        <li><strong>Lower risk.</strong> Counterintuitive: deploying more often is safer because each deploy is smaller and the rollback is rehearsed.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">DORA's research is clear: elite teams deploy multiple times per day with lower change-failure rate than teams who deploy quarterly.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Branching</div><h2>The Branching Model Behind CI/CD</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Model</th><th>Idea</th><th>When it fits</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Trunk-based</strong></td><td>Short-lived branches (&lt; 1 day), merge to main behind feature flags.</td><td>The default for CI/CD-driven teams. Pairs naturally with CD.</td></tr>
+          <tr><td>GitHub Flow</td><td>main + short feature branches; deploy from main.</td><td>Small/mid teams. Effectively trunk-based with PRs.</td></tr>
+          <tr><td>GitFlow</td><td>main, develop, release branches, hotfix branches.</td><td>Long-release-cycle products. Heavyweight; usually overkill.</td></tr>
+          <tr><td>Release Trains</td><td>Cut a release branch on a fixed schedule; backport fixes.</td><td>Mobile apps, OS releases, anything you can't auto-update.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">CI/CD shines under trunk-based. Long-lived branches turn merges into archaeology and break the "one mainline, always green" property CI depends on.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pipeline Anatomy</div><h2>What a Real Pipeline Looks Like</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px;line-height:1.7;">
+        <li><strong>Source trigger</strong> — push to a branch or open a PR.</li>
+        <li><strong>Lint &amp; format check</strong> — fail fast on style violations (~seconds).</li>
+        <li><strong>Type check</strong> — TypeScript, mypy, etc.</li>
+        <li><strong>Unit tests</strong> — most of the suite, in parallel where possible.</li>
+        <li><strong>Build</strong> — produce the artifact (container image, binary, bundle).</li>
+        <li><strong>Integration tests</strong> — against ephemeral services / containers.</li>
+        <li><strong>Security scans</strong> — SAST, secret scan, dependency scan, container image scan.</li>
+        <li><strong>Publish artifact</strong> — push to registry / artifact store with an immutable tag.</li>
+        <li><strong>Deploy to preview / staging</strong> — for PRs, a unique URL per PR is gold.</li>
+        <li><strong>E2E / smoke tests</strong> — against the deployed environment.</li>
+        <li><strong>Promote to production</strong> — automatically (CD) or with a human approval gate.</li>
+        <li><strong>Post-deploy verification</strong> — synthetic checks, SLO burn-rate watch, automatic rollback on failure.</li>
+      </ol>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:8px;">Order matters: cheap, fast checks first. A 30-second lint failure beats waiting 12 minutes for the build to fail on a typo.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tools</div><h2>Where Pipelines Live</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Tool</th><th>Sweet spot</th></tr></thead>
+        <tbody>
+          <tr><td><a href="github-actions.html">GitHub Actions →</a></td><td>Code on GitHub. The default for most projects in 2026.</td></tr>
+          <tr><td><a href="gitlab-ci.html">GitLab CI →</a></td><td>Code on GitLab. Tight integration; mature container registry.</td></tr>
+          <tr><td><a href="jenkins.html">Jenkins →</a></td><td>Self-hosted, plugin-rich, lives in many enterprises.</td></tr>
+          <tr><td><a href="circleci.html">CircleCI →</a></td><td>Hosted, fast, strong macOS/iOS support.</td></tr>
+          <tr><td><a href="azure-pipelines.html">Azure Pipelines →</a></td><td>Microsoft / .NET-heavy stacks; deep Azure integration.</td></tr>
+          <tr><td>Buildkite, Drone, Harness, Argo Workflows</td><td>Specialized: hybrid runners, Kubernetes-native, enterprise governance.</td></tr>
+          <tr><td><a href="gitops.html">GitOps (Argo CD, Flux) →</a></td><td>Not a CI tool — a CD model where Git is the source of truth for cluster state.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Properties</div><h2>What Makes a Pipeline Trustworthy</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Reproducible.</strong> Same commit + same pipeline = same artifact, every time. No "works on the build server."</li>
+        <li><strong>Hermetic.</strong> Builds don't reach out to the internet at random. Pin versions, use a proxy, lock dependencies.</li>
+        <li><strong>Fast.</strong> If CI takes 30 minutes, people batch up changes, which defeats the point. Aim for under 10 minutes for the inner loop.</li>
+        <li><strong>Parallel where possible.</strong> Tests, lints, builds — run them concurrently, fail the whole pipeline on the first failure.</li>
+        <li><strong>Cached intelligently.</strong> Dependencies, build outputs, container layers. Don't recompute the world on every push.</li>
+        <li><strong>Idempotent.</strong> Re-running a step shouldn't double-publish an artifact or double-deploy.</li>
+        <li><strong>Observable.</strong> Logs, durations, failure reasons — a flaky test is a fixable problem, but only if you can find it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Artifacts &amp; Promotion</div><h2>Build Once, Deploy Many</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A core CI/CD principle: build the artifact once, then promote the <em>same bytes</em> through staging → production. Never rebuild for prod.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Immutable tags.</strong> Tag images by commit SHA, not <code>latest</code>. <code>latest</code> is a lie waiting to happen.</li>
+        <li><strong>Pin by digest in production.</strong> <code>image@sha256:…</code> beats <code>image:v1.2.3</code>.</li>
+        <li><strong>Promotion = config change, not rebuild.</strong> Change which digest the prod environment points to.</li>
+        <li><strong>Provenance.</strong> Sign artifacts (Sigstore / cosign), generate SBOMs, attest the build context. Required for supply-chain integrity.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Deploy Safely</div><h2>How CD Reaches Production</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Health checks.</strong> The deployer waits until the new instance is actually serving before shifting traffic.</li>
+        <li><strong>Progressive rollouts.</strong> Rolling, blue/green, canary. <a href="deployment-strategies.html">Deployment strategies deep dive →</a></li>
+        <li><strong>Feature flags.</strong> Decouple <em>deploy</em> from <em>release</em>. Code can ship to prod dark, then be enabled per-cohort.</li>
+        <li><strong>Automatic rollback.</strong> If error rate / latency / SLO burn cross thresholds during rollout, revert without paging anyone.</li>
+        <li><strong>Database changes are special.</strong> Expand → migrate → contract; never do schema-breaking changes in the same deploy as the code that needs them.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Secrets &amp; Security</div><h2>Don't Leak Through the Pipeline</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Secrets live in a manager</strong> (GitHub Secrets, Vault, AWS Secrets Manager) — not in repo or workflow YAML.</li>
+        <li><strong>Short-lived credentials.</strong> Use OIDC federation between CI and your cloud. No long-lived keys for the pipeline.</li>
+        <li><strong>Least privilege per job.</strong> A test job doesn't need deploy creds.</li>
+        <li><strong>Fork-PR safety.</strong> Don't expose secrets to PRs from forks. Most providers split this automatically — don't disable it.</li>
+        <li><strong>Pin actions / images by digest.</strong> Tag-mutability means a malicious update can hijack your pipeline.</li>
+        <li><strong>Build provenance &amp; signing.</strong> SLSA, Sigstore, in-toto — verifiable chain from source to artifact.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Pipeline</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A minimal but realistic GitHub Actions pipeline that lints, tests, builds a container, deploys a per-PR preview, and on merge promotes the same image to production.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+name: ci-cd
+on:
+  pull_request:
+  push: { branches: [main] }
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --coverage
+      - uses: aquasecurity/trivy-action@v0.20.0    # SAST + dep scan
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions: { id-token: write, contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+  preview:
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh preview-${{ github.event.number }} ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./deploy.sh prod ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+      - run: ./smoke-test.sh https://urls.example.com   # auto-rollback on failure
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Notice: tests gate the build, the same digest is promoted from preview to prod, deploys are gated by GitHub's <code>environment</code> protections, and a smoke test (with auto-rollback) is the last word.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>Pipelines That Fight Their Owners</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Slow CI.</strong> If devs hesitate to push, the pipeline is the bottleneck. Profile, parallelize, cache.</li>
+        <li><strong>Flaky tests merged anyway.</strong> One flaky test trains the team to ignore failures. Quarantine flakes; fix or delete within a week.</li>
+        <li><strong>Building separately for staging and prod.</strong> Different bytes, different bugs. Build once, promote.</li>
+        <li><strong>Manual approval as a habit.</strong> If every deploy needs a human, you don't have CD — you have CI plus paperwork.</li>
+        <li><strong>Snowflake build agents.</strong> Self-hosted runners with hand-installed tools drift. Build the runner image; replace, don't patch.</li>
+        <li><strong>Secrets in logs.</strong> One <code>echo $TOKEN</code> on a debug day is a public token. Mask consistently.</li>
+        <li><strong>No rollback story.</strong> Forward-only is fine until it isn't. Practice rollbacks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="containers.html">Containers →</a>
+        <a href="deployment-strategies.html">Deployment Strategies →</a>
+        <a href="gitops.html">GitOps →</a>
+        <a href="github-actions.html">GitHub Actions →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

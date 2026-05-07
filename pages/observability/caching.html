@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Caching · Observability &amp; Performance Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Caching — keep the hot stuff close. Patterns, layers, invalidation, and the failure modes that bite when you skip the boring parts." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/caching.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Caching · Observability &amp; Performance Deep Dive" />
+<meta property="og:description" content="Patterns, layers, invalidation, and failure modes." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/caching.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Caching · Observability &amp; Performance Deep Dive" />
+<meta name="twitter:description" content="Patterns, layers, invalidation, and failure modes." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability &amp; Performance Deep Dive</div>
+    <h1>Caching — Keep the Hot Stuff Close</h1>
+    <p class="lede">A cache trades a little staleness for a lot of speed. Done well, it turns a creaking system into a calm one. Done poorly, it produces the kind of bugs that show up only on Black Friday — wrong data served confidently, fast.</p>
+    <div class="tags"><span>Cache-aside</span><span>TTL</span><span>Invalidation</span><span>Stampede</span><span>CDN</span><span>Redis</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability &amp; Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Cache:</strong> a faster, smaller copy of data that lives closer to the consumer.</li>
+          <li><strong>Hit / miss:</strong> the request found the value in cache, or it didn't.</li>
+          <li><strong>TTL (time-to-live):</strong> how long an entry stays valid before it expires.</li>
+          <li><strong>Eviction:</strong> what to drop when the cache is full — typically LRU, LFU, or TTL-based.</li>
+          <li><strong>Invalidation:</strong> proactively removing stale entries when the underlying data changes.</li>
+          <li><strong>Hit ratio:</strong> hits ÷ (hits + misses). The KPI for whether the cache is doing its job.</li>
+        </ul>
+      </div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Phil Karlton: <em>"There are only two hard things in computer science: cache invalidation and naming things."</em></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Layers</div><h2>Where Caches Live</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Layer</th><th>Examples</th><th>What it caches</th></tr></thead>
+        <tbody>
+          <tr><td>Browser</td><td>HTTP cache, service worker</td><td>Static assets, API responses with explicit headers.</td></tr>
+          <tr><td>CDN / edge</td><td>Cloudflare, CloudFront, Fastly</td><td>HTML, images, JS, JSON — close to the user.</td></tr>
+          <tr><td>Reverse proxy</td><td>Varnish, NGINX, HAProxy</td><td>Whole responses keyed by URL + headers.</td></tr>
+          <tr><td>Application — local</td><td>Caffeine (Java), <code>functools.lru_cache</code> (Python), in-process LRU</td><td>Hottest values, no network hop. Per-instance.</td></tr>
+          <tr><td>Application — distributed</td><td>Redis, Memcached</td><td>Shared across instances. Single source of cached truth.</td></tr>
+          <tr><td>Database</td><td>Buffer pool, query cache, materialized views</td><td>Pages, query plans, precomputed aggregates.</td></tr>
+          <tr><td>Client SDK</td><td>Apollo, React Query, SWR</td><td>API responses, normalized for the UI.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Most production systems have caches at three or four of these layers simultaneously. The hard part isn't adding one — it's reasoning about all of them at once.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>How Code Talks to a Cache</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Cache-aside (lazy loading)</summary>
+        <div class="drill-body">
+          <p>The application checks the cache; on a miss, it reads the source of truth, populates the cache, and returns. On writes, it updates the source and either invalidates or refreshes the cache entry.</p>
+          <p><strong>Pros:</strong> simple, resilient — the system works even if the cache is down. <strong>Cons:</strong> first request after expiry is slow; risk of stampedes when many readers miss at once.</p>
+          <p>The default choice. If you don't know which pattern to use, use this one.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Read-through</summary>
+        <div class="drill-body">
+          <p>The cache itself fetches from the source on a miss. The application only talks to the cache. Common in client SDKs and in caching libraries with built-in loaders (e.g., Caffeine's <code>LoadingCache</code>).</p>
+          <p><strong>Pros:</strong> cleaner application code. <strong>Cons:</strong> coupling — the cache becomes a runtime dependency, and configuring loaders adds complexity.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Write-through</summary>
+        <div class="drill-body">
+          <p>Writes go to the cache and the source synchronously. Reads always hit fresh data.</p>
+          <p><strong>Pros:</strong> never stale. <strong>Cons:</strong> every write pays both costs; no benefit if the data is rarely read.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Write-behind (write-back)</summary>
+        <div class="drill-body">
+          <p>Writes hit the cache and queue an async write to the source. Fastest writes, eventual consistency.</p>
+          <p><strong>Pros:</strong> excellent write latency, can absorb bursts. <strong>Cons:</strong> data loss risk if the cache crashes before flushing — only acceptable for non-critical data.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Refresh-ahead</summary>
+        <div class="drill-body">
+          <p>Asynchronously refresh entries before they expire, based on access patterns. Hot keys never go cold.</p>
+          <p><strong>Pros:</strong> tail latency stays flat. <strong>Cons:</strong> you can refresh things no one will ever ask for again — wasted work.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Invalidation</div><h2>The Hardest Part</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>TTL:</strong> set a time, accept staleness up to that long. Simple, robust, dumb in the right way.</li>
+        <li><strong>Explicit invalidation:</strong> on write, delete the affected entries. Sharp but easy to miss a path. Test it.</li>
+        <li><strong>Write-through / read-through</strong> sidestep the issue but pay other costs.</li>
+        <li><strong>Versioned keys:</strong> embed an entity version (<code>user:42:v17</code>) so old entries are simply unreachable. Old entries die naturally on TTL.</li>
+        <li><strong>Event-based:</strong> publish change events; subscribers invalidate. Works across services, but now you've got distributed messaging in the loop.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Rule of thumb: prefer short TTLs over clever invalidation. The bug you don't write is the bug you don't debug at 2am.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Failure Modes</div><h2>How Caches Hurt You</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Thundering herd / cache stampede</summary>
+        <div class="drill-body">
+          <p>A popular key expires. A thousand concurrent requests miss simultaneously, all stampede the database, the database falls over.</p>
+          <p><strong>Mitigations:</strong> single-flight (only one fetch per key in-flight, others wait); probabilistic early expiry (refresh at random points before TTL); soft TTL + hard TTL (serve stale while one process refreshes); jittered TTLs so keys don't expire in lockstep.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cache penetration</summary>
+        <div class="drill-body">
+          <p>Requests for keys that don't exist anywhere — all misses, all hit the database. Often a sign of probing or a buggy client.</p>
+          <p><strong>Mitigations:</strong> negative caching (cache the 404); bloom filter in front of the cache; rate-limit unknown-key requests.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cache avalanche</summary>
+        <div class="drill-body">
+          <p>Many keys expire at once (often because they were all set together). Database gets a synchronized spike.</p>
+          <p><strong>Mitigations:</strong> jitter the TTL (<code>baseTTL ± 10%</code>); spread initial population over time; multi-tier caches so only one tier expires at once.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Stale data nobody notices</summary>
+        <div class="drill-body">
+          <p>Most insidious. Code paths bypass invalidation, the wrong field is keyed, two services cache differently. The system <em>works</em> — just with slightly wrong numbers.</p>
+          <p><strong>Mitigations:</strong> observability — emit hit ratio, age-of-entry, source-vs-cache mismatches; integration tests that mutate data and assert reads see the change; ship a <code>?nocache=1</code> debug toggle.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cache as a single point of failure</summary>
+        <div class="drill-body">
+          <p>You optimized so hard that the database now can't handle the cold-cache traffic. When Redis blinks, everything falls.</p>
+          <p><strong>Mitigations:</strong> graceful degradation — on cache failure, log and fall back to source; rate-limit fallback so the DB survives; capacity-test with the cache disabled occasionally.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking a Key</div><h2>Cache Keys Are an API</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Include everything that affects the value: ID, version, locale, currency, feature flag, schema version.</li>
+        <li>Don't include things that don't (request ID, timestamp) — you'll never get a hit.</li>
+        <li>Namespace by feature: <code>link:code:abc123</code>, not <code>abc123</code>. Future-you will thank you.</li>
+        <li>Embed a global cache version (<code>v3:link:…</code>) so a deploy can invalidate everything by bumping a constant.</li>
+        <li>Be conservative with what you cache for logged-in users — per-user keys multiply storage fast.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Observability</div><h2>What to Measure</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Hit ratio</strong> per key family. A falling ratio is the first sign your data shape changed.</li>
+        <li><strong>Latency</strong> p50/p95/p99 for cache reads, source reads, and the combined endpoint. The gap shows what caching buys you.</li>
+        <li><strong>Eviction rate.</strong> Sustained evictions mean the cache is too small or the working set too big.</li>
+        <li><strong>Memory usage.</strong> Watch for fragmentation in Redis; <code>used_memory</code> vs <code>used_memory_rss</code>.</li>
+        <li><strong>Origin load with vs without cache.</strong> Run a controlled drill — disable a small percentage of caching and see what happens.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Cache</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Reads dominate (every redirect is a read), writes are rare, the value is a small immutable string. Textbook cache-aside.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+async function resolve(code) {
+  const key = `link:code:${code}`;
+  const cached = await redis.get(key);
+  if (cached !== null) {
+    metrics.inc('cache.hit', { family: 'link' });
+    return cached === 'MISS' ? null : cached;   // negative cache for 404s
+  }
+  metrics.inc('cache.miss', { family: 'link' });
+
+  const row = await db.findLinkByCode(code);
+  const value = row?.target_url ?? 'MISS';
+  const ttl  = row ? jitter(60 * 60) : 60;       // 1h ± jitter for hits, 60s for misses
+  await redis.set(key, value, { EX: ttl });
+
+  return row?.target_url ?? null;
+}
+
+async function deleteLink(code) {
+  await db.deleteByCode(code);
+  await redis.del(`link:code:${code}`);          // explicit invalidation on write
+}
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Jittered TTL avoids avalanche; negative caching avoids penetration; explicit delete-on-write keeps the cache honest. Add single-flight if you ever see stampede patterns in your hit-ratio dashboard.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>When Not to Cache</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Already fast enough.</strong> A cache adds operational complexity. Don't pay it for a 2ms query.</li>
+        <li><strong>Highly personalized data.</strong> If every user sees a different value and they only ask once, hit ratio will be near zero.</li>
+        <li><strong>Strong-consistency requirements.</strong> Account balances, inventory, auth state — better to make the source fast than to add staleness.</li>
+        <li><strong>Tiny working set.</strong> If everything fits in DB memory anyway, the database is your cache.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Add a cache when the data is hot, immutable-ish, and slow to compute. Otherwise, fix the source first.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="performance.html">Performance &amp; Scalability →</a>
+        <a href="metrics.html">Metrics →</a>
+        <a href="../testing/performance.html">Performance Testing →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability &amp; Performance</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

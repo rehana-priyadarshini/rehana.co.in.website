@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Containers · DevOps Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Containers — package an app and its runtime once, run it anywhere. Images, layers, registries, and the orchestration that keeps them alive." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/containers.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Containers · DevOps Deep Dive" />
+<meta property="og:description" content="Package once, run anywhere — and the operational reality behind it." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/containers.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Containers · DevOps Deep Dive" />
+<meta name="twitter:description" content="Package once, run anywhere — and the operational reality behind it." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps Deep Dive</div>
+    <h1>Containers — One Box, Runs Anywhere</h1>
+    <p class="lede">A container is a Linux process with its own filesystem, namespaces, and resource limits. The <em>image</em> is a frozen snapshot of everything that process needs. Together they solved the hardest problem in operations: making "it works on my machine" actually true everywhere else.</p>
+    <div class="tags"><span>Docker</span><span>OCI</span><span>Images</span><span>Registries</span><span>Kubernetes</span><span>Compose</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>What's Actually Under the Hood</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Container:</strong> a normal Linux process, isolated by kernel features (namespaces, cgroups, capabilities). Not a VM.</li>
+          <li><strong>Image:</strong> a tarball of filesystem layers + metadata describing how to start it. Format standardized as OCI.</li>
+          <li><strong>Layer:</strong> one filesystem diff. Layers are content-addressed and shared between images that use the same base.</li>
+          <li><strong>Registry:</strong> a server that stores and distributes images (Docker Hub, GHCR, ECR, GCR, Harbor).</li>
+          <li><strong>Runtime:</strong> the thing that runs the container — Docker, Podman, containerd, CRI-O. All speak OCI.</li>
+          <li><strong>Orchestrator:</strong> the thing that runs <em>many</em> containers across <em>many</em> machines. Usually <a href="kubernetes.html">Kubernetes</a>.</li>
+        </ul>
+      </div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Container ≠ VM. A VM ships a kernel; a container shares the host's. That's why containers are seconds-to-start instead of minutes.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why</div><h2>What Containers Solved</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Environment parity.</strong> Dev, CI, staging, prod — same image, same bytes, same behavior.</li>
+        <li><strong>Dependency hell.</strong> Two services need different Python versions? Each gets its own image.</li>
+        <li><strong>Density.</strong> Containers share the host kernel, so you can pack far more onto one machine than VMs allow.</li>
+        <li><strong>Immutability.</strong> The running container is read-only by convention. To change something, you build a new image — auditable, repeatable.</li>
+        <li><strong>Portability.</strong> The same image runs on a laptop, a CI runner, a Kubernetes cluster, a Lambda, a Fly.io machine.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Anatomy</div><h2>How an Image Is Built</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A <code>Dockerfile</code> is a recipe. Each instruction creates a new layer; layers cache aggressively. The order of instructions is the difference between a 30-second rebuild and a 12-minute one.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+# 1. Build stage — has compilers, build deps, source
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./             # cached if package.json hasn't changed
+RUN  npm ci
+COPY . .
+RUN  npm run build                # produces /app/dist
+
+# 2. Runtime stage — minimal, no build tools
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN  npm ci --omit=dev
+COPY --from=build /app/dist ./dist
+
+USER node                          # don't run as root
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:3000/health || exit 1
+CMD ["node", "dist/server.js"]
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Multi-stage = small final image. <code>COPY package*.json</code> first means dependency layer is cached until those files change.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Image Hygiene</div><h2>Small, Safe, Reproducible</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Use a slim base.</strong> <code>alpine</code>, <code>distroless</code>, or <code>debian:slim</code> beats a full distro by 100s of MB.</li>
+        <li><strong>Pin by digest in production.</strong> <code>node:20@sha256:…</code> — tags can move under you.</li>
+        <li><strong>Don't run as root.</strong> Add a non-root <code>USER</code>. Many CVEs need root inside the container to matter.</li>
+        <li><strong>Fewer layers, smaller layers.</strong> Combine <code>RUN</code>s where it makes sense; clean up apt caches in the same RUN that installs them.</li>
+        <li><strong>.dockerignore</strong> aggressively. Don't ship <code>.git</code>, <code>node_modules</code>, or local secrets into the build context.</li>
+        <li><strong>Reproducible builds.</strong> Lockfiles, pinned base images, no <code>RUN apt-get update &amp;&amp; apt-get install foo</code> without a version.</li>
+        <li><strong>Scan images.</strong> Trivy, Grype, Snyk — run in CI, fail on high CVEs you can't waive.</li>
+        <li><strong>Sign images.</strong> Cosign / Sigstore. Prove the image came from your pipeline, not a typo-squat.</li>
+        <li><strong>Generate an SBOM.</strong> Required for supply-chain hygiene; many regulators now ask for it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Local Dev</div><h2>Compose &amp; Friends</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">For a single developer machine, <code>docker compose</code> (or <code>podman compose</code>) is enough — declarative file, multi-service, one command up.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+# docker-compose.yml
+services:
+  app:
+    build: .
+    ports: ["3000:3000"]
+    env_file: .env
+    depends_on: [db, redis]
+
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_PASSWORD: dev }
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+
+  redis:
+    image: redis:7-alpine
+
+  worker:
+    build: .
+    command: ["node", "dist/worker.js"]
+    depends_on: [db, redis]
+
+volumes:
+  pgdata:
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Compose is great for dev and tiny prod. Once you need scheduling, healing, or multi-host networking, it's time for an orchestrator.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Production</div><h2>Where Containers Run for Real</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Option</th><th>Best for</th><th>Cost of entry</th></tr></thead>
+        <tbody>
+          <tr><td>One VM + <code>systemd</code> + <code>docker run</code></td><td>Small projects, hobby workloads.</td><td>Trivial.</td></tr>
+          <tr><td>Compose on a single host</td><td>Side projects, internal tools.</td><td>Low.</td></tr>
+          <tr><td><a href="simple-orchestration.html">Nomad / Docker Swarm</a></td><td>Mid-sized ops without K8s overhead.</td><td>Modest.</td></tr>
+          <tr><td>PaaS — Fly.io, Render, Railway, Heroku, App Runner</td><td>Most teams under 10 services.</td><td>Low; vendor coupling.</td></tr>
+          <tr><td><a href="kubernetes.html">Kubernetes</a> (self-hosted)</td><td>Many teams, many services, real complexity.</td><td>High. Don't pick it for one app.</td></tr>
+          <tr><td><a href="managed-k8s.html">Managed K8s — EKS, GKE, AKS</a></td><td>K8s benefits without running the control plane.</td><td>Still high; the cluster's still yours.</td></tr>
+          <tr><td>Serverless containers — Cloud Run, ECS Fargate, Container Apps</td><td>Stateless services, scale-to-zero.</td><td>Lowest among hosted options.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Don't reach for Kubernetes by default. The right answer for most teams is "PaaS or serverless containers, until you can articulate why not."</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Containers in Practice</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>One process per container.</strong> Not literally — but conceptually one job. Sidecars (proxy, log shipper) are fine.</li>
+        <li><strong>Stateless apps.</strong> Persistent data lives in volumes or managed services, not inside the container.</li>
+        <li><strong>Logs to stdout/stderr.</strong> The runtime collects them. Don't write to local files.</li>
+        <li><strong>Config via env vars.</strong> 12-factor — keep config out of the image.</li>
+        <li><strong>Graceful shutdown.</strong> Handle <code>SIGTERM</code>; the orchestrator gives you ~30s before <code>SIGKILL</code>.</li>
+        <li><strong>Liveness vs readiness vs startup probes.</strong> Different questions. Mix them up and you'll either drop traffic or restart healthy containers.</li>
+        <li><strong>Resource requests and limits.</strong> Without limits, one bad pod takes down the host. Without requests, scheduling is guesswork.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>How Containers Bite</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Bloated images.</strong> 2GB Node images in 2026 are a smell. Multi-stage builds + slim base.</li>
+        <li><strong>Cache busting via reorder.</strong> A <code>COPY . .</code> before <code>npm ci</code> reinstalls everything on every change. Order matters.</li>
+        <li><strong>Latest tag in prod.</strong> "It worked yesterday" — yes, on a different image.</li>
+        <li><strong>Root user, exposed ports, no <code>USER</code>.</strong> Container escape and lateral movement become trivial.</li>
+        <li><strong>Time bombs in build args.</strong> Cache key includes the timestamp; nothing rebuilds. Pin time-sensitive things explicitly.</li>
+        <li><strong>Treating the container like a VM.</strong> SSH'ing into a running container to "fix" something undermines the whole model. Rebuild, redeploy.</li>
+        <li><strong>Mismatched architectures.</strong> M1 Mac builds <code>arm64</code>, prod runs <code>amd64</code>. Use buildx with explicit platforms.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Container</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A multi-stage build for the shortener app, with a separate worker process started from the same image. One artifact, two roles, picked by command.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+# Build
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN  npm ci
+COPY . .
+RUN  npm run build
+
+# Runtime — distroless for minimal attack surface
+FROM gcr.io/distroless/nodejs20-debian12
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist          ./dist
+COPY package.json .
+
+USER nonroot
+EXPOSE 3000
+CMD ["dist/server.js"]               # default = web server
+                                     # `docker run … dist/worker.js` for the queue consumer
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Distroless: no shell, no package manager, no tools an attacker could use. The image is small, signed, scanned, and shared between the web and worker deployments — same digest, different command.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="docker.html">Docker →</a>
+        <a href="kubernetes.html">Kubernetes →</a>
+        <a href="managed-k8s.html">Managed K8s →</a>
+        <a href="helm.html">Helm →</a>
+        <a href="cicd.html">CI/CD →</a>
+        <a href="deployment-strategies.html">Deployment Strategies →</a>
+        <a href="../../index.html#ch-devops">↑ Back to DevOps</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

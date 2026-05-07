@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Schema Design · Database Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Schema design — naming, keys, normalization, indexes, and migrations. Get the shape of your data right and most other problems shrink." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/database/schema.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Schema Design · Database Deep Dive" />
+<meta property="og:description" content="Get the shape of your data right and most other problems shrink." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/database/schema.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Schema Design · Database Deep Dive" />
+<meta name="twitter:description" content="Get the shape of your data right and most other problems shrink." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Database Deep Dive</div>
+    <h1>Schema Design — The Shape of Your Data</h1>
+    <p class="lede">A schema is a contract: every row of this table looks like <em>this</em>, every relationship means <em>that</em>. Get it right and reads are fast, invariants hold, and changes stay cheap. Get it wrong and you'll fight the same bugs for years.</p>
+    <div class="tags"><span>Keys</span><span>Normalization</span><span>Indexes</span><span>Constraints</span><span>Migrations</span></div>
+    <a class="back" href="../../index.html#ch-db">← Back to Database Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Entity:</strong> a thing your system tracks — a user, an order, a link.</li>
+          <li><strong>Attribute:</strong> a property of an entity — email, status, created_at.</li>
+          <li><strong>Relationship:</strong> how entities connect — one-to-one, one-to-many, many-to-many.</li>
+          <li><strong>Key:</strong> a column (or set) that identifies a row uniquely (primary) or points to another (foreign).</li>
+          <li><strong>Constraint:</strong> a rule the database enforces — <code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code>, foreign key.</li>
+          <li><strong>Index:</strong> an extra data structure that makes some queries fast at the cost of writes.</li>
+          <li><strong>Migration:</strong> a versioned, reproducible change to the schema.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Step One</div><h2>Model the Domain Before the Tables</h2></div>
+    <div class="chapter-body">
+      <p>Start with nouns and verbs. List the entities (<em>User</em>, <em>Link</em>, <em>Click</em>), the relationships (<em>a User owns many Links</em>; <em>a Link has many Clicks</em>), and the operations (<em>create a Link</em>, <em>resolve a code</em>, <em>aggregate Clicks per day</em>). The schema is a translation of that model — not the other way around.</p>
+      <p>If you can't describe what each table represents in one short sentence, the model isn't ready yet.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Keys</div><h2>Picking a Primary Key</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Key style</th><th>Pros</th><th>Cons</th></tr></thead>
+        <tbody>
+          <tr><td>Auto-increment integer</td><td>Tiny, fast, simple.</td><td>Leaks volume; awkward across shards; guessable in URLs.</td></tr>
+          <tr><td>UUID v4 (random)</td><td>Unique anywhere, generate client-side.</td><td>Bigger; random inserts hurt B-tree locality.</td></tr>
+          <tr><td>UUID v7 / ULID</td><td>Time-ordered + globally unique. Best of both.</td><td>Newer; not all drivers support natively.</td></tr>
+          <tr><td>Natural key (email, ISBN)</td><td>Meaningful; avoids one extra join.</td><td>Mutable in practice. Avoid as primary key.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:13.5px;color:var(--muted);">Rule of thumb: synthetic keys for primary, natural keys for <code>UNIQUE</code> indexes. Never let a primary key carry meaning that might change.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Normalization</div><h2>One Fact, One Place</h2></div>
+    <div class="chapter-body">
+      <details class="drill" open>
+        <summary>The three forms in plain English</summary>
+        <div class="drill-body">
+          <ul>
+            <li><strong>1NF:</strong> no repeating groups, no arrays-in-a-cell. Every cell is atomic.</li>
+            <li><strong>2NF:</strong> every non-key column depends on the <em>whole</em> primary key (matters for composite keys).</li>
+            <li><strong>3NF:</strong> non-key columns depend only on the key — not on other non-key columns.</li>
+          </ul>
+          <p>Practically: if you find yourself updating the same fact in two rows, it's not in 3NF.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>When to denormalize</summary>
+        <div class="drill-body">
+          <p>Denormalize when a join is on the read path of your hottest query and the data being duplicated changes rarely. Examples: storing <code>order.customer_name</code> as it was at purchase time, caching <code>post.comment_count</code>, materializing a daily rollup.</p>
+          <p>The cost is write complexity: every change must update every copy. Pay it deliberately, not by accident.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Constraints</div><h2>Let the Database Defend the Truth</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong><code>NOT NULL</code></strong> on every column that must have a value. <code>NULL</code> means "unknown" — only use it when that's actually what you mean.</li>
+        <li><strong><code>UNIQUE</code></strong> on natural identifiers (email, slug, short code).</li>
+        <li><strong>Foreign keys</strong> with the right <code>ON DELETE</code> behavior — <code>CASCADE</code>, <code>SET NULL</code>, or <code>RESTRICT</code>. Pick one consciously.</li>
+        <li><strong><code>CHECK</code> constraints</strong> for invariants — <code>price &gt; 0</code>, <code>status IN ('active','expired')</code>.</li>
+        <li><strong>Generated columns</strong> for derived values you query on (e.g., a normalized lowercase email).</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Application code is one of many writers. Constraints in the database are the only ones that hold no matter who is writing.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Indexes</div><h2>Fast Reads Aren't Free</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Index for the queries you actually run.</strong> Look at <code>EXPLAIN</code> plans, not your intuition.</li>
+        <li><strong>Composite indexes</strong> are ordered — <code>(user_id, created_at)</code> serves <code>WHERE user_id = ?</code> and <code>WHERE user_id = ? ORDER BY created_at</code>, but not <code>WHERE created_at &gt; ?</code> alone.</li>
+        <li><strong>Every index slows writes.</strong> Indexes also take disk and RAM. More is not better.</li>
+        <li><strong>Partial indexes</strong> for sparse predicates: <code>CREATE INDEX … WHERE deleted_at IS NULL</code>.</li>
+        <li><strong>Covering indexes</strong> include all columns the query needs, so the table doesn't need to be touched at all.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Naming</div><h2>Conventions That Save Future-You</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Tables: plural, snake_case (<code>users</code>, <code>link_clicks</code>). Or singular — pick one, stay consistent.</li>
+        <li>Columns: snake_case, no abbreviations unless universal (<code>url</code>, <code>id</code>).</li>
+        <li>Foreign keys: <code>&lt;referenced_table_singular&gt;_id</code> (<code>user_id</code>, <code>link_id</code>).</li>
+        <li>Booleans: positive phrasing — <code>is_active</code>, not <code>is_not_disabled</code>.</li>
+        <li>Timestamps: <code>created_at</code>, <code>updated_at</code>, <code>deleted_at</code>. Always store UTC; convert at the edge.</li>
+        <li>Indexes: <code>idx_&lt;table&gt;_&lt;cols&gt;</code>. Constraints: <code>chk_</code>, <code>uq_</code>, <code>fk_</code> prefixes.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Evolution</div><h2>Schemas Are Living Things — Migrations</h2></div>
+    <div class="chapter-body">
+      <p>Production schemas change. The question isn't whether, but how safely.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Use a migration tool.</strong> Flyway, Liquibase, Alembic, Prisma Migrate, Knex, Rails, Django — pick one and keep migrations in version control.</li>
+        <li><strong>Forward-only in production.</strong> "Down" migrations are nice for dev, dangerous for prod. Roll forward with a new migration.</li>
+        <li><strong>Expand → migrate → contract.</strong> Add the new column nullable, dual-write, backfill, switch reads, drop the old. Never break running code.</li>
+        <li><strong>Avoid long-locking changes.</strong> Adding a non-null column with a default rewrites the table on many engines. Use multi-step migrations on big tables.</li>
+        <li><strong>Test migrations</strong> against a copy of prod-shaped data — not just an empty schema.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>Mistakes You Only Make Once</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Using <code>VARCHAR</code> for everything.</strong> Reach for the right type — <code>TIMESTAMPTZ</code>, <code>UUID</code>, <code>NUMERIC</code>, <code>JSONB</code>, <code>BOOLEAN</code>, enums.</li>
+        <li><strong>Money in <code>FLOAT</code>.</strong> Use <code>NUMERIC(precision, scale)</code> or store integer minor units.</li>
+        <li><strong>Soft deletes everywhere.</strong> Useful sometimes, but every query now needs <code>WHERE deleted_at IS NULL</code>. Forget once and data leaks.</li>
+        <li><strong>Storing JSON blobs to "stay flexible."</strong> Fine for genuinely unstructured payloads; a tar pit for fields you'll query, index, or migrate.</li>
+        <li><strong>No timestamps.</strong> Add <code>created_at</code> and <code>updated_at</code> on every table. You'll thank yourself during your first incident.</li>
+        <li><strong>Single tenants table.</strong> If you're multi-tenant, decide between row-level (<code>tenant_id</code> everywhere) or schema-per-tenant <em>before</em> you ship.</li>
+        <li><strong>Cyclic foreign keys.</strong> Tempting, painful at insert time. Restructure or use deferrable constraints.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Schema</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A reasonable starting point — small, normalized, with the right constraints:</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:16px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+CREATE TABLE users (
+  id           BIGSERIAL PRIMARY KEY,
+  email        TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT uq_users_email UNIQUE (email)
+);
+
+CREATE TABLE links (
+  id          BIGSERIAL PRIMARY KEY,
+  code        TEXT NOT NULL,
+  target_url  TEXT NOT NULL,
+  owner_id    BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at  TIMESTAMPTZ,
+  deleted_at  TIMESTAMPTZ,
+  CONSTRAINT uq_links_code UNIQUE (code),
+  CONSTRAINT chk_links_url CHECK (target_url ~* '^https?://')
+);
+
+CREATE INDEX idx_links_owner_active
+  ON links (owner_id) WHERE deleted_at IS NULL;
+
+CREATE TABLE clicks (
+  id         BIGSERIAL PRIMARY KEY,
+  link_id    BIGINT NOT NULL REFERENCES links(id) ON DELETE CASCADE,
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  referrer   TEXT,
+  user_agent TEXT,
+  country    TEXT
+);
+
+CREATE INDEX idx_clicks_link_time
+  ON clicks (link_id, occurred_at DESC);
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Notice: every table has timestamps; every <code>UNIQUE</code> business field has a constraint; the partial index on active links keeps it small; the <code>clicks</code> index is ordered for the most common query (recent clicks for a link).</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="sql.html">← SQL (Relational)</a>
+        <a href="nosql.html">NoSQL →</a>
+        <a href="../../index.html#ch-db">↑ Back to Database Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

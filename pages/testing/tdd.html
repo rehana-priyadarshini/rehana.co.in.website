@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TDD · Testing Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Test-Driven Development — write the test first, watch it fail, make it pass, then clean up. A short loop that quietly reshapes how you design code." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/testing/tdd.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="TDD · Testing Deep Dive" />
+<meta property="og:description" content="Red, green, refactor — and the design discipline hidden inside it." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/testing/tdd.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="TDD · Testing Deep Dive" />
+<meta name="twitter:description" content="Red, green, refactor — and the design discipline hidden inside it." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Testing Deep Dive</div>
+    <h1>TDD — Test-Driven Development</h1>
+    <p class="lede">Write a failing test. Make it pass with the smallest change you can. Clean up. Repeat. The loop is small enough to feel silly — and that's the point. The discipline forces you to specify what you want before you build it, and leaves a regression suite as a side effect.</p>
+    <div class="tags"><span>Red-Green-Refactor</span><span>Kent Beck</span><span>Design</span><span>Discipline</span></div>
+    <a class="back" href="../../index.html#ch-testing">← Back to Testing &amp; Quality</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Red:</strong> write a test for behavior that doesn't exist yet — watch it fail.</li>
+          <li><strong>Green:</strong> write the simplest code that makes the test pass. Resist the urge to do more.</li>
+          <li><strong>Refactor:</strong> with the test as a safety net, clean up the code (and the test) without changing behavior.</li>
+          <li><strong>Origin:</strong> popularized by Kent Beck in the late 1990s alongside Extreme Programming.</li>
+          <li><strong>Outcome:</strong> a regression suite that grew with the code, plus a design shaped by its own use.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Loop</div><h2>Red, Green, Refactor</h2></div>
+    <div class="chapter-body">
+      <details class="drill" open>
+        <summary>1. Red — write a failing test</summary>
+        <div class="drill-body">
+          <p>Pick the smallest behavior you don't have yet. Write a test that <em>asserts</em> it. Run it. It must fail — and fail for the right reason (the function doesn't exist, the result is wrong) rather than a typo or import error. A red test you didn't expect to fail is a bug in your test, not a feature.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>2. Green — make it pass, however ugly</summary>
+        <div class="drill-body">
+          <p>Write the dumbest code that turns the test green. Hardcode the answer if you have to. The point isn't elegance yet — it's proving the test wires up to real code and the loop is closed. Speed matters here; minutes, not hours.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>3. Refactor — clean up with the net</summary>
+        <div class="drill-body">
+          <p>Now that the bar is green, improve the code without changing behavior. Rename, extract, deduplicate. Run the tests after every small step. If a refactor turns the bar red, undo it — don't try to fix it forward.</p>
+          <p>Refactor the test code too. Tests are first-class code; they rot like everything else.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why It Works</div><h2>The Hidden Design Discipline</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>You design from the outside in.</strong> Writing the test first forces you to imagine the API before the implementation. Bad APIs feel awful to test — and the pain shows up before you've built anything.</li>
+        <li><strong>You build only what's needed.</strong> No speculative branches, no "I might need this later" code. The next test pulls the next behavior out.</li>
+        <li><strong>Every line is covered by a test that justified its existence.</strong> Coverage isn't a metric you chase; it's a residue.</li>
+        <li><strong>You're never far from green.</strong> If you break something, the last passing state is one minute behind you.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>A Base62 Encoder, TDD-Style</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Building the short-code encoder for the URL shortener track, one red-green-refactor cycle at a time.</p>
+
+      <h4 style="margin-top:14px;">Cycle 1 — encoding zero</h4>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+test('encode(0) returns "0"', () =&gt; {
+  expect(encode(0)).toBe('0');
+});
+</pre>
+      <p style="font-size:13.5px;">Red — <code>encode</code> doesn't exist. Green — <code>const encode = () =&gt; '0';</code>. That's it. Resist the urge to write the real algorithm.</p>
+
+      <h4 style="margin-top:14px;">Cycle 2 — encoding small numbers</h4>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+test('encode(1) returns "1"', () =&gt; expect(encode(1)).toBe('1'));
+test('encode(10) returns "a"', () =&gt; expect(encode(10)).toBe('a'));
+test('encode(61) returns "Z"', () =&gt; expect(encode(61)).toBe('Z'));
+</pre>
+      <p style="font-size:13.5px;">Now the hardcoded version fails. Implement a real lookup against the alphabet.</p>
+
+      <h4 style="margin-top:14px;">Cycle 3 — multi-digit</h4>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+test('encode(62) returns "10"', () =&gt; expect(encode(62)).toBe('10'));
+test('encode(123456) round-trips', () =&gt; {
+  expect(decode(encode(123456))).toBe(123456);
+});
+</pre>
+      <p style="font-size:13.5px;">Red drives you to the divmod loop. Once green, refactor: extract the alphabet to a constant, share it between encode and decode, add a property test for round-trips on random integers.</p>
+
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Notice what you didn't write: error handling for negatives, performance optimizations, edge cases for huge integers. They'll arrive when a test demands them — not before.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Variations</div><h2>Flavors of TDD</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Flavor</th><th>What's different</th><th>When it shines</th></tr></thead>
+        <tbody>
+          <tr><td>Classic / Chicago</td><td>Test the result. Use real collaborators where possible.</td><td>Algorithms, pure logic, libraries.</td></tr>
+          <tr><td>Mockist / London</td><td>Test interactions with collaborators via mocks.</td><td>Object-heavy code with clear roles and responsibilities.</td></tr>
+          <tr><td>BDD (Behavior-Driven)</td><td>Tests phrased as <em>given/when/then</em> scenarios.</td><td>Cross-functional teams; product-readable specs.</td></tr>
+          <tr><td>ATDD (Acceptance-TDD)</td><td>Start at the user-visible behavior, drill in.</td><td>Feature work with clear acceptance criteria.</td></tr>
+          <tr><td>Property-based</td><td>Assert invariants over generated inputs, not specific cases.</td><td>Encoders, parsers, anything with round-trip or algebraic properties.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tradeoffs</div><h2>Where TDD Pays Off — and Where It Doesn't</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Great for:</strong> pure logic, parsers, encoders, business rules, anything you'll touch repeatedly.</li>
+        <li><strong>Awkward for:</strong> exploratory UI work, glue code that mostly delegates, throwaway scripts.</li>
+        <li><strong>Slower at first.</strong> Expect to be 10–30% slower for the first few weeks; the curve flips once the suite is meaningful.</li>
+        <li><strong>Doesn't replace</strong> integration, E2E, or exploratory testing. It's the bottom of the pyramid, not the whole thing.</li>
+        <li><strong>Test smell ≈ design smell.</strong> If a test is hard to write, the design is hard to use. Fix the design.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>Ways TDD Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Testing the implementation, not the behavior.</strong> If a refactor that preserves behavior breaks tests, the tests are coupled to internals.</li>
+        <li><strong>Over-mocking.</strong> Mocks that mirror the code under test prove only that the code calls itself. Prefer real collaborators where cheap.</li>
+        <li><strong>Skipping refactor.</strong> Red-green-red-green leaves a swamp of duplication. The third step is where the design improves.</li>
+        <li><strong>Giant tests.</strong> A test that fails for ten reasons tells you nothing. One assertion per behavior.</li>
+        <li><strong>Slow suite.</strong> If the unit suite takes more than a few seconds, the loop breaks down. Push slow tests up the pyramid.</li>
+        <li><strong>Cargo-cult coverage.</strong> 100% coverage with weak assertions is worse than 70% with strong ones.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">How to Start</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px;line-height:1.7;">
+        <li>Pick one small new feature, not a refactor of existing code.</li>
+        <li>Write the test first. If you don't know what to assert, you don't know what you're building.</li>
+        <li>Make it green with the dumbest possible code. No cleverness yet.</li>
+        <li>Refactor with the bar green. Run the tests after every change.</li>
+        <li>Stop when the next test you'd write feels redundant. That's enough.</li>
+      </ol>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">After a few features, you'll notice you're designing differently — smaller pieces, clearer seams, fewer big-bang debug sessions. That's the real win, not the green bar.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="unit.html">← Unit Testing</a>
+        <a href="integration.html">Integration Testing →</a>
+        <a href="e2e.html">E2E Testing →</a>
+        <a href="../../index.html#ch-testing">↑ Back to Testing &amp; Quality</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

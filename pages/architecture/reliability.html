@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reliability · Architecture Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Reliability — designing systems that survive failure. Redundancy, graceful degradation, retries, blast radius, runbooks, and the discipline that makes 'four nines' a number, not a wish." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/reliability.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Reliability · Architecture Deep Dive" />
+<meta property="og:description" content="Designing systems that survive failure." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/reliability.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Reliability · Architecture Deep Dive" />
+<meta name="twitter:description" content="Designing systems that survive failure." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architecture Deep Dive</div>
+    <h1>Reliability — Surviving Failure</h1>
+    <p class="lede">Things break. Disks die, networks partition, vendors have bad days, deploys go wrong. Reliability is the discipline of building systems where those events are absorbed, not amplified — and where recovery is rehearsed, not improvised.</p>
+    <div class="tags"><span>Redundancy</span><span>Failover</span><span>Blast Radius</span><span>Chaos</span><span>Runbooks</span><span>Postmortems</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Vocabulary</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Words you'll use</h4>
+        <ul>
+          <li><strong>Availability:</strong> fraction of time the system is up. 99.9% ≈ 43 minutes of downtime per month.</li>
+          <li><strong>Durability:</strong> fraction of stored data not lost. Higher bar than availability.</li>
+          <li><strong>Fault-tolerant:</strong> tolerates failures without user-visible impact.</li>
+          <li><strong>Resilient:</strong> recovers quickly when impact is unavoidable.</li>
+          <li><strong>RTO:</strong> Recovery Time Objective — how long until we're back up.</li>
+          <li><strong>RPO:</strong> Recovery Point Objective — how much data we can afford to lose.</li>
+          <li><strong>Blast radius:</strong> how much breaks when one thing fails.</li>
+          <li><strong>MTTR / MTTD:</strong> mean time to recovery / detection.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Failure</div><h2>Failure Modes You'll See</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Hardware:</strong> disks, NICs, single nodes. Common, mitigated by redundancy.</li>
+        <li><strong>Network:</strong> packet loss, DNS hiccups, partitions. Less common, much harder to reason about.</li>
+        <li><strong>Software:</strong> bugs, OOMs, deadlocks, regressions on deploy. The most common cause of incidents.</li>
+        <li><strong>Capacity:</strong> traffic spike, queue backup, slow downstream. Predictable in theory, surprising in practice.</li>
+        <li><strong>Human:</strong> a misconfigured rule, a bad migration, a wrong button. The cause of most large outages.</li>
+        <li><strong>Cloud / vendor:</strong> a provider region or service goes down. Rare but newsworthy when it happens.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">A reliable system is one that turns each of these from "outage" into "non-event" or "small event."</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Redundancy</div><h2>The Cheapest Reliability Win</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>N+1 instances</strong> for every critical component. Two app servers, two database nodes, two of everything.</li>
+        <li><strong>Multi-AZ</strong> for cloud workloads. Cheap, transparent, defends against datacenter-level events.</li>
+        <li><strong>Multi-region</strong> for the rare strategic case. Expensive, complex, only for systems that can't tolerate a region outage.</li>
+        <li><strong>Stateless app instances</strong> are infinitely cloneable. State is the part that takes care.</li>
+        <li><strong>Independent failure domains.</strong> Two replicas on the same host, in the same AZ, with the same dependencies isn't redundancy — it's a single point of failure with extra cost.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Patterns</div><h2>Building Blocks of Resilient Systems</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Health checks &amp; load balancers</summary>
+        <div class="drill-body">
+          <p>The LB checks each backend; failing instances are removed from rotation automatically. Pair with separate <strong>liveness</strong>, <strong>readiness</strong>, and <strong>startup</strong> probes when running on Kubernetes — they answer different questions.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Timeouts everywhere</summary>
+        <div class="drill-body">
+          <p>Every network call has a deadline. Without them, a single slow downstream becomes a thread-pool exhaustion outage. Default to short timeouts; lengthen consciously.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Retries with exponential backoff &amp; jitter</summary>
+        <div class="drill-body">
+          <p>Retry transient failures. Bounded attempts. Jittered delays so retries don't synchronize and stampede. Distinguish retryable vs terminal errors at the source.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Circuit breakers</summary>
+        <div class="drill-body">
+          <p>After N failures, stop calling the bad downstream for a cool-down window. Lets it recover instead of being beaten while down.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Bulkheads</summary>
+        <div class="drill-body">
+          <p>Isolate resource pools — thread pools, connection pools, rate-limit buckets — so one tenant or feature can't starve another. The shipping metaphor: water in one compartment doesn't sink the whole boat.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Graceful degradation</summary>
+        <div class="drill-body">
+          <p>When something fails, serve a worse but useful response. Search down → show recent items. Recommendations down → show defaults. <em>Some</em> answer is much better than a 500.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Idempotency &amp; the outbox pattern</summary>
+        <div class="drill-body">
+          <p>Retries are safe only if handlers are idempotent. The outbox pattern (write event + business state in one DB transaction; publish later) makes "publish or roll back" atomic.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Backpressure &amp; load shedding</summary>
+        <div class="drill-body">
+          <p>When you can't keep up, reject early at the edge. Rate limit per tenant; drop low-priority work first; surface 429s clients can respect.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Blast Radius</div><h2>Limit What One Failure Can Take Down</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Cellular architecture / shuffle sharding.</strong> Partition users into independent cells. A bad deploy or a noisy tenant is contained to one cell.</li>
+        <li><strong>Independent services for unrelated features.</strong> A bug in the analytics path shouldn't take down the redirect path.</li>
+        <li><strong>Asynchronous boundaries.</strong> Decouple via queues so downstream pain doesn't propagate upstream.</li>
+        <li><strong>Read/write separation.</strong> Reads can keep working when writes can't (and vice versa).</li>
+        <li><strong>Feature flags.</strong> Turn off a misbehaving feature without a rollback.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Deploy Safety</div><h2>The #1 Source of Outages</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Deployments cause far more incidents than hardware. Treat them with respect.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Progressive rollouts:</strong> rolling, blue/green, canary. Catch the bad version before it hits everyone.</li>
+        <li><strong>Health gates &amp; auto-rollback.</strong> If error rate or latency cross thresholds during rollout, revert without paging.</li>
+        <li><strong>Decouple deploy from release</strong> with feature flags. Code can be in production but disabled.</li>
+        <li><strong>Database changes are special.</strong> Expand → migrate → contract; never break running code.</li>
+        <li><strong>No Friday afternoon deploys</strong> when budget is tight. The boring rule that prevents weekend pages.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Backup &amp; Recovery</div><h2>The Last Line of Defense</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Automated, tested backups.</strong> Untested backups are wishes. Restore drills monthly.</li>
+        <li><strong>Point-in-time recovery</strong> for transactional databases. RPO measured in seconds, not hours.</li>
+        <li><strong>Off-account / off-region copies.</strong> A compromised AWS account shouldn't delete its own backups.</li>
+        <li><strong>Immutable / WORM storage</strong> for critical backups (object lock). Defends against ransomware.</li>
+        <li><strong>Documented runbooks</strong> for restore. Practice them before you need them.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Operating It</div><h2>Reliability Is a Practice, Not a Property</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Define <a href="../observability/slos.html">SLOs and error budgets</a>.</strong> Reliability you can measure is reliability you can prioritize.</li>
+        <li><strong>On-call rotation</strong> with clear ownership. The team that builds it operates it.</li>
+        <li><strong>Runbooks for the top 5 alerts</strong> on every service. New on-callers shouldn't have to invent the response at 3am.</li>
+        <li><strong>Game days &amp; chaos testing.</strong> Inject failures in staging (or carefully in prod) to find latent assumptions.</li>
+        <li><strong>Blameless postmortems.</strong> Every incident → write-up → action items → tracked to completion. Without this, the same outage repeats.</li>
+        <li><strong>Reduce toil.</strong> Repeated manual interventions are bugs in disguise. Automate or eliminate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>Reliability Plan for the URL Shortener</h2></div>
+    <div class="chapter-body">
+
+      <h4>Targets</h4>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li>Redirect availability SLO 99.95% / 30 days.</li>
+        <li>Redirect latency SLO 99% &lt; 50ms / 30 days.</li>
+        <li>RTO ≤ 15 min, RPO ≤ 1 min for link metadata; clicks may lose up to 1 hour in disaster.</li>
+      </ul>
+
+      <h4 style="margin-top:14px;">Architecture</h4>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li>Two AZs; ≥ 2 stateless app instances per AZ behind a load balancer.</li>
+        <li>Postgres primary in AZ-A, hot standby in AZ-B; PITR enabled; daily off-account snapshot.</li>
+        <li>Redis with replication; service degrades to direct DB reads if Redis fails.</li>
+        <li>Click pipeline via queue with DLQ; redirect path is independent of click writes.</li>
+      </ul>
+
+      <h4 style="margin-top:14px;">Resilience patterns</h4>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li>Per-call timeouts to DB (200ms) and Redis (50ms); circuit breakers wrap both.</li>
+        <li>Edge rate limit per IP; per-tenant quotas; load shedding at &gt; 80% saturation.</li>
+        <li>Outbox + idempotent worker for click events; retries with exponential backoff + jitter.</li>
+        <li>Feature flags for risky paths (preview-fetch, abuse rules) — kill switch in &lt; 60s.</li>
+      </ul>
+
+      <h4 style="margin-top:14px;">Practice</h4>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li>Quarterly game day: kill primary DB, observe failover; kill Redis, observe degradation; partition AZs.</li>
+        <li>Monthly restore drill from off-account snapshot.</li>
+        <li>Top-5 runbooks: DB failover, Redis outage, queue backed up, deploy gone wrong, abuse spike.</li>
+        <li>Postmortem template + action-item tracker linked from every incident.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>"Reliability" without numbers.</strong> Without an SLO, "more reliable" is a feeling, not a target.</li>
+        <li><strong>Untested redundancy.</strong> Two replicas you've never failed over to are one replica.</li>
+        <li><strong>Retry storms.</strong> Naive retries amplify outages. Always add backoff + jitter + bounds.</li>
+        <li><strong>Hidden coupling.</strong> "Independent" services that share a single Redis, a single database, a single shared library version.</li>
+        <li><strong>No graceful degradation.</strong> A read-only mode beats a 500 every time.</li>
+        <li><strong>Deploys without health gates.</strong> A bad deploy with no auto-rollback turns a small bug into a long outage.</li>
+        <li><strong>One-shot fixes, no postmortem.</strong> Fix the symptom, miss the cause, watch it recur.</li>
+        <li><strong>Heroics culture.</strong> Reliability built on the same three people staying up late doesn't last.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="scalability.html">← Scalability</a>
+        <a href="../observability/slos.html">SLOs &amp; Error Budgets →</a>
+        <a href="queues.html">Message Queues →</a>
+        <a href="../devops/deployment-strategies.html">Deployment Strategies →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

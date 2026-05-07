@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SLIs, SLOs &amp; Error Budgets · Observability Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="SLIs, SLOs, SLAs and the error-budget discipline they enable. How to define reliability you can actually engineer toward." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/observability/slos.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="SLIs, SLOs &amp; Error Budgets · Observability Deep Dive" />
+<meta property="og:description" content="Define reliability as a number you can engineer toward." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/observability/slos.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="SLIs, SLOs &amp; Error Budgets · Observability Deep Dive" />
+<meta name="twitter:description" content="Define reliability as a number you can engineer toward." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Observability Deep Dive</div>
+    <h1>SLIs, SLOs &amp; Error Budgets</h1>
+    <p class="lede">"Reliable" is a feeling. <em>Measurably</em> reliable is a discipline. Service Level Objectives turn reliability into a number you can budget, alert on, and trade against feature velocity. The whole point isn't to hit 100% — it's to spend the failure you can afford on the work that matters most.</p>
+    <div class="tags"><span>SRE</span><span>Reliability</span><span>Error budget</span><span>Burn rate</span><span>SLI</span></div>
+    <a class="back" href="../../index.html#ch-observe">← Back to Observability &amp; Performance</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Three Letters</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>SLI vs SLO vs SLA</h4>
+        <ul>
+          <li><strong>SLI — Service Level Indicator:</strong> a number you measure. "Fraction of redirects served in under 50ms." Usually <em>good events ÷ valid events</em>.</li>
+          <li><strong>SLO — Service Level Objective:</strong> the target you set internally. "99.9% of redirects under 50ms over a 30-day window."</li>
+          <li><strong>SLA — Service Level Agreement:</strong> the promise you make externally, with consequences (refunds, credits) if you miss it. SLAs are looser than SLOs by design — you set yourself a tighter internal target so you have room to react.</li>
+          <li><strong>Error budget:</strong> the gap between 100% and your SLO. With a 99.9% SLO, you have a 0.1% budget — about 43 minutes of failure per 30 days.</li>
+        </ul>
+      </div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Codified by Google's SRE practice. The discipline matters more than the exact numbers.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why</div><h2>What SLOs Buy You</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>A shared definition of "working."</strong> No more "the site felt slow" arguments — the SLI either was or wasn't met.</li>
+        <li><strong>Alerts that wake you for the right reasons.</strong> You alert on <em>budget burn</em>, not on every blip.</li>
+        <li><strong>A lever for the velocity-vs-stability trade.</strong> Budget left → ship features. Budget exhausted → freeze and stabilize.</li>
+        <li><strong>A user-facing definition</strong> instead of a CPU graph. "99.9% of logins succeed under 1s" maps directly to user pain. "CPU is at 60%" doesn't.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking SLIs</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A good SLI is a fraction:</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:13px;">
+SLI = good events ÷ valid events
+</pre>
+      <p style="font-size:14px;">Define both halves carefully. "Valid events" excludes things you don't want to be on the hook for (synthetic checks, requests from blocked IPs, 4xx caused by the client). "Good events" is whatever you'd defend in a postmortem as "worked."</p>
+
+      <h4 style="margin-top:14px;">Common SLI families</h4>
+      <table>
+        <thead><tr><th>Family</th><th>Example</th><th>Where it fits</th></tr></thead>
+        <tbody>
+          <tr><td>Availability</td><td>Fraction of requests with HTTP &lt; 500.</td><td>Almost every service.</td></tr>
+          <tr><td>Latency</td><td>Fraction of requests served in &lt; 50ms.</td><td>User-facing reads.</td></tr>
+          <tr><td>Quality</td><td>Fraction of search queries returning &gt; 0 results.</td><td>Search, recommendations, ML services.</td></tr>
+          <tr><td>Freshness</td><td>Fraction of dashboards reflecting data from the last 5 minutes.</td><td>Pipelines, batch, replicas.</td></tr>
+          <tr><td>Throughput</td><td>Messages processed per minute above floor X.</td><td>Async pipelines.</td></tr>
+          <tr><td>Correctness</td><td>Fraction of orders whose total matches sum of line items.</td><td>Critical business logic.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Pick at most 2–3 SLIs per service. More than that and nobody will track them.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Picking the Number</div><h2>How High Should the SLO Be?</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">As high as users actually need — and not a tenth of a percent higher.</p>
+      <table>
+        <thead><tr><th>SLO</th><th>Allowed downtime / 30 days</th><th>Roughly equivalent to</th></tr></thead>
+        <tbody>
+          <tr><td>99%</td><td>~7h 12m</td><td>Internal tools, pre-launch betas.</td></tr>
+          <tr><td>99.5%</td><td>~3h 36m</td><td>B2B SaaS used during business hours.</td></tr>
+          <tr><td>99.9% ("three nines")</td><td>~43m 12s</td><td>Most consumer web products.</td></tr>
+          <tr><td>99.95%</td><td>~21m 36s</td><td>Critical paths in larger products.</td></tr>
+          <tr><td>99.99% ("four nines")</td><td>~4m 19s</td><td>Payments, identity providers, core infra.</td></tr>
+          <tr><td>99.999%</td><td>~26 seconds</td><td>Telecom, regulated finance. Hugely expensive.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Each extra "nine" is roughly 10× the cost. Setting SLOs higher than users need is one of the most expensive mistakes a team can make.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Error Budgets</div><h2>The Discipline That Makes SLOs Useful</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A 99.9% SLO over 30 days = 0.1% × 30d ≈ 43 minutes of "bad time" you're allowed to spend. That's your error budget.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Budget unspent → ship faster.</strong> Take risks, deploy mid-day, run experiments.</li>
+        <li><strong>Budget burning → slow down.</strong> Freeze risky changes, focus on reliability work, don't ship Friday afternoon.</li>
+        <li><strong>Budget exhausted → stop.</strong> No new features until the SLO recovers. Sounds extreme; works.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">This is the trade product and engineering should be making consciously. Without an error budget the conversation devolves into "ship faster" vs "be more careful" with no shared language.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Alerting</div><h2>Burn-Rate Alerts Beat Threshold Alerts</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Old-school alerts trip on "error rate &gt; 1% for 5 minutes" — too sensitive at midnight, too slow during a real outage. Multi-window, multi-burn-rate alerts solve this.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Burn rate</strong> = how fast you're spending the error budget right now. <code>1×</code> = on track to exhaust the budget exactly at the end of the window. <code>10×</code> = blowing through it ten times faster.</li>
+        <li><strong>Fast-burn alert</strong> (page now): e.g., 14× burn over 1 hour <em>and</em> 5 minutes. Catches major outages quickly with low false-positive rate.</li>
+        <li><strong>Slow-burn alert</strong> (ticket, not page): e.g., 1× burn over 6 hours <em>and</em> 30 minutes. Catches creeping degradation.</li>
+        <li><strong>Two windows</strong> in each alert keep you from paging on a single noisy minute.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">The Google SRE workbook's burn-rate table is the canonical reference here. Most observability platforms (Datadog, Grafana, Honeycomb, Nobl9) ship SLO + burn-rate alerts as a first-class feature.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Pitfalls</div><h2>Ways Teams Get SLOs Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Aspirational SLOs.</strong> 99.99% on a service that historically does 99.5%. You'll spend forever in alarm and learn to ignore the alerts.</li>
+        <li><strong>SLOs nobody owns.</strong> If the team doesn't sign off, they'll quietly disregard them. Co-own with product.</li>
+        <li><strong>Measuring the wrong thing.</strong> CPU is not user pain. Pick SLIs from the user's perspective.</li>
+        <li><strong>Symmetric SLOs across endpoints.</strong> Your healthcheck doesn't need 99.99% — your checkout does.</li>
+        <li><strong>No budget policy.</strong> "Stop and stabilize" only works if it's pre-agreed with leadership.</li>
+        <li><strong>Including planned maintenance in the SLI.</strong> Either exclude it, or accept the budget hit consciously.</li>
+        <li><strong>Forgetting to review.</strong> SLOs need to age — what was right last year might be too loose or too strict now.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>SLOs for the URL Shortener</h2></div>
+    <div class="chapter-body">
+
+      <h4>SLI 1 — Redirect availability</h4>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+good_events  = count(http_requests{path="/:code", status &lt; 500})
+valid_events = count(http_requests{path="/:code"})
+SLI          = good_events / valid_events
+SLO          = 99.95% over 30 days  → ~21 minutes of budget
+</pre>
+
+      <h4 style="margin-top:14px;">SLI 2 — Redirect latency</h4>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+good_events  = count(http_requests{path="/:code", duration_ms &lt; 50})
+valid_events = count(http_requests{path="/:code"})
+SLI          = good_events / valid_events
+SLO          = 99% of redirects &lt; 50ms over 30 days
+</pre>
+
+      <h4 style="margin-top:14px;">SLI 3 — Click-event freshness</h4>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+good_events  = count(clicks where now() - occurred_at &lt; 5min)
+valid_events = count(clicks)
+SLI          = good_events / valid_events
+SLO          = 99% of clicks visible in stats within 5 minutes
+</pre>
+
+      <h4 style="margin-top:14px;">Error-budget policy</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>&gt; 50% budget remaining: normal operations; experiment freely.</li>
+        <li>&lt; 50% budget remaining: code freeze on risky changes; reliability is the next sprint's #1 priority.</li>
+        <li>Budget exhausted: feature freeze. The next deploy must be a reliability fix.</li>
+        <li>Burn-rate page: 14× burn over 1h + 5min. Burn-rate ticket: 1× burn over 6h + 30min.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Operationalizing</div><h2>Make It Stick</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px;line-height:1.7;">
+        <li>Pick 2–3 SLIs per service from a user perspective.</li>
+        <li>Ship them as Prometheus / OTel metrics with stable labels — these become your SLO definitions.</li>
+        <li>Set conservative initial SLOs based on <em>past 30 days</em> of data, not aspiration.</li>
+        <li>Build one dashboard per service: SLI value, SLO target, budget remaining, burn rate.</li>
+        <li>Wire up burn-rate alerts (fast + slow). Delete legacy threshold alerts that overlap.</li>
+        <li>Write the budget policy down. Get product + leadership agreement.</li>
+        <li>Review SLOs quarterly. Tighten where you've earned it, loosen where users don't care.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="metrics.html">← Metrics</a>
+        <a href="logging.html">Logging →</a>
+        <a href="tracing.html">Tracing →</a>
+        <a href="alerting.html">Alerting →</a>
+        <a href="performance.html">Performance →</a>
+        <a href="../../index.html#ch-observe">↑ Back to Observability</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

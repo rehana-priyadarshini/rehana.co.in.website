@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Authorization · Security Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Authorization — deciding what an authenticated user is allowed to do. RBAC, ABAC, ReBAC, ownership checks, and the patterns that keep them honest." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/authorization.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Authorization · Security Deep Dive" />
+<meta property="og:description" content="Deciding what an authenticated user is allowed to do." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/authorization.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Authorization · Security Deep Dive" />
+<meta name="twitter:description" content="Deciding what an authenticated user is allowed to do." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Security Deep Dive</div>
+    <h1>Authorization — What Are You Allowed to Do?</h1>
+    <p class="lede">Authentication tells you <em>who</em> the request is from. Authorization decides <em>what</em> they're allowed to do. It's the layer where most real-world breaches happen — usually because some endpoint forgot to check.</p>
+    <div class="tags"><span>RBAC</span><span>ABAC</span><span>ReBAC</span><span>Least Privilege</span><span>Policies</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Subject:</strong> who is acting (user, service account, API client).</li>
+          <li><strong>Resource:</strong> what they're acting on (a link, an order, a tenant).</li>
+          <li><strong>Action:</strong> what they're trying to do (read, update, delete, share).</li>
+          <li><strong>Policy:</strong> the rule that decides whether <em>subject</em> may perform <em>action</em> on <em>resource</em>.</li>
+          <li><strong>Least privilege:</strong> grant the minimum permissions needed; nothing more.</li>
+          <li><strong>Default deny:</strong> if no rule explicitly allows it, reject.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Models</div><h2>Three Ways to Think About Permissions</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Model</th><th>Decisions based on…</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>RBAC</strong> — Role-Based</td><td>The user's role(s): admin, editor, viewer.</td><td>Most apps. Simple, auditable, easy to reason about.</td></tr>
+          <tr><td><strong>ABAC</strong> — Attribute-Based</td><td>Attributes of subject, resource, and environment (tenant, time, IP, sensitivity).</td><td>Complex enterprise rules ("editors can publish during business hours from corp IPs").</td></tr>
+          <tr><td><strong>ReBAC</strong> — Relationship-Based</td><td>Graph relationships ("is this user a member of the team that owns this doc?").</td><td>Sharing-heavy apps — Google Docs, GitHub. Inspired by Google's Zanzibar.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">In practice, mature systems blend all three: RBAC for coarse roles, ABAC for context, ReBAC for sharing.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">RBAC in Practice</div><h2>Roles, Permissions, and the Trap</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Permissions are verbs on resources:</strong> <code>link:read</code>, <code>link:delete</code>, <code>user:invite</code>.</li>
+        <li><strong>Roles bundle permissions.</strong> <code>editor</code> = read + create + update.</li>
+        <li><strong>Users have roles</strong> (often per-tenant). Avoid one global role per user — that's how you end up with "support engineer" who needs prod access in one tenant only.</li>
+        <li><strong>The trap:</strong> proliferation. After a few years you have 47 overlapping roles nobody can audit. Periodically review and consolidate.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where to Check</div><h2>Layers of Authorization</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Edge / API gateway</summary>
+        <div class="drill-body">
+          <p>Coarse checks: is the token valid, does it have the required scope, is the rate limit OK. Cheap and fast — keeps obvious garbage out.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Application / route</summary>
+        <div class="drill-body">
+          <p>"Is this user allowed to call this endpoint at all?" — usually role-based middleware. Easy to centralize, easy to bypass if you skip it.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Object-level (the critical one)</summary>
+        <div class="drill-body">
+          <p>"Is this user allowed to act on <em>this specific record</em>?" Skipping this is the #1 OWASP issue: <a href="broken-access-control.html">Broken Access Control →</a>.</p>
+          <p>An "editor" role doesn't mean "edit any link" — it means "edit links you own." Always check ownership/relationship at the object level.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Data layer</summary>
+        <div class="drill-body">
+          <p>Last line of defense. Postgres <strong>row-level security (RLS)</strong> or per-tenant DB schemas keep the wrong rows from leaving the server even if a query forgets a <code>WHERE owner_id = ?</code>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Vulnerabilities</div><h2>Three Bugs You Will Write Eventually</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>IDOR — Insecure Direct Object Reference</summary>
+        <div class="drill-body">
+          <p><code>GET /api/links/42</code> returns link 42 to anyone who knows the URL — no ownership check. The attacker just iterates IDs.</p>
+          <p><strong>Fix:</strong> always join on <code>owner_id = current_user_id</code> in the query. Use unguessable IDs (UUID v7, ULID) as defense in depth, never as the only defense.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Privilege escalation via mass assignment</summary>
+        <div class="drill-body">
+          <p><code>PATCH /users/me {"role": "admin"}</code> — and the framework happily writes <code>role</code> because it's a column on the model.</p>
+          <p><strong>Fix:</strong> explicit allow-lists of fields per endpoint. Never deserialize directly into the entity.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Forgotten checks on side-doors</summary>
+        <div class="drill-body">
+          <p>The main UI checks ownership. The CSV export endpoint, the GraphQL field resolver, the admin-only debug route — all written by different people, all forgot.</p>
+          <p><strong>Fix:</strong> centralize the policy. Have one <code>can(user, action, resource)</code> function and call it everywhere. Add an integration test for every endpoint.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Centralizing Policy</div><h2>Policy Engines &amp; Policy-as-Code</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">When rules get complex, scattering them through controllers is a maintenance disaster. Move policies into a dedicated layer.</p>
+      <table>
+        <thead><tr><th>Tool</th><th>What it offers</th></tr></thead>
+        <tbody>
+          <tr><td>OPA / Rego</td><td>General-purpose policy language; runs as a sidecar or library. Defacto standard.</td></tr>
+          <tr><td>Cedar</td><td>AWS-developed policy language; designed for ABAC + RBAC blends.</td></tr>
+          <tr><td>OpenFGA / Permify / Authzed (SpiceDB)</td><td>Zanzibar-style ReBAC stores. Model permissions as a graph.</td></tr>
+          <tr><td>Casbin / Oso</td><td>Embeddable libraries — policies live alongside your code.</td></tr>
+          <tr><td>Postgres RLS</td><td>Row-level security in the database itself. Underrated default for multi-tenant apps.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">You don't need a policy engine on day one. You do need a single function the whole codebase calls.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Authorization Layer</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">A small policy with three roles, ownership checks, and a rate-limited anonymous quota.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+// One function. Call it everywhere.
+function can(user, action, link) {
+  if (action === 'link:read') return true;          // public redirects
+  if (!user) return false;                          // everything else needs auth
+
+  if (user.role === 'admin') return true;           // admins can do anything
+
+  if (action === 'link:create')  return true;       // any user can create
+  if (action === 'link:delete' || action === 'link:update')
+    return link.owner_id === user.id;               // ownership check
+
+  return false;                                     // default deny
+}
+
+// Usage in the route handler
+app.delete('/links/:code', requireAuth, async (req, res) =&gt; {
+  const link = await db.findLinkByCode(req.params.code);
+  if (!link) return res.sendStatus(404);
+  if (!can(req.user, 'link:delete', link)) return res.sendStatus(403);
+  await db.deleteLink(link.id);
+  res.sendStatus(204);
+});
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Pair this with a Postgres policy: <code>CREATE POLICY links_owner ON links USING (owner_id = current_setting('app.user_id')::bigint);</code>. Now even a query bug can't leak someone else's links.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Testing It</div><h2>How to Know It Works</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Negative tests are mandatory.</strong> For every endpoint, write "user A cannot access user B's resource" — and watch it fail before you fix it.</li>
+        <li><strong>Tabletop the matrix.</strong> Roles × actions × resource states. Spot-check the surprising cells.</li>
+        <li><strong>Audit logs:</strong> log every authorization decision (allow + deny). You'll need them after an incident.</li>
+        <li><strong>Periodic review:</strong> dump the role/permission graph quarterly. Look for "admin-equivalent" roles you didn't intend.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="authentication.html">← Authentication</a>
+        <a href="broken-access-control.html">Broken Access Control →</a>
+        <a href="oauth.html">OAuth 2.0 →</a>
+        <a href="owasp.html">OWASP Top 10 →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

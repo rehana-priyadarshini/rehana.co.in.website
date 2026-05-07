@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Authentication · Security Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Authentication — proving who someone is. Passwords, hashing, MFA, sessions, tokens, and the failure modes that put users at risk." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/authentication.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Authentication · Security Deep Dive" />
+<meta property="og:description" content="Proving who someone is — and how we get it wrong." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/authentication.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Authentication · Security Deep Dive" />
+<meta name="twitter:description" content="Proving who someone is — and how we get it wrong." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Security Deep Dive</div>
+    <h1>Authentication — Proving Who You Are</h1>
+    <p class="lede">Authentication answers a single question: <em>is this request really from the person it claims to be?</em> Get it wrong and nothing else in your security model matters. Get it right and most of your users will never notice it exists.</p>
+    <div class="tags"><span>Passwords</span><span>Hashing</span><span>MFA</span><span>Sessions</span><span>Tokens</span><span>OIDC</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Authentication (AuthN):</strong> establishing identity. Different from authorization (what you can do).</li>
+          <li><strong>Factors:</strong> something you <em>know</em> (password), <em>have</em> (phone, key), <em>are</em> (fingerprint).</li>
+          <li><strong>Multi-factor (MFA):</strong> require at least two different factor types.</li>
+          <li><strong>Session:</strong> a server-side record of "this browser is logged in as user X".</li>
+          <li><strong>Token:</strong> a signed credential the client carries (e.g., JWT) — server verifies the signature, no DB lookup needed.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Passwords</div><h2>Storing Them Without Regret</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Never store plaintext.</strong> Never. Not even temporarily.</li>
+        <li><strong>Hash with a slow, salted algorithm.</strong> In 2026 the defaults are <strong>argon2id</strong>, <strong>bcrypt</strong> (cost ≥ 12), or <strong>scrypt</strong>. Don't use MD5, SHA-1, or plain SHA-256 — they're built to be fast, which is the opposite of what you want.</li>
+        <li><strong>Salt is per-password</strong> and stored alongside the hash. Modern libraries handle this for you.</li>
+        <li><strong>Pepper</strong> (a server-side secret added before hashing) is optional defense in depth.</li>
+        <li><strong>Re-hash on login</strong> if your cost factor or algorithm has been upgraded — users get the upgrade transparently.</li>
+        <li><strong>Check against breach corpora.</strong> Use Have I Been Pwned's k-anonymity API to reject known-leaked passwords.</li>
+        <li><strong>Length over complexity.</strong> NIST 800-63B recommends 8+ chars, no forced rotation, no composition rules.</li>
+      </ul>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+// Node — argon2id
+import argon2 from 'argon2';
+
+const hash   = await argon2.hash(password, { type: argon2.argon2id });
+const valid  = await argon2.verify(storedHash, password);
+</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">MFA</div><h2>The Single Highest-Impact Control</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Factor</th><th>Strength</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>SMS code</td><td>Weak</td><td>Vulnerable to SIM swap. Better than nothing — barely.</td></tr>
+          <tr><td>TOTP (authenticator apps)</td><td>Strong</td><td>Phishable but solid baseline. Free, no hardware.</td></tr>
+          <tr><td>Push notification</td><td>Strong</td><td>UX-friendly; "MFA fatigue" attacks are real — require number-matching.</td></tr>
+          <tr><td>WebAuthn / Passkey</td><td>Strongest</td><td>Phishing-resistant. The future. <a href="passkeys.html">See passkeys deep dive →</a></td></tr>
+          <tr><td>Hardware token (YubiKey)</td><td>Strongest</td><td>WebAuthn implementation in physical form.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">If you ship one auth feature this quarter, ship MFA. <a href="mfa.html">MFA deep dive →</a></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Sessions vs Tokens</div><h2>Two Models, Different Tradeoffs</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Server-side sessions</summary>
+        <div class="drill-body">
+          <p>Login creates a server record; the browser holds a random opaque session ID in an <code>HttpOnly Secure SameSite</code> cookie. Every request looks up the session.</p>
+          <p><strong>Pros:</strong> easy invalidation (delete the row), small cookie, no leaking claims to the client. <strong>Cons:</strong> requires sticky sessions or shared session store (Redis).</p>
+          <p>Default for traditional web apps. Boring in the good way.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>JWT / signed tokens</summary>
+        <div class="drill-body">
+          <p>Login mints a signed token containing claims (user ID, roles, expiry). Server verifies the signature on each request — no DB lookup.</p>
+          <p><strong>Pros:</strong> stateless, easy across services. <strong>Cons:</strong> can't be revoked before expiry without an extra denylist; claims are world-readable; choosing the wrong algorithm or library has burned many teams.</p>
+          <p>Use short expiries (5–15 min) plus a refresh token. Never put sensitive data in the payload — it's signed, not encrypted. <a href="jwt.html">JWT deep dive →</a></p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Cookies — get the flags right</summary>
+        <div class="drill-body">
+          <ul>
+            <li><strong><code>HttpOnly</code></strong> — JS can't read it (XSS mitigation).</li>
+            <li><strong><code>Secure</code></strong> — only sent over HTTPS.</li>
+            <li><strong><code>SameSite=Lax</code></strong> (or <code>Strict</code>) — CSRF mitigation. <a href="csrf.html">CSRF deep dive →</a></li>
+            <li><strong><code>__Host-</code> prefix</strong> — locks the cookie to its origin.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Federated Auth</div><h2>Don't Build It If You Don't Have To</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">For most apps, the right answer is <em>delegate</em>. Use OIDC against Google/Microsoft/Apple, or a managed provider (Auth0, Clerk, Cognito, Authentik), and inherit decades of someone else's hard-won security work.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong><a href="oidc.html">OpenID Connect (OIDC)</a></strong> — modern federated auth on top of OAuth 2.0.</li>
+        <li><strong><a href="oauth.html">OAuth 2.0</a></strong> — delegated <em>authorization</em>; OIDC adds the auth piece.</li>
+        <li><strong><a href="saml.html">SAML</a></strong> — older, XML-based; still common in enterprise SSO.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Whole Lifecycle</div><h2>It's More Than Login</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Signup:</strong> verify email before granting full access; rate-limit by IP and email.</li>
+        <li><strong>Login:</strong> generic error messages ("invalid credentials") — never reveal whether the email exists.</li>
+        <li><strong>Brute-force protection:</strong> exponential backoff, account lockout after N attempts, CAPTCHA when suspicious.</li>
+        <li><strong>Password reset:</strong> single-use, short-lived, signed token sent via email. Invalidate active sessions on reset.</li>
+        <li><strong>Email change:</strong> require re-auth + send confirmation to the <em>old</em> address — common account-takeover vector.</li>
+        <li><strong>Logout:</strong> destroy the session server-side; clear the cookie. For JWT, add to denylist or shorten TTL.</li>
+        <li><strong>Session listing:</strong> let users see active sessions and revoke them.</li>
+        <li><strong>Suspicious-login alerts:</strong> notify on new device / new country.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>Where Auth Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Rolling your own crypto.</strong> Use a vetted library. Always.</li>
+        <li><strong>Timing-unsafe comparisons.</strong> Use constant-time compare for tokens and password hashes.</li>
+        <li><strong>JWT <code>alg: none</code> / algorithm confusion.</strong> Pin the algorithm server-side.</li>
+        <li><strong>Long-lived tokens with no revocation.</strong> Painful when an account is compromised.</li>
+        <li><strong>Logging credentials or tokens.</strong> Scrub before they hit your log pipeline.</li>
+        <li><strong>Leaking via account-existence oracles.</strong> "Email already in use" on signup, different timing on login — both leak who has accounts.</li>
+        <li><strong>Skipping rate limits.</strong> Credential-stuffing is automated; without limits, you'll be tested daily.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">See also: <a href="broken-authentication.html">Broken Authentication (OWASP) →</a></p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Login Flow</h2></div>
+    <div class="chapter-body">
+      <ol style="font-size:14px;line-height:1.7;">
+        <li>User submits email + password over HTTPS.</li>
+        <li>Server fetches the user row by lowercased email.</li>
+        <li><code>argon2.verify(row.password_hash, password)</code> — constant-time.</li>
+        <li>If valid, mint a 15-minute access JWT and a 30-day refresh token (stored hashed in DB so it can be revoked).</li>
+        <li>Set both as <code>HttpOnly Secure SameSite=Lax</code> cookies, prefixed <code>__Host-</code>.</li>
+        <li>Increment a per-IP failed-login counter on failure; lock after 10 attempts/5 min.</li>
+        <li>Audit-log: user ID, IP, user-agent, success/failure.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="authorization.html">Authorization →</a>
+        <a href="mfa.html">MFA →</a>
+        <a href="passkeys.html">Passkeys →</a>
+        <a href="jwt.html">JWT →</a>
+        <a href="owasp.html">OWASP Top 10 →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

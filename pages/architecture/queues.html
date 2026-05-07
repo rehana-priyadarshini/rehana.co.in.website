@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Message Queues · Architecture Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Message queues — push slow, risky, or bursty work off the request path. Producers, consumers, brokers, delivery semantics, retries, and the failure modes that bite." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/queues.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Message Queues · Architecture Deep Dive" />
+<meta property="og:description" content="Push slow work off the request path — without losing it." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/queues.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Message Queues · Architecture Deep Dive" />
+<meta name="twitter:description" content="Push slow work off the request path — without losing it." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architecture Deep Dive</div>
+    <h1>Message Queues — Decoupling Producers from Consumers</h1>
+    <p class="lede">A queue is a buffer with semantics. Producers drop work in; consumers pull it out at their own pace. The result is a system that absorbs spikes, survives consumer outages, and stays responsive under load — provided you understand the failure modes you're now opting into.</p>
+    <div class="tags"><span>Async</span><span>Brokers</span><span>Delivery semantics</span><span>Retries</span><span>DLQ</span><span>Idempotency</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Producer:</strong> the code that publishes a message.</li>
+          <li><strong>Consumer / worker:</strong> the code that processes it.</li>
+          <li><strong>Broker:</strong> the system in the middle that holds messages durably (Redis, RabbitMQ, Kafka, SQS…).</li>
+          <li><strong>Queue vs topic:</strong> a queue delivers each message to one consumer; a topic broadcasts to many subscribers.</li>
+          <li><strong>Backlog:</strong> messages waiting to be processed. Watch this number — it's the most honest signal you have.</li>
+          <li><strong>DLQ (dead-letter queue):</strong> a side queue for messages that keep failing — for human inspection.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Why</div><h2>What Queues Are Good For</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Decoupling latency.</strong> A user-facing redirect shouldn't wait on geo-IP enrichment or analytics writes.</li>
+        <li><strong>Absorbing spikes.</strong> The producer side can briefly exceed consumer capacity; the queue acts as a buffer.</li>
+        <li><strong>Tolerating outages.</strong> If the worker is down, work piles up and drains when it returns — no data lost.</li>
+        <li><strong>Smoothing variable work.</strong> Sending an email takes 50–5000ms. Don't make every web request pay that.</li>
+        <li><strong>Fan-out.</strong> One event, many independent consumers — analytics, search index, billing, notifications.</li>
+        <li><strong>Scheduled / delayed work.</strong> "Send a reminder in 24 hours."</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Choices</div><h2>Brokers, Briefly</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Broker</th><th>Sweet spot</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Redis (BullMQ, Sidekiq, RQ, Celery+Redis)</td><td>App-level job queues, low setup cost.</td><td>Already in your stack as a cache; fine for moderate volume; durability is "good enough" with AOF.</td></tr>
+          <tr><td>RabbitMQ</td><td>Classic AMQP queues, complex routing.</td><td>Mature, flexible, exchange/binding model. Single-broker mental model.</td></tr>
+          <tr><td>Kafka / Redpanda</td><td>High-throughput event streams, replay.</td><td>Log, not a queue. Consumers track their own offsets. Great for analytics, painful as a generic job queue.</td></tr>
+          <tr><td>AWS SQS / GCP Pub/Sub / Azure Service Bus</td><td>Managed, infinite-scale, pay per message.</td><td>No ops; visibility timeouts and DLQs built in. Vendor lock comes with the convenience.</td></tr>
+          <tr><td>NATS / NATS JetStream</td><td>Low-latency messaging with optional persistence.</td><td>Lightweight, fast, increasingly popular for microservices.</td></tr>
+          <tr><td>Postgres-as-a-queue (e.g., River, Graphile Worker)</td><td>Small/mid teams already on Postgres.</td><td>Transactional with your DB; one less moving part. Has clear scale ceiling but it's surprisingly high.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Default for small teams: Postgres-as-a-queue or Redis-backed. Reach for Kafka when you need replay/streaming, not just async jobs.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Semantics</div><h2>How Often Does a Message Get Processed?</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Guarantee</th><th>Meaning</th><th>Reality</th></tr></thead>
+        <tbody>
+          <tr><td>At-most-once</td><td>0 or 1 deliveries.</td><td>Cheap. Fine for fire-and-forget telemetry; unsafe for anything you can't lose.</td></tr>
+          <tr><td>At-least-once</td><td>1 or more deliveries.</td><td>The pragmatic default. Combine with idempotent handlers and you've got "effectively once".</td></tr>
+          <tr><td>Exactly-once</td><td>Exactly 1 delivery.</td><td>Distributed-systems folklore. True end-to-end exactly-once is rare and expensive; usually you build it from at-least-once + idempotency.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">The right phrase isn't "exactly-once delivery", it's "exactly-once <em>effect</em>" — and you achieve it by making handlers idempotent, not by tuning the broker.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Idempotency</div><h2>The Most Important Property of a Worker</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">If processing the same message twice produces the same outcome as processing it once, you're idempotent. If not, every retry is a potential bug.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Use a stable message ID.</strong> Producer assigns it; persist it on the consumer side.</li>
+        <li><strong>De-dupe by ID.</strong> A unique constraint on <code>processed_messages(message_id)</code> is often enough.</li>
+        <li><strong>Make state changes conditional.</strong> <code>UPDATE … WHERE status = 'pending'</code> beats unconditional writes.</li>
+        <li><strong>Outbound side-effects need care.</strong> Hitting a third-party API twice is the kind of bug that goes undetected until accounting calls.</li>
+        <li><strong>Use the broker's de-dup window</strong> if available (SQS FIFO, Kafka exactly-once producers) — but treat it as defense in depth, not the design.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Retries</div><h2>Failing Gracefully</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Retry transient failures, not bugs.</strong> A network blip, a database deadlock, a 503 from a downstream — yes. A <code>NullPointerException</code> on the same input — no, that's a poison message.</li>
+        <li><strong>Exponential backoff with jitter.</strong> 1s, 2s, 4s, 8s, ± random. Avoids thundering herds against the same downstream.</li>
+        <li><strong>Bounded attempts.</strong> After N tries, send to the DLQ. Don't loop forever.</li>
+        <li><strong>Visibility timeouts</strong> (SQS, Redis) keep a message hidden while a worker holds it; if the worker dies, it reappears. Pick a value comfortably larger than your p99 handler time.</li>
+        <li><strong>Distinguish retryable vs terminal errors</strong> in your handler. Throwing a <code>NonRetryable</code> error should bypass retries and go straight to DLQ.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">DLQs</div><h2>Where Bad Messages Go to Wait for a Human</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Every queue should have a DLQ. No exceptions.</li>
+        <li>DLQ depth is an alertable metric — a non-zero DLQ usually means a recent code change broke something.</li>
+        <li>Build a tool to <strong>replay</strong> DLQ messages after a fix. Manual replays from the broker UI don't scale.</li>
+        <li>Capture the failure reason alongside the message — handler exceptions, downstream errors, timeouts.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Ordering &amp; Concurrency</div><h2>Pick Two of Three: Order, Throughput, Simplicity</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Order is expensive.</strong> Strict ordering means a single consumer per partition/key. Throughput is bounded by that.</li>
+        <li><strong>Partition by a key</strong> (user ID, tenant ID) so that <em>per-key</em> order is preserved while you scale across keys. Kafka, SQS FIFO, and most modern brokers support this.</li>
+        <li><strong>Concurrency caps</strong> per consumer — both globally and per key — protect downstreams.</li>
+        <li><strong>Most jobs don't need ordering.</strong> Don't pay for it if you don't need it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Reliable Publishing</div><h2>The Outbox Pattern</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Publishing to a queue and writing to a database are two separate operations. If the broker is unavailable after the DB commit, you've silently lost the event. The fix:</p>
+      <ol style="font-size:14px;line-height:1.7;">
+        <li>Write the message into an <code>outbox</code> table in the same DB transaction as your business write.</li>
+        <li>A separate process reads new outbox rows and publishes them to the broker.</li>
+        <li>On successful publish, mark the row sent (or delete it).</li>
+      </ol>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:6px;">Now your business write and your "intent to publish" are atomic. The publisher can crash and recover without losing events.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Observability</div><h2>What to Watch</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Backlog depth</strong> per queue — flat or growing?</li>
+        <li><strong>Age of the oldest message</strong> — better tail metric than depth alone.</li>
+        <li><strong>Throughput</strong> (msgs/sec in vs out) and per-message latency p50/p95/p99.</li>
+        <li><strong>Error rate</strong> by error class; <strong>retry rate</strong>.</li>
+        <li><strong>DLQ size</strong> — alert on any non-zero value during steady state.</li>
+        <li><strong>Trace context propagation</strong> — pass the OpenTelemetry trace ID through the message so async work shows up in your distributed traces.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>The URL Shortener Click Pipeline</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Every redirect publishes a click event to a queue. A worker enriches it (geo-IP, UA parsing) and writes to the <code>clicks</code> table. The redirect itself never waits for the write.</p>
+<pre style="background:#0A2A43;color:#CADCFC;padding:14px;border-radius:8px;font-size:12.5px;line-height:1.5;overflow-x:auto;">
+// Producer — on the redirect path
+async function redirect(req, res, link) {
+  res.redirect(302, link.target_url);                  // user gets out fast
+
+  // Fire-and-forget enqueue (with outbox in real life)
+  await queue.add('click', {
+    id:         crypto.randomUUID(),                   // stable message ID
+    link_id:    link.id,
+    occurred_at: new Date().toISOString(),
+    ip:         req.ip,
+    ua:         req.get('user-agent'),
+    referrer:   req.get('referer') ?? null
+  }, { attempts: 5, backoff: { type: 'exponential', delay: 1000 } });
+}
+
+// Consumer
+worker.process('click', async (job) =&gt; {
+  const m = job.data;
+
+  // Idempotency: unique index on (message_id) absorbs duplicates
+  const inserted = await db.insertClickIfNew(m.id, m);
+  if (!inserted) return;                               // already processed
+
+  const enriched = await enrich(m);                    // geo, UA parsing
+  await db.upsertClickEnrichment(m.id, enriched);
+});
+
+// DLQ alarm: queue 'click:dead' depth &gt; 0 for 5 minutes → page on-call
+</pre>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Notice: redirect latency is unaffected by analytics; duplicates are absorbed; failures retry with backoff and end up in a DLQ if they don't succeed; trace ID would be propagated in a real implementation.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Pitfalls</div><h2>Lessons Paid For in Pages</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Non-idempotent handlers.</strong> One retry charges the customer twice.</li>
+        <li><strong>No DLQ.</strong> Poison messages loop forever, eat capacity, hide other work.</li>
+        <li><strong>Visibility timeout shorter than handler time.</strong> Two workers process the same message in parallel. Surprise.</li>
+        <li><strong>Synchronous publish in the request path.</strong> Broker hiccup → user-facing 500. Use the outbox.</li>
+        <li><strong>Treating Kafka like a queue.</strong> No ack-based redelivery, offsets you have to manage, retention windows that drop messages on you.</li>
+        <li><strong>Fan-out without backpressure.</strong> One slow consumer can take the whole pipeline down.</li>
+        <li><strong>Logging the whole payload.</strong> PII in your log pipeline. Scrub.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="event-driven.html">Event-Driven Architecture →</a>
+        <a href="cqrs.html">CQRS →</a>
+        <a href="microservices.html">Microservices →</a>
+        <a href="../../index.html#ch-arch">↑ Back to Architecture</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>

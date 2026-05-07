@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Threat Modeling · Security Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Threat modeling — a structured way to ask 'what could go wrong?' before you build the thing. STRIDE, attack trees, four questions, one page of output." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/threat-modeling.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Threat Modeling · Security Deep Dive" />
+<meta property="og:description" content="Find security bugs on the whiteboard, not in production." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/threat-modeling.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Threat Modeling · Security Deep Dive" />
+<meta name="twitter:description" content="Find security bugs on the whiteboard, not in production." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Security Deep Dive</div>
+    <h1>Threat Modeling — Find the Bugs on the Whiteboard</h1>
+    <p class="lede">Threat modeling is a structured conversation about what could go wrong. Done before code, it surfaces design-level security bugs that no scanner can catch. Done well, it costs an hour and saves a quarter.</p>
+    <div class="tags"><span>STRIDE</span><span>Attack Trees</span><span>Four Questions</span><span>Trust Boundaries</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>The Four-Question Frame</h2></div>
+    <div class="chapter-body">
+      <div class="basics">
+        <h4>Adam Shostack's "four-question frame"</h4>
+        <ul>
+          <li><strong>What are we working on?</strong> Draw it. A whiteboard sketch is plenty.</li>
+          <li><strong>What can go wrong?</strong> Walk the diagram, ask "what's the worst that could happen here?"</li>
+          <li><strong>What are we going to do about it?</strong> Mitigations, accepted risks, decisions to defer.</li>
+          <li><strong>Did we do a good job?</strong> Validate later — bug bounty hits, pen-test findings, real incidents tell you.</li>
+        </ul>
+      </div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">If you remember nothing else, remember those four questions. The frameworks below are tools that help you answer them.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Step 1</div><h2>Diagram the System</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Use a Data-Flow Diagram (DFD). Five primitives is enough:</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>External entities</strong> — users, third-party services. Things you don't control.</li>
+        <li><strong>Processes</strong> — your code: API server, worker, frontend.</li>
+        <li><strong>Data stores</strong> — databases, caches, queues, S3 buckets.</li>
+        <li><strong>Data flows</strong> — arrows showing what data moves where.</li>
+        <li><strong>Trust boundaries</strong> — dotted lines wherever the level of trust changes (internet ↔ your VPC, your VPC ↔ DB subnet, your service ↔ a vendor API).</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">Most interesting threats live <em>on</em> the trust boundaries. Mark them clearly.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Step 2</div><h2>STRIDE — A Threat Per Letter</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">For every element in the diagram, walk the six STRIDE categories. Microsoft's mnemonic, still the best general-purpose checklist.</p>
+      <table>
+        <thead><tr><th>Letter</th><th>Threat</th><th>Defends</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>S</strong></td><td>Spoofing</td><td>Authentication</td><td>Attacker forges a session, replays a JWT, impersonates a service.</td></tr>
+          <tr><td><strong>T</strong></td><td>Tampering</td><td>Integrity</td><td>Modifying data in transit, in storage, or in flight (e.g., bypassing client-side validation).</td></tr>
+          <tr><td><strong>R</strong></td><td>Repudiation</td><td>Non-repudiation / Audit</td><td>User denies an action; logs are missing or unreliable.</td></tr>
+          <tr><td><strong>I</strong></td><td>Information Disclosure</td><td>Confidentiality</td><td>IDOR, verbose errors, S3 misconfig, leaky logs.</td></tr>
+          <tr><td><strong>D</strong></td><td>Denial of Service</td><td>Availability</td><td>Resource exhaustion, billion-laughs XML, slow loris, expensive query oracle.</td></tr>
+          <tr><td><strong>E</strong></td><td>Elevation of Privilege</td><td>Authorization</td><td>Mass assignment, missing role check, privilege escalation via shared key.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px;">Not every letter applies to every element — but the discipline of asking each one prevents tunnel vision.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Other Frameworks</div><h2>Beyond STRIDE</h2></div>
+    <div class="chapter-body">
+      <table>
+        <thead><tr><th>Framework</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>STRIDE</strong></td><td>Default checklist for app teams; simple, well-known.</td></tr>
+          <tr><td><strong>LINDDUN</strong></td><td>Privacy-focused (Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance). Use when GDPR-style risks dominate.</td></tr>
+          <tr><td><strong>PASTA</strong></td><td>Process for Attack Simulation &amp; Threat Analysis — heavier, business-risk-driven, suits enterprise.</td></tr>
+          <tr><td><strong>Attack Trees</strong></td><td>Pick a goal ("steal user data"), branch downward through how an attacker would achieve it. Great for high-value flows.</td></tr>
+          <tr><td><strong>MITRE ATT&amp;CK</strong></td><td>Catalog of real-world adversary tactics. Useful for ops/red-team threat modeling more than design-time.</td></tr>
+          <tr><td><strong>OWASP Threat Dragon / Microsoft Threat Modeling Tool</strong></td><td>If you want a tool. Most teams do fine with a whiteboard and a doc.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Step 3</div><h2>Mitigations &amp; Decisions</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">For each threat you find, pick one:</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Mitigate.</strong> Add a control — input validation, rate limit, RBAC check, encryption.</li>
+        <li><strong>Eliminate.</strong> Redesign the feature so the threat doesn't exist (the strongest mitigation).</li>
+        <li><strong>Transfer.</strong> Hand the risk to someone better at handling it (use a managed identity provider, not your own).</li>
+        <li><strong>Accept.</strong> Document the residual risk and who signed off. Real and legitimate — not every theoretical issue is worth fixing.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">Track decisions as ADRs. The "why we didn't fix this" record matters as much as the "what we fixed" record.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">When</div><h2>Where Threat Modeling Fits</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>New feature design.</strong> The highest-leverage moment. One hour with the design doc.</li>
+        <li><strong>Architecture changes.</strong> New service, new data store, new vendor.</li>
+        <li><strong>Trust-boundary changes.</strong> Anything that exposes a previously internal surface.</li>
+        <li><strong>Periodic review.</strong> Annually or after major releases — the system has drifted from last year's diagram.</li>
+        <li><strong>After incidents.</strong> Update the model with what you learned.</li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);">It doesn't need to be heavyweight. A 60-minute "evil brainstorm" with the team beats a 200-page document nobody reads.</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Worked Example</div><h2>Threat Model — URL Shortener Redirect Path</h2></div>
+    <div class="chapter-body">
+
+      <h4>System sketch</h4>
+      <p style="font-size:14px;">User → CDN → Redirect API → Cache (Redis) → DB (Postgres). Redirect API also fetches the target URL on creation to extract the page title (preview feature).</p>
+
+      <h4 style="margin-top:14px;">Trust boundaries</h4>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li>Internet ↔ CDN edge.</li>
+        <li>CDN ↔ Redirect API (origin).</li>
+        <li>Redirect API ↔ Redis &amp; Postgres (private subnet).</li>
+        <li>Redirect API ↔ third-party target URL (egress fetch).</li>
+      </ul>
+
+      <h4 style="margin-top:14px;">STRIDE walk (abridged)</h4>
+      <table>
+        <thead><tr><th>Element</th><th>Threat</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Create-link API</td><td><strong>S</strong> — anonymous abuse to mass-create spam links</td><td>Rate limit per IP + per anon quota; CAPTCHA over threshold; abuse domain deny-list.</td></tr>
+          <tr><td>Create-link API</td><td><strong>I</strong> — preview-fetch makes server-side requests (SSRF)</td><td>Resolve hostname; reject private/loopback/link-local; scheme allow-list (http/https); egress proxy with allow-list.</td></tr>
+          <tr><td>Redirect</td><td><strong>T</strong> — open-redirect abuse (phishing through your domain)</td><td>Show preview interstitial for low-reputation domains; deny-list known phishing/malware sources.</td></tr>
+          <tr><td>Redirect</td><td><strong>D</strong> — viral link DDoSing origin</td><td>CDN caches 302s; rate limit at edge; circuit breaker on DB; degrade to read-only on overload.</td></tr>
+          <tr><td>Stats endpoint</td><td><strong>E</strong> — IDOR: any user reads any link's stats</td><td>Ownership check; partial index keyed on owner; Postgres RLS as defense in depth.</td></tr>
+          <tr><td>Click events</td><td><strong>R</strong> — disputed clicks (analytics fraud)</td><td>Sign click events; correlate IP + UA + timestamp; rate-limit click writes per IP.</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="margin-top:14px;">Decisions</h4>
+      <ul style="font-size:14px;line-height:1.6;">
+        <li><em>Mitigate:</em> rate limit, SSRF defenses, ownership checks, CDN caching, RLS.</li>
+        <li><em>Accept:</em> sophisticated click fraud — out of scope for v1; revisit after launch metrics.</li>
+        <li><em>Transfer:</em> phishing reputation handled via a third-party domain reputation API rather than building our own.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Tips</div><h2>Make It Stick</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Time-box it.</strong> 60 minutes per feature, 2 hours for a big architecture change.</li>
+        <li><strong>Small group.</strong> 2–4 people: an engineer who knows the design, an engineer who likes breaking things, optionally security and ops.</li>
+        <li><strong>Adversarial mindset.</strong> Pretend you're the attacker. "If I owned that key, what could I do?"</li>
+        <li><strong>One page of output.</strong> Diagram + STRIDE table + decisions + owners. If it's longer, nobody re-reads it.</li>
+        <li><strong>Treat it as a living doc.</strong> Update on architecture changes; don't let it bit-rot.</li>
+        <li><strong>Don't aim for "all threats found".</strong> Aim for the high-impact ones that the team can act on this sprint.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Related Reading</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="owasp.html">OWASP Top 10 →</a>
+        <a href="secrets.html">Secrets Management →</a>
+        <a href="authorization.html">Authorization →</a>
+        <a href="secure-development.html">Secure Development →</a>
+        <a href="../../index.html#ch-security">↑ Back to Security</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
+</body>
+</html>
