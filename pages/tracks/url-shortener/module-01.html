@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 01 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 01 — set up the repo, scaffold a TypeScript HTTP server, configure linting, and write a one-page design doc." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-01.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 01 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Foundations &amp; project setup — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-01.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 01 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Foundations &amp; project setup — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 01 of 11</div>
+    <h1>Foundations &amp; Project Setup</h1>
+    <p class="lede">By the end of this tutorial you'll have a Git repo, a TypeScript HTTP server that says "hello", a working linter, a one-page design doc, and the habits that make every later module easier.</p>
+    <div class="tags"><span>~2–3 hrs</span><span>Beginner</span><span>No prior code needed</span></div>
+    <a class="back" href="../url-shortener.html#m1">← Back to Module 01 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Before You Start</div><h2>Prerequisites</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Node.js 20+</strong> — install from <a href="https://nodejs.org" style="color:var(--accent);">nodejs.org</a> or via <code>nvm</code> / <code>fnm</code> / <code>volta</code>.</li>
+        <li><strong>Git</strong> — <code>git --version</code> should print something.</li>
+        <li><strong>A GitHub account</strong> (free) and the <code>gh</code> CLI installed and authenticated, or just be ready to create a repo via the web UI.</li>
+        <li><strong>An editor</strong> — VS Code is the path of least resistance.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>A GitHub repo named <code>url-shortener</code> with <code>main</code> as the default branch.</li>
+        <li>A TypeScript Express server running locally on <code>http://localhost:3000</code>.</li>
+        <li><code>npm run lint</code> and <code>npm run dev</code> both work.</li>
+        <li>A one-page <code>docs/design.md</code> committed to the repo.</li>
+        <li>Branch protection on <code>main</code> requiring PRs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create the repo</h4>
+        <p>From an empty parent folder:</p>
+<pre>mkdir url-shortener &amp;&amp; cd url-shortener
+git init -b main
+gh repo create url-shortener --public --source=. --remote=origin
+# Or skip the gh command and create the repo via github.com later.</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git status</code> shows "On branch main".</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Initialize the Node project</h4>
+<pre>npm init -y
+npm pkg set type="module"
+npm pkg set engines.node="&gt;=20"</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>package.json</code> exists and contains <code>"type": "module"</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Install TypeScript and runtime dependencies</h4>
+<pre>npm install express
+npm install -D typescript tsx @types/node @types/express \
+              eslint @eslint/js typescript-eslint prettier</pre>
+        <div class="gotcha"><strong>Gotcha:</strong> If <code>npm install</code> hangs on a corporate network, set <code>npm config set registry https://registry.npmjs.org/</code> and try again.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Configure TypeScript</h4>
+        <p>Create <code>tsconfig.json</code>:</p>
+<pre>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]
+}</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Write the hello-world server</h4>
+        <p>Create <code>src/server.ts</code>:</p>
+<pre>import express from 'express';
+
+const app  = express();
+const port = Number(process.env.PORT ?? 3000);
+
+app.get('/health', (_req, res) =&gt; res.json({ ok: true }));
+app.get('/',       (_req, res) =&gt; res.send('URL Shortener — hello!'));
+
+app.listen(port, () =&gt; console.log(`listening on :${port}`));</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Add npm scripts</h4>
+<pre>npm pkg set scripts.dev="tsx watch src/server.ts"
+npm pkg set scripts.build="tsc"
+npm pkg set scripts.start="node dist/server.js"
+npm pkg set scripts.lint="eslint src"
+npm pkg set scripts.format="prettier --write ."</pre>
+        <p>Run it:</p>
+<pre>npm run dev</pre>
+        <div class="verify"><strong>✓ Verify:</strong> open <code>http://localhost:3000/health</code> in a browser. You should see <code>{"ok":true}</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Set up linting and formatting</h4>
+        <p>Create <code>eslint.config.js</code>:</p>
+<pre>import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+
+export default [
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  { ignores: ['dist/**', 'node_modules/**'] }
+];</pre>
+        <p>Create <code>.prettierrc.json</code>:</p>
+<pre>{ "singleQuote": true, "semi": true, "printWidth": 100 }</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm run lint</code> exits with code 0.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Add an .editorconfig and .gitignore</h4>
+        <p><code>.editorconfig</code>:</p>
+<pre>root = true
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true</pre>
+        <p><code>.gitignore</code>:</p>
+<pre>node_modules
+dist
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Write the design doc</h4>
+        <p>Create <code>docs/design.md</code> with this skeleton — keep it to one page.</p>
+<pre># URL Shortener — Design
+
+## Problem
+Users want short, shareable URLs that redirect to long ones.
+
+## Goals
+- POST /shorten → returns a short code
+- GET /:code → 302 redirects to the original URL
+- Per-user ownership of links
+- 99.95% redirect availability over 30 days
+
+## Non-goals (v1)
+- Custom domains
+- Click analytics dashboard (will arrive in module 6)
+- Mobile app
+
+## Sketch
+Client → Express → Redis (cache) → Postgres
+                ↘ Queue → Worker → clicks table
+
+## Open questions
+- ID scheme: random base62 vs hash? (decide in module 2)
+- Anonymous quota? (decide in module 5)</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 10</div>
+        <h4>Commit, push, protect</h4>
+<pre>git add .
+git commit -m "module 01: scaffold typescript express server"
+git push -u origin main</pre>
+        <p>On GitHub: <em>Settings → Branches → Add rule</em> for <code>main</code>:</p>
+        <ul style="font-size:14px;line-height:1.7;">
+          <li>Require a pull request before merging.</li>
+          <li>Require status checks to pass (we'll add the actual checks in Module 08).</li>
+          <li>Disallow direct pushes to <code>main</code>.</li>
+        </ul>
+        <div class="verify"><strong>✓ Verify:</strong> attempt <code>git push origin main</code> from a new commit on <code>main</code> directly — it should be rejected.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>"Cannot find module 'express'"</strong> — make sure you ran <code>npm install</code> after creating <code>package.json</code>.</li>
+        <li><strong>tsx not found</strong> — verify <code>npx tsx --version</code> works; if not, reinstall: <code>npm i -D tsx</code>.</li>
+        <li><strong>Port 3000 in use</strong> — set <code>PORT=3001 npm run dev</code> (or kill the other process).</li>
+        <li><strong>ESLint complains about <code>process</code></strong> — make sure <code>@types/node</code> is installed.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">You've got a clean slate. Next up: actually doing something useful with it — designing the API and shaping the database.</p>
+      <div class="nav-other">
+        <a href="../url-shortener.html#m1">← Module 01 overview</a>
+        <a href="module-02.html">Module 02 — Core API &amp; Data Modeling →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

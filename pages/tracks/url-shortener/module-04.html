@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 04 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 04 — add Redis cache-aside, jittered TTLs, negative caching, and a k6 load test that proves the latency improvement." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-04.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 04 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Caching &amp; performance — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-04.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 04 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Caching &amp; performance — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 04 of 11</div>
+    <h1>Caching &amp; Performance</h1>
+    <p class="lede">By the end of this tutorial you'll have Redis caching the redirect path with jittered TTLs and negative caching, a graceful fallback if Redis dies, and a k6 load test that proves p95 latency dropped.</p>
+    <div class="tags"><span>~3–4 hrs</span><span>Redis</span><span>Cache-aside</span><span>k6</span></div>
+    <a class="back" href="../url-shortener.html#m4">← Back to Module 04 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Before You Start</div><h2>Prerequisites</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Modules 01–03 complete with passing tests.</li>
+        <li>Docker running.</li>
+        <li><strong>k6</strong> installed (<code>brew install k6</code> / scoop / chocolatey / Linux package).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Redis running in Docker alongside Postgres.</li>
+        <li>Cache-aside reads on <code>GET /:code</code>; cache invalidation on delete.</li>
+        <li>Jittered TTLs and negative caching for 404s.</li>
+        <li>Service stays up if Redis is killed (logs the error, falls back to DB).</li>
+        <li>A <code>perf/redirect.js</code> k6 script and a <code>docs/perf/before-after.md</code> writeup with the p95 numbers.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Add Redis to docker-compose</h4>
+<pre>services:
+  # …existing db service…
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 10</pre>
+<pre>docker compose up -d redis</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>docker compose exec redis redis-cli ping</code> → <code>PONG</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Install the Redis client</h4>
+<pre>npm install ioredis</pre>
+        <p>Add to <code>.env</code> and <code>.env.example</code>:</p>
+<pre>REDIS_URL=redis://localhost:6379</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Create a cache module</h4>
+        <p>Create <code>src/cache.ts</code>:</p>
+<pre>import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+  lazyConnect: true,
+  maxRetriesPerRequest: 1,
+  enableOfflineQueue: false
+});
+redis.on('error', (e) =&gt; console.warn('redis error:', e.message));
+redis.connect().catch(() =&gt; { /* tolerate startup failure */ });
+
+const HOUR = 60 * 60;
+const jitter = (s: number) =&gt; Math.floor(s * (0.9 + Math.random() * 0.2));
+
+export async function getLink(code: string): Promise&lt;string | null | undefined&gt; {
+  try {
+    const v = await redis.get(`link:${code}`);
+    if (v === null) return undefined;     // cache miss
+    if (v === 'MISS') return null;        // negatively cached: known-404
+    return v;                              // cached hit
+  } catch { return undefined; }            // Redis down — degrade to DB
+}
+
+export async function setLinkHit(code: string, target: string) {
+  try { await redis.set(`link:${code}`, target, 'EX', jitter(HOUR)); } catch {}
+}
+
+export async function setLinkMiss(code: string) {
+  try { await redis.set(`link:${code}`, 'MISS', 'EX', 60); } catch {}
+}
+
+export async function invalidateLink(code: string) {
+  try { await redis.del(`link:${code}`); } catch {}
+}</pre>
+        <p>Notice: every Redis call is wrapped — Redis being down logs but never throws to the request handler.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Wire the cache into the redirect path</h4>
+        <p>In <code>src/app.ts</code> update the GET and DELETE handlers:</p>
+<pre>import { getLink, setLinkHit, setLinkMiss, invalidateLink } from './cache.js';
+
+app.get('/:code', async (req, res) =&gt; {
+  const { code } = req.params;
+
+  const cached = await getLink(code);
+  if (cached === null) return res.sendStatus(404);
+  if (typeof cached === 'string') return res.redirect(302, cached);
+
+  const { rows } = await pool.query(
+    'SELECT target_url FROM links WHERE code = $1', [code]
+  );
+  if (rows.length === 0) {
+    await setLinkMiss(code);
+    return res.sendStatus(404);
+  }
+  await setLinkHit(code, rows[0].target_url);
+  res.redirect(302, rows[0].target_url);
+});
+
+app.delete('/:code', async (req, res) =&gt; {
+  const result = await pool.query('DELETE FROM links WHERE code = $1', [req.params.code]);
+  await invalidateLink(req.params.code);
+  res.sendStatus(result.rowCount === 0 ? 404 : 204);
+});</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Smoke test the cache behavior</h4>
+<pre>npm run dev
+
+# Create
+curl -s -X POST http://localhost:3000/shorten \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}'   # remember the code
+
+# First request — DB miss, cache populated
+curl -s -o /dev/null -w '%{time_total}\n' http://localhost:3000/&lt;code&gt;
+
+# Second request — should be ~half the latency
+curl -s -o /dev/null -w '%{time_total}\n' http://localhost:3000/&lt;code&gt;
+
+# Confirm in Redis
+docker compose exec redis redis-cli get link:&lt;code&gt;</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Redis shows the target URL; second curl is faster than the first.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Test negative caching</h4>
+<pre>curl -i http://localhost:3000/this-does-not-exist     # 404
+docker compose exec redis redis-cli get link:this-does-not-exist
+# → "MISS" (cached for 60s)</pre>
+        <p>For the next 60 seconds, repeated 404s for this code don't hit Postgres. Watch the Postgres log to confirm.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Add an integration test for the cache path</h4>
+        <p>Append to <code>tests/api.test.ts</code>:</p>
+<pre>it('serves a redirect from cache after a warm read', async () =&gt; {
+  const r = await request(app()).post('/shorten').send({ url: 'https://example.com/cache' });
+  const code = r.body.code;
+  await request(app()).get(`/${code}`);                  // warms cache
+  const cold = await request(app()).get(`/${code}`).redirects(0);
+  expect(cold.status).toBe(302);
+  expect(cold.headers.location).toBe('https://example.com/cache');
+});</pre>
+        <p>For tests, point <code>REDIS_URL</code> at a Testcontainers Redis (mirror the Postgres pattern), or skip Redis in tests by short-circuiting <code>cache.ts</code> when <code>NODE_ENV === 'test'</code>.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Write the k6 load test</h4>
+        <p>Create <code>perf/redirect.js</code>:</p>
+<pre>import http from 'k6/http';
+import { check } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '15s', target: 50  },
+    { duration: '60s', target: 200 },
+    { duration: '15s', target: 0   }
+  ],
+  thresholds: {
+    http_req_failed:   ['rate&lt;0.01'],
+    http_req_duration: ['p(95)&lt;50']
+  }
+};
+
+const code = __ENV.CODE;
+const base = __ENV.BASE || 'http://localhost:3000';
+
+export default function () {
+  const res = http.get(`${base}/${code}`, { redirects: 0 });
+  check(res, { 'is 302': (r) =&gt; r.status === 302 });
+}</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Measure before vs after</h4>
+        <p>Disable the cache temporarily by short-circuiting <code>getLink</code> to return <code>undefined</code>, run the load test, record the numbers. Then re-enable and run again.</p>
+<pre># Create a code first
+CODE=$(curl -s -X POST http://localhost:3000/shorten \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}' | jq -r .code)
+
+# Run
+CODE=$CODE k6 run perf/redirect.js</pre>
+        <p>Capture both runs in <code>docs/perf/before-after.md</code>:</p>
+<pre># Redirect Performance — Before / After Caching
+
+| metric          | no cache | with cache |
+|-----------------|----------|------------|
+| p50 (ms)        |    XX    |     XX     |
+| p95 (ms)        |    XX    |     XX     |
+| RPS sustained   |    XX    |     XX     |
+| Postgres CPU    |    XX %  |     XX %   |</pre>
+        <div class="verify"><strong>✓ Verify:</strong> p95 with cache is comfortably below 50ms; without cache, you saturate Postgres far sooner.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 10</div>
+        <h4>Verify graceful degradation</h4>
+<pre>docker compose stop redis
+curl -i http://localhost:3000/&lt;code&gt;       # still works (slower)
+docker compose start redis</pre>
+        <p>The app should log Redis errors but keep serving traffic.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 11</div>
+        <h4>Commit</h4>
+<pre>git checkout -b module-04
+git add .
+git commit -m "module 04: redis cache-aside, jittered TTLs, k6 load test"
+git push -u origin module-04</pre>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Redis errors in tests</strong> — easiest fix is to short-circuit the cache module when <code>NODE_ENV === 'test'</code> or use Testcontainers to spin up a Redis.</li>
+        <li><strong>k6 thresholds fail</strong> — check whether your laptop is the bottleneck (low RPS, high CPU); try smaller targets or run k6 from a separate machine.</li>
+        <li><strong>Stale data after a delete</strong> — make sure you call <code>invalidateLink</code> in the DELETE handler.</li>
+        <li><strong>"Redis client is closed"</strong> — the <code>lazyConnect</code> + <code>connect()</code> pattern only connects once; if you crash and restart, give it a moment.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">The redirect path is fast and resilient. Now we make sure not just anyone can create or delete links — auth time.</p>
+      <div class="nav-other">
+        <a href="module-03.html">← Module 03</a>
+        <a href="module-05.html">Module 05 — Auth &amp; Rate Limiting →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 06 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 06 — push click events to a BullMQ queue, run a worker that writes to a clicks table, expose a stats endpoint, and add retries with a DLQ." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-06.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 06 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Analytics &amp; background jobs — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-06.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 06 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Analytics &amp; background jobs — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 06 of 11</div>
+    <h1>Analytics &amp; Background Jobs</h1>
+    <p class="lede">By the end of this tutorial you'll have a click pipeline: every redirect enqueues an event, a separate worker writes it to a <code>clicks</code> table idempotently, and <code>GET /stats/:code</code> serves aggregate counts. Failed jobs land in a DLQ.</p>
+    <div class="tags"><span>~4–6 hrs</span><span>BullMQ</span><span>Workers</span><span>DLQ</span><span>Idempotency</span></div>
+    <a class="back" href="../url-shortener.html#m6">← Back to Module 06 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Definition of Done</div><h2>What You'll Have</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>A <code>clicks</code> table with a unique <code>message_id</code> for idempotency.</li>
+        <li>BullMQ queue + worker process; <code>npm run worker</code> starts it.</li>
+        <li>Redirect path enqueues the event without blocking the response.</li>
+        <li>Worker retries failures with exponential backoff; gives up to a DLQ.</li>
+        <li><code>GET /stats/:code</code> returns total clicks + by-day buckets.</li>
+        <li>Killing the worker doesn't lose events — they queue and drain on restart.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Schema migration: clicks table</h4>
+<pre>npm run migrate -- create clicks</pre>
+<pre>export const up = (pgm) =&gt; {
+  pgm.createTable('clicks', {
+    id:          { type: 'bigserial', primaryKey: true },
+    message_id:  { type: 'uuid', notNull: true, unique: true },
+    link_id:     { type: 'bigint', notNull: true, references: 'links(id)', onDelete: 'CASCADE' },
+    occurred_at: { type: 'timestamptz', notNull: true },
+    referrer:    { type: 'text' },
+    user_agent:  { type: 'text' }
+  });
+  pgm.createIndex('clicks', ['link_id', 'occurred_at']);
+};
+export const down = (pgm) =&gt; pgm.dropTable('clicks');</pre>
+<pre>npm run migrate:up</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Install BullMQ</h4>
+<pre>npm install bullmq</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Create the queue producer</h4>
+        <p><code>src/queue.ts</code>:</p>
+<pre>import { Queue } from 'bullmq';
+
+export const clickQueue = new Queue('clicks', {
+  connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' }
+});
+
+export type ClickEvent = {
+  id: string;             // stable message id (uuid)
+  link_id: number;
+  occurred_at: string;
+  referrer: string | null;
+  user_agent: string | null;
+};
+
+export async function enqueueClick(ev: ClickEvent) {
+  await clickQueue.add('click', ev, {
+    jobId: ev.id,
+    attempts: 5,
+    backoff: { type: 'exponential', delay: 1000 },
+    removeOnComplete: 1000,
+    removeOnFail: 5000
+  });
+}</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Update the redirect path to enqueue</h4>
+        <p>In <code>src/app.ts</code>:</p>
+<pre>import { randomUUID } from 'node:crypto';
+import { enqueueClick } from './queue.js';
+
+app.get('/:code', async (req, res) =&gt; {
+  // …existing cache + DB logic…
+  // After we've decided the target, before res.redirect:
+  const linkId = rows[0].id ?? cachedId;        // adjust your shape
+  res.redirect(302, target);
+
+  // Fire-and-forget — don't await
+  enqueueClick({
+    id: randomUUID(),
+    link_id: Number(linkId),
+    occurred_at: new Date().toISOString(),
+    referrer: req.get('referer') ?? null,
+    user_agent: req.get('user-agent') ?? null
+  }).catch(e =&gt; console.warn('enqueue failed:', e.message));
+});</pre>
+        <div class="gotcha"><strong>Gotcha:</strong> you'll need <code>id</code> from the link query — update your SELECT to return it. Cache the ID along with the URL too (or look it up once on miss).</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Write the worker</h4>
+        <p><code>src/worker.ts</code>:</p>
+<pre>import 'dotenv/config';
+import { Worker } from 'bullmq';
+import { pool } from './db.js';
+import type { ClickEvent } from './queue.js';
+
+const worker = new Worker&lt;ClickEvent&gt;('clicks', async (job) =&gt; {
+  const ev = job.data;
+  // Idempotent insert — unique(message_id) absorbs duplicates
+  await pool.query(
+    `INSERT INTO clicks(message_id, link_id, occurred_at, referrer, user_agent)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (message_id) DO NOTHING`,
+    [ev.id, ev.link_id, ev.occurred_at, ev.referrer, ev.user_agent]
+  );
+}, {
+  connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' },
+  concurrency: 10
+});
+
+worker.on('completed', (job) =&gt; console.log('done', job.id));
+worker.on('failed',    (job, err) =&gt; console.error('fail', job?.id, err.message));</pre>
+<pre>npm pkg set scripts.worker="tsx src/worker.ts"</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Add the stats endpoint</h4>
+<pre>app.get('/stats/:code', requireAuth, async (req, res) =&gt; {
+  const { rows: link } = await pool.query(
+    'SELECT id, owner_id FROM links WHERE code = $1', [req.params.code]
+  );
+  if (link.length === 0) return res.sendStatus(404);
+  if (link[0].owner_id !== Number(req.user!.sub) &amp;&amp; req.user!.role !== 'admin')
+    return res.sendStatus(403);
+
+  const { rows } = await pool.query(
+    `SELECT date_trunc('day', occurred_at)::date AS day, COUNT(*)::int AS clicks
+     FROM clicks WHERE link_id = $1
+     GROUP BY 1 ORDER BY 1 DESC LIMIT 30`,
+    [link[0].id]
+  );
+  const total = rows.reduce((s, r) =&gt; s + r.clicks, 0);
+  res.json({ total, by_day: rows });
+});</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Run it end-to-end</h4>
+        <p>Open three terminals:</p>
+<pre># T1
+npm run dev
+# T2
+npm run worker
+# T3 — generate clicks
+for i in $(seq 1 50); do
+  curl -s -o /dev/null http://localhost:3000/&lt;your-code&gt;
+done
+# T3 — check stats
+curl -b jar.txt http://localhost:3000/stats/&lt;your-code&gt;</pre>
+        <div class="verify"><strong>✓ Verify:</strong> stats endpoint returns total: 50 with one bucket for today.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Prove durability — kill the worker</h4>
+<pre># Stop the worker (T2)
+# Generate more clicks
+for i in $(seq 1 20); do curl -s -o /dev/null http://localhost:3000/&lt;code&gt;; done
+# Inspect the queue
+docker compose exec redis redis-cli LLEN bull:clicks:wait
+# Restart the worker
+npm run worker
+# Wait a few seconds — queue drains, count goes to 70</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Verify idempotency</h4>
+        <p>Temporarily make the worker pretend to fail half the time, then re-process. Counts should stay correct because of the unique constraint.</p>
+<pre>// in worker.ts, inside the handler, before the INSERT:
+if (Math.random() &lt; 0.5) throw new Error('flaky downstream');</pre>
+        <p>Generate 100 clicks; total in <code>clicks</code> table should be exactly 100 once the queue drains. Remove the chaos line afterwards.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 10</div>
+        <h4>Set up a DLQ alarm (mock)</h4>
+        <p>Add a tiny periodic check in <code>worker.ts</code>:</p>
+<pre>import { QueueEvents } from 'bullmq';
+const events = new QueueEvents('clicks', {
+  connection: { url: process.env.REDIS_URL ?? 'redis://localhost:6379' }
+});
+events.on('failed', ({ jobId, failedReason }) =&gt;
+  console.error('DLQ candidate:', jobId, failedReason));</pre>
+        <p>Real alerting wiring lands in Module 07.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 11</div>
+        <h4>Commit</h4>
+<pre>git checkout -b module-06
+git add .
+git commit -m "module 06: bullmq click pipeline, stats endpoint, idempotent worker"
+git push -u origin module-06</pre>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Worker doesn't pick up jobs</strong> — both producer and worker must point to the same Redis instance and queue name.</li>
+        <li><strong>Duplicate clicks in the table</strong> — make sure the unique constraint on <code>message_id</code> exists and you use <code>ON CONFLICT DO NOTHING</code>.</li>
+        <li><strong>Redirect latency went up</strong> — you accidentally <code>await</code>ed <code>enqueueClick</code>. Fire and forget; log enqueue failures.</li>
+        <li><strong>BullMQ requires Redis ≥ 6.2</strong> — the <code>redis:7-alpine</code> from Module 04 is fine.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="module-05.html">← Module 05</a>
+        <a href="module-07.html">Module 07 — Observability →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

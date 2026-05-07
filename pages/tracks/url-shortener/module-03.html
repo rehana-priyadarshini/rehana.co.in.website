@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 03 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 03 — set up Vitest, write unit and integration tests, practice TDD on a custom-alias feature, and add a coverage gate." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-03.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 03 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Testing discipline — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-03.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 03 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Testing discipline — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 03 of 11</div>
+    <h1>Testing Discipline</h1>
+    <p class="lede">By the end of this tutorial you'll have a fast unit suite, integration tests against a throwaway Postgres, a TDD-built custom-alias feature, and a coverage gate that fails the build below 70%.</p>
+    <div class="tags"><span>~3–5 hrs</span><span>Vitest</span><span>Testcontainers</span><span>TDD</span></div>
+    <a class="back" href="../url-shortener.html#m3">← Back to Module 03 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Before You Start</div><h2>Prerequisites</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Modules 01 and 02 complete: working server + Postgres in Docker.</li>
+        <li>Docker still running (we'll use Testcontainers).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><code>npm test</code> runs unit tests in under 30s.</li>
+        <li><code>npm run test:integration</code> spins up Postgres in a container, runs migrations, exercises the API.</li>
+        <li>A <code>POST /shorten</code> with <code>{ "alias": "..." }</code> creates a vanity short code, built TDD-style.</li>
+        <li>Coverage threshold of 70% lines / branches enforced.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Install Vitest and friends</h4>
+<pre>npm install -D vitest @vitest/coverage-v8 supertest @types/supertest \
+              testcontainers</pre>
+        <p>Add scripts:</p>
+<pre>npm pkg set scripts.test="vitest run --coverage"
+npm pkg set scripts.test:watch="vitest"
+npm pkg set scripts.test:integration="vitest run -c vitest.integration.ts"</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Configure Vitest with a coverage gate</h4>
+        <p>Create <code>vitest.config.ts</code>:</p>
+<pre>import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      thresholds: { lines: 70, branches: 70, functions: 70, statements: 70 }
+    }
+  }
+});</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Write unit tests for the encoder</h4>
+        <p>Create <code>src/code.test.ts</code>:</p>
+<pre>import { describe, it, expect } from 'vitest';
+import { randomCode } from './code.js';
+
+describe('randomCode', () =&gt; {
+  it('returns the requested length', () =&gt; {
+    expect(randomCode(7)).toHaveLength(7);
+    expect(randomCode(3)).toHaveLength(3);
+  });
+
+  it('only uses base62 characters', () =&gt; {
+    const re = /^[0-9a-zA-Z]+$/;
+    for (let i = 0; i &lt; 100; i++) expect(randomCode(7)).toMatch(re);
+  });
+
+  it('does not collide trivially', () =&gt; {
+    const seen = new Set&lt;string&gt;();
+    for (let i = 0; i &lt; 1000; i++) seen.add(randomCode(7));
+    expect(seen.size).toBeGreaterThan(990);
+  });
+});</pre>
+        <pre>npm test</pre>
+        <div class="verify"><strong>✓ Verify:</strong> 3 passing tests, coverage report in the terminal.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Refactor for testability — extract the app</h4>
+        <p>Split <code>src/server.ts</code> into <code>src/app.ts</code> (returns the Express app) and a thin <code>src/server.ts</code> that just listens. This lets tests import the app without binding a port.</p>
+<pre>// src/app.ts
+import express from 'express';
+import { pool } from './db.js';
+import { randomCode } from './code.js';
+
+export function createApp(base: string) {
+  const app = express();
+  app.use(express.json());
+
+  app.get('/health', (_req, res) =&gt; res.json({ ok: true }));
+
+  app.post('/shorten', async (req, res) =&gt; { /* …same as before… */ });
+  app.get   ('/:code', async (req, res) =&gt; { /* …same as before… */ });
+  app.delete('/:code', async (req, res) =&gt; { /* …same as before… */ });
+
+  return app;
+}</pre>
+<pre>// src/server.ts
+import 'dotenv/config';
+import { createApp } from './app.js';
+
+const port = Number(process.env.PORT ?? 3000);
+const base = process.env.BASE_URL ?? `http://localhost:${port}`;
+createApp(base).listen(port, () =&gt; console.log(`listening on :${port}`));</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Set up integration tests with Testcontainers</h4>
+        <p>Create <code>vitest.integration.ts</code>:</p>
+<pre>import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { include: ['tests/**/*.test.ts'], testTimeout: 60_000, hookTimeout: 60_000 }
+});</pre>
+        <p>Create <code>tests/api.test.ts</code>:</p>
+<pre>import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from 'testcontainers';
+import { execSync } from 'node:child_process';
+import request from 'supertest';
+import { createApp } from '../src/app.js';
+
+let container: StartedPostgreSqlContainer;
+
+beforeAll(async () =&gt; {
+  container = await new PostgreSqlContainer('postgres:16-alpine').start();
+  process.env.DATABASE_URL = container.getConnectionUri();
+  execSync(
+    'npx node-pg-migrate up -m migrations -j ts',
+    { env: process.env, stdio: 'inherit' }
+  );
+});
+
+afterAll(async () =&gt; { await container.stop(); });
+
+describe('shorten / redirect / delete', () =&gt; {
+  const app = () =&gt; createApp('http://test');
+
+  it('rejects non-http urls', async () =&gt; {
+    const r = await request(app()).post('/shorten').send({ url: 'javascript:1' });
+    expect(r.status).toBe(400);
+  });
+
+  it('round-trips a link', async () =&gt; {
+    const create = await request(app()).post('/shorten')
+      .send({ url: 'https://example.com/abc' });
+    expect(create.status).toBe(201);
+
+    const code = create.body.code as string;
+    const get = await request(app()).get(`/${code}`).redirects(0);
+    expect(get.status).toBe(302);
+    expect(get.headers.location).toBe('https://example.com/abc');
+
+    const del = await request(app()).delete(`/${code}`);
+    expect(del.status).toBe(204);
+
+    const gone = await request(app()).get(`/${code}`);
+    expect(gone.status).toBe(404);
+  });
+});</pre>
+<pre>npm run test:integration</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Testcontainers boots a Postgres, migrations run, both tests pass. First run is slow (image pull); later runs are quick.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>TDD a new feature: custom aliases</h4>
+        <p>Goal: <code>POST /shorten { url, alias }</code> uses the alias as the code.</p>
+        <p><strong>Red.</strong> Add to <code>tests/api.test.ts</code>:</p>
+<pre>it('uses a custom alias when provided', async () =&gt; {
+  const r = await request(app()).post('/shorten')
+    .send({ url: 'https://example.com', alias: 'my-link' });
+  expect(r.status).toBe(201);
+  expect(r.body.code).toBe('my-link');
+});
+
+it('rejects an alias that is already taken', async () =&gt; {
+  await request(app()).post('/shorten').send({ url: 'https://a.com', alias: 'taken' });
+  const r = await request(app()).post('/shorten').send({ url: 'https://b.com', alias: 'taken' });
+  expect(r.status).toBe(409);
+});
+
+it('rejects malformed aliases', async () =&gt; {
+  for (const alias of ['', 'a', 'has space', 'has/slash', 'a'.repeat(33)]) {
+    const r = await request(app()).post('/shorten').send({ url: 'https://x.com', alias });
+    expect(r.status, alias).toBe(400);
+  }
+});</pre>
+        <p>Run integration tests — they fail. <strong>Green.</strong> Update <code>POST /shorten</code> in <code>src/app.ts</code>:</p>
+<pre>const ALIAS_RE = /^[A-Za-z0-9_-]{3,32}$/;
+
+app.post('/shorten', async (req, res) =&gt; {
+  const { url, alias } = req.body ?? {};
+  if (typeof url !== 'string' || !/^https?:\/\//i.test(url) || url.length &gt; 2048)
+    return res.status(400).json({ error: 'url must be http(s)://...' });
+
+  if (alias !== undefined) {
+    if (typeof alias !== 'string' || !ALIAS_RE.test(alias))
+      return res.status(400).json({ error: 'alias must be 3-32 chars, [A-Za-z0-9_-]' });
+    try {
+      await pool.query('INSERT INTO links(code, target_url) VALUES ($1, $2)', [alias, url]);
+      return res.status(201).json({ code: alias, short: `${base}/${alias}` });
+    } catch (e: unknown) {
+      const err = e as { code?: string };
+      if (err.code === '23505') return res.status(409).json({ error: 'alias taken' });
+      throw e;
+    }
+  }
+
+  // …fall through to random-code path as before
+});</pre>
+        <p>Re-run integration tests — green. <strong>Refactor.</strong> Extract the validation into a helper, dedupe the insert call. Run tests after every change.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Tighten the coverage gate</h4>
+        <p>Run <code>npm test</code>. If coverage is comfortably above 70%, raise the threshold to 80% in <code>vitest.config.ts</code>. Don't chase 100% — it incentivizes weak tests.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Commit</h4>
+<pre>git checkout -b module-03
+git add .
+git commit -m "module 03: vitest, integration tests, custom aliases via TDD"
+git push -u origin module-03</pre>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Testcontainers can't reach Docker</strong> — make sure Docker Desktop is running and your user has access (<code>docker ps</code> works).</li>
+        <li><strong>Migration "no migrations directory"</strong> — paths are relative to where Vitest runs. Use absolute paths or set <code>cwd</code> in <code>execSync</code>.</li>
+        <li><strong>Tests share state</strong> — each test should make its own data. If two tests fight, isolate per-test by using a unique alias prefix.</li>
+        <li><strong>Coverage fails on test files themselves</strong> — Vitest excludes them by default; if not, add <code>exclude: ['src/**/*.test.ts']</code> to the coverage config.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <p style="font-size:14px;">Tests turn green fast — but the redirect path still hits Postgres on every call. Time to add a cache and measure the difference.</p>
+      <div class="nav-other">
+        <a href="module-02.html">← Module 02</a>
+        <a href="module-04.html">Module 04 — Caching &amp; Performance →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 05 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 05 — add user signup/login with argon2, JWT cookies, ownership checks, and per-API-key rate limiting via Redis token bucket." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-05.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 05 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Auth &amp; rate limiting — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-05.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 05 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Auth &amp; rate limiting — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 05 of 11</div>
+    <h1>Authentication &amp; Authorization</h1>
+    <p class="lede">By the end of this tutorial, you'll have user accounts with argon2 password hashing, JWT-cookie sessions, ownership checks on every link, and a Redis-backed rate limiter on the create endpoint.</p>
+    <div class="tags"><span>~5–7 hrs</span><span>argon2</span><span>JWT</span><span>Rate Limit</span></div>
+    <a class="back" href="../url-shortener.html#m5">← Back to Module 05 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Definition of Done</div><h2>What You'll Have</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><code>POST /signup</code>, <code>POST /login</code>, <code>POST /logout</code> endpoints.</li>
+        <li>Passwords hashed with argon2id; never logged.</li>
+        <li>JWT issued in an <code>HttpOnly Secure SameSite=Lax</code> cookie.</li>
+        <li>A <code>requireAuth</code> middleware; <code>POST /shorten</code> and <code>DELETE /:code</code> require it.</li>
+        <li>Ownership: only the link's owner (or an admin) can delete or update.</li>
+        <li>Per-IP token bucket on <code>POST /shorten</code>; 429 with <code>Retry-After</code> when exhausted.</li>
+        <li>Integration tests prove user A can't delete user B's link.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Schema migration: users + owner_id</h4>
+<pre>npm run migrate -- create users-and-ownership</pre>
+        <p>In the new migration:</p>
+<pre>export const up = (pgm) =&gt; {
+  pgm.createTable('users', {
+    id:            { type: 'bigserial', primaryKey: true },
+    email:         { type: 'text', notNull: true, unique: true },
+    password_hash: { type: 'text', notNull: true },
+    role:          { type: 'text', notNull: true, default: 'user' },
+    created_at:    { type: 'timestamptz', notNull: true, default: pgm.func('now()') }
+  });
+  pgm.addColumns('links', {
+    owner_id: { type: 'bigint', references: 'users(id)', onDelete: 'SET NULL' }
+  });
+  pgm.createIndex('links', 'owner_id');
+};
+export const down = (pgm) =&gt; {
+  pgm.dropColumns('links', ['owner_id']);
+  pgm.dropTable('users');
+};</pre>
+<pre>npm run migrate:up</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Install crypto and JWT dependencies</h4>
+<pre>npm install argon2 jose cookie-parser
+npm install -D @types/cookie-parser</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Add a JWT module</h4>
+        <p>Add <code>JWT_SECRET</code> to <code>.env</code> (a long random string — <code>openssl rand -base64 32</code>).</p>
+        <p>Create <code>src/auth.ts</code>:</p>
+<pre>import { SignJWT, jwtVerify } from 'jose';
+import type { Request, Response, NextFunction } from 'express';
+
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? 'dev-only-secret');
+
+export type Session = { sub: string; role: 'user' | 'admin' };
+
+export async function issueToken(s: Session) {
+  return await new SignJWT(s as Record&lt;string, unknown&gt;)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('15m')
+    .sign(SECRET);
+}
+
+export async function readSession(token: string | undefined): Promise&lt;Session | null&gt; {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, SECRET);
+    return { sub: String(payload.sub), role: (payload.role ?? 'user') as 'user' | 'admin' };
+  } catch { return null; }
+}
+
+declare module 'express-serve-static-core' {
+  interface Request { user?: Session }
+}
+
+export async function loadUser(req: Request, _res: Response, next: NextFunction) {
+  req.user = (await readSession(req.cookies?.token)) ?? undefined;
+  next();
+}
+
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) return res.sendStatus(401);
+  next();
+}</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Add signup, login, logout</h4>
+        <p>Create <code>src/routes/auth.ts</code>:</p>
+<pre>import { Router } from 'express';
+import argon2 from 'argon2';
+import { pool } from '../db.js';
+import { issueToken } from '../auth.js';
+
+export const authRouter = Router();
+
+const cookieOpts = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  maxAge: 15 * 60 * 1000
+};
+
+authRouter.post('/signup', async (req, res) =&gt; {
+  const { email, password } = req.body ?? {};
+  if (typeof email !== 'string' || typeof password !== 'string' || password.length &lt; 10)
+    return res.status(400).json({ error: 'bad input' });
+
+  const hash = await argon2.hash(password, { type: argon2.argon2id });
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO users(email, password_hash) VALUES (LOWER($1), $2) RETURNING id, role',
+      [email, hash]
+    );
+    const token = await issueToken({ sub: String(rows[0].id), role: rows[0].role });
+    res.cookie('token', token, cookieOpts).status(201).json({ id: rows[0].id });
+  } catch (e: any) {
+    if (e.code === '23505') return res.status(409).json({ error: 'email taken' });
+    throw e;
+  }
+});
+
+authRouter.post('/login', async (req, res) =&gt; {
+  const { email, password } = req.body ?? {};
+  if (typeof email !== 'string' || typeof password !== 'string')
+    return res.status(400).json({ error: 'bad input' });
+
+  const { rows } = await pool.query(
+    'SELECT id, password_hash, role FROM users WHERE email = LOWER($1)',
+    [email]
+  );
+  const ok = rows.length === 1 &amp;&amp; await argon2.verify(rows[0].password_hash, password);
+  if (!ok) return res.status(401).json({ error: 'invalid credentials' });
+
+  const token = await issueToken({ sub: String(rows[0].id), role: rows[0].role });
+  res.cookie('token', token, cookieOpts).json({ ok: true });
+});
+
+authRouter.post('/logout', (_req, res) =&gt; res.clearCookie('token').sendStatus(204));</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Add a Redis token-bucket rate limiter</h4>
+        <p>Create <code>src/ratelimit.ts</code>:</p>
+<pre>import Redis from 'ioredis';
+import type { Request, Response, NextFunction } from 'express';
+
+const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+
+const SCRIPT = `
+local key = KEYS[1]
+local capacity = tonumber(ARGV[1])
+local refill   = tonumber(ARGV[2])
+local now      = tonumber(ARGV[3])
+
+local data    = redis.call('HMGET', key, 'tokens', 'ts')
+local tokens  = tonumber(data[1]) or capacity
+local ts      = tonumber(data[2]) or now
+
+tokens = math.min(capacity, tokens + (now - ts) * refill)
+local allowed = 0
+if tokens &gt;= 1 then tokens = tokens - 1; allowed = 1 end
+
+redis.call('HMSET', key, 'tokens', tokens, 'ts', now)
+redis.call('EXPIRE', key, 3600)
+return allowed`;
+
+export function rateLimit(opts: { id: (r: Request) =&gt; string; capacity: number; refillPerSec: number }) {
+  return async (req: Request, res: Response, next: NextFunction) =&gt; {
+    const key = `rl:${opts.id(req)}`;
+    const allowed = await redis.eval(
+      SCRIPT, 1, key, String(opts.capacity), String(opts.refillPerSec), String(Date.now() / 1000)
+    ) as number;
+    if (allowed === 0) return res.set('Retry-After', '5').sendStatus(429);
+    next();
+  };
+}</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Wire it all into the app</h4>
+        <p>Update <code>src/app.ts</code>:</p>
+<pre>import cookieParser from 'cookie-parser';
+import { authRouter } from './routes/auth.js';
+import { loadUser, requireAuth } from './auth.js';
+import { rateLimit } from './ratelimit.js';
+
+app.use(express.json());
+app.use(cookieParser());
+app.use(loadUser);
+app.use('/auth', authRouter);
+
+const limit = rateLimit({
+  id: (r) =&gt; r.user?.sub ?? r.ip,
+  capacity: 20, refillPerSec: 0.2     // 20-burst, ~12/min
+});
+
+app.post('/shorten', requireAuth, limit, async (req, res) =&gt; {
+  // …existing logic…
+  // when inserting:
+  await pool.query(
+    'INSERT INTO links(code, target_url, owner_id) VALUES ($1, $2, $3)',
+    [code, url, Number(req.user!.sub)]
+  );
+});
+
+app.delete('/:code', requireAuth, async (req, res) =&gt; {
+  const { rows } = await pool.query('SELECT owner_id FROM links WHERE code = $1', [req.params.code]);
+  if (rows.length === 0) return res.sendStatus(404);
+  if (rows[0].owner_id !== Number(req.user!.sub) &amp;&amp; req.user!.role !== 'admin')
+    return res.sendStatus(403);
+
+  await pool.query('DELETE FROM links WHERE code = $1', [req.params.code]);
+  // invalidate cache as in module 4
+  res.sendStatus(204);
+});</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Try the full flow</h4>
+<pre>npm run dev
+
+# Sign up
+curl -i -c jar.txt -X POST http://localhost:3000/auth/signup \
+  -H 'content-type: application/json' \
+  -d '{"email":"a@example.com","password":"correcthorsebattery"}'
+
+# Create a link as that user
+curl -s -b jar.txt -X POST http://localhost:3000/shorten \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}'
+
+# Without the cookie — should be 401
+curl -i -X POST http://localhost:3000/shorten \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}'
+
+# Hit the rate limit
+for i in $(seq 1 50); do curl -s -o /dev/null -w '%{http_code} ' -b jar.txt \
+  -X POST http://localhost:3000/shorten \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}'; done</pre>
+        <div class="verify"><strong>✓ Verify:</strong> first 20 succeed, then a stream of 429s.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Add the negative authorization test</h4>
+        <p>Append to <code>tests/api.test.ts</code>:</p>
+<pre>it('user A cannot delete user B's link', async () =&gt; {
+  const a = request.agent(app());
+  await a.post('/auth/signup').send({ email: `a+${Date.now()}@x.com`, password: 'x'.repeat(12) });
+  const create = await a.post('/shorten').send({ url: 'https://example.com' });
+  const code = create.body.code;
+
+  const b = request.agent(app());
+  await b.post('/auth/signup').send({ email: `b+${Date.now()}@x.com`, password: 'x'.repeat(12) });
+  const del = await b.delete(`/${code}`);
+  expect(del.status).toBe(403);
+});</pre>
+        <p><code>npm run test:integration</code> — must pass.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Commit</h4>
+<pre>git checkout -b module-05
+git add .
+git commit -m "module 05: argon2 auth, JWT cookies, ownership, rate limit"
+git push -u origin module-05</pre>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>argon2 native build fails</strong> on Windows — use WSL2, or switch to <code>bcrypt</code>.</li>
+        <li><strong>Cookie not sent</strong> — make sure <code>cookie-parser</code> is registered before routes; in tests use <code>request.agent()</code> to persist cookies.</li>
+        <li><strong>JWT verifies in dev but fails in prod</strong> — different <code>JWT_SECRET</code> on each instance. Centralize in your secret manager (Module 09).</li>
+        <li><strong>Rate limit too strict</strong> in tests — pass a higher capacity for <code>NODE_ENV === 'test'</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="module-04.html">← Module 04</a>
+        <a href="module-06.html">Module 06 — Analytics &amp; Background Jobs →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

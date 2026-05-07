@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 11 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 11 — self code review, security review, polish the README and architecture diagram, write ADRs, record a 5-minute demo, and pick a license." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-11.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 11 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Capstone &amp; review — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-11.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 11 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Capstone &amp; review — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 11 of 11</div>
+    <h1>Capstone &amp; Review</h1>
+    <p class="lede">By the end of this tutorial you'll have a polished, public, portfolio-grade repo: clean code, a strong README with an architecture diagram, an ADR log, a 5-minute walkthrough video, and an explicit open-source license.</p>
+    <div class="tags"><span>~3–4 hrs</span><span>README</span><span>ADRs</span><span>Demo</span><span>License</span></div>
+    <a class="back" href="../url-shortener.html#m11">← Back to Module 11 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Definition of Done</div><h2>What You'll Have</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>A self code review pass — issues found and fixed.</li>
+        <li>A self security review against your threat model — issues found and fixed.</li>
+        <li>A polished <code>README.md</code> with hero blurb, architecture diagram, run-locally section, contributing notes.</li>
+        <li>5–10 ADRs under <code>docs/adr/</code>.</li>
+        <li>A 5-minute demo video linked from the README.</li>
+        <li>A <code>LICENSE</code> file (MIT or Apache-2.0 recommended).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Polish It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Self code review</h4>
+        <p>Open your repo in your editor and walk every file. Look for:</p>
+        <ul style="font-size:14px;line-height:1.7;">
+          <li>Dead code, commented-out blocks, leftover <code>console.log</code>.</li>
+          <li>Weak names — <code>data</code>, <code>tmp</code>, <code>foo</code>. Rename to what they actually are.</li>
+          <li>Functions over ~30 lines. Split if there's a clean seam; leave alone if not.</li>
+          <li>Missing tests for new branches you added late.</li>
+          <li>TODOs that are real — file them as issues; delete the ones that aren't.</li>
+          <li>Inconsistent error handling — one place does <code>throw</code>, another does <code>return null</code>.</li>
+        </ul>
+        <p>Track findings in a checklist; fix them in a single PR.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Self security review</h4>
+        <p>Walk your <code>docs/threat-model.md</code> from Module 09. For each threat, find the test or code that mitigates it. If something doesn't have a test, add one.</p>
+        <ul style="font-size:14px;line-height:1.7;">
+          <li>Run <code>npx gitleaks detect</code> on full history.</li>
+          <li>Run <code>npm audit --omit=dev</code>; fix or document waivers.</li>
+          <li>Confirm <code>curl -I</code> on prod shows expected security headers.</li>
+          <li>Verify ownership tests pass (Module 05); SSRF tests pass (Module 09).</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Pick and add a license</h4>
+<pre>npx license mit -o "Your Name" &gt; LICENSE
+# or apache-2.0, etc.</pre>
+        <p>Reference: see the <a href="../../soft/open-source-licensing.html">Open Source &amp; Licensing deep dive</a>.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Polish the README</h4>
+        <p>Use this skeleton:</p>
+<pre># URL Shortener
+
+Production-grade URL shortener built as a learning project.
+Live demo: https://&lt;your-app&gt;.fly.dev
+
+## Features
+- Anonymous &amp; authenticated short-link creation
+- Vanity aliases
+- Click analytics with daily rollups
+- Per-IP rate limiting
+- Cache-aside (Redis), read replica routing, idempotent worker
+- Observability: structured logs, Prometheus metrics, OTel traces, SLOs
+
+## Architecture
+![architecture](docs/architecture.svg)
+
+## Run locally
+```sh
+git clone …
+cp .env.example .env
+docker compose up -d
+npm ci
+npm run migrate:up
+npm run dev      # web
+npm run worker   # in another terminal
+```
+
+## Tech
+- Node 20 / TypeScript / Express
+- Postgres 16, Redis 7
+- BullMQ for background jobs
+- pino, prom-client, OpenTelemetry, Grafana
+- GitHub Actions, GHCR, Fly.io
+
+## Docs
+- [Design](docs/design.md)
+- [Threat model](docs/threat-model.md)
+- [SLOs](docs/slo.md)
+- [ADRs](docs/adr)
+- [Runbooks](docs/ops)
+
+## Demo
+[5-minute walkthrough](https://…)
+
+## License
+MIT</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Draw the architecture diagram</h4>
+        <p>Quickest path: write the diagram in <a href="https://mermaid.live">mermaid.live</a> and export an SVG to <code>docs/architecture.svg</code>.</p>
+<pre>flowchart LR
+  U(User) --&gt; CDN[CDN/Edge]
+  CDN --&gt; LB[Load Balancer]
+  LB --&gt; A1[App #1]
+  LB --&gt; A2[App #2]
+  A1 &amp; A2 --&gt; R[(Redis)]
+  A1 &amp; A2 --&gt; PW[(Postgres primary)]
+  A1 &amp; A2 --&gt; PR[(Postgres replica)]
+  A1 &amp; A2 --&gt; Q[[BullMQ queue]]
+  Q --&gt; W[Worker]
+  W --&gt; PW
+  A1 &amp; A2 --&gt; OTLP[Jaeger/OTLP]
+  A1 &amp; A2 --&gt; PROM[Prometheus]</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Write the ADR log</h4>
+        <p>Create <code>docs/adr/0001-pick-typescript.md</code> and similar for each major decision. Template:</p>
+<pre># ADR 0001 — Pick TypeScript + Express
+
+## Status
+Accepted, 2026-XX-XX.
+
+## Context
+Need a stack with strong types, a low operational footprint, and a wide hiring pool.
+
+## Decision
+Use Node 20 + TypeScript + Express.
+
+## Consequences
+- Most ecosystem support; fast to ship.
+- Less type safety than e.g. Rust or Go.
+- Will revisit if perf becomes a bottleneck.</pre>
+        <p>Cover: stack, base62 ID scheme, cache-aside vs write-through, JWT vs server sessions, BullMQ vs Postgres-as-queue, Postgres replica strategy, Fly.io vs alternatives, MIT vs Apache-2.0.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Record the demo</h4>
+        <p>5 minutes max. Suggested arc:</p>
+        <ul style="font-size:14px;line-height:1.7;">
+          <li><strong>0:00</strong> — what it is, in one sentence.</li>
+          <li><strong>0:30</strong> — architecture diagram walkthrough.</li>
+          <li><strong>1:30</strong> — create a link, follow the redirect, check stats.</li>
+          <li><strong>3:00</strong> — show the Grafana dashboard during a small load test.</li>
+          <li><strong>4:00</strong> — show one chaos drill (kill Redis), explain graceful degradation.</li>
+          <li><strong>4:30</strong> — wrap with what you'd do next.</li>
+        </ul>
+        <p>Tools: Loom, OBS, or Quicktime. Upload to YouTube unlisted; link in README.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>The 10-minute newcomer test</h4>
+        <p>Hand the repo URL to a friend (or a fresh clone on a different machine). They should:</p>
+        <ol style="font-size:14px;line-height:1.7;">
+          <li><code>git clone</code></li>
+          <li>Read the README</li>
+          <li>Run the app locally</li>
+          <li>Hit <code>http://localhost:3000/health</code></li>
+        </ol>
+        <p>… in under 10 minutes. If they get stuck, the README is the bug. Fix and repeat.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Final commit and announcement</h4>
+<pre>git checkout -b module-11
+git add .
+git commit -m "module 11: capstone polish — readme, adrs, license, demo"
+git push -u origin module-11</pre>
+        <p>Merge to <code>main</code>, tag a release:</p>
+<pre>git tag -a v1.0.0 -m "v1.0.0 — track complete"
+git push origin v1.0.0
+gh release create v1.0.0 --generate-notes</pre>
+        <p>Optional: write a blog post per module. One of the highest-leverage things you can do for your future career.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">You're Done</div><h2>Where to Go Next</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Stretch features:</strong> custom domains, link expiration, QR codes, abuse detection, an admin dashboard, a CLI client.</li>
+        <li><strong>Read</strong> <em>Designing Data-Intensive Applications</em> by Martin Kleppmann; sketch how you'd scale this to 100B links.</li>
+        <li><strong>Try a harder track:</strong> a webhook delivery service, a feature-flag service, or a real-time collaborative tool.</li>
+        <li><strong>Show the work.</strong> Push the link to LinkedIn, your portfolio, and a community site (HN/Reddit/Lobste.rs).</li>
+      </ul>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="module-10.html">← Module 10</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

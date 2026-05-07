@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 10 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 10 — add a Postgres read replica, two app instances behind a load balancer, run chaos drills, and write runbooks plus a postmortem." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-10.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 10 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Scaling &amp; reliability — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-10.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 10 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Scaling &amp; reliability — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 10 of 11</div>
+    <h1>Scaling &amp; Reliability</h1>
+    <p class="lede">By the end of this tutorial you'll have a Postgres read replica taking redirect reads, multiple app instances behind a load balancer, three runbooks, a chaos drill report, and a postmortem written from a real (small) failure.</p>
+    <div class="tags"><span>~5–7 hrs</span><span>Replicas</span><span>Chaos</span><span>Runbooks</span><span>Postmortem</span></div>
+    <a class="back" href="../url-shortener.html#m10">← Back to Module 10 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Definition of Done</div><h2>What You'll Have</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Reads on <code>GET /:code</code> route to a replica; writes go to the primary.</li>
+        <li>Two app instances behind a load balancer; killing one drops zero requests.</li>
+        <li>Redis outage degrades performance but the service stays up; alarm fires within a minute.</li>
+        <li>Three runbooks under <code>docs/ops/</code> for the most likely incidents.</li>
+        <li>One postmortem from a chaos drill committed under <code>docs/postmortems/</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Add a Postgres replica (local docker-compose)</h4>
+<pre>services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shortener
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: shortener
+    command: ["postgres", "-c", "wal_level=replica", "-c", "max_wal_senders=4", "-c", "hot_standby=on"]
+    ports: ["5432:5432"]
+    volumes: ["./ops/init-replica.sh:/docker-entrypoint-initdb.d/init.sh", "pgdata:/var/lib/postgresql/data"]
+
+  db-replica:
+    image: postgres:16-alpine
+    depends_on: [db]
+    environment:
+      POSTGRES_USER: shortener
+      POSTGRES_PASSWORD: dev
+    command:
+      - bash
+      - -c
+      - |
+        until pg_basebackup -h db -U replicator -D /var/lib/postgresql/data -P -R -X stream; do
+          sleep 1
+        done
+        chown -R postgres:postgres /var/lib/postgresql/data
+        exec gosu postgres postgres
+    ports: ["5433:5432"]</pre>
+        <p>Create <code>ops/init-replica.sh</code>:</p>
+<pre>#!/bin/bash
+set -e
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" &lt;&lt;-EOSQL
+  CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD 'replpass';
+EOSQL
+echo "host replication replicator 0.0.0.0/0 md5" &gt;&gt; "$PGDATA/pg_hba.conf"</pre>
+        <div class="gotcha"><strong>Gotcha:</strong> in production, use your cloud's managed Postgres replica — this local setup is just to practice the failover.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Add a read pool</h4>
+        <p>In <code>src/db.ts</code>:</p>
+<pre>export const writePool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+export const readPool  = new pg.Pool({
+  connectionString: process.env.DATABASE_REPLICA_URL ?? process.env.DATABASE_URL
+});</pre>
+        <p>Use <code>readPool</code> for the redirect resolve and <code>/stats/:code</code>; use <code>writePool</code> for inserts/deletes/migrations.</p>
+        <p>Add to <code>.env</code>:</p>
+<pre>DATABASE_REPLICA_URL=postgres://shortener:dev@localhost:5433/shortener</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Run two app instances behind a local load balancer</h4>
+        <p>Add to <code>docker-compose.yml</code>:</p>
+<pre>  app1: { build: ., environment: { PORT: 3000, ...common }, ports: ["3001:3000"] }
+  app2: { build: ., environment: { PORT: 3000, ...common }, ports: ["3002:3000"] }
+  caddy:
+    image: caddy:alpine
+    ports: ["8080:80"]
+    volumes: ["./ops/Caddyfile:/etc/caddy/Caddyfile"]</pre>
+        <p>Create <code>ops/Caddyfile</code>:</p>
+<pre>:80 {
+  reverse_proxy app1:3000 app2:3000 {
+    health_uri  /health
+    health_interval 5s
+    lb_policy   round_robin
+    lb_try_duration 2s
+  }
+}</pre>
+<pre>docker compose up -d --build app1 app2 caddy</pre>
+        <div class="verify"><strong>✓ Verify:</strong> hitting <code>http://localhost:8080/health</code> repeatedly succeeds. Stop one app: <code>docker compose stop app1</code>. Requests still succeed.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Chaos drill 1 — kill Redis</h4>
+<pre>docker compose stop redis
+# In another terminal: keep hitting /:code
+while true; do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/&lt;code&gt;; sleep 1; done
+# Should keep returning 302 — slower but not failing
+docker compose start redis</pre>
+        <p>Note observed numbers (latency, error rate) in <code>docs/ops/chaos-redis.md</code>.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Chaos drill 2 — kill an app instance</h4>
+<pre>docker compose kill app1
+# Requests still succeed via app2
+# Caddy notices app1 is unhealthy and stops routing to it
+docker compose start app1</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Chaos drill 3 — replica lag</h4>
+        <p>Pause the replica:</p>
+<pre>docker compose pause db-replica
+# Create a new link via primary (write goes to app1/app2 → writePool → db)
+# Read it via /:code (read goes to readPool → db-replica)
+# Read may 404 until you unpause</pre>
+        <p>Document the user-visible behavior. Decide your policy: should newly-created codes read from primary for the first N seconds? Add a TODO to <code>docs/ops/replica-lag.md</code>.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Write three runbooks</h4>
+        <p>Each under <code>docs/ops/</code>, ~one page each:</p>
+        <ul style="font-size:14px;line-height:1.7;">
+          <li><code>db-down.md</code> — symptoms, immediate actions, escalation, recovery, verification.</li>
+          <li><code>queue-backed-up.md</code> — how to inspect, scale workers, drain DLQ, root-cause.</li>
+          <li><code>cache-cold.md</code> — what user-facing latency looks like, capacity adjustments while warming, when to alert.</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Write a postmortem from one chaos drill</h4>
+        <p>Use <code>docs/postmortems/2026-XX-XX-redis-outage.md</code>:</p>
+<pre># Redis Outage Drill — 2026-XX-XX
+
+## Summary
+Stopped Redis at 14:02 UTC; app continued serving traffic from Postgres. Latency rose from p95=12ms to p95=78ms. No 5xx errors. Total impact window: 2 minutes.
+
+## Timeline
+- 14:02 — Redis stopped (planned)
+- 14:02 — Caddy detected normal app health; no instance ejection
+- 14:03 — p95 latency alert fired (latency SLO consuming budget)
+- 14:04 — Redis started; p95 returned to baseline within 30s
+
+## What went well
+- Cache-aside fallback worked; no errors.
+- Alert fired within 1 min.
+
+## What didn't
+- Postgres CPU jumped 4× during the outage; would have hit limits at 5× normal traffic.
+
+## Action items
+- [ ] Add per-key in-process LRU as second-tier cache (owner: …, by …)
+- [ ] Add k6 capacity test with cache disabled (owner: …, by …)</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Commit</h4>
+<pre>git checkout -b module-10
+git add .
+git commit -m "module 10: read replica, multi-instance, chaos drills, runbooks, postmortem"
+git push -u origin module-10</pre>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Read-your-own-writes broken</strong> — newly created links 404 from replica. Either route reads-after-writes to primary briefly, or accept and document the lag.</li>
+        <li><strong>Caddy 502 on instance restart</strong> — make sure the health endpoint responds quickly; bump <code>health_interval</code> shorter.</li>
+        <li><strong>Replica setup fails</strong> — Postgres replication is finicky locally; consider using <code>repmgr</code>, a managed service, or just simulating the read split with two pools to the same DB.</li>
+        <li><strong>Drills feel pointless</strong> — that's the point. The boring drill is the one that doesn't surprise you in production.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="module-09.html">← Module 09</a>
+        <a href="module-11.html">Module 11 — Capstone &amp; Review →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 08 Tutorial · URL Shortener Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 08 — multi-stage Dockerfile, GitHub Actions CI pipeline, GHCR push, Fly.io deploy with health checks, and automatic rollback on smoke-test failure." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/url-shortener/module-08.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 08 Tutorial · URL Shortener Track" />
+<meta property="og:description" content="Containers &amp; CI/CD — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/url-shortener/module-08.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 08 Tutorial · URL Shortener Track" />
+<meta name="twitter:description" content="Containers &amp; CI/CD — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">URL Shortener Tutorial · Module 08 of 11</div>
+    <h1>Containerization &amp; CI/CD</h1>
+    <p class="lede">By the end of this tutorial you'll have a small multi-stage Docker image, a GitHub Actions pipeline that lints, tests, builds, scans, and deploys preview + production environments, and an automatic rollback on smoke-test failure.</p>
+    <div class="tags"><span>~4–6 hrs</span><span>Docker</span><span>GitHub Actions</span><span>Fly.io</span><span>Trivy</span></div>
+    <a class="back" href="../url-shortener.html#m8">← Back to Module 08 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Definition of Done</div><h2>What You'll Have</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>A multi-stage <code>Dockerfile</code> producing a sub-200MB image; runs as non-root.</li>
+        <li>GitHub Actions workflow on every PR + push to <code>main</code>: lint → typecheck → test → build → scan → deploy.</li>
+        <li>Image published to GitHub Container Registry tagged with the commit SHA.</li>
+        <li>Production deploy from <code>main</code> to a real host (Fly.io / Render / Railway).</li>
+        <li>A post-deploy smoke test with auto-rollback.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Write a multi-stage Dockerfile</h4>
+        <p>Create <code>Dockerfile</code>:</p>
+<pre>FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN  npm ci
+COPY tsconfig.json ./
+COPY src ./src
+COPY migrations ./migrations
+RUN  npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN  npm ci --omit=dev &amp;&amp; npm cache clean --force
+COPY --from=build /app/dist        ./dist
+COPY --from=build /app/migrations  ./migrations
+
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/server.js"]</pre>
+        <p>Create <code>.dockerignore</code>:</p>
+<pre>node_modules
+dist
+.git
+.env
+.env.*
+!.env.example
+coverage
+**/*.test.ts
+tests
+docs
+ops</pre>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Build and run locally</h4>
+<pre>docker build -t url-shortener:dev .
+docker run --rm -p 3000:3000 \
+  -e DATABASE_URL=postgres://shortener:dev@host.docker.internal:5432/shortener \
+  -e REDIS_URL=redis://host.docker.internal:6379 \
+  -e JWT_SECRET=dev-only \
+  url-shortener:dev</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>curl http://localhost:3000/health</code> → <code>{"ok":true}</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Write the GitHub Actions workflow</h4>
+        <p>Create <code>.github/workflows/ci.yml</code>:</p>
+<pre>name: ci
+on:
+  pull_request:
+  push: { branches: [main] }
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres: { image: postgres:16-alpine, env: { POSTGRES_PASSWORD: dev, POSTGRES_USER: shortener, POSTGRES_DB: shortener }, ports: ["5432:5432"], options: --health-cmd "pg_isready -U shortener" --health-interval 5s --health-retries 10 }
+      redis:    { image: redis:7-alpine, ports: ["6379:6379"] }
+    env:
+      DATABASE_URL: postgres://shortener:dev@localhost:5432/shortener
+      REDIS_URL:    redis://localhost:6379
+      JWT_SECRET:   ci-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run migrate:up
+      - run: npm test
+      - run: npm run test:integration
+
+  build-and-scan:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write, id-token: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+      - uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          severity:  CRITICAL,HIGH
+          exit-code: '1'
+
+  deploy-prod:
+    needs: build-and-scan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --image ghcr.io/${{ github.repository }}:${{ github.sha }} --strategy rolling
+        env: { FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} }
+      - name: smoke
+        run: |
+          for i in 1 2 3 4 5; do
+            sleep 5
+            curl -fsS https://&lt;your-app&gt;.fly.dev/health &amp;&amp; exit 0
+          done
+          flyctl deploy --image ghcr.io/${{ github.repository }}:$(git rev-parse HEAD~1) --strategy rolling
+          exit 1
+        env: { FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }} }</pre>
+        <div class="gotcha"><strong>Gotcha:</strong> Fly is one option among many. Render, Railway, Cloud Run, and a tiny self-hosted VM all work — replace the deploy step with the appropriate CLI.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Set up the host (Fly.io example)</h4>
+<pre>fly auth login
+fly launch --no-deploy --name &lt;your-app&gt;
+fly secrets set JWT_SECRET=$(openssl rand -base64 32) \
+                DATABASE_URL=&lt;managed-postgres-url&gt; \
+                REDIS_URL=&lt;managed-redis-url&gt;
+fly deploy</pre>
+        <p>Then in GitHub → Settings → Secrets → Actions → add <code>FLY_API_TOKEN</code> from <code>fly tokens create</code>.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Open a PR and watch CI</h4>
+<pre>git checkout -b module-08
+git add .
+git commit -m "module 08: dockerfile + github actions ci/cd"
+git push -u origin module-08</pre>
+        <p>Open the PR. Watch the Actions tab — every step should turn green.</p>
+        <div class="verify"><strong>✓ Verify:</strong> the GHCR package page shows an image with your commit SHA.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Test the auto-rollback</h4>
+        <p>Introduce a bug deliberately on a branch (make <code>/health</code> return 500), merge to <code>main</code>, watch the deploy job fail and roll back to the previous SHA. Then revert the bad commit.</p>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Add branch protection</h4>
+        <p>GitHub → Settings → Branches → <code>main</code>:</p>
+        <ul style="font-size:14px;line-height:1.7;">
+          <li>Require PR before merging.</li>
+          <li>Require these checks: <code>test</code>, <code>build-and-scan</code>.</li>
+          <li>Require branches up to date.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Common Gotchas</div><h2>If Something Goes Wrong</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Trivy fails on a vendored CVE</strong> — pin or upgrade the base image; if the CVE is in a transitive dep with no fix, document a temporary waiver.</li>
+        <li><strong>npm ci fails on Alpine</strong> — some native deps need build tools; switch to <code>node:20-bookworm-slim</code> if argon2 won't build.</li>
+        <li><strong>Image larger than 500MB</strong> — you're including dev deps or source. Check your <code>.dockerignore</code> and the production stage's <code>npm ci --omit=dev</code>.</li>
+        <li><strong>OIDC not configured</strong> — the workflow as written uses <code>GITHUB_TOKEN</code> for GHCR (works out of the box). For cloud deploys, set up OIDC federation per your provider's guide.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What's Next</div><h2>Move On</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="module-07.html">← Module 07</a>
+        <a href="module-09.html">Module 09 — Security Hardening →</a>
+        <a href="../url-shortener.html">↑ Back to track</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>
