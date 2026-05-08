@@ -86,13 +86,17 @@
 }
 
 <span class="com">// A small domain class with modern Java features</span>
-<span class="kw">public record</span> Customer(String name, <span class="kw">int</span> age) {
+<span class="kw">record</span> Customer(String name, <span class="kw">int</span> age) {
     <span class="kw">public boolean</span> <span class="fn">isAdult</span>() { <span class="kw">return</span> age &gt;= <span class="num">18</span>; }
 }
 
-List&lt;Customer&gt; adults = customers.stream()
-    .filter(Customer::isAdult)
-    .toList();</pre>
+<span class="kw">class</span> Demo {
+    <span class="kw">static</span> List&lt;Customer&gt; <span class="fn">findAdults</span>(List&lt;Customer&gt; customers) {
+        <span class="kw">return</span> customers.stream()
+            .filter(Customer::isAdult)
+            .toList();
+    }
+}</pre>
     </div>
   </section>
 
