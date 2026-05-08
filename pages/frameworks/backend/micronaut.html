@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Micronaut · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<!-- SEO -->
+<meta name="description" content="Modern, lightweight JVM framework. Dependency injection at compile-time, minimal reflection, cloud-ready. Fast startup and low memory — ideal for microservices." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/frameworks/backend/micronaut.html" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Micronaut · Backend Framework Deep Dive" />
+<meta property="og:description" content="Modern, lightweight JVM framework. Dependency injection at compile-time, minimal reflection, cloud-ready. Fast startup and low memory — ideal for microservices." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/frameworks/backend/micronaut.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Micronaut · Backend Framework Deep Dive" />
+<meta name="twitter:description" content="Modern, lightweight JVM framework. Dependency injection at compile-time, minimal reflection, cloud-ready. Fast startup and low memory — ideal for microservices." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" /><link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Micronaut</h1>
+    <p class="lede">Modern, lightweight JVM framework. Dependency injection at compile-time, minimal reflection, cloud-ready. Fast startup and low memory — ideal for microservices.</p>
+    <div class="tags"><span>Java</span><span>JVM</span><span>Kotlin</span><span>Groovy</span><span>Microservices</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val">Java · <a href="../../languages/kotlin.html" style="color:var(--blue);text-decoration:none;">Kotlin</a> · Groovy</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2018 · Object Computing Inc (OCI)</div></div>
+        <div class="f"><div class="label">Built on</div><div class="val">Netty (HTTP), Jakarta EE standards</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Compile-time DI, functional, minimal magic</div></div>
+        <div class="f"><div class="label">Build</div><div class="val">Maven, Gradle, CLI</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Micronaut 4.x · JDK 17+</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Compile-time DI:</strong> Dependency injection resolved at compile time, not runtime reflection. No classpath scanning.</li>
+          <li><strong>Minimal magic:</strong> No bytecode generation or proxies at runtime — predictable, debuggable.</li>
+          <li><strong>Native image ready:</strong> Plays nicely with GraalVM native image; no special config needed.</li>
+          <li><strong>Functional first:</strong> Immutable by default, method references, pipelines.</li>
+          <li><strong>Built on Netty:</strong> Non-blocking HTTP, excellent for high-concurrency workloads.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Micronaut</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">@Controller</span>(<span class="str">"/api/products"</span>)
+<span class="kw">public class</span> ProductController {
+    <span class="kw">private final</span> ProductService service;
+
+    <span class="kw">public</span> <span class="fn">ProductController</span>(ProductService service) {
+        <span class="kw">this</span>.service = service;
+    }
+
+    <span class="kw">@Get</span>
+    <span class="kw">public</span> List&lt;Product&gt; <span class="fn">list</span>() {
+        <span class="kw">return</span> service.<span class="fn">findAll</span>();
+    }
+
+    <span class="kw">@Post</span>
+    <span class="kw">public</span> HttpResponse&lt;Product&gt; <span class="fn">create</span>(<span class="kw">@Body</span> Product p) {
+        Product created = service.<span class="fn">save</span>(p);
+        <span class="kw">return</span> HttpResponse.<span class="fn">created</span>(created);
+    }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Compile-Time Dependency Injection</summary>
+        <div class="drill-body">
+          <p>Micronaut generates the entire object graph at compile time using annotation processing. No reflection or classpath scanning at startup. Result: instant boot, tiny memory footprint, and errors caught early.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>First-Class Language Support</summary>
+        <div class="drill-body">
+          <p>Write in Java, Kotlin, or Groovy. Micronaut treats them equally. Great for polyglot teams; Kotlin support is exceptional with extension functions and coroutines.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Declarative HTTP Clients</summary>
+        <div class="drill-body">
+          <p>Define a simple interface with annotations; Micronaut generates the HTTP client at compile time. No string building, no typos. Perfect for talking to external APIs or internal services.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Service Discovery &amp; Cluster</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li><strong>Service discovery:</strong> Kubernetes, Consul, Eureka integration out of the box.</li>
+            <li><strong>Client-side LB:</strong> Built-in load balancing for discovered services.</li>
+            <li><strong>Circuit breakers:</strong> Resilience4j integration to handle failures gracefully.</li>
+            <li><strong>Distributed tracing:</strong> Zipkin, Jaeger support baked in.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Micronaut Data</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Data Access</th><th>Details</th></tr></thead>
+            <tbody>
+              <tr><td>JDBC</td><td>Type-safe, compile-time verified queries.</td></tr>
+              <tr><td>JPA / Hibernate</td><td>Standard ORM with compile-time optimizations.</td></tr>
+              <tr><td>Mongo</td><td>MongoDB driver integration.</td></tr>
+              <tr><td>SQL</td><td>Reactive SQL clients for async DB calls.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Compile-time safety — errors caught early, not at runtime.</li>
+            <li>Extremely fast startup and low memory footprint.</li>
+            <li>Excellent Kotlin support and functional programming model.</li>
+            <li>GraalVM native image works seamlessly.</li>
+            <li>Modern, opinionated API design.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller community and ecosystem vs Spring.</li>
+            <li>Fewer tutorials and Stack Overflow answers.</li>
+            <li>Compile-time DI can feel rigid if you need runtime flexibility.</li>
+            <li>Less mature monitoring/observability integrations.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Distributed Microservices</h5><p>Service discovery, circuit breakers, and client-side LB built in.</p></div>
+        <div class="card teal"><h5>Kotlin Codebases</h5><p>First-class Kotlin support with coroutines and extension functions.</p></div>
+        <div class="card mid"><h5>Serverless &amp; FaaS</h5><p>AWS Lambda, Google Cloud Functions — instant cold starts.</p></div>
+        <div class="card accent"><h5>Resource-Constrained Environments</h5><p>Edge devices, IoT, embedded systems — minimal footprint.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="quarkus.html">Quarkus</a><a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

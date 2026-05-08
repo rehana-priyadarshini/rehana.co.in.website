@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quarkus · Backend Framework Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<!-- SEO -->
+<meta name="description" content="Cloud-native Java built on standards. Instant startup, tiny memory footprint, designed for Kubernetes. GraalVM native images ship as single binaries." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/frameworks/backend/quarkus.html" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Quarkus · Backend Framework Deep Dive" />
+<meta property="og:description" content="Cloud-native Java built on standards. Instant startup, tiny memory footprint, designed for Kubernetes. GraalVM native images ship as single binaries." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/frameworks/backend/quarkus.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Quarkus · Backend Framework Deep Dive" />
+<meta name="twitter:description" content="Cloud-native Java built on standards. Instant startup, tiny memory footprint, designed for Kubernetes. GraalVM native images ship as single binaries." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" /><link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Backend Framework Deep Dive</div>
+    <h1>Quarkus</h1>
+    <p class="lede">Cloud-native Java built on standards. Instant startup, tiny memory footprint, designed for Kubernetes. GraalVM native images ship as single binaries.</p>
+    <div class="tags"><span>Java</span><span>JVM</span><span>Cloud-native</span><span>Kubernetes</span><span>Microservices</span></div>
+    <a class="back" href="../../../index.html#ch-server">← Back to Server Side</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Quick Facts</div><h2>At a Glance</h2></div>
+    <div class="chapter-body">
+      <div class="facts">
+        <div class="f"><div class="label">Language</div><div class="val"><a href="../../languages/java.html" style="color:var(--blue);text-decoration:none;">Java</a> (Kotlin OK)</div></div>
+        <div class="f"><div class="label">Created</div><div class="val">2019 · Red Hat</div></div>
+        <div class="f"><div class="label">Built on</div><div class="val">Jakarta EE standards (CDI, JAX-RS, JPA)</div></div>
+        <div class="f"><div class="label">Style</div><div class="val">Reactive-first, container-optimized</div></div>
+        <div class="f"><div class="label">Build</div><div class="val">Maven, Gradle</div></div>
+        <div class="f"><div class="label">Latest</div><div class="val">Quarkus 3.x · JDK 17+</div></div>
+      </div>
+
+      <div class="basics">
+        <h4>Basic Concepts</h4>
+        <ul>
+          <li><strong>Build-time optimization:</strong> Configuration and annotation scanning happen at build time, not startup. Massive reduction in memory and boot latency.</li>
+          <li><strong>Live Coding:</strong> <code>quarkus:dev</code> hot-reloads code without restart — best-in-class DX.</li>
+          <li><strong>Container-first:</strong> Designed for Docker and Kubernetes from the ground up; build slim OCI images.</li>
+          <li><strong>Native image:</strong> Compile with GraalVM to a native binary — 20ms startup, 50MB RAM baseline.</li>
+          <li><strong>Reactive foundation:</strong> Mutiny for reactive streams, WebSockets, Server-Sent Events natively.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Syntax</div><h2>Taste of Quarkus</h2></div>
+    <div class="chapter-body">
+<pre><span class="kw">import</span> io.quarkus.runtime.QuarkusApplication;
+
+<span class="kw">@QuarkusMain</span>
+<span class="kw">public class</span> StoreApp <span class="kw">implements</span> QuarkusApplication {
+    <span class="kw">@Override</span>
+    <span class="kw">public int</span> <span class="fn">run</span>(String... args) {
+        System.<span class="fn">out</span>.println(<span class="str">"Quarkus app running"</span>);
+        <span class="kw">return</span> 0;
+    }
+}
+
+<span class="kw">@Path</span>(<span class="str">"/api/products"</span>)
+<span class="kw">@Produces</span>(MediaType.APPLICATION_JSON)
+<span class="kw">public class</span> ProductResource {
+    <span class="kw">@Inject</span> ProductService service;
+
+    <span class="kw">@GET</span>
+    <span class="kw">public</span> List&lt;Product&gt; <span class="fn">list</span>() {
+        <span class="kw">return</span> service.<span class="fn">findAll</span>();
+    }
+
+    <span class="kw">@POST</span>
+    <span class="kw">public</span> Product <span class="fn">create</span>(Product p) {
+        <span class="kw">return</span> service.<span class="fn">save</span>(p);
+    }
+}</pre>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Mechanics</div><h2>Key Features</h2></div>
+    <div class="chapter-body">
+
+      <details class="drill" open>
+        <summary>Build-Time Processing</summary>
+        <div class="drill-body">
+          <p>Quarkus' secret sauce: CDI beans are instantiated at build time, config is resolved, and reflection metadata is pre-computed. At runtime, the JVM just executes warm code. Results in 10x faster startup vs Spring Boot on JVM.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Reactive Everywhere</summary>
+        <div class="drill-body">
+          <p>Mutiny is baked in for reactive streams. Write async pipelines that consume fewer threads than traditional servlets. Perfect for I/O-bound services, real-time APIs, WebSockets.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Dev Mode Magic</summary>
+        <div class="drill-body">
+          <p><code>./mvnw quarkus:dev</code> boots the app in seconds with hot reload. Change a source file, refresh your browser — no restart. Fastest feedback loop in the JVM ecosystem.</p>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Native Image First-Class Citizen</summary>
+        <div class="drill-body">
+          <ul style="font-size:14px;line-height:1.6">
+            <li>Native Quarkus apps start in ~20ms (vs 1-3s for JVM).</li>
+            <li>Memory footprint drops to 50-100MB (vs 500MB+ for Spring Boot).</li>
+            <li><code>./mvnw clean package -Pnative</code> compiles to native binary.</li>
+            <li>Seamless Docker integration; AWS Lambda, Google Cloud Run use cases.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="drill">
+        <summary>Extensions Ecosystem</summary>
+        <div class="drill-body">
+          <table>
+            <thead><tr><th>Extension</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>REST / RESTEasy Reactive</td><td>JAX-RS REST endpoints.</td></tr>
+              <tr><td>Panache (JPA)</td><td>Simplified database access with active-record style.</td></tr>
+              <tr><td>Reactive SQL Clients</td><td>Non-blocking database drivers.</td></tr>
+              <tr><td>Security / OpenID Connect</td><td>Auth via standards; OIDC, JWT, SAML.</td></tr>
+              <tr><td>Messaging (RabbitMQ, Kafka)</td><td>Event-driven architecture.</td></tr>
+              <tr><td>gRPC</td><td>High-performance RPC framework.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Trade-offs</div><h2>Strengths &amp; Weaknesses</h2></div>
+    <div class="chapter-body">
+      <div class="two-col pros-cons">
+        <div class="pros">
+          <h6>Strengths</h6>
+          <ul>
+            <li>Blazing-fast startup and native image support.</li>
+            <li>Minimal memory footprint — perfect for Kubernetes.</li>
+            <li>Outstanding dev experience with hot reload.</li>
+            <li>Standardized (Jakarta EE) — not trapped in a framework.</li>
+            <li>Strong backing from Red Hat / IBM.</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h6>Weaknesses</h6>
+          <ul>
+            <li>Smaller ecosystem than Spring; fewer third-party libs.</li>
+            <li>GraalVM native compilation can be tricky (reflection, classpath scanning).</li>
+            <li>Less enterprise hiring pool than Spring Boot.</li>
+            <li>Reactive-first mindset requires learning Mutiny.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Where It Shines</div><h2>Sweet Spots</h2></div>
+    <div class="chapter-body">
+      <div class="grid">
+        <div class="card"><h5>Kubernetes Microservices</h5><p>Container-optimized by design. Minimal footprint per pod.</p></div>
+        <div class="card teal"><h5>Serverless &amp; Edge</h5><p>AWS Lambda, Google Cloud Run, Cloudflare Workers — fast cold starts.</p></div>
+        <div class="card mid"><h5>Real-Time APIs</h5><p>Reactive streams + WebSockets + SSE for live data feeds.</p></div>
+        <div class="card accent"><h5>Cloud-Native Startups</h5><p>Modern tech stack, lower operating costs (fewer resources).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Continue</div><h2>Other Backend Frameworks</h2></div>
+    <div class="chapter-body">
+      <div class="nav-other">
+        <a href="spring-boot.html">Spring Boot</a><a href="micronaut.html">Micronaut</a><a href="aspnet-core.html">ASP.NET Core</a><a href="django.html">Django</a><a href="fastapi.html">FastAPI</a><a href="express.html">Express</a><a href="nestjs.html">NestJS</a><a href="rails.html">Rails</a><a href="laravel.html">Laravel</a><a href="gin.html">Gin</a><a href="ktor.html">Ktor</a>
+        <a href="../../../index.html#ch-server">↑ Back to Server Side</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>
