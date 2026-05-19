@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cryptography · Security Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Cryptography — the math that keeps secrets secret. Encryption, hashing, digital signatures, key management." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/security/cryptography.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Cryptography · Security Deep Dive" />
+<meta property="og:description" content="The math that keeps secrets secret." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/security/cryptography.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Cryptography · Security Deep Dive" />
+<meta name="twitter:description" content="The math that keeps secrets secret." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-S12BBKZXSP");
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Security Deep Dive</div>
+    <h1>Cryptography — Secrets, Verification, and Trust</h1>
+    <p class="lede">Cryptography keeps secrets hidden, verifies data hasn't changed, and proves you are who you claim. Most developers don't need to understand the math — but everyone needs to understand the tradeoffs.</p>
+    <div class="tags"><span>Encryption</span><span>Hashing</span><span>Digital Signatures</span><span>Key Management</span><span>TLS/SSL</span></div>
+    <a class="back" href="../../index.html#ch-security">← Back to Security</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Three Core Problems</div><h2>What Cryptography Solves</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Confidentiality:</strong> keep data secret. Use encryption.</li>
+        <li><strong>Integrity:</strong> prove data hasn't changed. Use hashing or signatures.</li>
+        <li><strong>Authentication:</strong> prove who you are. Use signatures or HMAC.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
+    Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll("a[href^=\"#\"]").forEach(a => {
+    a.addEventListener("click", () => {
+      const id = a.getAttribute("href").slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === "DETAILS") target.open = true;
+    });
+  });
+</script>
+
+</body>
+</html>

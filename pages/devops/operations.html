@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Operational Excellence · DevOps Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Operational excellence — the discipline of running systems well." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/operations.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Operational Excellence · DevOps Deep Dive" />
+<meta property="og:description" content="Running systems with discipline and grace." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/operations.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Operational Excellence · DevOps Deep Dive" />
+<meta name="twitter:description" content="Running systems with discipline and grace." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-S12BBKZXSP");
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps Deep Dive</div>
+    <h1>Operational Excellence — Running Systems Well</h1>
+    <p class="lede">Great code means nothing if the system crashes at 2am. Operational excellence is the discipline of documenting how systems work, preparing for failure, responding quickly when things go wrong, and continuously improving based on what we learn.</p>
+    <div class="tags"><span>Runbooks</span><span>Incident Response</span><span>On-call Discipline</span><span>Postmortems</span><span>Documentation</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Incident Response</div><h2>When Things Break</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Detection:</strong> monitoring alerts you to the problem.</li>
+        <li><strong>Triage:</strong> what is broken? Who is affected?</li>
+        <li><strong>Mitigation:</strong> stop the bleeding. Rollback, scale, or failover.</li>
+        <li><strong>Root cause:</strong> figure out what actually broke.</li>
+        <li><strong>Communication:</strong> keep stakeholders informed.</li>
+        <li><strong>Resolution:</strong> restore full functionality.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
+    Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll("a[href^=\"#\"]").forEach(a => {
+    a.addEventListener("click", () => {
+      const id = a.getAttribute("href").slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === "DETAILS") target.open = true;
+    });
+  });
+</script>
+
+</body>
+</html>

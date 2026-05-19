@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Idempotency · Architecture Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Idempotency — making operations safe to retry. Idempotency keys, duplicate detection, deduplication ledgers." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/architecture/idempotency.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Idempotency · Architecture Deep Dive" />
+<meta property="og:description" content="Making operations safe to retry." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/architecture/idempotency.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Idempotency · Architecture Deep Dive" />
+<meta name="twitter:description" content="Making operations safe to retry." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-S12BBKZXSP");
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Architecture Deep Dive</div>
+    <h1>Idempotency — Safe Retries</h1>
+    <p class="lede">Networks fail. Your client can't tell if a request succeeded or just timed out. Idempotency solves this: the same request can be safely executed multiple times without duplicate side effects. Use idempotency keys to track retries.</p>
+    <div class="tags"><span>Idempotency Keys</span><span>Duplicate Detection</span><span>Deduplication Ledger</span><span>Retry Safety</span><span>Exactly-Once Semantics</span></div>
+    <a class="back" href="../../index.html#ch-arch">← Back to Architecture</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Problem</div><h2>The Retry Dilemma</h2></div>
+    <div class="chapter-body">
+      <p>Client calls an API to transfer $100. Server processes it but response is lost. Client retries. Now $200 is transferred. This is disaster for money, and for any operation with side effects.</p>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Network failures:</strong> timeouts, lost packets, dropped connections.</li>
+        <li><strong>Client retry logic:</strong> without idempotency, retries cause duplicates.</li>
+        <li><strong>Exactly-once semantics:</strong> hard to achieve in distributed systems.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
+    Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll("a[href^=\"#\"]").forEach(a => {
+    a.addEventListener("click", () => {
+      const id = a.getAttribute("href").slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === "DETAILS") target.open = true;
+    });
+  });
+</script>
+
+</body>
+</html>

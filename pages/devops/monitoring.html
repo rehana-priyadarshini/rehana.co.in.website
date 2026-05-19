@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monitoring & Alerting · DevOps Deep Dive</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+<meta name="description" content="Monitoring and alerting — the eyes and ears of your system. Metrics, logs, traces, and the discipline of keeping systems visible." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/devops/monitoring.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Monitoring & Alerting · DevOps Deep Dive" />
+<meta property="og:description" content="Knowing what's happening in production." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/devops/monitoring.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Monitoring & Alerting · DevOps Deep Dive" />
+<meta name="twitter:description" content="Knowing what's happening in production." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">DevOps Deep Dive</div>
+    <h1>Monitoring & Alerting — Visibility into Production</h1>
+    <p class="lede">You can't manage what you can't measure. Monitoring is the practice of collecting data about your systems: how fast are requests? How much disk space is left? Are users getting errors? Alerting wakes someone up when things go wrong. Together, they give you the visibility to operate systems confidently.</p>
+    <div class="tags"><span>Metrics</span><span>Logging</span><span>Distributed Tracing</span><span>Alerting</span><span>Dashboards</span></div>
+    <a class="back" href="../../index.html#ch-devops">← Back to DevOps</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Three Pillars</div><h2>Observability Fundamentals</h2></div>
+    <div class="chapter-body">
+      <details class="drill" open>
+        <summary>Metrics</summary>
+        <div class="drill-body">
+          <p>Numeric measurements over time: request latency, error rate, queue depth, CPU usage, disk usage. Aggregated (p50, p95, p99) or individual data points.</p>
+          <ul style="font-size:13.5px;line-height:1.6;margin-top:10px;">
+            <li><strong>System metrics:</strong> CPU, memory, disk, network.</li>
+            <li><strong>Application metrics:</strong> requests/sec, error rate, latency.</li>
+            <li><strong>Business metrics:</strong> transactions completed, revenue, user signups.</li>
+          </ul>
+        </div>
+      </details>
+      <details class="drill">
+        <summary>Logs</summary>
+        <div class="drill-body">
+          <p>Detailed, unstructured (or structured) text output from services. What happened and when. Essential for debugging specific incidents.</p>
+          <ul style="font-size:13.5px;line-height:1.6;margin-top:10px;">
+            <li><strong>Application logs:</strong> what your code is doing.</li>
+            <li><strong>System logs:</strong> OS-level events (kernel panics, package updates).</li>
+            <li><strong>Access logs:</strong> HTTP requests (who, when, what, response code).</li>
+          </ul>
+        </div>
+      </details>
+      <details class="drill">
+        <summary>Traces</summary>
+        <div class="drill-body">
+          <p>Follow a single request through the entire system. Which services did it touch? How long in each? Where did it slow down?</p>
+          <ul style="font-size:13.5px;line-height:1.6;margin-top:10px;">
+            <li><strong>Use case:</strong> debugging latency issues, understanding critical paths, visualizing service dependencies.</li>
+            <li><strong>Tools:</strong> Jaeger, Zipkin, Datadog APM.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
+    Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', () => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === 'DETAILS') target.open = true;
+    });
+  });
+</script>
+
+</body>
+</html>
