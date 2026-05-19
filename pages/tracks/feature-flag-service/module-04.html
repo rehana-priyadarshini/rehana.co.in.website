@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 04 Tutorial · Feature Flag Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 04 — implement SDK clients for easy flag evaluation in applications." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-04.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 04 Tutorial · Feature Flag Service Track" />
+<meta property="og:description" content="SDK Integration & Clients — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-04.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 04 Tutorial · Feature Flag Service Track" />
+<meta name="twitter:description" content="SDK Integration & Clients — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Feature Flag Service Tutorial · Module 04 of 10</div>
+    <h1>SDK Integration &amp; Clients</h1>
+    <p class="lede">Build SDKs for Node.js and JavaScript so applications can easily check flags. Cache flag definitions locally with periodic updates. Support offline evaluation. By the end, any app can integrate flags with a few lines of code.</p>
+    <div class="tags"><span>~4–5 hrs</span><span>Intermediate</span><span>SDK focus</span></div>
+    <a class="back" href="../feature-flag-service.html#m4">← Back to Module 04 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Node.js SDK: <code>FeatureFlagClient</code> class with <code>isEnabled(flagName, context)</code> method.</li>
+        <li>Local caching: Flags refreshed every 60 seconds (configurable).</li>
+        <li>Offline support: Cached flags work even if service is temporarily unavailable.</li>
+        <li><code>npm install @feature-flag-service/sdk</code> (published or local monorepo).</li>
+        <li>JavaScript/Browser SDK with same interface.</li>
+        <li>Metrics: Cache hit rate, evaluation latency, flag refresh failures.</li>
+        <li>Example usage in demo app.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create Node.js SDK</h4>
+        <p>Create <code>sdk/node/src/client.ts</code>:</p>
+<pre>import axios from 'axios';
+
+interface Flag {
+  id: string;
+  name: string;
+  status: string;
+  rules: any[];
+}
+
+export interface EvaluationContext {
+  user_id?: string;
+  segment?: string;
+  attributes?: Record<string, any>;
+}
+
+export class FeatureFlagClient {
+  private apiUrl: string;
+  private clientId: string;
+  private flags: Map<string, Flag> = new Map();
+  private lastRefresh: number = 0;
+  private refreshInterval: number;
+  private cacheHits: number = 0;
+  private cacheMisses: number = 0;
+
+  constructor(apiUrl: string, clientId: string, refreshInterval = 60000) {
+    this.apiUrl = apiUrl;
+    this.clientId = clientId;
+    this.refreshInterval = refreshInterval;
+    this.startRefresh();
+  }
+
+  async isEnabled(flagName: string, context: EvaluationContext = {}): Promise<boolean> {
+    try {
+      const response = await axios.post(
+        `${this.apiUrl}/flags/${flagName}/evaluate`,
+        context,
+        { headers: { 'X-Client-ID': this.clientId } }
+      );
+      return response.data.enabled;
+    } catch (err) {
+      console.error(`Failed to evaluate flag ${flagName}:`, err);
+      return false;
+    }
+  }
+
+  private async startRefresh() {
+    setInterval(async () => {
+      try {
+        const response = await axios.get(`${this.apiUrl}/flags`, {
+          headers: { 'X-Client-ID': this.clientId }
+        });
+        this.flags.clear();
+        response.data.flags.forEach((flag: Flag) => {
+          this.flags.set(flag.name, flag);
+        });
+        this.lastRefresh = Date.now();
+      } catch (err) {
+        console.error('Failed to refresh flags:', err);
+      }
+    }, this.refreshInterval);
+  }
+
+  getMetrics() {
+    return {
+      cacheHits: this.cacheHits,
+      cacheMisses: this.cacheMisses,
+      cachedFlags: this.flags.size,
+      lastRefresh: new Date(this.lastRefresh)
+    };
+  }
+}

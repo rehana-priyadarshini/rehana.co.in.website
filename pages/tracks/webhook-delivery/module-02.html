@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 02 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 02 — implement POST /webhooks, POST /events, and the core API contract." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-02.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 02 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Core webhook API — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-02.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 02 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Core webhook API — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 02 of 10</div>
+    <h1>Core Webhook API</h1>
+    <p class="lede">Implement the contract: let customers register webhooks and emit events. By the end, you'll have <code>POST /webhooks</code>, <code>POST /events</code>, and proper data validation.</p>
+    <div class="tags"><span>~4–6 hrs</span><span>Intermediate</span><span>Database required</span></div>
+    <a class="back" href="../webhook-delivery.html#m2">← Back to Module 02 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><code>POST /webhooks</code> accepts URL, secret, event_types; stores in DB; returns webhook ID.</li>
+        <li><code>GET /webhooks/:id</code> retrieves webhook metadata.</li>
+        <li><code>POST /events</code> accepts event type and payload; stores immediately in DB.</li>
+        <li>Input validation: URL format, event type enum, max payload size.</li>
+        <li>Proper HTTP status codes: 201 on create, 400 on bad input, 404 on missing.</li>
+        <li>Database migrations committed and working.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Set up database migrations</h4>
+        <p>Create <code>src/db/migrations.ts</code>:</p>
+<pre>import { Pool } from 'pg';
+
+export async function runMigrations(pool: Pool) {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS webhooks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        url TEXT NOT NULL,
+        secret TEXT NOT NULL,
+        event_types TEXT[] NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        type TEXT NOT NULL,
+        payload JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS deliveries (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        webhook_id UUID NOT NULL REFERENCES webhooks(id),
+        event_id UUID NOT NULL REFERENCES events(id),
+        status TEXT NOT NULL DEFAULT 'pending',
+        attempts INT DEFAULT 0,
+        last_error TEXT,
+        next_retry_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('Migrations completed successfully');
+  } finally {
+    client.release();
+  }
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> File exists at <code>src/db/migrations.ts</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Create database connection and initialize on startup</h4>
+        <p>Create <code>src/db/pool.ts</code>:</p>
+<pre>import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgres://postgres:password@localhost:5432/webhook_service'
+});
+
+export default pool;</pre>
+        <p>Update <code>src/index.ts</code> to run migrations:</p>
+<pre>import express from 'express';
+import pool from './db/pool';
+import { runMigrations } from './db/migrations';
+
+const app = express();
+app.use(express.json());
+
+// Routes will go here
+
+async function start() {
+  try {
+    await runMigrations(pool);
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+start();</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm run dev</code> logs "Migrations completed successfully".</div>
+        <div class="gotcha"><strong>⚠ Gotcha:</strong> Make sure Postgres is running: <code>docker ps</code> should show a postgres container, or <code>psql -U postgres</code> should work.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Implement POST /webhooks</h4>
+        <p>Create <code>src/routes/webhooks.ts</code>:</p>
+<pre>import { Router, Request, Response } from 'express';
+import pool from '../db/pool';
+import { v4 as uuidv4 } from 'uuid';
+
+const router = Router();
+
+const VALID_EVENT_TYPES = ['order.created', 'order.updated', 'user.signed_up'];
+
+// POST /webhooks
+router.post('/', async (req: Request, res: Response) => {
+  const { url, secret, event_types } = req.body;
+
+  // Validate
+  if (!url || !secret) {
+    return res.status(400).json({ error: 'url and secret required' });
+  }
+  if (!Array.isArray(event_types) || event_types.length === 0) {
+    return res.status(400).json({ error: 'event_types must be non-empty array' });
+  }
+  if (!event_types.every(t => VALID_EVENT_TYPES.includes(t))) {
+    return res.status(400).json({ error: `event_types must be one of: ${VALID_EVENT_TYPES.join(', ')}` });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO webhooks (url, secret, event_types) VALUES ($1, $2, $3) RETURNING *',
+      [url, secret, event_types]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create webhook' });
+  }
+});
+
+// GET /webhooks/:id
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM webhooks WHERE id = $1',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Webhook not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch webhook' });
+  }
+});
+
+export default router;</pre>
+        <p>Update <code>src/index.ts</code> to use the router:</p>
+<pre>import webhooksRouter from './routes/webhooks';
+
+app.use('/webhooks', webhooksRouter);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Test with curl:
+<pre>curl -X POST http://localhost:3000/webhooks \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "url": "https://example.com/webhook",
+    "secret": "my-secret",
+    "event_types": ["order.created"]
+  }'</pre>
+Should return 201 with the webhook ID.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Implement POST /events</h4>
+        <p>Create <code>src/routes/events.ts</code>:</p>
+<pre>import { Router, Request, Response } from 'express';
+import pool from '../db/pool';
+
+const router = Router();
+
+const VALID_EVENT_TYPES = ['order.created', 'order.updated', 'user.signed_up'];
+
+// POST /events
+router.post('/', async (req: Request, res: Response) => {
+  const { type, payload } = req.body;
+
+  // Validate
+  if (!type || !VALID_EVENT_TYPES.includes(type)) {
+    return res.status(400).json({ error: `type must be one of: ${VALID_EVENT_TYPES.join(', ')}` });
+  }
+  if (!payload || typeof payload !== 'object') {
+    return res.status(400).json({ error: 'payload must be a JSON object' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO events (type, payload) VALUES ($1, $2) RETURNING *',
+      [type, payload]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create event' });
+  }
+});
+
+export default router;</pre>
+        <p>Update <code>src/index.ts</code>:</p>
+<pre>import eventsRouter from './routes/events';
+
+app.use('/events', eventsRouter);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Test with curl:
+<pre>curl -X POST http://localhost:3000/events \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "type": "order.created",
+    "payload": {"order_id": 123, "amount": 99.99}
+  }'</pre>
+Should return 201 with the event ID.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Commit your work</h4>
+<pre>git add -A
+git commit -m "feat: implement core webhook and event API
+
+- POST /webhooks: register webhook endpoints
+- POST /events: emit events to the system
+- Database migrations for webhooks, events, deliveries
+- Input validation and proper HTTP status codes"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 03?</h2></div>
+    <div class="chapter-body">
+      <p>You now have the basic API contract. Next, you'll implement reliable delivery with retries and exponential backoff. Head to Module 03.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m3">→ Start Module 03: Reliable Delivery &amp; Retries</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

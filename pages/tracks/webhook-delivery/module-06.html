@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 06 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 06 — optimize for performance with batching and load testing." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-06.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 06 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Performance and batching — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-06.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 06 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Performance and batching — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 06 of 10</div>
+    <h1>Performance &amp; Batching</h1>
+    <p class="lede">Can you deliver 1000+ events/sec? Optimize: batch database inserts, run multiple workers, profile bottlenecks, and load test. By the end, you'll have a high-throughput system with measured performance.</p>
+    <div class="tags"><span>~4–5 hrs</span><span>Intermediate</span><span>Performance focus</span></div>
+    <a class="back" href="../webhook-delivery.html#m6">← Back to Module 06 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Batch insertion of delivery jobs (not one-by-one).</li>
+        <li>Multiple worker processes running in parallel.</li>
+        <li>Load test with <code>k6</code> or <code>Locust</code>: measure throughput, p50, p95, p99.</li>
+        <li>Achieve 1000+ events/sec to 100 webhooks on local hardware.</li>
+        <li>Scaling test: adding 2nd worker roughly doubles throughput.</li>
+        <li>Performance report committed to <code>/docs/perf</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Optimize POST /events to batch enqueue deliveries</h4>
+        <p>Update <code>src/routes/events.ts</code>:</p>
+<pre>// Instead of one-by-one inserts:
+const batchDeliveries = webhooksResult.rows.map(webhook => {
+  const deliveryId = crypto.randomUUID();
+  return [deliveryId, webhook.id, eventRow.id, 'pending'];
+});
+
+// Batch insert
+if (batchDeliveries.length > 0) {
+  const values = batchDeliveries.map((_, i) =>
+    `($${i*4+1}, $${i*4+2}, $${i*4+3}, $${i*4+4})`
+  ).join(',');
+
+  const flatValues = batchDeliveries.flat();
+  await pool.query(
+    `INSERT INTO deliveries (id, webhook_id, event_id, status) VALUES ${values}`,
+    flatValues
+  );
+}
+
+// Batch enqueue jobs
+const jobs = webhooksResult.rows.map(webhook => ({
+  delivery_id: generateId(),
+  webhook_id: webhook.id,
+  event_id: eventRow.id,
+  webhook_url: webhook.url,
+  webhook_secret: webhook.secret,
+  payload: payload,
+  attempt: 0
+}));
+
+await deliveryQueue.addBulk(jobs.map(job => ({ data: job })));</pre>
+        <div class="verify"><strong>✓ Verify:</strong> POST /events completes in <50ms for event with 100 webhooks.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Run multiple worker processes</h4>
+        <p>Create <code>src/workers.ts</code> to manage multiple workers:</p>
+<pre>import './worker/deliveryWorker';
+
+const NUM_WORKERS = parseInt(process.env.NUM_WORKERS || '1');
+
+console.log(`Starting ${NUM_WORKERS} delivery workers...`);
+
+for (let i = 0; i < NUM_WORKERS; i++) {
+  console.log(`Worker ${i+1} started`);
+}</pre>
+        <p>Or use a process manager like <code>concurrently</code>:</p>
+<pre>npm install --save-dev concurrently
+
+"scripts": {
+  "worker:multi": "concurrently 'npm run worker' 'npm run worker' 'npm run worker'"
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Run <code>npm run worker:multi</code> and see 3 workers start.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Install k6 for load testing</h4>
+<pre>npm install --save-dev k6</pre>
+        <p>Create <code>load-test.js</code>:</p>
+<pre>import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '10s', target: 100 },  // Ramp to 100 concurrent requests
+    { duration: '30s', target: 100 },  // Stay at 100
+    { duration: '10s', target: 0 },    // Ramp down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<500'],  // 95th percentile under 500ms
+  },
+};
+
+// Create 100 webhooks first
+const webhooks = [];
+for (let i = 0; i < 100; i++) {
+  const res = http.post('http://localhost:3000/webhooks', JSON.stringify({
+    url: `https://webhook${i}.example.com/hook`,
+    secret: 'secret',
+    event_types: ['order.created']
+  }), { headers: { 'Content-Type': 'application/json' } });
+  webhooks.push(JSON.parse(res.body));
+}
+
+export default function () {
+  const payload = JSON.stringify({
+    type: 'order.created',
+    payload: { order_id: Math.random() * 100000 }
+  });
+
+  const res = http.post('http://localhost:3000/events', payload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  check(res, {
+    'status is 201': (r) => r.status === 201,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(0.1);
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>k6 run load-test.js</code> completes with results.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Profile bottlenecks</h4>
+        <p>Add timing logs to <code>src/routes/events.ts</code>:</p>
+<pre>const t1 = Date.now();
+
+// Webhook lookup
+const webhooksResult = await pool.query(...);
+const t2 = Date.now();
+
+// Batch insert deliveries
+await pool.query(...);
+const t3 = Date.now();
+
+// Enqueue jobs
+await deliveryQueue.addBulk(...);
+const t4 = Date.now();
+
+console.log(`[PERF] webhook_lookup=${t2-t1}ms, batch_insert=${t3-t2}ms, enqueue=${t4-t3}ms`);</pre>
+        <p>Run load test and check logs to identify slowest operation.</p>
+        <div class="verify"><strong>✓ Verify:</strong> Logs show timing breakdown. Identify which step is slowest.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Measure with multiple workers</h4>
+        <p>Run load test with 1, 2, 3 workers:</p>
+<pre>NUM_WORKERS=1 npm run dev & npm run worker
+# Wait for load test to complete
+# Record results
+
+NUM_WORKERS=2 npm run dev & npm run worker:multi
+# Run same load test
+# Record results and compare</pre>
+        <div class="verify"><strong>✓ Verify:</strong> 2 workers roughly double throughput compared to 1.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Document performance results</h4>
+        <p>Create <code>docs/perf/load-test-report.md</code>:</p>
+<pre># Load Test Report
+
+## Test Setup
+- Webhooks: 100
+- Events: 5000 total (100 VUs × 50 requests each)
+- Duration: 50 seconds
+- Workers: 1, 2, 3
+
+## Results
+| Workers | Throughput (req/s) | p50 (ms) | p95 (ms) | p99 (ms) |
+|---------|-------------------|----------|----------|----------|
+| 1       | 98 req/s           | 450      | 850      | 1200     |
+| 2       | 195 req/s          | 430      | 780      | 1050     |
+| 3       | 287 req/s          | 410      | 720      | 950      |
+
+## Conclusion
+Throughput scales near-linearly with worker count. Each worker handles ~100 req/s on this hardware.</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Report is committed and shows performance improvements with batching and multiple workers.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Commit performance work</h4>
+<pre>git add -A
+git commit -m "perf: optimize delivery throughput with batching and workers
+
+- Batch enqueue delivery jobs (not one-by-one)
+- Support multiple worker processes
+- k6 load test: 1000+ events/sec with 100 webhooks
+- Performance report with scaling metrics
+- 2-3 workers scale throughput near-linearly"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 07?</h2></div>
+    <div class="chapter-body">
+      <p>You now have a fast, scalable system. Next, you'll instrument it: logs, metrics, traces, and dashboards. Head to Module 07.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m7">→ Start Module 07: Observability &amp; Debugging</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

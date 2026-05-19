@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 10 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 10 — deploy to production, write runbooks, and polish documentation." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-10.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 10 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Production deployment and operations — the capstone." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-10.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 10 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Production deployment and operations — the capstone." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 10 of 10</div>
+    <h1>Capstone &amp; Production Readiness</h1>
+    <p class="lede">Your system is complete. Now ship it: containerize, automate CI/CD, deploy to production, document runbooks, and post-mortem incidents. By the end, you'll have a battle-tested, well-documented service ready for real customers.</p>
+    <div class="tags"><span>~6–8 hrs</span><span>Advanced</span><span>Operations focus</span></div>
+    <a class="back" href="../webhook-delivery.html#m10">← Back to Module 10 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Multi-stage Dockerfile: dev, build, prod with minimal final image.</li>
+        <li><code>docker-compose.yml</code> for local development (app + postgres + redis + prometheus + grafana).</li>
+        <li>GitHub Actions CI/CD pipeline: lint, test, build, push image, deploy.</li>
+        <li>Deployment guide for your production platform (Fly.io, AWS, Heroku, etc.).</li>
+        <li>Runbook for on-call engineers: diagnosing DLQ growth, slow webhook, rate limit issues, database lag.</li>
+        <li>Postmortem template and incident log.</li>
+        <li>Capacity planning guide: what to monitor, scaling thresholds, upgrade path.</li>
+        <li>Polished README with architecture diagram, API examples, and quick start.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create multi-stage Dockerfile</h4>
+        <p>Create <code>Dockerfile</code>:</p>
+<pre># Build stage
+FROM node:20-alpine as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+
+# Final stage
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+
+ENV NODE_ENV=production
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+CMD ["node", "dist/index.js"]</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Build and run: <code>docker build -t webhook-service . && docker run -p 3000:3000 webhook-service</code></div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Create docker-compose for local development</h4>
+        <p>Create <code>docker-compose.yml</code>:</p>
+<pre>version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://webhook:webhook@postgres:5432/webhook_service
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-key
+      LOG_LEVEL: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./dist:/app/dist
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: webhook
+      POSTGRES_PASSWORD: webhook
+      POSTGRES_DB: webhook_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webhook"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:</pre>
+        <p>Run: <code>docker-compose up</code></p>
+        <div class="verify"><strong>✓ Verify:</strong> All services start. Visit http://localhost:3000/health (returns 200).</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Create GitHub Actions CI/CD pipeline</h4>
+        <p>Create <code>.github/workflows/ci.yml</code>:</p>
+<pre>name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: webhook
+          POSTGRES_PASSWORD: webhook
+          POSTGRES_DB: webhook_service
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test -- --coverage
+      - run: npm run test:integration
+
+  build-and-push:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to production
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          # Your deployment script here
+          # Example: flyctl deploy, kubectl apply, etc.
+          echo "Deploying to production..."</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Push to main, check GitHub Actions tab. Pipeline runs lint, test, build, and deploys.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Write deployment guide</h4>
+        <p>Create <code>docs/deployment.md</code>:</p>
+<pre># Deployment Guide
+
+## Local Development
+<code>docker-compose up</code> — all services (app, postgres, redis, prometheus, grafana).
+App available at http://localhost:3000.
+
+## Production Deployment
+
+### Prerequisites
+- Docker registry (Docker Hub, ECR, GHCR)
+- Production database (managed Postgres: AWS RDS, Google Cloud SQL, Heroku Postgres)
+- Production Redis (managed: AWS ElastiCache, Heroku Redis)
+- Monitoring: Prometheus + Grafana or managed service (DataDog, New Relic, etc.)
+
+### Environment Variables
+```
+DATABASE_URL=postgresql://user:pass@prod-db.example.com:5432/webhook
+REDIS_URL=redis://:password@prod-redis.example.com:6379
+JWT_SECRET=<use-strong-random-key>
+LOG_LEVEL=info
+NODE_ENV=production
+```
+
+### Deploy Steps (example: Fly.io)
+1. Install flyctl: <code>curl -L https://fly.io/install.sh | sh</code>
+2. Create app: <code>flyctl launch</code>
+3. Set secrets: <code>flyctl secrets set DATABASE_URL=... REDIS_URL=... JWT_SECRET=...</code>
+4. Deploy: <code>flyctl deploy</code>
+5. Check status: <code>flyctl status</code>
+
+### Health Checks
+- App health: <code>GET /health</code> (returns 200 if ready)
+- Database: included in health check
+- Redis: monitored via queueDepth metric
+
+### Scaling
+- Scale app: <code>flyctl scale count=3</code>
+- Add workers: Increase NUM_WORKERS env var or add separate worker Machines
+- Database: Upgrade compute/storage in managed service console</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Document is committed and step-by-step.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Write runbook for on-call engineers</h4>
+        <p>Create <code>docs/runbook.md</code>:</p>
+<pre># On-Call Runbook
+
+## Quick Diagnostics
+
+### DLQ size growing
+**Symptoms:** Grafana shows dlq_size > 100 and growing.
+**Action:**
+1. Check logs: <code>grep "dlq_insert" app.log | tail -20</code>
+2. View DLQ: <code>curl http://prod.example.com/dlq?limit=10</code>
+3. Check webhook endpoints: Are customer webhooks unreachable or returning errors?
+4. If transient (network blip): DLQ will drain naturally
+5. If permanent (webhook deleted): Contact customer or manually delete entries
+
+### Slow webhook blocking others
+**Symptoms:** Queue depth growing, p95 latency spiking
+**Action:**
+1. Check metrics: <code>rate(webhook_queue_depth[5m])</code> in Grafana
+2. Identify slow webhook: <code>grep "delivery_latency" app.log | sort -k2 -rn | head</code>
+3. Slow endpoint: Either timeout is misconfigured or webhook is genuinely slow
+4. Add webhook to timeout allowlist or increase timeout selectively
+5. Restart workers: New workers will pick up jobs
+
+### Rate limit errors (429)
+**Symptoms:** Customers report "Rate limit exceeded" errors
+**Action:**
+1. Check tenant quota: <code>curl http://prod.example.com/quotas/:tenant_id</code>
+2. Identify spike: <code>SELECT tenant_id, COUNT(*) as events FROM events WHERE created_at > NOW() - INTERVAL '1 min' GROUP BY tenant_id ORDER BY events DESC;</code>
+3. Legitimate traffic: Increase quota: <code>UPDATE quotas SET max_events_per_sec = 200 WHERE tenant_id = :id;</code>
+4. Abuse: Monitor and consider rate limiting at API gateway
+
+### Database lag increasing
+**Symptoms:** Events table query slow, delivery inserts backing up
+**Action:**
+1. Check active connections: <code>SELECT count(*) FROM pg_stat_activity WHERE state = 'active';</code>
+2. Kill long-running queries: <code>SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE duration > interval '5 minutes';</code>
+3. Check table size: <code>SELECT pg_size_pretty(pg_total_relation_size('events'));</code>
+4. If table > 50GB: Plan archival or partitioning
+5. Scale database: Increase compute tier in managed service console
+
+### Workers not processing jobs
+**Symptoms:** Queue depth growing, no new deliveries completed
+**Action:**
+1. Check worker logs: Ensure no ERROR logs
+2. Verify Redis connectivity: <code>redis-cli -h $REDIS_HOST ping</code>
+3. Check NUM_WORKERS: Should be > 0
+4. Restart workers: <code>flyctl machines restart $WORKER_ID</code> or redeploy
+
+## Incident Response
+
+### Declare incident
+1. Create incident channel (Slack: #incident-webhook-outage)
+2. Notify oncall lead and team
+3. Assign: Investigation lead, Communication lead, Execution lead
+
+### Investigate
+1. Check status page (Grafana dashboard)
+2. Review recent deployments: <code>flyctl releases</code>
+3. Check error rates: Success rate, DLQ growth, timeouts
+4. Root cause: DB, Redis, webhook endpoints, configuration?
+
+### Communicate
+- Update status page every 15 minutes
+- Notify customers of ETA for fix
+- Include: What's affected, what we're doing, expected impact
+
+### Resolve
+- Apply fix (rollback deployment, scale up, increase timeout, etc.)
+- Verify: Error rate drops, queue depth stable, deliveries resuming
+- Post to incident channel: "Resolved at HH:MM. Cause: [brief summary]"
+
+### Follow-up (within 24 hours)
+- Write postmortem (see template below)
+- File remediation tickets to prevent recurrence
+- Share lessons learned</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Runbook covers 5+ common scenarios with step-by-step actions.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Create incident postmortem template</h4>
+        <p>Create <code>docs/postmortem-template.md</code>:</p>
+<pre"># Postmortem: [Incident Title]
+
+**Date:** YYYY-MM-DD
+**Duration:** HH:MM (X minutes)
+**Impact:** X events dropped / Y seconds of unavailability / Z customers affected
+**Root Cause:** [One-line summary]
+
+## Timeline
+| Time | Event |
+|------|-------|
+| 14:32 | Alert: DLQ size > 100 |
+| 14:35 | On-call investigates |
+| 14:40 | Root cause identified: Redis connection pool exhausted |
+| 14:42 | Scale up Redis |
+| 14:50 | Service recovered, DLQ draining |
+| 15:00 | All deliveries caught up |
+
+## Root Cause Analysis
+Database connection pool was misconfigured (default 10, hitting limit at 50 concurrent webhooks). High latency on customer endpoints caused workers to hold connections longer, starving other workers.
+
+## Impact
+- 500 events queued but not delivered during 28-minute window
+- 12 customers affected (1.2% of tenant base)
+- Manual retry after incident recovered 499 of 500 (1 webhook was deleted)
+
+## What Went Well
+- Alerts fired quickly (3 min)
+- Runbook steps worked smoothly
+- Customer endpoints came back automatically
+
+## What Went Wrong
+- Config difference between staging and prod (staging had larger pool)
+- No load test with concurrent webhooks at this scale
+- Documentation for pool sizing was unclear
+
+## Remediation
+- [ ] Set connection pool size based on max_concurrent_deliveries (next sprint)
+- [ ] Add load test to CI: simulate 1000 concurrent deliveries (next sprint)
+- [ ] Document pool sizing formula in design doc (1 week)
+- [ ] Alert on connection pool utilization > 80% (1 week)
+
+## Owner
+[On-call name] — follow up in 1 week to confirm remediation tickets completed</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Template is clear and prompts for all key info.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Write capacity planning guide</h4>
+        <p>Create <code>docs/capacity-planning.md</code>:</p>
+<pre># Capacity Planning
+
+## Monitoring Dashboard
+Key metrics on Grafana:
+- **Events/sec:** Rate of incoming events
+- **Delivery rate:** Webhooks delivered/sec
+- **Queue depth:** Pending jobs
+- **DLQ size:** Failed deliveries
+- **P95 latency:** Customer webhook response time
+- **Success rate:** Delivered / total events
+- **Tenant quota usage:** 80%+ = approaching limit
+
+## Scaling Triggers
+
+### Scale app workers when:
+- Queue depth > 500 for > 5 minutes
+- Events/sec trending up and approaching max throughput
+- P95 latency > 2 seconds
+
+**Action:** Increase NUM_WORKERS or add more app Machines
+
+### Scale database when:
+- CPU > 80% sustained
+- Connections > 80% of limit
+- Query time > 100ms for simple selects
+- Table size exceeds 100GB
+
+**Action:** Upgrade compute tier, add read replicas, or partition table
+
+### Scale Redis when:
+- Memory > 80% of available
+- Evictions occurring (check Redis INFO)
+- Latency spikes on queue operations
+
+**Action:** Upgrade Redis tier, or use Redis Cluster for sharding
+
+## Growth Planning
+
+### 1K tenants, 1M events/day
+- **Throughput:** ~12 events/sec avg, 50+ peak
+- **Storage:** ~100MB/month (events + deliveries)
+- **Workers:** 1-2 sufficient
+- **Database:** Single instance, small compute
+- **Redis:** Single instance
+
+### 10K tenants, 10M events/day
+- **Throughput:** ~120 events/sec avg, 500+ peak
+- **Storage:** ~1GB/month
+- **Workers:** 3-5 instances
+- **Database:** Primary + read replica, medium compute
+- **Redis:** Single instance, larger memory
+
+### 100K tenants, 100M events/day
+- **Throughput:** ~1200 events/sec avg, 5000+ peak
+- **Storage:** ~10GB/month, consider archival
+- **Workers:** 10+ instances, multiple zones
+- **Database:** Partitioned by tenant_id, read replicas per zone, large compute
+- **Redis:** Cluster mode for sharding across zones
+
+## Cost Estimation (example: AWS)
+- App (t3.medium, 3 instances): ~$100/month
+- Database (db.r6i.xlarge): ~$400/month
+- Redis (cache.t3.large): ~$50/month
+- Data transfer: ~$50/month
+- Monitoring: ~$100/month
+- **Total:** ~$700/month for 100K tenants
+
+Optimize by:
+- Using spot instances for workers
+- Auto-scaling based on metrics
+- Archiving old events to S3
+- Using CDN for static assets</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Guide covers growth milestones and cost estimation.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Polish README with architecture and examples</h4>
+        <p>Update <code>README.md</code>:</p>
+<pre"># Webhook Delivery Service
+
+A production-grade service that reliably delivers webhooks at scale. Built for reliability (exponential backoff, DLQ), observability (metrics, tracing, logging), and multi-tenancy (rate limiting, resource isolation).
+
+## Quick Start
+
+### Local Development
+```bash
+git clone <repo>
+cd webhook-delivery
+docker-compose up
+npm install && npm run build
+npm run dev
+```
+Visit http://localhost:3000 and http://localhost:3001 (Grafana).
+
+### Production
+See [Deployment Guide](docs/deployment.md).
+
+## Architecture
+
+```
+┌─────────────────┐
+│  Customer      │
+│   (sends POST)  │
+└────────┬────────┘
+         │
+    POST /events
+         │
+    ┌────▼─────┬────────────────┐
+    │           │                │
+   API      Database         Queue
+(Express)  (Postgres)     (Bull + Redis)
+    │           │                │
+    └───────────┼────────────────┘
+                │
+         ┌──────▼──────────────┐
+         │ Delivery Worker     │
+         │ (async processor)   │
+         └──────┬──────────────┘
+                │
+         POST to customer webhook
+                │
+         ┌──────▼──────────────┐
+         │ Success / Retry /   │
+         │ DLQ                 │
+         └─────────────────────┘
+```
+
+## Key Features
+
+### Reliability
+- **Exponential backoff:** Retries at 1s, 4s, 16s, 64s, 256s
+- **Dead Letter Queue:** Failed deliveries stored for manual recovery
+- **Idempotency:** Delivery IDs prevent duplicates on retry
+
+### Observability
+- **Structured logging:** JSON logs with trace IDs
+- **Prometheus metrics:** Events/sec, delivery latency, queue depth, DLQ size
+- **OpenTelemetry tracing:** Full request path from event → delivery
+- **Grafana dashboard:** 4 golden signals + queue/DLQ health
+
+### Security
+- **HMAC-SHA256 signing:** Customers verify webhook authenticity
+- **SSRF prevention:** Block private IPs and metadata endpoints
+- **Audit logging:** Track who created webhooks, retried DLQ items
+- **Environment variables:** Secrets never in code
+
+### Multi-Tenancy
+- **Resource isolation:** Rate limits per tenant
+- **Quotas:** Max events/sec, concurrent deliveries, DLQ size
+- **Tenant-scoped queries:** No data leakage between customers
+
+## API Examples
+
+### Register Webhook
+```bash
+curl -X POST http://localhost:3000/webhooks \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "url": "https://api.customer.com/webhooks",
+    "secret": "webhook_secret_key",
+    "event_types": ["order.created", "order.shipped"],
+    "tenant_id": "customer-123"
+  }'
+
+# Response:
+# {
+#   "id": "webhook-abc123",
+#   "url": "https://api.customer.com/webhooks",
+#   "created_at": "2026-01-15T10:30:00Z"
+# }
+```
+
+### Emit Event
+```bash
+curl -X POST http://localhost:3000/events \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "type": "order.created",
+    "payload": {
+      "order_id": "ord-123",
+      "amount": 99.99,
+      "items": ["item-1", "item-2"]
+    },
+    "tenant_id": "customer-123"
+  }'
+
+# Response:
+# {
+#   "event_id": "evt-xyz789",
+#   "webhooks_queued": 2,
+#   "delivery_ids": ["del-1", "del-2"]
+# }
+```
+
+### Check Quotas
+```bash
+curl http://localhost:3000/quotas/customer-123
+
+# Response:
+# {
+#   "tenant_id": "customer-123",
+#   "limits": {
+#     "max_events_per_sec": 100,
+#     "max_concurrent_deliveries": 50,
+#     "max_dlq_size": 100
+#   },
+#   "current_usage": {
+#     "events_sent": 45,
+#     "concurrent_deliveries": 8,
+#     "dlq_count": 2
+#   }
+# }
+```
+
+### View Dead Letter Queue
+```bash
+curl http://localhost:3000/dlq?limit=10
+
+# Response:
+# {
+#   "entries": [
+#     {
+#       "delivery_id": "del-abc",
+#       "webhook_id": "webhook-123",
+#       "last_error": "HTTP 503: Service Unavailable",
+#       "attempts": 5,
+#       "created_at": "2026-01-15T10:35:00Z"
+#     }
+#   ],
+#   "total": 5,
+#   "limit": 10,
+#   "offset": 0
+# }
+```
+
+## Monitoring & Alerting
+
+### Key Metrics
+- **Delivery success rate:** Should be > 99%
+- **Queue depth:** Should be < 100 (healthy)
+- **DLQ size:** Growing DLQ indicates customer webhook issues
+- **P95 latency:** Should be < 1 second for queue operations
+
+### Alerts
+- ⚠️ Success rate < 99% (error budget consumed)
+- ⚠️ Queue depth > 500 for 5+ minutes (workers overloaded)
+- ⚠️ DLQ growing steadily (customer endpoints failing)
+- ⚠️ Database CPU > 80% (scale up)
+
+## Documentation
+
+- [Module 01: Foundations & Project Setup](pages/tracks/webhook-delivery/module-01.html)
+- [Module 02: Core Webhook API](pages/tracks/webhook-delivery/module-02.html)
+- [Module 03: Reliable Delivery & Retries](pages/tracks/webhook-delivery/module-03.html)
+- [Module 04: Dead Letter Queue & Failure Handling](pages/tracks/webhook-delivery/module-04.html)
+- [Module 05: Testing Async Systems](pages/tracks/webhook-delivery/module-05.html)
+- [Module 06: Performance & Batching](pages/tracks/webhook-delivery/module-06.html)
+- [Module 07: Observability & Debugging](pages/tracks/webhook-delivery/module-07.html)
+- [Module 08: Scaling & Multi-Tenant](pages/tracks/webhook-delivery/module-08.html)
+- [Module 09: Security & Compliance](pages/tracks/webhook-delivery/module-09.html)
+- [Deployment Guide](docs/deployment.md)
+- [On-Call Runbook](docs/runbook.md)
+- [Capacity Planning](docs/capacity-planning.md)
+- [SLO Document](docs/slo.md)
+- [Threat Model](docs/threat-model.md)
+
+## Testing
+
+```bash
+# Unit tests
+npm test
+
+# Integration tests (requires Docker)
+npm run test:integration
+
+# Load test with k6
+npm run load-test
+
+# Type check
+npm run type-check
+
+# Lint
+npm run lint
+```
+
+## License
+
+MIT</pre>
+        <div class="verify"><strong>✓ Verify:</strong> README has architecture, API examples, and links to docs.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 9</div>
+        <h4>Create incident log</h4>
+        <p>Create <code>docs/incidents.md</code>:</p>
+<pre># Incident Log
+
+## Incident #1: Redis Connection Pool Exhaustion
+**Date:** 2026-01-15
+**Duration:** 28 minutes (14:32–15:00)
+**Impact:** 500 events queued, 12 customers affected
+**Root Cause:** Pool misconfiguration (default 10 vs prod 50 concurrent)
+**Status:** Resolved, remediation in progress
+[Full Postmortem](postmortems/2026-01-15-redis-pool.md)
+
+## Incident #2: Database Replica Lag
+**Date:** 2026-02-03
+**Duration:** 45 minutes
+**Impact:** Slow reads for audit logs and DLQ queries
+**Root Cause:** Replica fell behind during high write load
+**Status:** Resolved, added monitoring for replica lag
+[Full Postmortem](postmortems/2026-02-03-replica-lag.md)
+
+---
+
+## Incident Report Template
+When an incident occurs:
+1. Create postmortem from template: <code>docs/postmortem-template.md</code>
+2. Save to: <code>docs/postmortems/YYYY-MM-DD-slug.md</code>
+3. Add entry to this log
+4. Schedule remediation follow-up (1 week)

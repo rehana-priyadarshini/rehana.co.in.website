@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 06 Tutorial · Feature Flag Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 06 — add caching and performance optimization." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-06.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 06 Tutorial · Feature Flag Service Track" />
+<meta property="og:description" content="Caching & Performance — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-06.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 06 Tutorial · Feature Flag Service Track" />
+<meta name="twitter:description" content="Caching & Performance — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Feature Flag Service Tutorial · Module 06 of 10</div>
+    <h1>Caching &amp; Performance</h1>
+    <p class="lede">Cache flag definitions in Redis for fast evaluation. Implement cache invalidation on flag updates. Add metrics for cache hit rates, evaluation latency, and database load. Support distributed caching across multiple instances. By the end, the service can handle 10K+ evaluations/sec.</p>
+    <div class="tags"><span>~4–5 hrs</span><span>Intermediate</span><span>Performance focus</span></div>
+    <a class="back" href="../feature-flag-service.html#m6">← Back to Module 06 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Redis caching: Flags cached with 5-minute TTL.</li>
+        <li>Cache invalidation: Flag updates invalidate Redis cache immediately.</li>
+        <li>Metrics: Cache hit rate (should be > 99%), evaluation latency (p95 < 50ms).</li>
+        <li>Distributed cache: Multiple app instances share Redis cache.</li>
+        <li>Fallback: If Redis unavailable, fall back to database.</li>
+        <li>Load test: 10K evaluations/sec with 100% cache hit rate.</li>
+        <li>Database queries reduced by 99% with caching.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Add Redis caching to flag storage</h4>
+        <p>Create <code>src/cache/flagCache.ts</code>:</p>
+<pre>import { Redis } from 'ioredis';
+
+export class FlagCache {
+  private redis: Redis;
+  private ttl: number = 300; // 5 minutes
+
+  constructor(redisUrl: string) {
+    this.redis = new Redis(redisUrl);
+  }
+
+  async getFlagWithRules(flagId: string) {
+    const cacheKey = `flag:${flagId}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+    return null;
+  }
+
+  async setFlagWithRules(flagId: string, flag: any) {
+    const cacheKey = `flag:${flagId}`;
+    await this.redis.setex(cacheKey, this.ttl, JSON.stringify(flag));
+  }
+
+  async invalidateFlag(flagId: string) {
+    await this.redis.del(`flag:${flagId}`);
+  }
+
+  async invalidateAllFlags() {
+    const keys = await this.redis.keys('flag:*');
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+    }
+  }
+
+  async getMetrics() {
+    const info = await this.redis.info('stats');
+    const dbSize = await this.redis.dbsize();
+    return { info, dbSize };
+  }
+}

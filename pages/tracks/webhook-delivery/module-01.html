@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 01 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 01 — set up the repo, scaffold an HTTP server, configure linting, design the data model, and write a one-page design doc." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-01.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 01 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Foundations &amp; project setup — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-01.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 01 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Foundations &amp; project setup — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 01 of 10</div>
+    <h1>Foundations &amp; Project Setup</h1>
+    <p class="lede">By the end of this tutorial you'll have a Git repo, an HTTP server that can receive requests, a working linter, a one-page design doc sketching the three main tables, and the foundation for reliable webhook delivery.</p>
+    <div class="tags"><span>~2–3 hrs</span><span>Beginner</span><span>No prior code needed</span></div>
+    <a class="back" href="../webhook-delivery.html#m1">← Back to Module 01 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Before You Start</div><h2>Prerequisites</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Node.js 20+</strong> — install from <a href="https://nodejs.org" style="color:var(--accent);">nodejs.org</a> or via <code>nvm</code> / <code>fnm</code> / <code>volta</code>.</li>
+        <li><strong>Git</strong> — <code>git --version</code> should print something.</li>
+        <li><strong>A GitHub account</strong> (free) and the <code>gh</code> CLI installed and authenticated, or be ready to create a repo via the web UI.</li>
+        <li><strong>An editor</strong> — VS Code is recommended.</li>
+        <li><strong>A database</strong> — Postgres 14+ or use Docker: <code>docker run -d -e POSTGRES_PASSWORD=password -p 5432:5432 postgres:16</code></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>A GitHub repo named <code>webhook-delivery</code> with <code>main</code> as the default branch.</li>
+        <li>A Node.js/TypeScript HTTP server running locally on <code>http://localhost:3000</code>.</li>
+        <li><code>npm run lint</code> and <code>npm run dev</code> both work.</li>
+        <li>A one-page <code>docs/design.md</code> documenting the three main tables: <code>webhooks</code>, <code>events</code>, <code>deliveries</code>.</li>
+        <li>Database migrations setup (Postgres connected and ready).</li>
+        <li>Branch protection on <code>main</code> requiring PRs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create the Git repo</h4>
+        <p>From an empty parent folder:</p>
+<pre>mkdir webhook-delivery && cd webhook-delivery
+git init -b main
+gh repo create webhook-delivery --public --source=. --remote=origin
+# Or create via github.com and clone if you prefer</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git status</code> shows "On branch main".</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Initialize Node.js and install dependencies</h4>
+<pre>npm init -y
+npm install express typescript ts-node dotenv pg
+npm install --save-dev @types/node @types/express eslint prettier</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>ls node_modules | grep express</code> shows express is installed.</div>
+        <div class="gotcha"><strong>⚠ Gotcha:</strong> Don't commit <code>node_modules/</code>. Create a <code>.gitignore</code> first (see Step 3).</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Configure .editorconfig, .gitignore, and linting</h4>
+        <p>Create <code>.gitignore</code>:</p>
+<pre>node_modules/
+.env
+.env.local
+dist/
+*.log
+.DS_Store</pre>
+        <p>Create <code>.eslintrc.json</code>:</p>
+<pre>{
+  "extends": "eslint:recommended",
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "ecmaVersion": 2020 },
+  "env": { "node": true, "es2020": true },
+  "rules": { "no-unused-vars": "warn" }
+}</pre>
+        <p>Create <code>.editorconfig</code>:</p>
+<pre>root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Files exist: <code>ls -la | grep git</code> and <code>ls -la | grep eslint</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Create TypeScript config and a simple "hello" server</h4>
+        <p>Create <code>tsconfig.json</code>:</p>
+<pre>{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}</pre>
+        <p>Create <code>src/index.ts</code>:</p>
+<pre>import express from 'express';
+
+const app = express();
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Webhook Delivery Service is running' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> File exists at <code>src/index.ts</code> and contains the server code.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Add npm scripts and test the server</h4>
+        <p>Update <code>package.json</code> with these scripts:</p>
+<pre>"scripts": {
+  "dev": "ts-node src/index.ts",
+  "build": "tsc",
+  "lint": "eslint src --ext .ts",
+  "lint:fix": "eslint src --ext .ts --fix"
+}</pre>
+        <p>Run the server:</p>
+<pre>npm run dev</pre>
+        <p>In another terminal, test it:</p>
+<pre>curl http://localhost:3000</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>curl http://localhost:3000</code> returns <code>{"message":"Webhook Delivery Service is running"}</code>. Linting passes: <code>npm run lint</code>.</div>
+        <div class="gotcha"><strong>⚠ Gotcha:</strong> If linting fails, run <code>npm run lint:fix</code> to auto-fix most issues.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Write the one-page design doc</h4>
+        <p>Create <code>docs/design.md</code>:</p>
+<pre># Webhook Delivery Service — Design Doc
+
+## Problem
+Teams need a reliable way to send events (webhooks) to customer endpoints. If the customer's server is down, events must be retried; if it keeps failing, events go to a dead-letter queue for manual recovery.
+
+## Goals
+- Reliably deliver events to customer endpoints
+- Support exponential backoff retries (1s, 4s, 16s, 64s, 256s)
+- Implement dead-letter queue for permanent failures
+- Track delivery status and provide audit logs
+- Support at least 1000 events/sec to 100 webhooks
+
+## Non-Goals
+- End-to-end encryption (HTTPS covers this)
+- Built-in webhook transformations
+- Event sampling/filtering (can add later)
+
+## Data Model
+
+### webhooks table
+```
+id (UUID)
+url (string) - customer endpoint
+secret (string) - for HMAC signing
+event_types (string[]) - which events this webhook receives
+created_at (timestamp)
+updated_at (timestamp)
+```
+
+### events table
+```
+id (UUID)
+type (string) - e.g., "order.created"
+payload (JSON) - the event data
+timestamp (timestamp)
+created_at (timestamp)
+```
+
+### deliveries table
+```
+id (UUID)
+webhook_id (UUID) - foreign key
+event_id (UUID) - foreign key
+status (enum) - pending, processing, success, failed
+attempts (int) - how many retries so far
+last_error (string)
+next_retry_at (timestamp)
+created_at (timestamp)
+updated_at (timestamp)
+```
+
+## Idempotency Strategy
+Each delivery has a unique `delivery_id`. Customers should use this to deduplicate if they receive the same event twice. Server guarantees: best-effort delivery (at-least-once, not exactly-once).
+
+## Open Questions
+- How long to retain events in the log?
+- Should we support batch deliveries?
+- Authentication: API key, OAuth, or both?</pre>
+        <div class="verify"><strong>✓ Verify:</strong> File exists at <code>docs/design.md</code> and describes the three tables.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Commit and enable branch protection</h4>
+<pre>git add .
+git commit -m "init: scaffold webhook delivery service
+
+- Set up TypeScript, Express, linting
+- Basic health-check endpoint
+- Design doc with data model"
+git push -u origin main</pre>
+        <p>On GitHub, go to Settings → Branches and enable branch protection for <code>main</code>. Require PR reviews and status checks.</p>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit. GitHub web shows the repo with branch protection enabled.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 02?</h2></div>
+    <div class="chapter-body">
+      <p>You've laid the foundation. Next, you'll implement the core webhook API: registration endpoints and event emission. Head over to Module 02 when you're ready.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m2">→ Start Module 02: Core Webhook API</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

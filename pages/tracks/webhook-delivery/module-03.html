@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 03 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 03 — implement queue, retries, and idempotency for reliable delivery." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-03.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 03 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Reliable delivery with retries — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-03.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 03 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Reliable delivery with retries — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 03 of 10</div>
+    <h1>Reliable Delivery &amp; Retries</h1>
+    <p class="lede">Implement the core: when an event is emitted, enqueue delivery jobs, run a worker to send them, and retry with exponential backoff. By the end, your webhook service will survive customer downtime.</p>
+    <div class="tags"><span>~5–7 hrs</span><span>Advanced</span><span>Queuing required</span></div>
+    <a class="back" href="../webhook-delivery.html#m3">← Back to Module 03 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>When <code>POST /events</code> is called, delivery jobs are enqueued for each matching webhook.</li>
+        <li>A worker process consumes jobs and POSTs the event to the webhook URL with a signed body.</li>
+        <li>Exponential backoff retries: 1s, 4s, 16s, 64s, 256s (5 retries max).</li>
+        <li>Idempotency: each delivery has a unique <code>delivery_id</code>.</li>
+        <li>Delivery state transitions: pending → processing → success or → retry scheduled.</li>
+        <li>Worker can be stopped/restarted without losing jobs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Install a job queue library</h4>
+<pre>npm install bull redis</pre>
+        <p>We'll use Bull with Redis as the backing store. Make sure Redis is running:</p>
+<pre>docker run -d -p 6379:6379 redis:7</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>redis-cli ping</code> returns PONG.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Create a queue service</h4>
+        <p>Create <code>src/queue/deliveryQueue.ts</code>:</p>
+<pre>import Queue from 'bull';
+
+export interface DeliveryJob {
+  delivery_id: string;
+  webhook_id: string;
+  event_id: string;
+  webhook_url: string;
+  webhook_secret: string;
+  payload: any;
+  attempt: number;
+}
+
+const deliveryQueue = new Queue<DeliveryJob>('delivery', {
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379')
+  }
+});
+
+export default deliveryQueue;</pre>
+        <div class="verify"><strong>✓ Verify:</strong> File exists at <code>src/queue/deliveryQueue.ts</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Update POST /events to enqueue delivery jobs</h4>
+        <p>Modify <code>src/routes/events.ts</code>:</p>
+<pre>import deliveryQueue from '../queue/deliveryQueue';
+
+// In the POST /events handler, after inserting the event:
+const eventRow = result.rows[0];
+
+// Find all matching webhooks
+const webhooksResult = await pool.query(
+  'SELECT * FROM webhooks WHERE $1 = ANY(event_types)',
+  [type]
+);
+
+// Create delivery records and enqueue jobs
+for (const webhook of webhooksResult.rows) {
+  const deliveryId = crypto.randomUUID();
+  await pool.query(
+    'INSERT INTO deliveries (id, webhook_id, event_id, status) VALUES ($1, $2, $3, $4)',
+    [deliveryId, webhook.id, eventRow.id, 'pending']
+  );
+
+  await deliveryQueue.add({
+    delivery_id: deliveryId,
+    webhook_id: webhook.id,
+    event_id: eventRow.id,
+    webhook_url: webhook.url,
+    webhook_secret: webhook.secret,
+    payload: payload,
+    attempt: 0
+  });
+}
+
+res.status(201).json(eventRow);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Emit an event and check Redis: <code>redis-cli KEYS '*'</code> shows the delivery queue.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Implement a worker to process deliveries</h4>
+        <p>Create <code>src/worker/deliveryWorker.ts</code>:</p>
+<pre>import crypto from 'crypto';
+import axios from 'axios';
+import pool from '../db/pool';
+import deliveryQueue, { DeliveryJob } from '../queue/deliveryQueue';
+
+const BACKOFF_DELAYS = [1000, 4000, 16000, 64000, 256000]; // ms
+const MAX_RETRIES = 5;
+
+function calculateNextRetry(attempt: number): number {
+  if (attempt >= MAX_RETRIES) return -1;
+  return Date.now() + BACKOFF_DELAYS[attempt];
+}
+
+function signPayload(payload: any, secret: string): string {
+  const body = JSON.stringify(payload);
+  return crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('hex');
+}
+
+deliveryQueue.process(async (job) => {
+  const { delivery_id, webhook_url, webhook_secret, payload, attempt } = job.data;
+
+  try {
+    // Update status to processing
+    await pool.query(
+      'UPDATE deliveries SET status = $1 WHERE id = $2',
+      ['processing', delivery_id]
+    );
+
+    // Sign and send
+    const signature = signPayload(payload, webhook_secret);
+    const response = await axios.post(webhook_url, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Signature': `sha256=${signature}`,
+        'X-Delivery-ID': delivery_id
+      },
+      timeout: 10000
+    });
+
+    if (response.status >= 200 && response.status < 300) {
+      // Success
+      await pool.query(
+        'UPDATE deliveries SET status = $1, attempts = $2, updated_at = NOW() WHERE id = $3',
+        ['success', attempt + 1, delivery_id]
+      );
+      return { success: true };
+    } else {
+      throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const nextRetryAt = calculateNextRetry(attempt);
+
+    if (nextRetryAt === -1) {
+      // Permanent failure - will move to DLQ in Module 04
+      await pool.query(
+        'UPDATE deliveries SET status = $1, attempts = $2, last_error = $3, updated_at = NOW() WHERE id = $4',
+        ['failed', attempt + 1, errorMsg, delivery_id]
+      );
+    } else {
+      // Retry scheduled
+      await pool.query(
+        'UPDATE deliveries SET status = $1, attempts = $2, last_error = $3, next_retry_at = $4, updated_at = NOW() WHERE id = $5',
+        ['pending', attempt + 1, errorMsg, new Date(nextRetryAt), delivery_id]
+      );
+
+      // Re-enqueue with delay
+      throw job.queue.add(job.data, {
+        delay: BACKOFF_DELAYS[attempt],
+        attempts: 1
+      });
+    }
+  }
+});
+
+export default deliveryQueue;</pre>
+        <p>Install axios: <code>npm install axios</code></p>
+        <div class="verify"><strong>✓ Verify:</strong> File exists at <code>src/worker/deliveryWorker.ts</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Start the worker as a separate process</h4>
+        <p>Create <code>src/worker.ts</code>:</p>
+<pre>import './worker/deliveryWorker';
+
+console.log('Webhook delivery worker started');</pre>
+        <p>Update <code>package.json</code> scripts:</p>
+<pre>"scripts": {
+  "dev": "ts-node src/index.ts",
+  "worker": "ts-node src/worker.ts",
+  ...
+}</pre>
+        <p>Now you can run the server and worker separately:</p>
+<pre>npm run dev        # Terminal 1
+npm run worker     # Terminal 2</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Both processes start without errors. Emit an event in Terminal 1, see it being processed in Terminal 2.</div>
+        <div class="gotcha"><strong>⚠ Gotcha:</strong> The worker needs access to the same database and Redis. Make sure environment variables are set correctly.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Test retry behavior</h4>
+        <p>Create a test webhook endpoint locally:</p>
+<pre>// In a separate file or terminal, mock a failing webhook:
+// This can be a simple Node server that returns 500 for testing
+const express = require('express');
+const app = express();
+app.post('/webhook', (req, res) => {
+  console.log('Received webhook:', req.body);
+  res.status(500).send('Temporary failure'); // Will retry
+});
+app.listen(4000);</pre>
+        <p>Register this webhook and emit an event. Watch the worker retry with exponential backoff.</p>
+        <div class="verify"><strong>✓ Verify:</strong> Delivery attempts increment. <code>next_retry_at</code> increases exponentially. After 5 failed attempts, status becomes <code>failed</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Commit your work</h4>
+<pre>git add -A
+git commit -m "feat: implement reliable delivery with exponential backoff
+
+- Bull + Redis job queue for webhook delivery
+- Delivery worker with exponential backoff retries
+- Idempotent delivery jobs with unique delivery_id
+- Proper state transitions: pending → processing → success/retry"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 04?</h2></div>
+    <div class="chapter-body">
+      <p>You now have reliable delivery with retries. Next, you'll implement a dead-letter queue to handle permanent failures. Head to Module 04.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m4">→ Start Module 04: Dead Letter Queue</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

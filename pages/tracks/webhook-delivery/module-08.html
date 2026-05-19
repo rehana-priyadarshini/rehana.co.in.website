@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 08 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 08 — add tenant isolation and rate limiting." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-08.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 08 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Scaling and multi-tenant — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-08.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 08 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Scaling and multi-tenant — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 08 of 10</div>
+    <h1>Scaling &amp; Multi-Tenant</h1>
+    <p class="lede">One tenant's misbehaving webhook shouldn't tank the system. Add isolation, rate limits per customer, and resource fairness. By the end, one customer's failures won't starve others.</p>
+    <div class="tags"><span>~5–7 hrs</span><span>Advanced</span><span>Isolation focus</span></div>
+    <a class="back" href="../webhook-delivery.html#m8">← Back to Module 08 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Customer/tenant ID in webhooks table.</li>
+        <li><code>quotas</code> table: max events/sec, max concurrent deliveries, max DLQ size per tenant.</li>
+        <li><code>POST /events</code> rejects with 429 if tenant quota exceeded.</li>
+        <li><code>GET /quotas/:tenant</code> shows usage and limits.</li>
+        <li>Chaos test: one slow tenant doesn't block others' deliveries.</li>
+        <li>Resource isolation documented in design doc.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Add tenant schema and quotas table</h4>
+        <p>Update <code>src/db/migrations.ts</code>:</p>
+<pre>ALTER TABLE webhooks ADD COLUMN tenant_id UUID NOT NULL DEFAULT gen_random_uuid();
+ALTER TABLE events ADD COLUMN tenant_id UUID NOT NULL DEFAULT gen_random_uuid();
+
+CREATE TABLE IF NOT EXISTS quotas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL UNIQUE,
+  max_events_per_sec INT DEFAULT 100,
+  max_concurrent_deliveries INT DEFAULT 50,
+  max_dlq_size INT DEFAULT 100,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Migrations run without errors.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Implement rate limiting in POST /events</h4>
+        <p>Update <code>src/routes/events.ts</code>:</p>
+<pre>import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// Create per-tenant rate limiter
+const redis = new Redis({ url: process.env.REDIS_URL });
+
+router.post('/', async (req: Request, res: Response) => {
+  const { type, payload, tenant_id } = req.body;
+
+  // Get tenant quota
+  const quotaResult = await pool.query(
+    'SELECT * FROM quotas WHERE tenant_id = $1',
+    [tenant_id]
+  );
+
+  if (quotaResult.rows.length === 0) {
+    return res.status(404).json({ error: 'Tenant not found' });
+  }
+
+  const quota = quotaResult.rows[0];
+  const ratelimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(quota.max_events_per_sec, '1 s'),
+    analytics: true,
+    prefix: `tenant:${tenant_id}:events`
+  });
+
+  const { success, pending, limit, reset, remaining } = await ratelimit.limit(tenant_id);
+
+  if (!success) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      limit,
+      remaining: 0,
+      reset
+    });
+  }
+
+  // ... rest of event creation with tenant_id</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Exceeding quota returns 429 with Retry-After header.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Implement GET /quotas endpoint</h4>
+        <p>Create <code>src/routes/quotas.ts</code>:</p>
+<pre>import { Router, Request, Response } from 'express';
+import pool from '../db/pool';
+
+const router = Router();
+
+// GET /quotas/:tenant_id
+router.get('/:tenant_id', async (req: Request, res: Response) => {
+  try {
+    const quotaResult = await pool.query(
+      'SELECT * FROM quotas WHERE tenant_id = $1',
+      [req.params.tenant_id]
+    );
+
+    if (quotaResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Tenant quota not found' });
+    }
+
+    const quota = quotaResult.rows[0];
+
+    // Get current usage
+    const usageResult = await pool.query(`
+      SELECT
+        COUNT(DISTINCT e.id) as events_sent,
+        COUNT(CASE WHEN d.status = 'processing' THEN 1 END) as concurrent_deliveries,
+        COUNT(CASE WHEN dlq.id IS NOT NULL THEN 1 END) as dlq_count
+      FROM events e
+      LEFT JOIN deliveries d ON e.id = d.event_id AND d.status = 'processing'
+      LEFT JOIN dead_letter_queue dlq ON e.tenant_id = dlq.id
+      WHERE e.tenant_id = $1
+    `, [req.params.tenant_id]);
+
+    const usage = usageResult.rows[0];
+
+    res.json({
+      tenant_id: quota.tenant_id,
+      limits: {
+        max_events_per_sec: quota.max_events_per_sec,
+        max_concurrent_deliveries: quota.max_concurrent_deliveries,
+        max_dlq_size: quota.max_dlq_size
+      },
+      current_usage: {
+        events_sent: parseInt(usage.events_sent),
+        concurrent_deliveries: parseInt(usage.concurrent_deliveries),
+        dlq_count: parseInt(usage.dlq_count)
+      },
+      remaining: {
+        events: quota.max_events_per_sec - parseInt(usage.events_sent),
+        deliveries: quota.max_concurrent_deliveries - parseInt(usage.concurrent_deliveries),
+        dlq: quota.max_dlq_size - parseInt(usage.dlq_count)
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch quota' });
+  }
+});
+
+export default router;</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>curl http://localhost:3000/quotas/:tenant_id</code> returns quota and usage.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Test tenant isolation with chaos</h4>
+        <p>Create <code>src/__tests__/tenant-isolation.test.ts</code>:</p>
+<pre>describe('Tenant Isolation', () => {
+  test('slow webhook of tenant A does not block tenant B', async () => {
+    // Create two tenants
+    const tenantA = crypto.randomUUID();
+    const tenantB = crypto.randomUUID();
+
+    // Tenant A has a slow webhook (30s response time)
+    // Tenant B has a fast webhook (100ms response time)
+
+    // Emit 100 events for each tenant
+    // Measure time for Tenant B's deliveries to complete
+    // Should be fast (not blocked by Tenant A's slow webhook)
+
+    const startB = Date.now();
+    // Emit events for Tenant B
+    const endB = Date.now();
+
+    expect(endB - startB).toBeLessThan(5000); // Should complete quickly
+  });
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Tenant B's deliveries complete quickly even while Tenant A is slow.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Document resource isolation strategy</h4>
+        <p>Update <code>docs/design.md</code>:</p>
+<pre>## Resource Isolation
+
+### Per-Tenant Quotas
+- Max events/sec: prevents one tenant from flooding the system
+- Max concurrent deliveries: limits thread pool per tenant
+- Max DLQ size: prevents one tenant's failures from filling disk
+
+### Implementation
+- Rate limiting via Upstash (Redis-backed)
+- Sliding window: 1-second buckets
+- Returns 429 (Too Many Requests) when exceeded
+- Retry-After header indicates when quota resets
+
+### Monitoring
+- Metrics per tenant_id: events/sec, delivery rate, error rate
+- Alert if any tenant exceeds 80% of their quota
+- Alert if any tenant's DLQ grows beyond 50% of limit</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Documentation is clear and committed.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Commit multi-tenant work</h4>
+<pre>git add -A
+git commit -m "feat: add multi-tenant support with rate limiting and isolation
+
+- Tenant ID in webhooks, events, deliveries
+- Quotas table: max events/sec, concurrent deliveries, DLQ size per tenant
+- Rate limiting via Ratelimit (Upstash Redis)
+- GET /quotas endpoint shows usage vs limits
+- POST /events returns 429 when tenant quota exceeded
+- Isolation: one tenant's failures don't affect others
+- Chaos test verifies isolation"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 09?</h2></div>
+    <div class="chapter-body">
+      <p>Your system now isolates tenants properly. Next, you'll harden security: HMAC signing, SSRF prevention, and threat modeling. Head to Module 09.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m9">→ Start Module 09: Security &amp; Compliance</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

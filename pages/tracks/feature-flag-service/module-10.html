@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 10 Tutorial · Feature Flag Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 10 — deploy to production and complete documentation." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-10.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 10 Tutorial · Feature Flag Service Track" />
+<meta property="og:description" content="Production Deployment — the capstone." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-10.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 10 Tutorial · Feature Flag Service Track" />
+<meta name="twitter:description" content="Production Deployment — the capstone." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Feature Flag Service Tutorial · Module 10 of 10</div>
+    <h1>Capstone &amp; Production Deployment</h1>
+    <p class="lede">Package the service for production: containerize, set up CI/CD, deploy to cloud, write runbooks, and document everything. By the end, your feature flag service is ready for real teams and real flags in production.</p>
+    <div class="tags"><span>~6–8 hrs</span><span>Advanced</span><span>Operations focus</span></div>
+    <a class="back" href="../feature-flag-service.html#m10">← Back to Module 10 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Multi-stage Dockerfile for backend and dashboard.</li>
+        <li><code>docker-compose.yml</code> with all services (app, postgres, redis, grafana).</li>
+        <li>GitHub Actions CI/CD: lint, test, build, push, deploy.</li>
+        <li>Deployment guide for production platform.</li>
+        <li>On-call runbook for common issues: flag not updating, high latency, cache miss.</li>
+        <li>SLO document: 99.9% evaluation latency < 100ms.</li>
+        <li>Polished README with architecture, SDK usage, and examples.</li>
+        <li>All changes committed to git.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create production Dockerfile</h4>
+        <p>Create <code>Dockerfile</code>:</p>
+<pre"># Backend build
+FROM node:20-alpine as backend-build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Backend runtime
+FROM node:20-alpine as backend-runtime
+WORKDIR /app
+COPY --from=backend-build /app/node_modules ./node_modules
+COPY --from=backend-build /app/dist ./dist
+COPY --from=backend-build /app/package*.json ./
+ENV NODE_ENV=production
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+CMD ["node", "dist/index.js"]
+
+# Dashboard build
+FROM node:20-alpine as dashboard-build
+WORKDIR /dashboard
+COPY dashboard/package*.json ./
+RUN npm ci
+COPY dashboard ./
+RUN npm run build
+
+# Nginx for dashboard
+FROM nginx:alpine as final
+COPY --from=dashboard-build /dashboard/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 03 Tutorial · Image Upload & Thumbnails Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 03 — implement async thumbnail generation using Bull queue." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/image-upload-thumbnails/module-03.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 03 Tutorial · Image Upload & Thumbnails Track" />
+<meta property="og:description" content="Async Thumbnail Generation — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/image-upload-thumbnails/module-03.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 03 Tutorial · Image Upload & Thumbnails Track" />
+<meta name="twitter:description" content="Async Thumbnail Generation — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Image Upload & Thumbnails Tutorial · Module 03 of 11</div>
+    <h1>Async Thumbnail Generation</h1>
+    <p class="lede">Generate thumbnails asynchronously using Bull + Redis job queue. Create multiple sizes (small 150x150, medium 300x300, large 600x600). Use Sharp for fast image processing. Return job ID immediately to client, notify when ready via webhook or polling. By the end, thumbnails are generated in the background without blocking uploads.</p>
+    <div class="tags"><span>~4–5 hrs</span><span>Intermediate</span><span>Processing focus</span></div>
+    <a class="back" href="../image-upload-thumbnails.html#m3">← Back to Module 03 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Bull queue for thumbnail generation jobs.</li>
+        <li>Generate 3 sizes: 150x150, 300x300, 600x600 using Sharp.</li>
+        <li>Store thumbnails alongside originals.</li>
+        <li><code>GET /images/:id</code> returns original + all thumbnail URLs.</li>
+        <li><code>GET /jobs/:jobId</code> shows job status and progress.</li>
+        <li>Handle failures: retry failed jobs, log errors.</li>
+        <li>Performance: generate 3 thumbnails in < 2 seconds per image.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create thumbnail generation worker</h4>
+        <p>Install: <code>npm install bull ioredis</code></p>
+        <p>Create <code>src/workers/thumbnailWorker.ts</code>:</p>
+<pre>import Queue from 'bull';
+import sharp from 'sharp';
+import fs from 'fs/promises';
+import path from 'path';
+import pool from '../db/pool';
+
+const thumbnailQueue = new Queue('thumbnails', process.env.REDIS_URL);
+
+const SIZES = {
+  small: { width: 150, height: 150 },
+  medium: { width: 300, height: 300 },
+  large: { width: 600, height: 600 }
+};
+
+thumbnailQueue.process(async (job) => {
+  const { imageId, imagePath } = job.data;
+
+  try {
+    for (const [size, dimensions] of Object.entries(SIZES)) {
+      const thumbPath = imagePath.replace(
+        '/originals/',
+        `/thumbnails/${size}/`
+      );
+
+      await fs.mkdir(path.dirname(thumbPath), { recursive: true });
+
+      await sharp(imagePath)
+        .resize(dimensions.width, dimensions.height, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .toFile(thumbPath);
+
+      await pool.query(
+        'INSERT INTO thumbnails (image_id, size, path) VALUES ($1, $2, $3)',
+        [imageId, size, thumbPath]
+      );
+
+      job.progress((Object.keys(SIZES).indexOf(size) + 1) / Object.keys(SIZES).length * 100);
+    }
+
+    return { success: true };
+  } catch (err) {
+    throw err;
+  }
+});
+
+export default thumbnailQueue;

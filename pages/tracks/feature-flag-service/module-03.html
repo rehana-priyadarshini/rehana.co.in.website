@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 03 Tutorial · Feature Flag Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 03 — implement advanced targeting with segments and rules." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-03.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 03 Tutorial · Feature Flag Service Track" />
+<meta property="og:description" content="Advanced Targeting & Rules — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-03.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 03 Tutorial · Feature Flag Service Track" />
+<meta name="twitter:description" content="Advanced Targeting & Rules — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Feature Flag Service Tutorial · Module 03 of 10</div>
+    <h1>Advanced Targeting &amp; Rules</h1>
+    <p class="lede">Build powerful targeting rules: segment membership, user attributes, geographic location, custom conditions. Support rule operators (eq, contains, regex). Add rule priority to control evaluation order. By the end, users can target flags with surgical precision.</p>
+    <div class="tags"><span>~4–5 hrs</span><span>Intermediate</span><span>Rules focus</span></div>
+    <a class="back" href="../feature-flag-service.html#m3">← Back to Module 03 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><code>POST /flags/:id/rules</code> — create a targeting rule with priority.</li>
+        <li><code>PATCH /flags/:id/rules/:ruleId</code> — update rule condition or priority.</li>
+        <li><code>DELETE /flags/:id/rules/:ruleId</code> — delete a rule.</li>
+        <li>Rule operators: <code>eq</code>, <code>ne</code>, <code>contains</code>, <code>regex</code>, <code>gt</code>, <code>lt</code>.</li>
+        <li>Rule types: segment membership, user attributes, percentage-based.</li>
+        <li>Rule priority: lower number = evaluated first.</li>
+        <li>Evaluation respects rule priority and returns matching rule ID.</li>
+        <li>Test suite: rule evaluation with multiple rules and priorities.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create rule evaluation engine</h4>
+        <p>Create <code>src/utils/ruleEngine.ts</code>:</p>
+<pre>import { EvaluationContext } from '../types/flag';
+
+interface Rule {
+  rule_type: 'segment' | 'user_attribute' | 'percentage';
+  rule_value: Record<string, any>;
+}
+
+export function evaluateRule(rule: Rule, context: EvaluationContext): boolean {
+  if (rule.rule_type === 'segment') {
+    return context.segment === rule.rule_value.segment;
+  }
+
+  if (rule.rule_type === 'user_attribute') {
+    const attr = rule.rule_value.attribute;
+    const operator = rule.rule_value.operator; // eq, ne, contains, regex, gt, lt
+    const expected = rule.rule_value.value;
+    const actual = context.attributes?.[attr];
+
+    if (actual === undefined) return false;
+
+    switch (operator) {
+      case 'eq':
+        return actual === expected;
+      case 'ne':
+        return actual !== expected;
+      case 'contains':
+        return String(actual).includes(String(expected));
+      case 'regex':
+        return new RegExp(expected).test(String(actual));
+      case 'gt':
+        return Number(actual) > Number(expected);
+      case 'lt':
+        return Number(actual) < Number(expected);
+      default:
+        return false;
+    }
+  }
+
+  if (rule.rule_type === 'percentage') {
+    const percentage = rule.rule_value.percentage || 0;
+    const userId = context.user_id || context.session_id || '';
+    const hash = hashString(userId);
+    return hash % 100 < percentage;
+  }
+
+  return false;
+}
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}

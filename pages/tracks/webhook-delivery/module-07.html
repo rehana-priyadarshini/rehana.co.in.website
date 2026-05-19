@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 07 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 07 — implement structured logging, metrics, tracing, and dashboards." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-07.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 07 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Observability and debugging — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-07.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 07 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Observability and debugging — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 07 of 10</div>
+    <h1>Observability &amp; Debugging</h1>
+    <p class="lede">Async systems fail silently without visibility. Instrument: structured JSON logs, Prometheus metrics, OpenTelemetry traces. Build a Grafana dashboard. By the end, you'll be able to debug any issue by following the logs.</p>
+    <div class="tags"><span>~5–7 hrs</span><span>Advanced</span><span>Observability focus</span></div>
+    <a class="back" href="../webhook-delivery.html#m7">← Back to Module 07 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Structured JSON logs with correlation/trace IDs for every event.</li>
+        <li>Prometheus metrics: events/sec, deliveries/sec, retry rate, queue depth, DLQ size.</li>
+        <li>OpenTelemetry traces instrument: enqueue → worker → POST → decision.</li>
+        <li>Grafana dashboard with 4 golden signals + queue health + DLQ health.</li>
+        <li>SLO document: 99.9% of events delivered within 5 minutes (over 30 days).</li>
+        <li>Can query logs for a single event's complete journey.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Add structured logging</h4>
+        <p>Install logger: <code>npm install pino pino-pretty</code></p>
+        <p>Create <code>src/logger.ts</code>:</p>
+<pre>import pino from 'pino';
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname'
+    }
+  }
+});
+
+export default logger;</pre>
+        <p>Use throughout codebase with trace IDs:</p>
+<pre>import logger from '../logger';
+
+logger.info({
+  traceId: crypto.randomUUID(),
+  type: 'event_received',
+  event_type: 'order.created',
+  webhook_count: 10
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Logs output as JSON. Can pipe to file: <code>npm run dev 2>&1 | tee app.log</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Add Prometheus metrics</h4>
+        <p>Install: <code>npm install prom-client</code></p>
+        <p>Create <code>src/metrics.ts</code>:</p>
+<pre>import { Counter, Histogram, Gauge } from 'prom-client';
+
+export const eventsEmitted = new Counter({
+  name: 'webhook_events_emitted_total',
+  help: 'Total events emitted',
+  labelNames: ['type']
+});
+
+export const deliveriesAttempted = new Counter({
+  name: 'webhook_deliveries_attempted_total',
+  help: 'Total delivery attempts',
+  labelNames: ['status', 'event_type']
+});
+
+export const deliveryLatency = new Histogram({
+  name: 'webhook_delivery_latency_seconds',
+  help: 'Delivery latency',
+  buckets: [0.1, 0.5, 1, 5, 10]
+});
+
+export const queueDepth = new Gauge({
+  name: 'webhook_queue_depth',
+  help: 'Number of pending jobs in queue'
+});
+
+export const dlqSize = new Gauge({
+  name: 'webhook_dlq_size',
+  help: 'Number of failed deliveries in DLQ'
+});</pre>
+        <p>Expose metrics endpoint in <code>src/index.ts</code>:</p>
+<pre>import { collectDefaultMetrics, register } from 'prom-client';
+
+collectDefaultMetrics();
+
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(register.metrics());
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>curl http://localhost:3000/metrics</code> returns Prometheus format.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Add OpenTelemetry tracing</h4>
+        <p>Install: <code>npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/auto</code></p>
+        <p>Create <code>src/tracing.ts</code>:</p>
+<pre>import { NodeSDK } from '@opentelemetry/sdk-node';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
+
+const sdk = new NodeSDK({
+  traceExporter: new ConsoleSpanExporter(),
+  instrumentations: [getNodeAutoInstrumentations()]
+});
+
+sdk.start();
+
+export default sdk;</pre>
+        <p>Import in <code>src/index.ts</code>: <code>import './tracing';</code> (first import)</p>
+        <div class="verify"><strong>✓ Verify:</strong> Logs show trace spans (in console output).</div>
+      </step>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Set up Prometheus + Grafana</h4>
+        <p>Create <code>docker-compose.yml</code>:</p>
+<pre>version: '3.8'
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin</pre>
+        <p>Create <code>prometheus.yml</code>:</p>
+<pre>global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'webhook-service'
+    static_configs:
+      - targets: ['localhost:3000']
+    metrics_path: '/metrics'</pre>
+        <p>Run: <code>docker-compose up</code></p>
+        <div class="verify"><strong>✓ Verify:</strong> Prometheus at http://localhost:9090 scrapes metrics. Grafana at http://localhost:3001.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Build Grafana dashboard</h4>
+        <p>In Grafana, create a dashboard with panels:</p>
+        <ul style="font-size:13px;line-height:1.6;">
+          <li><strong>Events/sec:</strong> rate(webhook_events_emitted_total[1m])</li>
+          <li><strong>Delivery success rate:</strong> deliveries_attempted_total{status="success"} / deliveries_attempted_total</li>
+          <li><strong>Delivery latency p95:</strong> histogram_quantile(0.95, webhook_delivery_latency_seconds)</li>
+          <li><strong>Queue depth:</strong> webhook_queue_depth</li>
+          <li><strong>DLQ size:</strong> webhook_dlq_size</li>
+        </ul>
+        <div class="verify"><strong>✓ Verify:</strong> Dashboard displays all metrics. Can answer "what was throughput at 14:32?" from the graph.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Document SLO</h4>
+        <p>Create <code>docs/slo.md</code>:</p>
+<pre># SLO — Webhook Delivery Service
+
+## Service Level Objective
+99.9% of events are delivered within 5 minutes of emission (over a 30-day window).
+
+## Service Level Indicator
+(successful_deliveries_within_5min / total_events) * 100
+
+## Error Budget
+30 days = 43,200 minutes
+1 minute of outage = ~0.002% error budget
+
+With 99.9% SLO, we have ~43 minutes of error budget per month.
+
+## Monitoring
+Dashboard tracks:
+- Events emitted per second
+- Delivery success rate
+- Delivery latency (p50, p95, p99)
+- Queue depth (queued jobs)
+- DLQ size (failed deliveries)
+
+Alerts:
+- Alert if success rate < 99.8% (consuming error budget)
+- Alert if DLQ size > 100 (cascading failures)</pre>
+        <div class="verify"><strong>✓ Verify:</strong> SLO document is committed. Dashboard reflects the SLO.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Test traceability</h4>
+        <p>Emit an event, query the logs for its trace ID:</p>
+<pre>curl -X POST http://localhost:3000/events \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"order.created","payload":{"id":123}}'
+
+# Copy the traceId from the response logs
+# Query logs for this trace:
+grep "traceId=abc-123" app.log
+
+# Should see: enqueue → delivery jobs → worker picks up → POST attempt → success/retry</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Can follow a single event through the entire system from logs.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 8</div>
+        <h4>Commit observability work</h4>
+<pre>git add -A
+git commit -m "observability: add logging, metrics, tracing, and dashboards
+
+- Structured JSON logging with trace IDs
+- Prometheus metrics: events/sec, delivery rate, latency, queue depth
+- OpenTelemetry tracing for full request path
+- Grafana dashboard with 4 golden signals + queue health
+- SLO document: 99.9% delivery within 5 minutes
+- Traceability: can follow single event through system"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 08?</h2></div>
+    <div class="chapter-body">
+      <p>You now have visibility into your system. Next, you'll make it multi-tenant and isolate resources. Head to Module 08.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m8">→ Start Module 08: Scaling &amp; Multi-Tenant</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

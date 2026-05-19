@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 07 Tutorial · Feature Flag Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 07 — add observability with logging, metrics, and tracing." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-07.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 07 Tutorial · Feature Flag Service Track" />
+<meta property="og:description" content="Observability & Monitoring — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-07.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 07 Tutorial · Feature Flag Service Track" />
+<meta name="twitter:description" content="Observability & Monitoring — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Feature Flag Service Tutorial · Module 07 of 10</div>
+    <h1>Observability &amp; Monitoring</h1>
+    <p class="lede">Instrument the service with structured logging, Prometheus metrics, and distributed tracing. Build Grafana dashboards showing evaluation rate, cache hit rate, rule matching patterns, and flag usage. By the end, you have full visibility into flag behavior.</p>
+    <div class="tags"><span>~4–5 hrs</span><span>Advanced</span><span>Observability focus</span></div>
+    <a class="back" href="../feature-flag-service.html#m7">← Back to Module 07 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Structured JSON logging with trace IDs and context.</li>
+        <li>Prometheus metrics: evaluation_total, cache_hit_rate, evaluation_latency, rule_matches, flag_updates.</li>
+        <li>OpenTelemetry traces for flag evaluation requests.</li>
+        <li>Grafana dashboard: evaluation throughput, cache performance, rule distribution.</li>
+        <li>Can answer: "Which flags are used most?" "What's the cache hit rate?" "How long does evaluation take?"</li>
+        <li>Audit events logged for all flag changes with user context.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Add structured logging</h4>
+        <p>Install: <code>npm install pino pino-pretty</code></p>
+        <p>Create <code>src/logger.ts</code>:</p>
+<pre>import pino from 'pino';
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  transport: {
+    target: 'pino-pretty',
+    options: { colorize: true, translateTime: 'SYS:standard' }
+  }
+});
+
+export default logger;

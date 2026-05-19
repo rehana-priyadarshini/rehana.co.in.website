@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 09 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 09 — HMAC signing, SSRF prevention, and threat modeling." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-09.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 09 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Security and compliance — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-09.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 09 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Security and compliance — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 09 of 10</div>
+    <h1>Security &amp; Compliance</h1>
+    <p class="lede">You're posting to customer URLs with sensitive data. Sign requests, prevent SSRF, manage secrets, audit logs. By the end, customers can verify they're receiving legitimate webhooks.</p>
+    <div class="tags"><span>~4–6 hrs</span><span>Advanced</span><span>Security focus</span></div>
+    <a class="back" href="../webhook-delivery.html#m9">← Back to Module 09 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Every webhook POST includes <code>X-Webhook-Signature: sha256=...</code> header.</li>
+        <li>SSRF prevention: block private IPs, metadata endpoints, file scheme.</li>
+        <li>No secrets in code: database passwords, API keys in env or secrets manager.</li>
+        <li>Audit logs: who created webhooks, who retried DLQ items, quota changes.</li>
+        <li>Threat model document identifying assets, actors, attack vectors, mitigations.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Implement HMAC signing for webhooks</h4>
+        <p>Update <code>src/worker/deliveryWorker.ts</code>:</p>
+<pre>import crypto from 'crypto';
+
+function signPayload(payload: any, secret: string): string {
+  const body = JSON.stringify(payload);
+  const timestamp = Date.now() / 1000; // Unix timestamp
+  const toSign = `${body}.${timestamp}`;
+
+  return crypto
+    .createHmac('sha256', secret)
+    .update(toSign)
+    .digest('hex');
+}
+
+// In delivery worker:
+const signature = signPayload(payload, webhook.secret);
+
+await axios.post(webhook_url, payload, {
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Webhook-Signature': `sha256=${signature}`,
+    'X-Webhook-Timestamp': String(Date.now() / 1000),
+    'X-Delivery-ID': delivery_id
+  }
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Every webhook POST includes signature header. Customers can verify it using the secret.</div>
+      </step>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Implement SSRF prevention</h4>
+        <p>Create <code>src/security/ssrf.ts</code>:</p>
+<pre>import { isIP } from 'net';
+
+const PRIVATE_RANGES = [
+  '127.0.0.1',
+  '::1',
+  '0.0.0.0',
+  '169.254.0.0/16',     // Link-local
+  '10.0.0.0/8',         // Private
+  '172.16.0.0/12',      // Private
+  '192.168.0.0/16'      // Private
+];
+
+const METADATA_HOSTS = [
+  'metadata.google.internal',
+  '169.254.169.254',
+  'http://169.254.169.254',
+  'http://metadata.google.internal'
+];
+
+export function isSafeURL(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+
+    // Block dangerous schemes
+    if (['file:', 'data:', 'javascript:', 'vbscript:'].includes(parsed.protocol)) {
+      return false;
+    }
+
+    // Block metadata endpoints
+    if (METADATA_HOSTS.some(host => url.includes(host))) {
+      return false;
+    }
+
+    // Resolve hostname and check IP
+    const hostname = parsed.hostname;
+    if (isIP(hostname)) {
+      // Check if it's in a private range
+      if (PRIVATE_RANGES.some(range => {
+        if (range.includes('/')) {
+          // CIDR check would go here
+          return false;
+        }
+        return hostname === range;
+      })) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+export default isSafeURL;</pre>
+        <p>Use in webhook registration:</p>
+<pre>import isSafeURL from '../security/ssrf';
+
+if (!isSafeURL(req.body.url)) {
+  return res.status(400).json({ error: 'Webhook URL is not allowed (private IP or metadata endpoint)' });
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Registering webhook to 127.0.0.1 or metadata endpoint is rejected.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Move secrets to environment variables</h4>
+        <p>Create <code>.env.example</code>:</p>
+<pre>DATABASE_URL=postgresql://user:password@localhost:5432/webhook_service
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-secret-key-here
+LOG_LEVEL=info</pre>
+        <p>Use in code:</p>
+<pre>const dbUrl = process.env.DATABASE_URL || 'postgres://...';
+const redisUrl = process.env.REDIS_URL || 'redis://...';
+
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}</pre>
+        <p>Never commit <code>.env</code> (add to .gitignore):</p>
+<pre>.env
+.env.local
+secrets.json</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>.env</code> is in .gitignore. .env.example exists with dummy values.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Implement audit logging</h4>
+        <p>Create <code>src/db/audit.ts</code>:</p>
+<pre>import pool from './pool';
+import logger from '../logger';
+
+export async function auditLog(action: string, details: any, userId?: string) {
+  try {
+    await pool.query(`
+      INSERT INTO audit_logs (action, details, user_id, timestamp)
+      VALUES ($1, $2, $3, NOW())
+    `, [action, JSON.stringify(details), userId]);
+
+    logger.info({ action, details, userId, type: 'audit' });
+  } catch (err) {
+    logger.error({ err, action, details }, 'Failed to log audit event');
+  }
+}
+
+// Usage:
+await auditLog('webhook_created', { webhook_id, tenant_id, url });
+await auditLog('dlq_retry', { delivery_id, attempts });
+await auditLog('quota_exceeded', { tenant_id, limit, current });</pre>
+        <p>Create audit_logs table in migrations:</p>
+<pre>CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  action TEXT NOT NULL,
+  details JSONB,
+  user_id UUID,
+  timestamp TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_audit_action ON audit_logs(action);
+CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Audit log entries appear for webhook creation, DLQ retries, etc.</div>
+      </step>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Write threat model</h4>
+        <p>Create <code>docs/threat-model.md</code>:</p>
+<pre># Threat Model — Webhook Delivery Service
+
+## Assets
+- Customer URLs (endpoints we POST to)
+- Customer secrets (used for HMAC signing)
+- Event payloads (may contain sensitive data)
+- Delivery state (audit trail)
+
+## Threats & Mitigations
+
+### 1. Customer sees other customer's events
+**Threat:** Query injection, authorization bypass
+**Mitigation:** Parameterized queries, tenant isolation, audit logs
+
+### 2. SSRF attack via webhook URL
+**Threat:** Attacker registers webhook to internal IP, accesses metadata endpoints
+**Mitigation:** Block private IPs, metadata endpoints, file scheme
+
+### 3. Replay attacks on webhooks
+**Threat:** Attacker replays a webhook POST, duplicating side effects
+**Mitigation:** Timestamp in signature, idempotency keys, customer deduplication
+
+### 4. Secrets in git/logs
+**Threat:** API keys, database passwords leaked
+**Mitigation:** Environment variables, never log secrets, audit who accesses them
+
+### 5. DoS via webhook registration
+**Threat:** Attacker registers 1M webhooks, crashes system
+**Mitigation:** Rate limiting, quotas, per-tenant limits</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Threat model is committed and covers key attack vectors.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Commit security work</h4>
+<pre>git add -A
+git commit -m "security: add HMAC signing, SSRF prevention, and audit logging
+
+- HMAC-SHA256 signing for all webhook POSTs
+- SSRF prevention: block private IPs and metadata endpoints
+- Move secrets to environment variables (not code)
+- Audit logging: track webhook creation, DLQ retries, quota changes
+- Threat model identifying assets, risks, and mitigations"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 10?</h2></div>
+    <div class="chapter-body">
+      <p>Your system is now secure and well-documented. The final module is the capstone: deploy, write runbooks, and document everything. Head to Module 10.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m10">→ Start Module 10: Capstone &amp; Production Readiness</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

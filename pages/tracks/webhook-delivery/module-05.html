@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 05 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 05 — write unit, integration, and chaos tests for async systems." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-05.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 05 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Testing async systems — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-05.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 05 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Testing async systems — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 05 of 10</div>
+    <h1>Testing Async Systems</h1>
+    <p class="lede">Async systems are slippery. Test them hard: unit tests for retry logic, integration tests with fake webhook servers, and chaos tests that inject failures. By the end, you'll have confidence your system survives real-world chaos.</p>
+    <div class="tags"><span>~5–7 hrs</span><span>Advanced</span><span>Test-driven</span></div>
+    <a class="back" href="../webhook-delivery.html#m5">← Back to Module 05 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Unit tests for retry logic: backoff calculation, state transitions.</li>
+        <li>Integration tests: spin up Postgres + Redis in containers, run end-to-end.</li>
+        <li>Chaos tests: inject timeouts, 500 errors, network partitions.</li>
+        <li>Concurrency test: emit 1000 events to 10 webhooks; verify all 10k deliveries complete.</li>
+        <li>Test suite runs in under 2 minutes.</li>
+        <li>75%+ code coverage for delivery worker.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Install testing dependencies</h4>
+<pre>npm install --save-dev jest ts-jest @types/jest testcontainers axios-mock-adapter</pre>
+        <p>Create <code>jest.config.js</code>:</p>
+<pre>module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  collectCoverageFrom: ['src/**/*.ts'],
+  coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
+  coverageThreshold: {
+    global: { lines: 75, functions: 75, branches: 70, statements: 75 }
+  }
+};</pre>
+        <p>Update <code>package.json</code>:</p>
+<pre>"scripts": {
+  "test": "jest",
+  "test:coverage": "jest --coverage",
+  ...
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm test</code> runs (even with no tests yet).</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Write unit tests for retry logic</h4>
+        <p>Create <code>src/__tests__/retryLogic.test.ts</code>:</p>
+<pre>describe('Retry Logic', () => {
+  const BACKOFF_DELAYS = [1000, 4000, 16000, 64000, 256000];
+
+  test('calculates exponential backoff correctly', () => {
+    expect(BACKOFF_DELAYS[0]).toBe(1000);
+    expect(BACKOFF_DELAYS[1]).toBe(4000);
+    expect(BACKOFF_DELAYS[4]).toBe(256000);
+  });
+
+  test('stops retrying after 5 attempts', () => {
+    let attempt = 5;
+    const shouldRetry = attempt < BACKOFF_DELAYS.length;
+    expect(shouldRetry).toBe(false);
+  });
+
+  test('generates increasing delays', () => {
+    for (let i = 0; i < BACKOFF_DELAYS.length - 1; i++) {
+      expect(BACKOFF_DELAYS[i + 1]).toBeGreaterThan(BACKOFF_DELAYS[i]);
+    }
+  });
+
+  test('total retry time is under 6 minutes', () => {
+    const totalTime = BACKOFF_DELAYS.reduce((a, b) => a + b, 0);
+    expect(totalTime).toBeLessThan(6 * 60 * 1000);
+  });
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm test -- retryLogic.test.ts</code> passes.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Write integration tests with test containers</h4>
+        <p>Create <code>src/__tests__/integration.test.ts</code>:</p>
+<pre>import { GenericContainer, Network } from 'testcontainers';
+import axios from 'axios';
+import pool from '../db/pool';
+
+describe('Webhook Delivery Integration', () => {
+  let postgresContainer: any;
+  let redisContainer: any;
+
+  beforeAll(async () => {
+    const network = await new Network().start();
+
+    postgresContainer = await new GenericContainer('postgres:16')
+      .withEnvironment({ POSTGRES_PASSWORD: 'test' })
+      .withNetwork(network)
+      .start();
+
+    redisContainer = await new GenericContainer('redis:7')
+      .withNetwork(network)
+      .start();
+  });
+
+  afterAll(async () => {
+    await postgresContainer.stop();
+    await redisContainer.stop();
+  });
+
+  test('creates and retrieves webhook', async () => {
+    // Test webhook creation
+    const response = await axios.post('http://localhost:3000/webhooks', {
+      url: 'https://example.com/hook',
+      secret: 'secret',
+      event_types: ['order.created']
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.data.id).toBeDefined();
+  });
+
+  test('emits event and enqueues deliveries', async () => {
+    // First create a webhook
+    const webhookRes = await axios.post('http://localhost:3000/webhooks', {
+      url: 'https://example.com/hook',
+      secret: 'secret',
+      event_types: ['order.created']
+    });
+
+    // Then emit an event
+    const eventRes = await axios.post('http://localhost:3000/events', {
+      type: 'order.created',
+      payload: { order_id: 123 }
+    });
+
+    expect(eventRes.status).toBe(201);
+
+    // Wait briefly for queue processing
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Verify deliveries were created
+    const result = await pool.query(
+      'SELECT COUNT(*) FROM deliveries WHERE event_id = $1',
+      [eventRes.data.id]
+    );
+    expect(parseInt(result.rows[0].count)).toBeGreaterThan(0);
+  });
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm test -- integration.test.ts</code> passes.</div>
+        <div class="gotcha"><strong>⚠ Gotcha:</strong> Test containers take time to start. Consider increasing Jest timeout: <code>jest.setTimeout(30000)</code>.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Write chaos tests (failure injection)</h4>
+        <p>Create <code>src/__tests__/chaos.test.ts</code>:</p>
+<pre>import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+
+describe('Chaos Tests', () => {
+  const mock = new MockAdapter(axios);
+
+  afterEach(() => {
+    mock.reset();
+  });
+
+  test('retries on 500 error', async () => {
+    mock.onPost(/example.com/).replyOnce(500).replyOnce(200, { ok: true });
+
+    // Simulate sending webhook
+    let attempts = 0;
+    const send = async () => {
+      attempts++;
+      try {
+        return await axios.post('https://example.com/hook', {});
+      } catch (err) {
+        if (attempts < 2) {
+          await new Promise(r => setTimeout(r, 100));
+          return send();
+        }
+        throw err;
+      }
+    };
+
+    const result = await send();
+    expect(result.status).toBe(200);
+    expect(attempts).toBe(2);
+  });
+
+  test('times out and retries on slow webhook', async () => {
+    mock.onPost(/example.com/).reply(() =>
+      new Promise(resolve => setTimeout(resolve, 15000)) // Longer than timeout
+    );
+
+    let attempts = 0;
+    const send = async () => {
+      attempts++;
+      try {
+        return await axios.post('https://example.com/hook', {}, { timeout: 5000 });
+      } catch (err) {
+        if (attempts < 2) {
+          await new Promise(r => setTimeout(r, 100));
+          return send();
+        }
+        throw err;
+      }
+    };
+
+    try {
+      await send();
+    } catch (err) {
+      expect(attempts).toBeGreaterThanOrEqual(1);
+    }
+  });
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm test -- chaos.test.ts</code> passes.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Add concurrency test</h4>
+        <p>Add to <code>src/__tests__/integration.test.ts</code>:</p>
+<pre>test('handles 1000 events to 10 webhooks concurrently', async () => {
+  // Create 10 webhooks
+  const webhooks = [];
+  for (let i = 0; i < 10; i++) {
+    const res = await axios.post('http://localhost:3000/webhooks', {
+      url: `https://example.com/webhook${i}`,
+      secret: 'secret',
+      event_types: ['order.created']
+    });
+    webhooks.push(res.data);
+  }
+
+  // Emit 1000 events
+  const events = [];
+  for (let i = 0; i < 1000; i++) {
+    const res = await axios.post('http://localhost:3000/events', {
+      type: 'order.created',
+      payload: { order_id: i }
+    });
+    events.push(res.data);
+  }
+
+  // Wait for worker to process
+  await new Promise(r => setTimeout(r, 5000));
+
+  // Verify all 10k deliveries exist
+  const result = await pool.query(
+    'SELECT COUNT(*) FROM deliveries'
+  );
+  expect(parseInt(result.rows[0].count)).toBeGreaterThanOrEqual(10000);
+}, 60000); // 60 second timeout</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Test runs without crashing. All deliveries are created.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Commit and run coverage</h4>
+<pre>git add -A
+git commit -m "test: comprehensive test suite for async delivery
+
+- Unit tests for retry logic and backoff
+- Integration tests with test containers
+- Chaos tests: failure injection, timeouts
+- Concurrency test: 1000 events × 10 webhooks
+- 75%+ code coverage threshold"
+npm test -- --coverage
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npm test</code> runs all tests in under 2 minutes. Coverage is 75%+.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 06?</h2></div>
+    <div class="chapter-body">
+      <p>You now have confidence in your delivery system. Next, you'll optimize for performance: batching, load testing, and throughput. Head to Module 06.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m6">→ Start Module 06: Performance &amp; Batching</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>

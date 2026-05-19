@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 01 Tutorial · Feature Flag Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 01 — set up project, design schema, and build core API." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-01.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 01 Tutorial · Feature Flag Service Track" />
+<meta property="og:description" content="Foundations & Project Setup — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flag-service/module-01.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 01 Tutorial · Feature Flag Service Track" />
+<meta name="twitter:description" content="Foundations & Project Setup — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Feature Flag Service Tutorial · Module 01 of 10</div>
+    <h1>Foundations &amp; Project Setup</h1>
+    <p class="lede">Build the foundation for a feature flag service. Create a Git repo, set up Node.js, design the database schema for flags, contexts, and evaluations, and scaffold the API. By the end, you'll have a working skeleton ready for flag logic.</p>
+    <div class="tags"><span>~3–4 hrs</span><span>Beginner</span><span>Setup focus</span></div>
+    <a class="back" href="../feature-flag-service.html#m1">← Back to Module 01 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Git repository initialized with Node.js 20, TypeScript, ESLint, Prettier.</li>
+        <li>PostgreSQL database with schema: <code>flags</code>, <code>flag_rules</code>, <code>flag_evaluations</code>, <code>audit_logs</code>.</li>
+        <li>Express server with health check endpoint.</li>
+        <li>Design doc explaining flag anatomy, targeting, and evaluation rules.</li>
+        <li>README with quick start and architecture overview.</li>
+        <li>All changes committed to git.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Initialize Git repository</h4>
+<pre>mkdir feature-flag-service
+cd feature-flag-service
+git init
+git config user.email "you@example.com"
+git config user.name "Your Name"
+git branch -M main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git status</code> shows "On branch main".</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Initialize Node.js project</h4>
+<pre>npm init -y
+npm install express postgres pino uuid dotenv</pre>
+        <p>Install dev dependencies:</p>
+<pre>npm install --save-dev typescript @types/node @types/express eslint prettier ts-node nodemon</pre>
+        <p>Create <code>tsconfig.json</code>:</p>
+<pre>{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}</pre>
+        <p>Create <code>.eslintrc.json</code>:</p>
+<pre>{
+  "env": { "node": true, "es2020": true },
+  "extends": "eslint:recommended",
+  "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },
+  "rules": { "no-console": "off", "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }] }
+}</pre>
+        <p>Create <code>.prettierrc.json</code>:</p>
+<pre>{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "printWidth": 100,
+  "tabWidth": 2
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>npx tsc --version</code> shows TypeScript version. <code>npm run lint</code> passes.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Create project structure</h4>
+<pre>mkdir -p src/{routes,db,types,middleware,utils}
+mkdir -p docs</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Directories exist and are empty.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Set up database connection</h4>
+        <p>Create <code>src/db/pool.ts</code>:</p>
+<pre>import { Pool } from 'postgres';
+
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'feature_flag_service',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres'
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
+export default pool;</pre>
+        <div class="verify"><strong>✓ Verify:</strong> File compiles without errors.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Design database schema</h4>
+        <p>Create <code>src/db/schema.sql</code>:</p>
+<pre>-- Flags: Feature flag definitions
+CREATE TABLE IF NOT EXISTS flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  status TEXT DEFAULT 'off', -- off, on, percentage, rules
+  percentage_enabled INT DEFAULT 0, -- 0-100 for percentage-based rollout
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Flag Rules: Targeting rules for a flag (e.g., user in segment, beta tester)
+CREATE TABLE IF NOT EXISTS flag_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  flag_id UUID NOT NULL REFERENCES flags(id) ON DELETE CASCADE,
+  priority INT NOT NULL, -- Lower number = higher priority
+  rule_type TEXT NOT NULL, -- 'segment', 'user_attribute', 'percentage'
+  rule_value JSONB NOT NULL, -- {"segment": "beta_testers"} or {"attribute": "country", "operator": "eq", "value": "US"}
+  enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Flag Evaluations: Log of flag checks for auditing
+CREATE TABLE IF NOT EXISTS flag_evaluations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  flag_id UUID NOT NULL REFERENCES flags(id) ON DELETE CASCADE,
+  context_id TEXT NOT NULL, -- User ID, Session ID, etc.
+  result BOOLEAN NOT NULL, -- true = flag enabled, false = disabled
+  evaluated_rule_id UUID, -- Which rule matched (if any)
+  timestamp TIMESTAMP DEFAULT NOW()
+);
+
+-- Audit Logs: Who changed what
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  flag_id UUID REFERENCES flags(id) ON DELETE SET NULL,
+  action TEXT NOT NULL, -- 'created', 'updated', 'deleted', 'toggled'
+  details JSONB,
+  changed_by TEXT, -- User email or service name
+  timestamp TIMESTAMP DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_flags_name ON flags(name);
+CREATE INDEX idx_flag_rules_flag_id ON flag_rules(flag_id, priority);
+CREATE INDEX idx_evaluations_flag_id ON flag_evaluations(flag_id);
+CREATE INDEX idx_evaluations_context ON flag_evaluations(context_id);
+CREATE INDEX idx_audit_logs_flag_id ON audit_logs(flag_id);
+CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Schema is syntactically correct SQL.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Create database migration runner</h4>
+        <p>Create <code>src/db/migrations.ts</code>:</p>
+<pre>import fs from 'fs';
+import path from 'path';
+import pool from './pool';
+
+export async function runMigrations() {
+  try {
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf-8');
+
+    const client = await pool.connect();
+    try {
+      await client.query(schema);
+      console.log('✓ Database migrations completed');
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Migration failed:', err);
+    process.exit(1);
+  }
+}
+
+export default runMigrations;</pre>
+        <div class="verify"><strong>✓ Verify:</strong> File compiles without errors.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Create Express server skeleton</h4>
+        <p>Create <code>src/index.ts</code>:</p>
+<pre>import express, { Request, Response } from 'express';
+import runMigrations from './db/migrations';
+import flagRoutes from './routes/flags';
+
+const app = express();
+const PORT = parseInt(process.env.PORT || '3000');
+
+// Middleware
+app.use(express.json());
+
+// Health check
+app.get('/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Routes
+app.use('/flags', flagRoutes);
+
+// 404 handler
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Error handler
+app.use((err: any, _req: Request, res: Response) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Start server
+async function start() {
+  try {
+    await runMigrations();
+    app.listen(PORT, () => {
+      console.log(`✓ Server running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+start();

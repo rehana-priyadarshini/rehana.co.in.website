@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 06 Tutorial · Image Upload & Thumbnails Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 06 — implement image transformations and filters on-the-fly." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/image-upload-thumbnails/module-06.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 06 Tutorial · Image Upload & Thumbnails Track" />
+<meta property="og:description" content="Image Transformations & Filters — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/image-upload-thumbnails/module-06.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 06 Tutorial · Image Upload & Thumbnails Track" />
+<meta name="twitter:description" content="Image Transformations & Filters — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Image Upload & Thumbnails Tutorial · Module 06 of 11</div>
+    <h1>Image Transformations &amp; Filters</h1>
+    <p class="lede">Apply on-the-fly transformations: resize, crop, rotate, blur, grayscale, sepia. Support query parameters for dynamic transformations. Cache transformed results for performance. By the end, clients can request any image with any transformation without pre-generating every variant.</p>
+    <div class="tags"><span>~3–4 hrs</span><span>Intermediate</span><span>Processing focus</span></div>
+    <a class="back" href="../image-upload-thumbnails.html#m6">← Back to Module 06 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Query parameters for transformations: <code>?width=400&height=300&format=webp&quality=80</code>.</li>
+        <li>Filters: <code>?blur=10&grayscale=1&sepia=1&rotate=90</code>.</li>
+        <li>Validate parameters: width/height max 4000px, quality 0-100.</li>
+        <li>Cache transformed images in Redis (1-day TTL).</li>
+        <li><code>GET /images/:id/transform?...params</code> returns transformed image.</li>
+        <li>Return appropriate Content-Type and Cache-Control headers.</li>
+        <li>Performance: transform + serve in < 500ms (cache hit < 50ms).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Implement image transformation pipeline</h4>
+        <p>Create <code>src/utils/imageTransform.ts</code>:</p>
+<pre>import sharp, { Sharp } from 'sharp';
+
+export interface TransformOptions {
+  width?: number;
+  height?: number;
+  format?: 'jpeg' | 'png' | 'webp' | 'avif';
+  quality?: number;
+  blur?: number;
+  grayscale?: boolean;
+  sepia?: boolean;
+  rotate?: number;
+}
+
+export async function transformImage(
+  buffer: Buffer,
+  options: TransformOptions
+): Promise<Buffer> {
+  let image = sharp(buffer);
+
+  // Validate and constrain dimensions
+  const maxDim = 4000;
+  const width = options.width ? Math.min(options.width, maxDim) : undefined;
+  const height = options.height ? Math.min(options.height, maxDim) : undefined;
+
+  if (width || height) {
+    image = image.resize(width, height, { fit: 'inside', withoutEnlargement: true });
+  }
+
+  if (options.rotate) {
+    image = image.rotate(options.rotate);
+  }
+
+  if (options.blur) {
+    image = image.blur(Math.min(options.blur, 50));
+  }
+
+  if (options.grayscale) {
+    image = image.grayscale();
+  }
+
+  if (options.sepia) {
+    image = image.tint({ r: 112, g: 66, b: 20 });
+  }
+
+  const format = options.format || 'jpeg';
+  const quality = Math.min(Math.max(options.quality || 80, 0), 100);
+
+  return image.toFormat(format, { quality }).toBuffer();
+}

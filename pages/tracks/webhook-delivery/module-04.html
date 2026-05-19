@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 04 Tutorial · Webhook Delivery Service Track</title>
+<link rel="icon" type="image/svg+xml" href="../../../favicon.svg" />
+<meta name="description" content="Step-by-step tutorial for Module 04 — implement dead-letter queue, failure analysis, and recovery." />
+<meta name="author" content="Software Development Tour" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#0A2A43" />
+<link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-04.html" />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Module 04 Tutorial · Webhook Delivery Service Track" />
+<meta property="og:description" content="Dead-letter queue and failure handling — step by step." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery/module-04.html" />
+<meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Module 04 Tutorial · Webhook Delivery Service Track" />
+<meta name="twitter:description" content="Dead-letter queue and failure handling — step by step." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
+<link rel="stylesheet" href="../../../assets/css/styles.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
+</script>
+<style>
+  .step { background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:8px;padding:14px 18px;margin:14px 0; }
+  .step h4 { color:var(--deep);margin-bottom:6px; }
+  .step .num { font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal); }
+  .verify { background:#F2F8F4;border-left:4px solid var(--ok);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  .verify strong { color:var(--ok); }
+  .gotcha { background:#FFF8E8;border-left:4px solid var(--accent);padding:8px 12px;border-radius:4px;margin:10px 0;font-size:13.5px; }
+  pre { background:#0A2A43;color:#CADCFC;padding:12px 14px;border-radius:6px;font-size:12.5px;line-height:1.5;overflow-x:auto; }
+  code { background:#EEF2F7;padding:1px 5px;border-radius:3px;font-size:0.92em; }
+  pre code { background:transparent;padding:0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Webhook Delivery Tutorial · Module 04 of 10</div>
+    <h1>Dead Letter Queue &amp; Failure Handling</h1>
+    <p class="lede">Permanently failed deliveries shouldn't disappear. Implement a DLQ, expose failure analytics, and allow manual recovery. By the end, you'll have full visibility into permanent failures.</p>
+    <div class="tags"><span>~4–6 hrs</span><span>Intermediate</span><span>Observability focus</span></div>
+    <a class="back" href="../webhook-delivery.html#m4">← Back to Module 04 overview</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">What You'll Have at the End</div><h2>Definition of Done</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><code>GET /dlq</code> endpoint lists all permanently failed deliveries (paginated).</li>
+        <li><code>POST /dlq/:delivery_id/retry</code> allows manual retries from the DLQ.</li>
+        <li>Failed deliveries are queryable: by webhook ID, by date, with error details.</li>
+        <li>Metrics/alerts when deliveries move to DLQ.</li>
+        <li>Clear documentation of transient vs permanent failure classification.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">The Steps</div><h2>Build It</h2></div>
+    <div class="chapter-body">
+
+      <div class="step">
+        <div class="num">STEP 1</div>
+        <h4>Create DLQ table schema</h4>
+        <p>Update <code>src/db/migrations.ts</code> to add:</p>
+<pre>CREATE TABLE IF NOT EXISTS dead_letter_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  delivery_id UUID NOT NULL REFERENCES deliveries(id),
+  webhook_id UUID NOT NULL REFERENCES webhooks(id),
+  event_id UUID NOT NULL REFERENCES events(id),
+  last_error TEXT,
+  error_count INT DEFAULT 1,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_dlq_webhook_id ON dead_letter_queue(webhook_id);
+CREATE INDEX idx_dlq_created_at ON dead_letter_queue(created_at);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Run migrations: <code>npm run dev</code> completes without errors.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 2</div>
+        <h4>Update the worker to move failed deliveries to DLQ</h4>
+        <p>Modify <code>src/worker/deliveryWorker.ts</code> where permanent failure is detected:</p>
+<pre>// When attempt >= MAX_RETRIES:
+if (nextRetryAt === -1) {
+  // Move to DLQ
+  await pool.query(
+    'INSERT INTO dead_letter_queue (delivery_id, webhook_id, event_id, last_error) VALUES ($1, $2, $3, $4)',
+    [delivery_id, job.data.webhook_id, job.data.event_id, errorMsg]
+  );
+
+  await pool.query(
+    'UPDATE deliveries SET status = $1, attempts = $2, last_error = $3, updated_at = NOW() WHERE id = $4',
+    ['failed', attempt + 1, errorMsg, delivery_id]
+  );
+
+  console.log(`Delivery ${delivery_id} moved to DLQ`);
+}</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Trigger permanent failures (5+ retries) and check DLQ table has records.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 3</div>
+        <h4>Implement GET /dlq endpoint</h4>
+        <p>Create <code>src/routes/dlq.ts</code>:</p>
+<pre>import { Router, Request, Response } from 'express';
+import pool from '../db/pool';
+
+const router = Router();
+
+// GET /dlq - list failed deliveries
+router.get('/', async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  try {
+    const countResult = await pool.query('SELECT COUNT(*) FROM dead_letter_queue');
+    const total = parseInt(countResult.rows[0].count);
+
+    const result = await pool.query(`
+      SELECT dlq.*, w.url as webhook_url, e.type as event_type
+      FROM dead_letter_queue dlq
+      JOIN webhooks w ON dlq.webhook_id = w.id
+      JOIN events e ON dlq.event_id = e.id
+      ORDER BY dlq.created_at DESC
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
+
+    res.json({
+      data: result.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch DLQ' });
+  }
+});
+
+// GET /dlq/webhook/:webhook_id - failures for a specific webhook
+router.get('/webhook/:webhook_id', async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT dlq.*, e.type as event_type
+      FROM dead_letter_queue dlq
+      JOIN events e ON dlq.event_id = e.id
+      WHERE dlq.webhook_id = $1
+      ORDER BY dlq.created_at DESC
+    `, [req.params.webhook_id]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch webhook DLQ' });
+  }
+});
+
+export default router;</pre>
+        <p>Add to <code>src/index.ts</code>:</p>
+<pre>import dlqRouter from './routes/dlq';
+app.use('/dlq', dlqRouter);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>curl http://localhost:3000/dlq</code> returns paginated failed deliveries.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 4</div>
+        <h4>Implement POST /dlq/:delivery_id/retry</h4>
+        <p>Add to <code>src/routes/dlq.ts</code>:</p>
+<pre>import deliveryQueue from '../queue/deliveryQueue';
+
+// POST /dlq/:delivery_id/retry - retry a failed delivery
+router.post('/:delivery_id/retry', async (req: Request, res: Response) => {
+  try {
+    // Get the DLQ entry
+    const dlqResult = await pool.query(
+      'SELECT * FROM dead_letter_queue WHERE delivery_id = $1',
+      [req.params.delivery_id]
+    );
+
+    if (dlqResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Delivery not found in DLQ' });
+    }
+
+    const dlq = dlqResult.rows[0];
+
+    // Get delivery and webhook info
+    const deliveryResult = await pool.query(
+      'SELECT * FROM deliveries WHERE id = $1',
+      [req.params.delivery_id]
+    );
+
+    const webhookResult = await pool.query(
+      'SELECT * FROM webhooks WHERE id = $1',
+      [dlq.webhook_id]
+    );
+
+    const eventResult = await pool.query(
+      'SELECT * FROM events WHERE id = $1',
+      [dlq.event_id]
+    );
+
+    if (deliveryResult.rows.length === 0 || webhookResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Delivery or webhook not found' });
+    }
+
+    // Re-enqueue
+    await deliveryQueue.add({
+      delivery_id: req.params.delivery_id,
+      webhook_id: dlq.webhook_id,
+      event_id: dlq.event_id,
+      webhook_url: webhookResult.rows[0].url,
+      webhook_secret: webhookResult.rows[0].secret,
+      payload: eventResult.rows[0].payload,
+      attempt: 0
+    });
+
+    // Update status back to pending
+    await pool.query(
+      'UPDATE deliveries SET status = $1, attempts = 0, next_retry_at = NULL WHERE id = $2',
+      ['pending', req.params.delivery_id]
+    );
+
+    // Remove from DLQ
+    await pool.query(
+      'DELETE FROM dead_letter_queue WHERE delivery_id = $1',
+      [req.params.delivery_id]
+    );
+
+    res.json({ message: 'Delivery requeued', delivery_id: req.params.delivery_id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to retry delivery' });
+  }
+});</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>curl -X POST http://localhost:3000/dlq/:delivery_id/retry</code> moves it back to pending and removes from DLQ.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 5</div>
+        <h4>Add DLQ alerts/metrics</h4>
+        <p>Create <code>src/metrics/dlqMetrics.ts</code>:</p>
+<pre>import pool from '../db/pool';
+
+export async function trackDLQGrowth() {
+  const result = await pool.query(
+    'SELECT COUNT(*) as count FROM dead_letter_queue'
+  );
+  const count = parseInt(result.rows[0].count);
+
+  // Log as metric (or push to Prometheus, CloudWatch, etc.)
+  console.log(`[METRIC] dlq.size=${count}`);
+
+  if (count > 10) {
+    console.warn(`[ALERT] DLQ is growing: ${count} failed deliveries`);
+  }
+
+  return count;
+}
+
+// Call this periodically (e.g., every 5 minutes)
+setInterval(() => trackDLQGrowth(), 5 * 60 * 1000);</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Logs show DLQ size metrics periodically.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 6</div>
+        <h4>Document failure classification</h4>
+        <p>Update <code>docs/design.md</code> with:</p>
+<pre>## Failure Classification
+
+### Transient Failures
+- Network timeout (retry with backoff)
+- 5xx server error (retry with backoff)
+- Connection refused (retry with backoff)
+
+### Permanent Failures
+- 4xx client error (except 408, 429)
+- URL unreachable (DNS failure, etc.)
+- Max retries exceeded (5 attempts)
+
+Failed deliveries move to the dead-letter queue for manual inspection and recovery.</pre>
+        <div class="verify"><strong>✓ Verify:</strong> Documentation is committed and clear.</div>
+      </div>
+
+      <div class="step">
+        <div class="num">STEP 7</div>
+        <h4>Commit your work</h4>
+<pre>git add -A
+git commit -m "feat: implement dead-letter queue for failure handling
+
+- DLQ table for permanently failed deliveries
+- GET /dlq endpoint with pagination and filtering
+- POST /dlq/:id/retry for manual recovery
+- DLQ growth metrics and alerts
+- Clear documentation of transient vs permanent failures"
+git push origin main</pre>
+        <div class="verify"><strong>✓ Verify:</strong> <code>git log --oneline</code> shows your commit.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">Next Steps</div><h2>Ready for Module 05?</h2></div>
+    <div class="chapter-body">
+      <p>You now have full failure handling and visibility. Next, you'll test this system: unit tests, integration tests, and chaos engineering. Head to Module 05.</p>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../webhook-delivery.html#m5">→ Start Module 05: Testing Async Systems</a>
+        <a href="../webhook-delivery.html">← Back to track overview</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../../assets/js/feedback.js" defer></script>
+</body>
+</html>
