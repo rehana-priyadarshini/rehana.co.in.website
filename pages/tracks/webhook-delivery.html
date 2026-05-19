@@ -3,64 +3,359 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Webhook Delivery Service - Learning Track</title>
+<title>Webhook Delivery Service Track · Learning Tracks</title>
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
-<meta name="description" content="Build a webhook delivery service. 10 modules covering async jobs, retries, DLQs, reliability patterns." />
+<meta name="description" content="A hands-on, ten-module learning track that builds a production-grade webhook delivery platform — touching async jobs, retries, dead-letter queues, and reliability patterns." />
 <meta name="author" content="Software Development Tour" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#0A2A43" />
 <link rel="canonical" href="http://www.rehana.co.in/pages/tracks/webhook-delivery.html" />
-<meta property="og:site_name" content="Software Development - A Guided Tour" />
-<meta property="og:title" content="Webhook Delivery Service - Learning Track" />
-<meta property="og:description" content="10 modules. Build a webhook platform." />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Webhook Delivery Service Track · Learning Tracks" />
+<meta property="og:description" content="Build a production-grade webhook delivery platform, one module at a time." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://www.rehana.co.in/pages/tracks/webhook-delivery.html" />
 <meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Webhook Delivery Service Track · Learning Tracks" />
+<meta name="twitter:description" content="Build a production-grade webhook delivery platform, one module at a time." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
 <link rel="stylesheet" href="../../assets/css/styles.css" />
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag("js", new Date());
-  gtag("config", "G-S12BBKZXSP");
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
 </script>
+<style>
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+  .module-grid a { display: block; padding: 12px 14px; border-radius: 10px; background: var(--cream); border: 1px solid var(--line); border-left: 5px solid var(--teal); text-decoration: none; color: var(--ink); font-size: 13.5px; transition: all 0.15s ease; }
+  .module-grid a:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10,42,67,0.12); }
+  .module-grid .num { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--teal); }
+  .module-grid .t { font-family: Georgia, serif; font-weight: 700; color: var(--deep); margin: 4px 0 2px; font-size: 15px; }
+  .acc { background: #F5F9FC; border-left: 4px solid var(--ok); padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  .acc h5 { margin: 0 0 6px; color: var(--deep); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .acc ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.6; }
+  .deep-links { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .deep-links a { color: var(--accent); text-decoration: none; }
+  .deep-links a:hover { text-decoration: underline; }
+</style>
 </head>
 <body>
 
 <header class="hero">
   <div class="hero-inner">
-    <div class="eyebrow">Learning Track</div>
-    <h1>Webhook Delivery Service</h1>
-    <p class="lede">Build a webhook platform that reliably delivers events at scale. 10 modules covering async job processing, retries, dead-letter queues, idempotency, monitoring, and operational excellence.</p>
-    <div class="tags"><span>Async Jobs</span><span>Retries</span><span>Dead-Letter Queues</span><span>Idempotency</span><span>Observability</span></div>
-    <a class="back" href="../../index.html#ch-tracks">Back to Tracks</a>
+    <div class="eyebrow">Learning Track · 2 of 3</div>
+    <h1>Build a Production-Grade Webhook Delivery Platform</h1>
+    <p class="lede">Ten modules that take you from an empty Git repo to a distributed, resilient webhook service — handling millions of events with reliable delivery, exponential backoff retries, dead-letter queues, and observability. This track pushes async systems, failure modes, and reliability patterns harder than most projects will encounter.</p>
+    <div class="tags"><span>Async systems</span><span>Queues</span><span>Retries</span><span>Dead-letter queues</span><span>Reliability</span><span>Observability</span></div>
+    <a class="back" href="../../index.html#ch-tracks">← Back to Learning Tracks</a>
   </div>
 </header>
 
 <div class="page">
+
   <section class="chapter">
-    <div class="chapter-head"><div class="eyebrow">10 Modules</div><h2>What You Build</h2></div>
+    <div class="chapter-head"><div class="eyebrow">How to Use This Track</div><h2>Learning by Shipping Async Systems</h2></div>
     <div class="chapter-body">
-      <ol style="font-size:14px;line-height:1.8;">
-        <li>Event Model and API</li>
-        <li>Queue and Worker Setup</li>
-        <li>Idempotency and Deduplication</li>
-        <li>Retry and Backoff</li>
-        <li>Dead-Letter Queue</li>
-        <li>Signature and Security</li>
-        <li>Observability</li>
-        <li>Testing and Chaos</li>
-        <li>Scaling and Partitioning</li>
-        <li>Capstone and Deployment</li>
-      </ol>
+      <div class="basics">
+        <h4>Ground rules</h4>
+        <ul>
+          <li><strong>Embrace queues early.</strong> Webhook delivery is fundamentally async. Don't build synchronously and retrofit later.</li>
+          <li><strong>Failure is the baseline.</strong> Network timeouts, retries, and dead-letter queues aren't add-ons — they're core design.</li>
+          <li><strong>Observe everything.</strong> You can't debug async systems without excellent logging and metrics.</li>
+          <li><strong>Pick a stack and stick with it.</strong> Node + BullMQ, Python + Celery, Go + go-queue are all solid.</li>
+          <li><strong>Test failure modes.</strong> Write tests that inject delays and failures. Chaos is your friend.</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:18px;">The ten modules</h4>
+      <div class="module-grid">
+        <a href="#m1"><div class="num">MODULE 01</div><div class="t">Foundations &amp; Setup</div><div>Repo, schema, design doc.</div></a>
+        <a href="#m2"><div class="num">MODULE 02</div><div class="t">Core Webhook API</div><div>REST API, event schema, registration.</div></a>
+        <a href="#m3"><div class="num">MODULE 03</div><div class="t">Reliable Delivery &amp; Retries</div><div>Queue, exponential backoff, idempotency.</div></a>
+        <a href="#m4"><div class="num">MODULE 04</div><div class="t">Dead Letter Queue</div><div>Failure handling, analytics, recovery.</div></a>
+        <a href="#m5"><div class="num">MODULE 05</div><div class="t">Testing Async Systems</div><div>Unit, integration, chaos tests.</div></a>
+        <a href="#m6"><div class="num">MODULE 06</div><div class="t">Performance &amp; Batching</div><div>Throughput, batch delivery, load tests.</div></a>
+        <a href="#m7"><div class="num">MODULE 07</div><div class="t">Observability &amp; Debugging</div><div>Logs, metrics, traces, dashboards.</div></a>
+        <a href="#m8"><div class="num">MODULE 08</div><div class="t">Scaling &amp; Multi-Tenant</div><div>Isolation, rate limits, resource mgmt.</div></a>
+        <a href="#m9"><div class="num">MODULE 09</div><div class="t">Security &amp; Compliance</div><div>Secrets, signing, audit logs, SSRF.</div></a>
+        <a href="#m10"><div class="num">MODULE 10</div><div class="t">Capstone &amp; Production Readiness</div><div>Deploy, runbooks, postmortem, docs.</div></a>
+      </div>
     </div>
   </section>
 
-  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
-    Software Development - A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
-  </footer>
-</div>
+  <!-- MODULE 1 -->
+  <section class="chapter" id="m1">
+    <div class="chapter-head"><div class="eyebrow">Module 01 · ~2–3 hrs</div><h2>Foundations &amp; Project Setup</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Start with a clear design and a pleasant repo. Webhook delivery is complex — don't let tooling get in the way.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Create a Git repo with standard config (<code>.editorconfig</code>, <code>.gitignore</code>, linter/formatter).</li>
+        <li>Scaffold an HTTP server. Pick one: Node/Express, Python/FastAPI, Go/Gin, or Rust/Axum.</li>
+        <li>Write a <strong>one-page design doc</strong>: problem statement, goals, API sketch, architecture diagram, failure modes you'll handle.</li>
+        <li>Create tables: <code>webhooks</code> (registrations), <code>events</code> (immutable log), <code>deliveries</code> (attempts and status).</li>
+        <li>Document your <strong>idempotency strategy</strong> in the design doc.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>git clone</code> + one command spins up the server.</li>
+          <li>Design doc committed to <code>/docs/design.md</code> with a sketch of the three main tables.</li>
+          <li>Linter passes. Pre-commit hook blocks failures.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../soft/documentation.html">Documentation &amp; Writing</a> · <a href="../soft/problem-decomposition.html">Problem Decomposition</a> · <a href="../database/schema.html">Schema Design</a></div>
+    </div>
+  </section>
 
+  <!-- MODULE 2 -->
+  <section class="chapter" id="m2">
+    <div class="chapter-head"><div class="eyebrow">Module 02 · ~4–6 hrs</div><h2>Core Webhook API</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The contract: let customers register webhooks and emit events. Get this right before adding async machinery.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Implement <code>POST /webhooks</code> to register a webhook: URL, secret (for signing), optional filter (event types).</li>
+        <li>Implement <code>POST /events</code> to emit an event: type, timestamp, payload. Store immediately in the <code>events</code> table (immutable log).</li>
+        <li>Validate input: URL format, event type enum, max payload size.</li>
+        <li>Return sensible HTTP status codes (201 on create, 400 on bad input, 404 on missing).</li>
+        <li>Document your <strong>event schema</strong> with examples (e.g., <code>order.created</code>, <code>user.updated</code>).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>curl -X POST /webhooks</code> creates a webhook; <code>GET /webhooks/:id</code> returns it.</li>
+          <li><code>curl -X POST /events</code> with an event appears in the <code>events</code> table.</li>
+          <li>Invalid URLs, missing fields are rejected with clear 4xx messages.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../api/rest.html">REST API Design</a> · <a href="../database/sql.html">Relational Databases</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 3 -->
+  <section class="chapter" id="m3">
+    <div class="chapter-head"><div class="eyebrow">Module 03 · ~5–7 hrs</div><h2>Reliable Delivery &amp; Retries</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The hard part: when you emit an event, every webhook must eventually get it — even if the customer's server is down for an hour.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>On <code>POST /events</code>, enqueue a delivery job for each matching webhook (use your job queue: BullMQ, Celery, SQS, etc.).</li>
+        <li>A worker processes jobs: POST the event to the webhook URL with a signed JSON body.</li>
+        <li>Implement <strong>exponential backoff retries</strong>: 1s, 4s, 16s, 64s, 256s, then stop (5 retries).</li>
+        <li>Implement <strong>idempotency</strong>: each delivery has a unique <code>delivery_id</code> in the request. Customers should deduplicate on this.</li>
+        <li>Track delivery state: pending, processing, success, failed (permanent).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Emit an event and verify a delivery job is enqueued for each webhook.</li>
+          <li>Stop the worker and emit events; restart the worker and deliveries drain successfully.</li>
+          <li>Sending to a URL that always fails (after 5 retries) transitions to <code>failed</code> state.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/queues.html">Message Queues</a> · <a href="../architecture/idempotency.html">Idempotency</a> · <a href="../architecture/resilience.html">Resilience &amp; Circuit Breakers</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 4 -->
+  <section class="chapter" id="m4">
+    <div class="chapter-head"><div class="eyebrow">Module 04 · ~4–6 hrs</div><h2>Dead Letter Queue &amp; Failure Handling</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Some webhooks will fail permanently. Don't lose them — analyze, alert, and allow recovery.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Create a <code>dead_letter_queue</code> table: deliveries that failed all retries go here.</li>
+        <li>Expose <code>GET /dlq</code> to list failed deliveries (paginated). Include: webhook_id, event, last_error, timestamp.</li>
+        <li>Add <code>POST /dlq/:delivery_id/retry</code> to allow manual retries from the DLQ.</li>
+        <li>Emit a metric/alert on DLQ writes so you catch silent failures.</li>
+        <li>Document your <strong>failure categorization</strong>: transient (retry) vs permanent (DLQ).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>A permanently-failed delivery appears in the DLQ.</li>
+          <li><code>POST /dlq/:delivery_id/retry</code> moves it back to the queue and retries it.</li>
+          <li>You can query the DLQ and see the last error message.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/event-driven.html">Event-Driven Patterns</a> · <a href="../devops/monitoring.html">Monitoring &amp; Observability</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 5 -->
+  <section class="chapter" id="m5">
+    <div class="chapter-head"><div class="eyebrow">Module 05 · ~5–7 hrs</div><h2>Testing Async Systems</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Async systems are slippery. Test them hard: race conditions, timing, failure injection.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Unit tests</strong> for retry logic: backoff calculation, state transitions, idempotency.</li>
+        <li><strong>Integration tests</strong> for delivery: spin up a fake webhook server, emit events, verify POSTs arrive.</li>
+        <li><strong>Chaos tests</strong>: inject delays (slow webhook), errors (500, timeout), network partitions. Verify queue drains correctly.</li>
+        <li><strong>Concurrency test</strong>: emit 1000 events to 10 webhooks; verify all 10k deliveries complete (single-threaded queue, or multi-worker safety).</li>
+        <li>Coverage threshold: 75% for core delivery logic.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Test suite runs in under 1 minute.</li>
+          <li>You can describe race conditions your tests protect against (e.g., DLQ insertion while retrying).</li>
+          <li>A failing webhook doesn't block other deliveries (isolation).</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../testing/unit.html">Unit Testing</a> · <a href="../testing/integration.html">Integration Testing</a> · <a href="../testing/tdd.html">TDD</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 6 -->
+  <section class="chapter" id="m6">
+    <div class="chapter-head"><div class="eyebrow">Module 06 · ~4–5 hrs</div><h2>Performance &amp; Batching</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Push throughput. Can you deliver 10k events/sec to 100k webhooks? Batching, parallelism, and backpressure are key.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Profile the bottleneck: is it database inserts, queue enqueue, or worker throughput?</li>
+        <li><strong>Batch enqueuing</strong>: when emitting an event, bulk-insert <code>N</code> delivery jobs (not one-by-one).</li>
+        <li>Run multiple <strong>worker processes</strong> (or threads). Test with <code>k6</code> or <code>Locust</code>: measure events/sec, p95 latency.</li>
+        <li>Discuss <strong>backpressure</strong>: what happens when the queue is full? Do you reject <code>POST /events</code> or buffer?</li>
+        <li>Optimize: connection pooling, query batching, queue batch sizes.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Load test shows you can deliver ≥1000 events/sec to 100 webhooks on local hardware.</li>
+          <li>Adding a 2nd worker scales throughput (roughly 2x, accounting for contention).</li>
+          <li>Load test report with graphs committed to <code>/docs/perf</code>.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../testing/performance.html">Performance Engineering</a> · <a href="../observability/metrics.html">Metrics &amp; Monitoring</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 7 -->
+  <section class="chapter" id="m7">
+    <div class="chapter-head"><div class="eyebrow">Module 07 · ~5–7 hrs</div><h2>Observability &amp; Debugging</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Async systems fail silently. Instrument heavily: logs, metrics, traces. Debugging without visibility is hopeless.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Structured JSON logs</strong> with correlation/trace IDs. Log every: enqueue, retry, success, DLQ placement.</li>
+        <li><strong>Metrics</strong> via Prometheus: enqueued events/sec, deliveries/sec, retry rate, DLQ growth, queue depth.</li>
+        <li><strong>Distributed tracing</strong> with OpenTelemetry: instrument the full path (enqueue → worker → POST).</li>
+        <li>Build a Grafana dashboard: 4 golden signals + queue health + DLQ health.</li>
+        <li>Define <strong>SLOs</strong>: e.g., 99.9% of events delivered within 5 minutes (over 30 days).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>You can query logs for a single event's journey: enqueue → all retries → success/DLQ.</li>
+          <li>One OpenTelemetry trace shows HTTP POST → response → DLQ decision.</li>
+          <li>SLO doc with error budget committed; dashboard shows compliance.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/logging.html">Logging</a> · <a href="../observability/metrics.html">Metrics</a> · <a href="../observability/tracing.html">Tracing</a> · <a href="../observability/slos.html">SLOs</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 8 -->
+  <section class="chapter" id="m8">
+    <div class="chapter-head"><div class="eyebrow">Module 08 · ~5–7 hrs</div><h2>Scaling &amp; Multi-Tenant</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">One tenant's misbehaving webhook shouldn't tank the system. Add isolation, rate limits, and resource fairness.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Add <strong>customer/tenant isolation</strong>: separate queue partitions or per-tenant workers.</li>
+        <li>Implement <strong>rate limits</strong> per customer: max events/sec, max concurrent deliveries, max DLQ size.</li>
+        <li>Add a <code>quotas</code> table. Reject <code>POST /events</code> with 429 if over limit.</li>
+        <li>Run a chaos drill: one tenant's webhook receiver is slow (p99 latency = 30s). Verify it doesn't starve other tenants.</li>
+        <li>Document your <strong>resource isolation strategy</strong> in the design doc.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Tenant A exhausting their quota doesn't affect Tenant B's delivery.</li>
+          <li><code>GET /quotas/:tenant</code> shows current usage and limits.</li>
+          <li>Rate-limited requests are rejected with 429 and a <code>Retry-After</code> header.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/scalability.html">Scalability</a> · <a href="../architecture/resilience.html">Resilience &amp; Circuit Breakers</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 9 -->
+  <section class="chapter" id="m9">
+    <div class="chapter-head"><div class="eyebrow">Module 09 · ~4–6 hrs</div><h2>Security &amp; Compliance</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">You're posting to customer URLs with sensitive data. Harden it: HMAC signing, SSRF prevention, secrets management.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>HMAC signing</strong>: include <code>X-Webhook-Signature: sha256=...</code> in every POST. Customers verify with their secret.</li>
+        <li><strong>SSRF prevention</strong>: block private IPs (127.0.0.1, 10.0.0.0/8, 169.254.0.0/16, metadata endpoints).</li>
+        <li>Move secrets (DB password, signing key) to a secrets manager (Vault, AWS Secrets Manager, GitHub Secrets).</li>
+        <li>Add <strong>audit logging</strong>: log who created/modified webhooks, DLQ retries, quota changes.</li>
+        <li>Write a simple <strong>threat model</strong>: customer sees other customer's events? Signing replay attacks? SSRF?</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Every webhook POST includes a signed <code>X-Webhook-Signature</code> header.</li>
+          <li>Attempting to register a webhook to 127.0.0.1 or metadata endpoint is rejected.</li>
+          <li>Threat model committed; key risks + mitigations documented.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/authentication.html">Authentication</a> · <a href="../security/owasp.html">OWASP Top 10</a> · <a href="../security/threat-modeling.html">Threat Modeling</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 10 -->
+  <section class="chapter" id="m10">
+    <div class="chapter-head"><div class="eyebrow">Module 10 · ~6–8 hrs</div><h2>Capstone &amp; Production Readiness</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Ship it safely. Deploy, monitor, document, and be ready to debug production issues.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Write a multi-stage <strong>Dockerfile</strong>. Use <code>docker-compose.yml</code> for local dev (app + Postgres + Redis + worker).</li>
+        <li>GitHub Actions: <em>lint → test → build → push → deploy</em>.</li>
+        <li>Deploy to production: Fly.io, Render, Railway, or a VM. Set up health checks and auto-rollback.</li>
+        <li>Write three <strong>runbooks</strong>: queue is backed up, DLQ is growing, worker is stuck.</li>
+        <li>Write a <strong>postmortem template</strong> and one practice postmortem for a simulated incident.</li>
+        <li>Polish the README: architecture diagram, how to run, how to test, how to deploy.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Every PR gets a preview URL; merging to <code>main</code> deploys to production automatically.</li>
+          <li>A bad deploy (health check fails) auto-rolls back.</li>
+          <li>Runbooks + postmortem template committed to <code>/docs</code>.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../devops/cicd.html">CI/CD</a> · <a href="../devops/containers.html">Containers</a> · <a href="../devops/operations.html">Operational Excellence</a></div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">After the Track</div><h2>Where to Go Next</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Stretch goals</strong> on the same project: webhook templates, custom transformations, batch delivery optimization, audit log export, webhook testing UI.</li>
+        <li><strong>Read about distributed systems.</strong> Study <em>Designing Data-Intensive Applications</em>; sketch how you'd scale to 1B events/day.</li>
+        <li><strong>Try the Image Upload track</strong> to practice async file processing at scale.</li>
+        <li><strong>Write about it.</strong> Blog post per module, especially on failure modes and chaos testing.</li>
+      </ul>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../../index.html#ch-tracks">↑ Back to Learning Tracks</a>
+        <a href="../../index.html">↑ Back to Map</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
 </body>
 </html>

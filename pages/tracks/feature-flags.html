@@ -3,64 +3,359 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Feature-Flag Service - Learning Track</title>
+<title>Feature-Flag Service Track · Learning Tracks</title>
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
-<meta name="description" content="Build a feature-flag service. 10 modules covering rule engines, SDKs, real-time updates, progressive rollouts, and analytics." />
+<meta name="description" content="A hands-on, ten-module learning track that builds a production-grade feature-flag service — touching rule engines, SDK design, real-time config distribution, and progressive rollouts." />
 <meta name="author" content="Software Development Tour" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#0A2A43" />
 <link rel="canonical" href="http://www.rehana.co.in/pages/tracks/feature-flags.html" />
-<meta property="og:site_name" content="Software Development - A Guided Tour" />
-<meta property="og:title" content="Feature-Flag Service - Learning Track" />
-<meta property="og:description" content="10 modules. Control feature launches safely." />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Feature-Flag Service Track · Learning Tracks" />
+<meta property="og:description" content="Build a production-grade feature-flag service, one module at a time." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://www.rehana.co.in/pages/tracks/feature-flags.html" />
 <meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Feature-Flag Service Track · Learning Tracks" />
+<meta name="twitter:description" content="Build a production-grade feature-flag service, one module at a time." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
 <link rel="stylesheet" href="../../assets/css/styles.css" />
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag("js", new Date());
-  gtag("config", "G-S12BBKZXSP");
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
 </script>
+<style>
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+  .module-grid a { display: block; padding: 12px 14px; border-radius: 10px; background: var(--cream); border: 1px solid var(--line); border-left: 5px solid var(--mid); text-decoration: none; color: var(--ink); font-size: 13.5px; transition: all 0.15s ease; }
+  .module-grid a:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10,42,67,0.12); }
+  .module-grid .num { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--mid); }
+  .module-grid .t { font-family: Georgia, serif; font-weight: 700; color: var(--deep); margin: 4px 0 2px; font-size: 15px; }
+  .acc { background: #F5F9FC; border-left: 4px solid var(--ok); padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  .acc h5 { margin: 0 0 6px; color: var(--deep); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .acc ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.6; }
+  .deep-links { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .deep-links a { color: var(--accent); text-decoration: none; }
+  .deep-links a:hover { text-decoration: underline; }
+</style>
 </head>
 <body>
 
 <header class="hero">
   <div class="hero-inner">
-    <div class="eyebrow">Learning Track</div>
-    <h1>Feature-Flag Service</h1>
-    <p class="lede">Build a feature-flag system that lets teams ship code dark, control rollouts, and run A/B tests. 10 modules covering rule engines, client SDKs, real-time distribution, segments, analytics, and operations.</p>
-    <div class="tags"><span>Rule Engines</span><span>Client SDKs</span><span>Real-Time Updates</span><span>Progressive Rollouts</span><span>Analytics</span></div>
-    <a class="back" href="../../index.html#ch-tracks">Back to Tracks</a>
+    <div class="eyebrow">Learning Track · 3 of 3</div>
+    <h1>Build a Production-Grade Feature-Flag Service</h1>
+    <p class="lede">Ten modules that take you from an empty Git repo to a distributed feature-flag platform — serving rules to thousands of clients, supporting real-time updates, progressive rollouts, A/B testing, and analytics. This track focuses on rule evaluation, SDK design, caching, and the operational challenges of feature control at scale.</p>
+    <div class="tags"><span>Rule engines</span><span>SDK design</span><span>Real-time distribution</span><span>Progressive rollouts</span><span>Analytics</span></div>
+    <a class="back" href="../../index.html#ch-tracks">← Back to Learning Tracks</a>
   </div>
 </header>
 
 <div class="page">
+
   <section class="chapter">
-    <div class="chapter-head"><div class="eyebrow">10 Modules</div><h2>What You Build</h2></div>
+    <div class="chapter-head"><div class="eyebrow">How to Use This Track</div><h2>Learning by Shipping Feature Control Systems</h2></div>
     <div class="chapter-body">
-      <ol style="font-size:14px;line-height:1.8;">
-        <li>Core Model and API</li>
-        <li>Rule Evaluation Engine</li>
-        <li>SDK and Client Integration</li>
-        <li>Caching and Performance</li>
-        <li>Real-Time Updates</li>
-        <li>Segments and Cohorts</li>
-        <li>Progressive Rollouts</li>
-        <li>Analytics and Observability</li>
-        <li>Testing and A/B Scenarios</li>
-        <li>Capstone and Operations</li>
-      </ol>
+      <div class="basics">
+        <h4>Ground rules</h4>
+        <ul>
+          <li><strong>Think like an SDK user.</strong> Every decision you make affects thousands of client apps. Prioritize simplicity and backwards compatibility.</li>
+          <li><strong>Performance matters.</strong> Flag evaluation is on the hot path. Caching, pre-computing, and efficient algorithms are non-negotiable.</li>
+          <li><strong>Embrace real-time distribution.</strong> WebSockets or polling: pick one and build it properly. Flag changes can't take hours to propagate.</li>
+          <li><strong>Pick a stack and stick with it.</strong> Node/TypeScript, Python/FastAPI, or Go are all good choices.</li>
+          <li><strong>Test the rule engine extensively.</strong> Off-by-one errors in targeting can segment your user base wrong.</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:18px;">The ten modules</h4>
+      <div class="module-grid">
+        <a href="#m1"><div class="num">MODULE 01</div><div class="t">Foundations &amp; Setup</div><div>Repo, schema, design doc.</div></a>
+        <a href="#m2"><div class="num">MODULE 02</div><div class="t">Core API &amp; Data Model</div><div>REST endpoints, flag schema, metadata.</div></a>
+        <a href="#m3"><div class="num">MODULE 03</div><div class="t">Rule Evaluation Engine</div><div>Boolean logic, segments, targeting rules.</div></a>
+        <a href="#m4"><div class="num">MODULE 04</div><div class="t">Client SDK &amp; Integration</div><div>SDKs, initialization, evaluation.</div></a>
+        <a href="#m5"><div class="num">MODULE 05</div><div class="t">Real-Time Config Updates</div><div>WebSockets, polling, cache invalidation.</div></a>
+        <a href="#m6"><div class="num">MODULE 06</div><div class="t">Testing &amp; Correctness</div><div>Unit, integration, edge case tests.</div></a>
+        <a href="#m7"><div class="num">MODULE 07</div><div class="t">Observability &amp; Debugging</div><div>Logs, metrics, traces, evaluation audit.</div></a>
+        <a href="#m8"><div class="num">MODULE 08</div><div class="t">Progressive Rollouts &amp; Canaries</div><div>Percentage targeting, scheduling, guardrails.</div></a>
+        <a href="#m9"><div class="num">MODULE 09</div><div class="t">Security &amp; Compliance</div><div>Access control, audit logs, secrets.</div></a>
+        <a href="#m10"><div class="num">MODULE 10</div><div class="t">Capstone &amp; Production Readiness</div><div>Deploy, runbooks, SDK docs, analytics.</div></a>
+      </div>
     </div>
   </section>
 
-  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
-    Software Development - A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
-  </footer>
-</div>
+  <!-- MODULE 1 -->
+  <section class="chapter" id="m1">
+    <div class="chapter-head"><div class="eyebrow">Module 01 · ~2–3 hrs</div><h2>Foundations &amp; Project Setup</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Start with a clear design. Feature flags are simple — wrong rule evaluation is not. Get the model right from the start.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Create a Git repo with standard config (<code>.editorconfig</code>, <code>.gitignore</code>, linter/formatter).</li>
+        <li>Scaffold an HTTP server in your chosen language.</li>
+        <li>Write a <strong>one-page design doc</strong>: problem, goals, flag model (simple boolean? rules? segments?), API sketch, evaluation performance targets.</li>
+        <li>Create database schema: <code>flags</code> (metadata), <code>rules</code> (targeting), <code>segments</code> (user groups).</li>
+        <li>Document your <strong>rule evaluation strategy</strong> in the design doc.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>git clone</code> + one command spins up the server.</li>
+          <li>Design doc committed to <code>/docs/design.md</code> with schema sketch.</li>
+          <li>Linter passes. Pre-commit hook blocks failures.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../soft/documentation.html">Documentation &amp; Writing</a> · <a href="../soft/problem-decomposition.html">Problem Decomposition</a> · <a href="../database/schema.html">Schema Design</a></div>
+    </div>
+  </section>
 
+  <!-- MODULE 2 -->
+  <section class="chapter" id="m2">
+    <div class="chapter-head"><div class="eyebrow">Module 02 · ~4–6 hrs</div><h2>Core API &amp; Data Model</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The contract: manage flags and evaluate them. Start simple — a flag has a name, enabled state, and variations.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Implement <code>POST /flags</code> to create a flag: name, type (boolean/string), enabled, variations, description.</li>
+        <li>Implement <code>POST /evaluate</code> to evaluate flags: user context (ID, attributes), flag key. Return the value/variation.</li>
+        <li>Implement <code>GET /flags/:key</code>, <code>PATCH /flags/:key</code>, <code>DELETE /flags/:key</code>.</li>
+        <li>Validate input: flag names, context structure, variation format.</li>
+        <li>Document the <strong>user context schema</strong> with examples (user ID, email, custom attributes).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>curl -X POST /flags</code> creates a flag; <code>GET /flags/:key</code> returns it.</li>
+          <li><code>curl -X POST /evaluate</code> with a user context returns a flag value.</li>
+          <li>Updating a flag is reflected immediately in evaluations.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../api/rest.html">REST API Design</a> · <a href="../database/sql.html">Relational Databases</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 3 -->
+  <section class="chapter" id="m3">
+    <div class="chapter-head"><div class="eyebrow">Module 03 · ~5–7 hrs</div><h2>Rule Evaluation Engine</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The core: evaluate complex rules (if-then logic, segments, attributes) to decide flag variations.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Implement a <strong>rule model</strong>: conditions (AND, OR), operators (equals, in, contains, regex), actions (target variation).</li>
+        <li>Implement <strong>segment support</strong>: define a segment by rules (e.g., "users in US and signed up this month"), use segments in flag rules.</li>
+        <li>Implement <strong>percentage-based targeting</strong>: send variation B to X% of users (deterministic by user ID hash).</li>
+        <li>Evaluate flags deterministically: same user + flag = same result every time (use consistent hashing for percentages).</li>
+        <li>Discuss in design doc: rule precedence, conflict resolution, fall-back behavior.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>A flag with rules: create segments, assign variations based on segments + attributes.</li>
+          <li>Evaluate a flag for user A 100 times → same result every time.</li>
+          <li>Percentage targeting: 1000 evaluations → roughly 50% of each variation (for 50% rollout).</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/distributed-systems.html">Distributed Systems</a> · <a href="../observability/caching.html">Caching</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 4 -->
+  <section class="chapter" id="m4">
+    <div class="chapter-head"><div class="eyebrow">Module 04 · ~5–7 hrs</div><h2>Client SDK &amp; Integration</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">SDKs are the interface. Make them simple to use, hard to misuse, and blazingly fast.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Build a server-side SDK (or multiple: Node, Python, Go). Initialize with the service URL and API key.</li>
+        <li>SDK exposes <code>client.evaluate(flag_key, user_context)</code> → returns the evaluated variation.</li>
+        <li>SDK locally caches the flag configuration in memory.</li>
+        <li>SDK provides <code>is_enabled(flag_key, user_context)</code> for boolean flags and <code>get_variation(flag_key, user_context)</code> for multi-armed.</li>
+        <li>Write SDK docs: initialization, API, error handling, performance.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>SDK initialization takes <code>&lt; 100ms</code>.</li>
+          <li>Flag evaluation from memory is <code>&lt; 1ms</code> (local cache).</li>
+          <li>SDK README with working example, error handling guide.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/caching.html">Caching</a> · <a href="../api/sdk-design.html">SDK Design</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 5 -->
+  <section class="chapter" id="m5">
+    <div class="chapter-head"><div class="eyebrow">Module 05 · ~4–6 hrs</div><h2>Real-Time Config Updates</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">SDK caches are stale by default. Push new flag definitions to SDKs in real-time so changes are live immediately.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Choose a mechanism: WebSockets (push), polling (pull), or Server-Sent Events.</li>
+        <li>On <code>PATCH /flags/:key</code>, push the updated flag config to all connected SDKs.</li>
+        <li>SDK subscribes to updates on initialization; receives flag changes in real-time.</li>
+        <li>Handle network failures: SDK reconnects with exponential backoff if the connection drops.</li>
+        <li>Document your <strong>update latency SLO</strong>: e.g., 99% of SDKs see new flags within 5 seconds.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Update a flag; within 5 seconds, SDK cache is fresh and next evaluation uses the new rules.</li>
+          <li>Disconnect the SDK from the update stream; flag doesn't change until connection is restored.</li>
+          <li>You can describe the failure mode if the update stream is down for an hour.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/event-driven.html">Event-Driven Patterns</a> · <a href="../observability/monitoring.html">Monitoring &amp; Observability</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 6 -->
+  <section class="chapter" id="m6">
+    <div class="chapter-head"><div class="eyebrow">Module 06 · ~5–7 hrs</div><h2>Testing &amp; Correctness</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Rule engines are correctness-critical. Off-by-one errors segment users wrong. Test extensively.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Unit tests</strong> for rule evaluation: all operators (equals, in, regex), segment membership, percentage targeting.</li>
+        <li><strong>Property-based tests</strong> (QuickCheck/Hypothesis): random user contexts + rules should always evaluate consistently.</li>
+        <li><strong>Integration tests</strong>: test SDK + server together. Update flags, verify SDKs see changes.</li>
+        <li><strong>Edge case tests</strong>: empty segments, contradicting rules, malformed attributes, null contexts.</li>
+        <li>Coverage threshold: 85% for evaluation logic.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Test suite runs in under 2 minutes.</li>
+          <li>You can describe a testing strategy for the rule engine (especially percentage targeting).</li>
+          <li>A malformed rule doesn't crash the service (graceful error handling).</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../testing/unit.html">Unit Testing</a> · <a href="../testing/integration.html">Integration Testing</a> · <a href="../testing/property-based.html">Property-Based Testing</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 7 -->
+  <section class="chapter" id="m7">
+    <div class="chapter-head"><div class="eyebrow">Module 07 · ~5–7 hrs</div><h2>Observability &amp; Debugging</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Teams need to understand why a flag evaluated to X. Instrument: logs, metrics, traces, evaluation audit logs.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Structured logs</strong> for every evaluation: flag key, user ID, rules matched, variation returned, timestamp.</li>
+        <li><strong>Metrics</strong>: evaluation count by flag, error rate, cache hit ratio, update latency.</li>
+        <li><strong>Distributed tracing</strong>: instrument the full path (SDK request → server evaluation → cache lookup).</li>
+        <li>Build a Grafana dashboard: flag evaluation rate, error rate, top flags by volume.</li>
+        <li>Expose <code>GET /flags/:key/audit</code> to show evaluation results for a user (debugging tool).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>You can query logs for all evaluations of flag X in the last hour.</li>
+          <li>Dashboard shows which flags are being used most; error rates per flag.</li>
+          <li><code>GET /flags/my-flag/audit?user_id=123</code> shows why the user got variation A.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/logging.html">Logging</a> · <a href="../observability/metrics.html">Metrics</a> · <a href="../observability/tracing.html">Tracing</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 8 -->
+  <section class="chapter" id="m8">
+    <div class="chapter-head"><div class="eyebrow">Module 08 · ~5–7 hrs</div><h2>Progressive Rollouts &amp; Canaries</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Roll out features to 1%, 10%, 100% without code changes. Schedule rollouts, monitor metrics, auto-rollback if needed.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Add <code>rollout_percentage</code> field to flags: 0–100% rollout to users.</li>
+        <li>Implement <strong>scheduled rollouts</strong>: flag can transition 1% → 10% → 50% → 100% on a schedule.</li>
+        <li>Implement <strong>guardrails</strong>: if error rate (from metrics) exceeds threshold, auto-rollback to 0%.</li>
+        <li>Expose <code>POST /flags/:key/rollout</code> to manually adjust rollout % with audit logging.</li>
+        <li>Document your <strong>rollout strategy</strong>: when to use % vs boolean, how to monitor during rollout.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Create a flag with a 50% rollout; verify exactly 50% of users see the new variation.</li>
+          <li>Schedule a rollout: 1% at time T, then 50% at time T+1h; verify it happens on schedule.</li>
+          <li>Manually adjust rollout %; audit log shows who changed it and when.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../devops/deployment-strategies.html">Deployment Strategies</a> · <a href="../observability/metrics.html">Metrics &amp; Monitoring</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 9 -->
+  <section class="chapter" id="m9">
+    <div class="chapter-head"><div class="eyebrow">Module 09 · ~4–6 hrs</div><h2>Security &amp; Compliance</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Teams rely on flags to ship safely. Secure it: access control, audit logs, secrets, sensitive data handling.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Implement <strong>role-based access control</strong>: admin (full), editor (create/update flags), viewer (read-only).</li>
+        <li>Add <strong>audit logging</strong>: log every flag change, rollout adjustment, user login. Include who, what, when.</li>
+        <li>Move secrets (API keys, signing keys) to a secrets manager (Vault, AWS Secrets Manager).</li>
+        <li>Never log sensitive user attributes in evaluation audit logs.</li>
+        <li>Write a simple <strong>threat model</strong>: flag injection (customer sees wrong flag)? Unauthorized rollouts?</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>A read-only user cannot create or modify flags.</li>
+          <li>Audit log shows every flag change: timestamp, user, old value, new value.</li>
+          <li>Threat model committed; key risks documented.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/authentication.html">Authentication</a> · <a href="../security/authorization.html">Authorization</a> · <a href="../security/threat-modeling.html">Threat Modeling</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 10 -->
+  <section class="chapter" id="m10">
+    <div class="chapter-head"><div class="eyebrow">Module 10 · ~6–8 hrs</div><h2>Capstone &amp; Production Readiness</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Ship it. Deploy, document SDKs, run operational drills, go live.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Write a multi-stage <strong>Dockerfile</strong>. Use <code>docker-compose.yml</code> for local dev (app + Postgres).</li>
+        <li>GitHub Actions: <em>lint → test → build → push → deploy</em>.</li>
+        <li>Deploy to production: Fly.io, Render, Railway, or a VM. Set up health checks and graceful rollback.</li>
+        <li>Write two <strong>runbooks</strong>: "a flag isn't updating" and "SDK connection storm."</li>
+        <li>Publish SDK documentation: GitHub README, code examples, changelog.</li>
+        <li>Write a <strong>migration guide</strong> for teams adopting the service from competitors.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Every PR gets a preview URL; <code>main</code> deploys to production automatically.</li>
+          <li>A bad deploy auto-rolls back.</li>
+          <li>Runbooks + SDK docs committed; linked from README.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../devops/cicd.html">CI/CD</a> · <a href="../devops/containers.html">Containers</a> · <a href="../devops/operations.html">Operational Excellence</a></div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">After the Track</div><h2>Where to Go Next</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Stretch goals</strong> on the same project: A/B testing framework, experiment analytics, custom attribute types, flag templates, third-party integrations.</li>
+        <li><strong>Read about systems design.</strong> Study large-scale feature-flag deployments; sketch how you'd serve 100M evaluations/sec.</li>
+        <li><strong>Try the Webhook Delivery track</strong> to practice event-driven systems at scale.</li>
+        <li><strong>Write about it.</strong> Blog post per module; specifically on rule evaluation correctness and percentage targeting.</li>
+      </ul>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../../index.html#ch-tracks">↑ Back to Learning Tracks</a>
+        <a href="../../index.html">↑ Back to Map</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
 </body>
 </html>

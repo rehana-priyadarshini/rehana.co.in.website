@@ -3,65 +3,385 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Image Upload and Thumbnails - Learning Track</title>
+<title>Image Upload &amp; Thumbnails Track · Learning Tracks</title>
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
-<meta name="description" content="Build an image upload and thumbnail service. 11 modules covering blob storage, validation, async processing, CDN, caching, and operations." />
+<meta name="description" content="A hands-on, eleven-module learning track that builds a production-grade image upload service — touching blob storage, async image processing, CDN integration, access control, and observability." />
 <meta name="author" content="Software Development Tour" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#0A2A43" />
 <link rel="canonical" href="http://www.rehana.co.in/pages/tracks/image-uploads.html" />
-<meta property="og:site_name" content="Software Development - A Guided Tour" />
-<meta property="og:title" content="Image Upload and Thumbnails - Learning Track" />
-<meta property="og:description" content="11 modules. Handle user-generated images at scale." />
+<meta property="og:site_name" content="Software Development — A Guided Tour" />
+<meta property="og:title" content="Image Upload &amp; Thumbnails Track · Learning Tracks" />
+<meta property="og:description" content="Build a production-grade image upload service, one module at a time." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://www.rehana.co.in/pages/tracks/image-uploads.html" />
 <meta property="og:image" content="http://www.rehana.co.in/favicon.svg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Image Upload &amp; Thumbnails Track · Learning Tracks" />
+<meta name="twitter:description" content="Build a production-grade image upload service, one module at a time." />
+<meta name="twitter:image" content="http://www.rehana.co.in/favicon.svg" />
 <link rel="stylesheet" href="../../assets/css/styles.css" />
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-S12BBKZXSP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag("js", new Date());
-  gtag("config", "G-S12BBKZXSP");
+  gtag('js', new Date());
+  gtag('config', 'G-S12BBKZXSP');
 </script>
+<style>
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+  .module-grid a { display: block; padding: 12px 14px; border-radius: 10px; background: var(--cream); border: 1px solid var(--line); border-left: 5px solid var(--accent); text-decoration: none; color: var(--ink); font-size: 13.5px; transition: all 0.15s ease; }
+  .module-grid a:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(10,42,67,0.12); }
+  .module-grid .num { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--accent); }
+  .module-grid .t { font-family: Georgia, serif; font-weight: 700; color: var(--deep); margin: 4px 0 2px; font-size: 15px; }
+  .acc { background: #F5F9FC; border-left: 4px solid var(--ok); padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  .acc h5 { margin: 0 0 6px; color: var(--deep); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .acc ul { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.6; }
+  .deep-links { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .deep-links a { color: var(--accent); text-decoration: none; }
+  .deep-links a:hover { text-decoration: underline; }
+</style>
 </head>
 <body>
 
 <header class="hero">
   <div class="hero-inner">
-    <div class="eyebrow">Learning Track</div>
-    <h1>Image Upload and Thumbnails</h1>
-    <p class="lede">Build a user-generated image service. 11 modules covering blob storage, image validation, async processing, multiple formats and sizes, CDN distribution, access control, and observability.</p>
-    <div class="tags"><span>Blob Storage</span><span>Image Processing</span><span>CDN Integration</span><span>Caching</span><span>Access Control</span></div>
-    <a class="back" href="../../index.html#ch-tracks">Back to Tracks</a>
+    <div class="eyebrow">Learning Track · 4 of 4</div>
+    <h1>Build a Production-Grade Image Upload &amp; Thumbnail Service</h1>
+    <p class="lede">Eleven modules that take you from an empty Git repo to a scalable, resilient image service — handling uploads, validation, async processing, multiple formats and sizes, CDN distribution, signed URLs, and edge cases. This track covers blob storage, async pipelines, media processing, caching, and operational excellence for user-generated content at scale.</p>
+    <div class="tags"><span>Blob storage</span><span>Image processing</span><span>Async pipelines</span><span>CDN</span><span>Access control</span><span>Observability</span></div>
+    <a class="back" href="../../index.html#ch-tracks">← Back to Learning Tracks</a>
   </div>
 </header>
 
 <div class="page">
+
   <section class="chapter">
-    <div class="chapter-head"><div class="eyebrow">11 Modules</div><h2>What You Build</h2></div>
+    <div class="chapter-head"><div class="eyebrow">How to Use This Track</div><h2>Learning by Shipping File Services</h2></div>
     <div class="chapter-body">
-      <ol style="font-size:14px;line-height:1.8;">
-        <li>Upload API and Storage</li>
-        <li>Input Validation and Safety</li>
-        <li>Async Image Processing</li>
-        <li>Multiple Formats and Sizes</li>
-        <li>Metadata and EXIF</li>
-        <li>CDN Integration</li>
-        <li>Caching and Optimization</li>
-        <li>Signed URLs and Access Control</li>
-        <li>Observability and Performance</li>
-        <li>Testing and Resilience</li>
-        <li>Capstone and Operations</li>
-      </ol>
+      <div class="basics">
+        <h4>Ground rules</h4>
+        <ul>
+          <li><strong>Validate early.</strong> User uploads are vectors for attacks (zip bombs, infinite files, malware). Validate format, size, and content.</li>
+          <li><strong>Process asynchronously.</strong> Image resizing is expensive. Never block the upload on processing.</li>
+          <li><strong>Embrace immutability.</strong> Once uploaded, images don't change. Use ETags and cache aggressively.</li>
+          <li><strong>Pick a storage backend and SDK.</strong> AWS S3, Google Cloud Storage, or self-hosted MinIO are all valid. Learn your SDK deeply.</li>
+          <li><strong>Edge cases are the work.</strong> EXIF data, corrupted files, unsupported formats, SSRF, path traversal — think like an attacker.</li>
+        </ul>
+      </div>
+
+      <h4 style="margin-top:18px;">The eleven modules</h4>
+      <div class="module-grid">
+        <a href="#m1"><div class="num">MODULE 01</div><div class="t">Foundations &amp; Setup</div><div>Repo, schema, design doc.</div></a>
+        <a href="#m2"><div class="num">MODULE 02</div><div class="t">Upload API &amp; Storage</div><div>REST endpoints, blob storage, persistence.</div></a>
+        <a href="#m3"><div class="num">MODULE 03</div><div class="t">Input Validation &amp; Safety</div><div>File type, size, magic bytes, SSRF.</div></a>
+        <a href="#m4"><div class="num">MODULE 04</div><div class="t">Async Image Processing</div><div>Queue, workers, thumbnails, formats.</div></a>
+        <a href="#m5"><div class="num">MODULE 05</div><div class="t">Multiple Sizes &amp; Formats</div><div>Thumbnails, responsive images, WebP.</div></a>
+        <a href="#m6"><div class="num">MODULE 06</div><div class="t">Metadata &amp; EXIF</div><div>Extract, strip sensitive data, index.</div></a>
+        <a href="#m7"><div class="num">MODULE 07</div><div class="t">CDN Integration &amp; Distribution</div><div>CloudFlare/Fastly, cache headers, purge.</div></a>
+        <a href="#m8"><div class="num">MODULE 08</div><div class="t">Signed URLs &amp; Access Control</div><div>Private uploads, time-limited URLs, ACLs.</div></a>
+        <a href="#m9"><div class="num">MODULE 09</div><div class="t">Observability &amp; Performance</div><div>Logs, metrics, traces, SLOs.</div></a>
+        <a href="#m10"><div class="num">MODULE 10</div><div class="t">Testing &amp; Resilience</div><div>Unit, integration, chaos, edge cases.</div></a>
+        <a href="#m11"><div class="num">MODULE 11</div><div class="t">Capstone &amp; Production Readiness</div><div>Deploy, runbooks, docs, go live.</div></a>
+      </div>
     </div>
   </section>
 
-  <footer style="margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);">
-    Software Development - A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved
-  </footer>
-</div>
+  <!-- MODULE 1 -->
+  <section class="chapter" id="m1">
+    <div class="chapter-head"><div class="eyebrow">Module 01 · ~2–3 hrs</div><h2>Foundations &amp; Project Setup</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Start with a clear design. Image services are deceptively complex — edge cases, security, and performance are everywhere.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Create a Git repo with standard config (<code>.editorconfig</code>, <code>.gitignore</code>, linter/formatter).</li>
+        <li>Scaffold an HTTP server. Pick one: Node, Python, Go, Rust.</li>
+        <li>Write a <strong>one-page design doc</strong>: problem, goals, storage backend choice, image sizes you'll generate, API sketch, failure modes.</li>
+        <li>Create database schema: <code>images</code> (metadata), <code>variants</code> (sizes/formats), <code>uploads</code> (user tracking).</li>
+        <li>Document your <strong>validation and security strategy</strong> in the design doc.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>git clone</code> + one command spins up the server.</li>
+          <li>Design doc committed to <code>/docs/design.md</code> with schema sketch.</li>
+          <li>Linter passes. Pre-commit hook blocks failures.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../soft/documentation.html">Documentation &amp; Writing</a> · <a href="../soft/problem-decomposition.html">Problem Decomposition</a> · <a href="../database/schema.html">Schema Design</a></div>
+    </div>
+  </section>
 
+  <!-- MODULE 2 -->
+  <section class="chapter" id="m2">
+    <div class="chapter-head"><div class="eyebrow">Module 02 · ~4–6 hrs</div><h2>Upload API &amp; Blob Storage</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">The baseline: accept uploads, store them durably, and serve them back. Start with your storage backend.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Set up blob storage: AWS S3, Google Cloud Storage, or MinIO locally.</li>
+        <li>Implement <code>POST /upload</code>: multipart file upload, store in blob storage, record metadata in DB.</li>
+        <li>Implement <code>GET /images/:id</code>: fetch from blob storage, return with correct content-type.</li>
+        <li>Implement <code>DELETE /images/:id</code>: delete from blob storage and DB.</li>
+        <li>Return proper HTTP headers: <code>Content-Type</code>, <code>ETag</code>, <code>Cache-Control</code>.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>curl -F file=@test.jpg POST /upload</code> stores the file and returns an image ID.</li>
+          <li><code>GET /images/:id</code> returns the file with correct content-type.</li>
+          <li>Deleting an image removes it from blob storage and the database.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../api/rest.html">REST API Design</a> · <a href="../database/sql.html">Relational Databases</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 3 -->
+  <section class="chapter" id="m3">
+    <div class="chapter-head"><div class="eyebrow">Module 03 · ~4–6 hrs</div><h2>Input Validation &amp; Security</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Users can upload anything. Validate format, size, content. Prevent zip bombs, SSRF, path traversal.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>File type validation</strong>: check magic bytes (file signature), not just extension.</li>
+        <li><strong>Size limits</strong>: max file size (e.g., 50MB). Rate limit uploads per user.</li>
+        <li><strong>SSRF prevention</strong>: if you support URL uploads, block private IPs and metadata endpoints.</li>
+        <li><strong>Malware scanning</strong> (optional): integrate ClamAV or VirusTotal for safety.</li>
+        <li>Reject uploads immediately if validation fails with clear 400 error.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Uploading a text file with <code>.jpg</code> extension is rejected.</li>
+          <li>Uploading a file larger than your limit is rejected with 413 Payload Too Large.</li>
+          <li>A rate-limited user gets 429 Too Many Requests.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/owasp.html">OWASP Top 10</a> · <a href="../security/input-validation.html">Input Validation</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 4 -->
+  <section class="chapter" id="m4">
+    <div class="chapter-head"><div class="eyebrow">Module 04 · ~5–7 hrs</div><h2>Async Image Processing</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Resizing images is expensive. Don't block the upload. Enqueue, process asynchronously, store variants.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>On successful upload, enqueue a processing job for the image.</li>
+        <li>A worker processes the job: read the original from blob storage, generate a thumbnail (200x200), store both.</li>
+        <li>Use ImageMagick, libvips, or equivalent. libvips is faster and uses less memory.</li>
+        <li>Track processing state: pending, processing, success, failed.</li>
+        <li>If processing fails, don't lose the original image. Log the error and expose it in the API.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Upload an image; <code>GET /images/:id?size=thumb</code> blocks until the thumbnail is ready.</li>
+          <li>Processing a 5MB image takes <code>&lt; 5 seconds</code> on local hardware.</li>
+          <li>A processing failure doesn't delete the original.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../architecture/queues.html">Message Queues</a> · <a href="../architecture/event-driven.html">Event-Driven Patterns</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 5 -->
+  <section class="chapter" id="m5">
+    <div class="chapter-head"><div class="eyebrow">Module 05 · ~5–7 hrs</div><h2>Multiple Sizes &amp; Formats</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Different clients need different sizes. Generate: thumbnail (200x200), medium (800x800), full (original). Support modern formats: WebP, AVIF.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Generate multiple variants: thumb, medium, large. Store each as a variant in blob storage.</li>
+        <li>Implement <strong>responsive images</strong>: <code>GET /images/:id?size=medium&format=webp</code> returns WebP, falling back to JPEG.</li>
+        <li>On-demand generation (optional): if a variant doesn't exist, generate it on-the-fly and cache.</li>
+        <li>Document your <strong>variant strategy</strong> in the design doc: which sizes, which formats, storage costs.</li>
+        <li>Measure disk usage: log variant sizes so you can optimize later.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>GET /images/:id?size=thumb</code> returns a 200x200 thumbnail.</li>
+          <li><code>GET /images/:id?format=webp</code> returns WebP if available, else original.</li>
+          <li>You can describe storage overhead: original + 2 thumbnails + WebP variants.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/caching.html">Caching</a> · <a href="../observability/performance.html">Performance Optimization</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 6 -->
+  <section class="chapter" id="m6">
+    <div class="chapter-head"><div class="eyebrow">Module 06 · ~3–4 hrs</div><h2>Metadata &amp; EXIF Handling</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">EXIF data can leak sensitive info (GPS, camera, timestamps). Extract what's useful, strip what's not.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Extract EXIF on upload: camera model, date taken, dimensions. Store in the <code>images</code> table.</li>
+        <li>Strip sensitive EXIF on variant generation (GPS, camera serial).</li>
+        <li>Expose <code>GET /images/:id/metadata</code> with safe EXIF (omit GPS, serial).</li>
+        <li>Use dimensions from EXIF to validate uploads (e.g., reject images <code>&lt; 100x100</code>).</li>
+        <li>Document your <strong>EXIF stripping strategy</strong> in the design doc.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li><code>GET /images/:id/metadata</code> returns EXIF data (no GPS or sensitive info).</li>
+          <li>Variants don't contain GPS or camera serial in EXIF.</li>
+          <li>You can describe why EXIF stripping matters (privacy).</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/privacy.html">Privacy &amp; Data Protection</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 7 -->
+  <section class="chapter" id="m7">
+    <div class="chapter-head"><div class="eyebrow">Module 07 · ~4–6 hrs</div><h2>CDN Integration &amp; Distribution</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Serve images from edge locations, not your origin. Integrate with a CDN: CloudFlare, Fastly, or AWS CloudFront.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Set up a CDN (CloudFlare, Fastly, or equivalent). Point to your origin.</li>
+        <li>Configure cache headers: <code>Cache-Control: public, max-age=31536000</code> for immutable images.</li>
+        <li>Implement <code>POST /images/:id/purge</code> to purge from CDN if an image is deleted.</li>
+        <li>Use a CDN-friendly URL format: <code>https://cdn.example.com/images/:id</code>.</li>
+        <li>Measure: edge cache hit rate, origin traffic reduction, latency from different regions.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Image served from CDN (check response headers for <code>CF-Cache-Status</code> or equivalent).</li>
+          <li>Deleting an image purges it from the CDN.</li>
+          <li>Cache-Control headers are correct (long-lived for immutable images).</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/caching.html">Caching</a> · <a href="../devops/deployment-strategies.html">Deployment &amp; Distribution</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 8 -->
+  <section class="chapter" id="m8">
+    <div class="chapter-head"><div class="eyebrow">Module 08 · ~4–6 hrs</div><h2>Signed URLs &amp; Access Control</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Not all images are public. Generate time-limited signed URLs for private uploads. Implement ownership and sharing.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Add a <code>public</code> flag to images. Private images are only accessible via signed URLs.</li>
+        <li>Implement <code>POST /images/:id/signed-url</code>: generate a time-limited signed URL (valid for 1 hour, configurable).</li>
+        <li>Implement ownership: only the uploader can delete their images and generate signed URLs.</li>
+        <li>Use HMAC or JWT for signing. Validate signature on <code>GET /images/:id</code>.</li>
+        <li>Expose <code>POST /images/:id/share</code> to grant time-limited access to another user.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Private images return 403 Forbidden without a valid signed URL.</li>
+          <li><code>POST /images/:id/signed-url</code> generates a URL valid for 1 hour.</li>
+          <li>User A cannot delete User B's private images.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../security/authentication.html">Authentication</a> · <a href="../security/authorization.html">Authorization</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 9 -->
+  <section class="chapter" id="m9">
+    <div class="chapter-head"><div class="eyebrow">Module 09 · ~5–7 hrs</div><h2>Observability &amp; Performance</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">You can't debug what you can't see. Instrument: logs, metrics, traces. Monitor upload latency, processing time, CDN performance.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Structured logs</strong> for every upload: file size, content-type, processing time, variants generated.</li>
+        <li><strong>Metrics</strong>: uploads/sec, total storage used, variant generation time (p50, p95, p99), CDN hit rate.</li>
+        <li><strong>Distributed tracing</strong>: instrument the full path (upload → validate → store → process variants).</li>
+        <li>Build a Grafana dashboard: upload volume, processing queue depth, variant generation latency, storage usage.</li>
+        <li>Define <strong>SLOs</strong>: e.g., 99.9% of uploads complete within 30 seconds (over 30 days).</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>You can query logs for a single upload: validation → storage → variant generation.</li>
+          <li>Dashboard shows variant generation latency; you can identify bottlenecks.</li>
+          <li>SLO doc with error budget committed.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../observability/logging.html">Logging</a> · <a href="../observability/metrics.html">Metrics</a> · <a href="../observability/tracing.html">Tracing</a> · <a href="../observability/slos.html">SLOs</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 10 -->
+  <section class="chapter" id="m10">
+    <div class="chapter-head"><div class="eyebrow">Module 10 · ~5–7 hrs</div><h2>Testing &amp; Resilience</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Edge cases are everywhere: corrupted uploads, missing processing, quota exceeded. Test them all.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Unit tests</strong> for validation: magic bytes, file size, EXIF parsing.</li>
+        <li><strong>Integration tests</strong>: upload → validate → store → process → serve. Verify end-to-end.</li>
+        <li><strong>Edge case tests</strong>: corrupted JPEG, 0-byte file, 50MB file, animated GIF, AVIF without support.</li>
+        <li><strong>Chaos tests</strong>: kill blob storage, kill processing worker. Verify originals aren't lost.</li>
+        <li>Coverage threshold: 80% for validation and processing logic.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Test suite runs in under 2 minutes.</li>
+          <li>You can describe 5 edge cases your tests cover (e.g., corrupted JPEG, missing processor).</li>
+          <li>Killing the processor doesn't lose uploads; jobs retry on restart.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../testing/unit.html">Unit Testing</a> · <a href="../testing/integration.html">Integration Testing</a> · <a href="../testing/tdd.html">TDD</a></div>
+    </div>
+  </section>
+
+  <!-- MODULE 11 -->
+  <section class="chapter" id="m11">
+    <div class="chapter-head"><div class="eyebrow">Module 11 · ~6–8 hrs</div><h2>Capstone &amp; Production Readiness</h2></div>
+    <div class="chapter-body">
+      <p class="lede-p">Ship it. Deploy, document, set up monitoring, go live.</p>
+      <h4>Tasks</h4>
+      <ul style="font-size:14px;line-height:1.7;">
+        <li>Write a multi-stage <strong>Dockerfile</strong>. Use <code>docker-compose.yml</code> for local dev (app + Postgres + worker + MinIO).</li>
+        <li>GitHub Actions: <em>lint → test → build → push → deploy</em>.</li>
+        <li>Deploy to production: Fly.io, Render, Railway, or a VM. Set up health checks and auto-rollback.</li>
+        <li>Write two <strong>runbooks</strong>: "storage quota exceeded" and "variant generation is slow".</li>
+        <li>Write a <strong>capacity planning guide</strong>: storage calculations, processing capacity, CDN costs.</li>
+        <li>Polish the README: architecture diagram, API examples, how to run locally, how to deploy.</li>
+      </ul>
+      <div class="acc">
+        <h5>Acceptance criteria</h5>
+        <ul>
+          <li>Every PR gets a preview URL; <code>main</code> deploys to production automatically.</li>
+          <li>A bad deploy auto-rolls back.</li>
+          <li>Runbooks + capacity planning guide committed to <code>/docs</code>.</li>
+        </ul>
+      </div>
+      <div class="deep-links">Deep dives: <a href="../devops/cicd.html">CI/CD</a> · <a href="../devops/containers.html">Containers</a> · <a href="../devops/operations.html">Operational Excellence</a></div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="chapter-head"><div class="eyebrow">After the Track</div><h2>Where to Go Next</h2></div>
+    <div class="chapter-body">
+      <ul style="font-size:14px;line-height:1.7;">
+        <li><strong>Stretch goals</strong> on the same project: watermarking, background blur, AI tagging, image search, video support, progressive uploads.</li>
+        <li><strong>Read about media processing.</strong> Study libvips, FFmpeg, ML-based image processing; sketch how you'd add video transcoding.</li>
+        <li><strong>Try the Webhook Delivery track</strong> to deepen your async systems knowledge.</li>
+        <li><strong>Write about it.</strong> Blog post per module; especially on EXIF stripping, CDN cache invalidation, and variant generation.</li>
+      </ul>
+      <div class="nav-other" style="margin-top:18px;">
+        <a href="../../index.html#ch-tracks">↑ Back to Learning Tracks</a>
+        <a href="../../index.html">↑ Back to Map</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>Software Development — A Guided Tour. © 2026 <a href="http://rehana.co.in" style="color:var(--accent);text-decoration:none;">rehana.co.in</a> All rights reserved</footer>
+</div>
+<script src="../../assets/js/feedback.js" defer></script>
 </body>
 </html>
